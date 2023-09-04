@@ -1,8 +1,13 @@
 import { useState } from "react";
 import "./App.css";
 import Ide from "./Ide";
+import { isMobile } from "react-device-detect";
+import ErrorIsMoble from "./errorIsMoble";
 
 function App() {
+    if (isMobile) {
+        return <ErrorIsMoble></ErrorIsMoble>;
+    }
 
     return (
         <div className="ide">

@@ -84,3 +84,19 @@
 
 ### Minor Changes
 - Not committing the `release` folder
+
+## Fitting FlexLayout into `ide-body`
+
+### Note
+- Needs to have `position: relative` in `light.css` to fit the layout within the parent instead of the body.
+
+## Device Detection
+
+### Changes
+- `npm install react-device-detect --save`
+    - For device detection
+- `npm install react-router-dom --save`
+    - For redirecting to an error page
+    - Not used; didn't figure it out
+- Used an error component for information display
+- Used `if` switch in `App.jsx` as a switch

@@ -1,0 +1,25 @@
+.ide {
+    background-color: red;
+    gap: 0px;
+    margin: 0;
+    padding: 0px;
+    height: 100vh;
+    width: 100vw;
+    display: flex;
+    flex-direction: column;
+}
+
+.ide-header {
+    background-color: yellow;
+    flex-grow: 0;
+}
+
+.ide-body {
+    background-color: aqua;
+    flex-grow: 1;
+}
+
+.ide-tail {
+    background-color:azure;
+    flex-grow: 0;
+}

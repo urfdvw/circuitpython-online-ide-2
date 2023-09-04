@@ -49,25 +49,38 @@
 - `npm install react-complex-tree`
     - For file tree
 
-# Single-File Build Config
+## Single-File Build Config
 
-## Reason
+### Reason
 - Single-file build is portable and can help with distribution
 - However, there are some functions that are not supported in the single HTML file version
     - Popup window in FlexLayout (requires server)
     - Some file system APIs (require HTTPS)
 
-## Changes
+### Changes
 - Added a `build-config.json`
     - Not a single field just in case more fields are added in the future
     - Not a command line for `vite.config.js` because it's easier to access from JSX
 - Read this config from:
     - `vite.config.js`
     - `App.jsx`
-- `./release` directory for holding the single HTML file build (committed)
+- `./release` directory for holding the single HTML file build
 
-## Usage
+### Usage
 - In `build-config.json`:
     - Change the `single-file` to `true` and build to get the release file(s)
     - Change the `single-file` to `false` and commit to GitHub
         - Otherwise, the GitHub action could fail as no `./dist` folder will be created.
+
+## Base Layout
+
+### Changes
+- Used Flexbox to divide the screen into three pieces:
+    - Header: size depends on content (`flex-grow: 0`)
+    - Tail: size depends on content (`flex-grow: 0`)
+    - Body: grows to fill the rest of the screen (`flex-grow: 1`)
+- Used a unique background color
+- Used `overflow: hidden` to disable scrolling
+
+### Minor Changes
+- Not committing the `release` folder

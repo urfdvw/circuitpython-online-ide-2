@@ -2,7 +2,7 @@ import { useState } from "react";
 import "./App.css";
 import Ide from "./Ide";
 import { isMobile } from "react-device-detect";
-import ErrorIsMoble from "./errorIsMoble";
+import ErrorIsMoble from "./ErrorIsMoble";
 
 function App() {
     if (isMobile) {

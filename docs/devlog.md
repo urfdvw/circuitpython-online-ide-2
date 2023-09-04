@@ -95,6 +95,7 @@
 ### Changes
 - `npm install react-device-detect --save`
     - For device detection
+    - ref https://github.com/duskload/react-device-detect/blob/master/docs/selectors.md
 - `npm install react-router-dom --save`
     - For redirecting to an error page
     - Not used; didn't figure it out

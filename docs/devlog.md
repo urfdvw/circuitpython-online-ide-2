@@ -20,3 +20,13 @@ test
     - icon not working
 - `npm run build` then run by vscode live server
     - icon working
+
+## Deployment
+
+changes
+- added `base: "./"` in `vite.config.js`
+- added `.github` actions
+
+minor changes
+- changed dir and file name of devlog
+- formator use 4 spaces in all edited files

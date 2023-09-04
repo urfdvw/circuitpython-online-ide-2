@@ -1,6 +1,6 @@
 import { useState } from "react";
 import "./App.css";
-import Ide from "./ide";
+import Ide from "./Ide";
 
 function App() {
 

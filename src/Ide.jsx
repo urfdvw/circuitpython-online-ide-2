@@ -22,10 +22,10 @@ export default function Ide() {
                     <AceEditor />
                 </div>
             );
-        } else if (component === "preview") {
+        } else if (component === "placeholder") {
             return (
                 <div className="tab_content">
-                    <p>Preview</p>
+                    <p>{node.getName()}</p>
                 </div>
             );
         }

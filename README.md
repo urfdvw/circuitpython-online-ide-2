@@ -1,2 +1,3 @@
-# CircuitPython-online-IDE2
-CircuitPython online IDE is a browser-based IDE for CircuitPython supported microcontrollers. No installation needed. Handy and powerful.
+# CircuitPython Online IDE 2.0
+
+This repository is currently under development. For more information, please refer to the Wiki tab.

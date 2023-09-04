@@ -5,6 +5,10 @@ import * as FlexLayout from "flexlayout-react";
 import layout from "./layout.json";
 // ace
 import AceEditor from "react-ace";
+// config
+import build_config from "../build-config.json";
+
+layout.global.tabEnableFloat = !build_config["single-file"];
 
 export default function Ide() {
     const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));

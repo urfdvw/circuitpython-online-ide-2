@@ -1,6 +1,5 @@
 import { useState } from "react";
 import "./App.css";
-import build_config from "../build-config.json";
 import Ide from "./ide";
 
 function App() {

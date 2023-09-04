@@ -1,32 +1,50 @@
-# Dev log
+# Dev Log
 
 # 202309041158
 
-## boilerplate
+## Boilerplate
 
-changes
+### Changes
 - `npm create vite@latest .`
-- removed vite exaple code
-    - kept the counter there
-    - kept the css files but empty
+- Removed Vite example code
+    - Kept the counter there
+    - Kept the CSS files but empty
 - Icon
-    - saved the icon file in `./public`
-    - refered in `index.html`
+    - Saved the icon file in `./public`
+    - Referred in `index.html`
 - Changed page title in `index.html`
 
-test
+### Test
 - `npm run dev`
-    - counter working
-    - icon not working
-- `npm run build` then run by vscode live server
-    - icon working
+    - Counter working
+    - Icon not working
+- `npm run build` then run by VSCode live server
+    - Icon working
 
 ## Deployment
 
-changes
-- added `base: "./"` in `vite.config.js`
-- added `.github` actions
+### Changes
+- Added `base: "./"` in `vite.config.js`
+- Added `.github` actions
 
-minor changes
-- changed dir and file name of devlog
-- formator use 4 spaces in all edited files
+### Minor Changes
+- Changed directory and file name of dev log
+- Formatter uses 4 spaces in all edited files
+
+## Install Packages
+- `npm install @mui/material @emotion/react @emotion/styled`
+    - For some common components, such as:
+        - Menu bar
+        - Buttons
+- `npm install vite-plugin-singlefile --save-dev`
+    - For single-file release
+- `npm install flexlayout-react`
+    - For tab management
+- `npm install react-ace ace-builds`
+    - Editor
+- `npm install @rjsf/core @rjsf/utils @rjsf/validator-ajv8 --save`
+    - JSON form, for settings
+    - `npm install tslib`
+    - `npm install @rjsf/mui`
+- `npm install react-complex-tree`
+    - For file tree

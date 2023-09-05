@@ -101,3 +101,15 @@
     - Not used; didn't figure it out
 - Used an error component for information display
 - Used `if` switch in `App.jsx` as a switch
+
+
+## Menu Mock
+
+### Changes
+- Used MUI menu example
+    - Mock data for now
+- Used a disabled button as the title
+    - Colored using MUI color
+
+### TODO
+- Make the menu item a separate component

@@ -26,7 +26,40 @@ function App() {
                     >
                         CircuitPython Online IDE
                     </Button>
-                    <Menu />
+                    <Menu
+                        lable="Connect"
+                        options={[
+                            {
+                                text: "CircuitPy Drive",
+                                handler: () => {
+                                    console.log("clicked on CircuitPy");
+                                },
+                            },
+                            {
+                                text: "Serial",
+                                handler: () => {
+                                    console.log("clicked on Serial");
+                                },
+                            },
+                        ]}
+                    />
+                    <Menu
+                        lable="Open"
+                        options={[
+                            {
+                                text: "Settings",
+                                handler: () => {
+                                    console.log("clicked on Settings");
+                                },
+                            },
+                            {
+                                text: "Folder View",
+                                handler: () => {
+                                    console.log("clicked on Folder View");
+                                },
+                            },
+                        ]}
+                    />
                 </Stack>
             </div>
             <div className="ide-body">

@@ -8,6 +8,7 @@ export default build_config["single-file"]
     ? defineConfig({
           plugins: [react(), viteSingleFile()],
           build: {
+              copyPublicDir: false,
               outDir: "./release",
           },
       })

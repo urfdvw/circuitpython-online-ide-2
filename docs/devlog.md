@@ -111,5 +111,31 @@
 - Used a disabled button as the title
     - Colored using MUI color
 
-### TODO
-- Make the menu item a separate component
+## Menu Component
+
+### Changes
+- Made the menu item a separate component
+    - with parameter `lable` and `options`
+    - example:
+        ```jsx
+        <Menu
+            lable="Open"
+            options={[
+                {
+                    text: "Settings",
+                    handler: () => {
+                        console.log("clicked on Settings");
+                    },
+                },
+                {
+                    text: "Folder View",
+                    handler: () => {
+                        console.log("clicked on Folder View");
+                    },
+                },
+            ]}
+        />
+        ```
+
+### Minor Changes
+- Set Vite to not copying the `./public` folder when building single file.

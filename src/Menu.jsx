@@ -8,7 +8,7 @@ import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
 import { grey } from "@mui/material/colors";
 
-function MenuListComposition() {
+export default function Menu({ lable, options }) {
     const [open, setOpen] = React.useState(false);
     const anchorRef = React.useRef(null);
 
@@ -44,7 +44,7 @@ function MenuListComposition() {
     }, [open]);
 
     return (
-        <div>
+        <>
             <Button
                 ref={anchorRef}
                 id="composition-button"
@@ -57,7 +57,7 @@ function MenuListComposition() {
                     color: grey[900],
                 }}
             >
-                Connect
+                {lable}
             </Button>
             <Popper
                 open={open}
@@ -86,25 +86,23 @@ function MenuListComposition() {
                                     aria-labelledby="composition-button"
                                     onKeyDown={handleListKeyDown}
                                 >
-                                    <MenuItem onClick={handleClose}>
-                                        Serial Device
-                                    </MenuItem>
-                                    <MenuItem onClick={handleClose}>
-                                        CircuitPy Drive
-                                    </MenuItem>
-                                    <MenuItem onClick={handleClose}>
-                                        Backup Directory
-                                    </MenuItem>
+                                    {options.map((opt) => (
+                                        <MenuItem
+                                            onClick={(event) => {
+                                                handleClose(event);
+                                                opt.handler();
+                                            }}
+                                            key={crypto.randomUUID()}
+                                        >
+                                            {opt.text}
+                                        </MenuItem>
+                                    ))}
                                 </MenuList>
                             </ClickAwayListener>
                         </Paper>
                     </Grow>
                 )}
             </Popper>
-        </div>
+        </>
     );
-}
-
-export default function Menu() {
-    return <MenuListComposition />;
 }

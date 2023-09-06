@@ -115,11 +115,11 @@
 
 ### Changes
 - Made the menu item a separate component
-    - with parameter `lable` and `options`
-    - example:
+    - With parameters `label` and `options`
+    - Example:
         ```jsx
         <Menu
-            lable="Open"
+            label="Open"
             options={[
                 {
                     text: "Settings",
@@ -138,4 +138,10 @@
         ```
 
 ### Minor Changes
-- Set Vite to not copying the `./public` folder when building single file.
+- Set Vite to avoid copying the `./public` folder when building a single file.
+
+## Switch to `gh-pages`
+
+### Changes
+- Removed GitHub Actions as it fails randomly
+- Installed `npm install gh-pages`

@@ -14,7 +14,8 @@
                 {
                     "type": "tab",
                     "name": "Folder View",
-                    "component": "placeholder"
+                    "component": "placeholder",
+                    "enableClose": false
                 }
             ]
         },
@@ -26,7 +27,8 @@
                 {
                     "type": "tab",
                     "name": "Settings",
-                    "component": "placeholder"
+                    "component": "placeholder",
+                    "enableClose": false
                 }
             ]
         },
@@ -39,7 +41,8 @@
                 {
                     "type": "tab",
                     "name": "Serial Console",
-                    "component": "placeholder"
+                    "component": "placeholder",
+                    "enableClose": false
                 }
             ]
         }

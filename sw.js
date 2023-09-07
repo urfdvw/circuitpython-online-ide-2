@@ -1,1 +1,52 @@
-if(!self.define){let e,i={};const n=(n,c)=>(n=new URL(n+".js",c).href,i[n]||new Promise((i=>{if("document"in self){const e=document.createElement("script");e.src=n,e.onload=i,document.head.appendChild(e)}else e=n,importScripts(n),i()})).then((()=>{let e=i[n];if(!e)throw new Error(`Module ${n} didn’t register its module`);return e})));self.define=(c,r)=>{const o=e||("document"in self?document.currentScript.src:"")||location.href;if(i[o])return;let s={};const f=e=>n(e,o),a={module:{uri:o},exports:s,require:f};i[o]=Promise.all(c.map((e=>a[e]||f(e)))).then((e=>(r(...e),s)))}}define(["./workbox-fa446783"],(function(e){"use strict";self.skipWaiting(),e.clientsClaim(),e.precacheAndRoute([{url:"assets/index-0d305acf.css",revision:null},{url:"assets/index-175db34e.js",revision:null},{url:"favicon.ico",revision:"10f10be7fd9cbf5480a8662452c33126"},{url:"icon-192x192.png",revision:"13f5a82ca069d83be91e8aac8a7857fa"},{url:"icon-256x256.png",revision:"4ad21c2d29eef073d53bb28079cfe884"},{url:"icon-384x384.png",revision:"b3db5de8fb543b3502e286b662e01483"},{url:"icon-512x512.png",revision:"b124f8e87de0e99cb6552dba48675579"},{url:"index.html",revision:"941ab91436e0223cf3c270c1ae9ca8c2"},{url:"manifest.webmanifest",revision:"88846d66850c9a97c182e662ebd1f512"},{url:"popout.html",revision:"0fb061dbac9f6f0c94f41a51bca6c3c2"},{url:"registerSW.js",revision:"402b66900e731ca748771b6fc5e7a068"},{url:"icon-192x192.png",revision:"13f5a82ca069d83be91e8aac8a7857fa"},{url:"favicon.ico",revision:"10f10be7fd9cbf5480a8662452c33126"},{url:"icon-256x256.png",revision:"4ad21c2d29eef073d53bb28079cfe884"},{url:"icon-384x384.png",revision:"b3db5de8fb543b3502e286b662e01483"},{url:"icon-512x512.png",revision:"b124f8e87de0e99cb6552dba48675579"},{url:"popout.html",revision:"0fb061dbac9f6f0c94f41a51bca6c3c2"},{url:"manifest.webmanifest",revision:"88846d66850c9a97c182e662ebd1f512"}],{}),e.cleanupOutdatedCaches(),e.registerRoute(new e.NavigationRoute(e.createHandlerBoundToURL("index.html")))}));
+var GHPATH = '/CircuitPython-online-IDE2';
+var APP_PREFIX = 'gppwa_';
+var VERSION = 'version_002';
+var URLS = [    
+  `${GHPATH}/`,
+  `${GHPATH}/index.html`,
+  `${GHPATH}/css/styles.css`,
+  `${GHPATH}/img/icon.png`,
+  `${GHPATH}/js/app.js`
+]
+
+var CACHE_NAME = APP_PREFIX + VERSION
+self.addEventListener('fetch', function (e) {
+  console.log('Fetch request : ' + e.request.url);
+  e.respondWith(
+    caches.match(e.request).then(function (request) {
+      if (request) { 
+        console.log('Responding with cache : ' + e.request.url);
+        return request
+      } else {       
+        console.log('File is not cached, fetching : ' + e.request.url);
+        return fetch(e.request)
+      }
+    })
+  )
+})
+
+self.addEventListener('install', function (e) {
+  e.waitUntil(
+    caches.open(CACHE_NAME).then(function (cache) {
+      console.log('Installing cache : ' + CACHE_NAME);
+      return cache.addAll(URLS)
+    })
+  )
+})
+
+self.addEventListener('activate', function (e) {
+  e.waitUntil(
+    caches.keys().then(function (keyList) {
+      var cacheWhitelist = keyList.filter(function (key) {
+        return key.indexOf(APP_PREFIX)
+      })
+      cacheWhitelist.push(CACHE_NAME);
+      return Promise.all(keyList.map(function (key, i) {
+        if (cacheWhitelist.indexOf(key) === -1) {
+          console.log('Deleting cache : ' + keyList[i] );
+          return caches.delete(keyList[i])
+        }
+      }))
+    })
+  )
+})

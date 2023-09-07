@@ -1,7 +1,5 @@
 # Dev Log
 
-# 202309041158
-
 ## Boilerplate
 
 ### Changes
@@ -145,11 +143,3 @@
 ### Changes
 - Removed GitHub Actions as it fails randomly
 - Installed `npm install gh-pages`
-
-## PWA
-
-### Changes
-- installed and configured PWA
-- ref
-    - https://vite-pwa-org.netlify.app/guide/
-    - https://adueck.github.io/blog/caching-everything-for-totally-offline-pwa-vite-react/

@@ -1,7 +1,6 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { viteSingleFile } from "vite-plugin-singlefile";
-import { VitePWA } from "vite-plugin-pwa";
 import build_config from "./build-config.json";
 
 // https://vitejs.dev/config/
@@ -14,6 +13,6 @@ export default build_config["single-file"]
           },
       })
     : defineConfig({
-          plugins: [react(), VitePWA({ registerType: "autoUpdate" })],
+          plugins: [react()],
           base: "./",
       });

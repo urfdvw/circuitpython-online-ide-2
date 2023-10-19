@@ -14,7 +14,7 @@
                 {
                     "type": "tab",
                     "name": "Folder View",
-                    "component": "placeholder",
+                    "component": "folder_view",
                     "enableClose": false
                 }
             ]

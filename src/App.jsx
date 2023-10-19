@@ -7,19 +7,8 @@ import Menu from "./Menu";
 import Stack from "@mui/material/Stack";
 import Button from "@mui/material/Button";
 import { deepPurple } from "@mui/material/colors";
-// submodule
-import useFileSystem from "../useFileSystem/src/useFileSystem";
 
 function App() {
-    const {
-        openDirectory,
-        selectedHandle,
-        directoryReady,
-        readFile,
-        readDir,
-        writeFile,
-    } = useFileSystem();
-
     if (isMobile) {
         return <ErrorIsMoble></ErrorIsMoble>;
     }

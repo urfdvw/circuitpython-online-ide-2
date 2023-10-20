@@ -1,5 +1,5 @@
 // React
-import { useState } from "react";
+import { useCallback, useState } from "react";
 // layout
 import * as FlexLayout from "flexlayout-react";
 import layout from "./layout.json";
@@ -10,7 +10,7 @@ import FolderView, { useFileSystem, getFileText } from "react-local-file-system"
 // config
 import build_config from "../build-config.json";
 
-function IdeFolderView(onFileClick) {
+function IdeFolderView({ onFileClick }) {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
     // Show FolderView component only when its ready
@@ -30,12 +30,18 @@ export default function Ide() {
     const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));
     const [text, setText] = useState("# Hello, *world*!");
 
+    async function onFileClick(fileHandle) {
+        const text = await getFileText(fileHandle);
+        console.log("file content of", fileHandle.name, ":", text);
+        setText(text);
+    }
+
     const factory = (node) => {
         var component = node.getComponent();
         if (component === "editor") {
             return (
                 <div className="tab_content">
-                    <AceEditor />
+                    <AceEditor value={text} />
                 </div>
             );
         } else if (component === "placeholder") {
@@ -45,9 +51,6 @@ export default function Ide() {
                 </div>
             );
         } else if (component === "folder_view") {
-            async function onFileClick(fileHandle) {
-                console.log("file content of", fileHandle.name, ":", await getFileText(fileHandle));
-            }
             return <IdeFolderView onFileClick={onFileClick} />;
         }
     };

@@ -1,14 +1,51 @@
 import { useState } from "react";
 import "./App.css";
-import Ide from "./Ide";
+import IdeBody from "./IdeBody";
 import { isMobile } from "react-device-detect";
 import ErrorIsMoble from "./ErrorIsMoble";
-import Menu from "./Menu";
-import Stack from "@mui/material/Stack";
-import Button from "@mui/material/Button";
-import { deepPurple } from "@mui/material/colors";
+import MenuBar from "./Menu";
 
 function App() {
+    const [menuStructure, setMenuStructure] = useState({
+        title: "CircuitPython Online IDE",
+        menu: [
+            {
+                label: "connect",
+                options: [
+                    {
+                        text: "CircuitPy Drive",
+                        handler: () => {
+                            console.log("clicked on CircuitPy");
+                        },
+                    },
+                    {
+                        text: "Serial",
+                        handler: () => {
+                            console.log("clicked on Serial");
+                        },
+                    },
+                ],
+            },
+            {
+                label: "open",
+                options: [
+                    {
+                        text: "Settings",
+                        handler: () => {
+                            console.log("clicked on Settings");
+                        },
+                    },
+                    {
+                        text: "Folder View",
+                        handler: () => {
+                            console.log("clicked on Folder View");
+                        },
+                    },
+                ],
+            },
+        ],
+    });
+
     if (isMobile) {
         return <ErrorIsMoble></ErrorIsMoble>;
     }
@@ -16,54 +53,10 @@ function App() {
     return (
         <div className="ide">
             <div className="ide-header">
-                <Stack direction="row" spacing={0}>
-                    <Button
-                        disabled
-                        style={{
-                            textTransform: "none",
-                            color: deepPurple[500],
-                        }}
-                    >
-                        CircuitPython Online IDE
-                    </Button>
-                    <Menu
-                        lable="Connect"
-                        options={[
-                            {
-                                text: "CircuitPy Drive",
-                                handler: () => {
-                                    console.log("clicked on CircuitPy");
-                                },
-                            },
-                            {
-                                text: "Serial",
-                                handler: () => {
-                                    console.log("clicked on Serial");
-                                },
-                            },
-                        ]}
-                    />
-                    <Menu
-                        lable="Open"
-                        options={[
-                            {
-                                text: "Settings",
-                                handler: () => {
-                                    console.log("clicked on Settings");
-                                },
-                            },
-                            {
-                                text: "Folder View",
-                                handler: () => {
-                                    console.log("clicked on Folder View");
-                                },
-                            },
-                        ]}
-                    />
-                </Stack>
+                <MenuBar menuStructure={menuStructure} />
             </div>
             <div className="ide-body">
-                <Ide />
+                <IdeBody />
             </div>
             <div className="ide-tail">tail</div>
         </div>

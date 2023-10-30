@@ -6,9 +6,29 @@ import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
-import { grey } from "@mui/material/colors";
+import { grey, deepPurple } from "@mui/material/colors";
+import Stack from "@mui/material/Stack";
 
-export default function Menu({ lable, options }) {
+export default function MenuBar({ menuStructure }) {
+    return (
+        <Stack direction="row" spacing={0}>
+            <Button
+                disabled
+                style={{
+                    textTransform: "none",
+                    color: deepPurple[500],
+                }}
+            >
+                {menuStructure.title}
+            </Button>
+            {menuStructure.menu.map((column) => {
+                return <Menu label={column.label} options={column.options} key={crypto.randomUUID()} />;
+            })}
+        </Stack>
+    );
+}
+
+function Menu({ label, options }) {
     const [open, setOpen] = React.useState(false);
     const anchorRef = React.useRef(null);
 
@@ -57,7 +77,7 @@ export default function Menu({ lable, options }) {
                     color: grey[900],
                 }}
             >
-                {lable}
+                {label}
             </Button>
             <Popper
                 open={open}
@@ -72,10 +92,7 @@ export default function Menu({ lable, options }) {
                     <Grow
                         {...TransitionProps}
                         style={{
-                            transformOrigin:
-                                placement === "bottom-start"
-                                    ? "left top"
-                                    : "left bottom",
+                            transformOrigin: placement === "bottom-start" ? "left top" : "left bottom",
                         }}
                     >
                         <Paper>

@@ -26,7 +26,7 @@ function IdeFolderView({ onFileClick }) {
 
 layout.global.tabEnableFloat = !build_config["single-file"];
 
-export default function Ide() {
+export default function IdeBody() {
     const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));
     const [text, setText] = useState("# Hello, *world*!");
 

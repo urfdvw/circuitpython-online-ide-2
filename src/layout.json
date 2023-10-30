@@ -55,11 +55,7 @@
                 "type": "tabset",
                 "weight": 50,
                 "selected": 0,
-                "children": [
-                    { "type": "tab", "name": "One", "component": "editor" },
-                    { "type": "tab", "name": "Two", "component": "editor" },
-                    { "type": "tab", "name": "Three", "component": "editor" }
-                ]
+                "children": []
             }
         ]
     }

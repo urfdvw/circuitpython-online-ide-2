@@ -2,10 +2,14 @@ import { useState } from "react";
 import "./App.css";
 import IdeBody from "./IdeBody";
 import { isMobile } from "react-device-detect";
-import ErrorIsMoble from "./ErrorIsMoble";
+import ErrorIsMobile from "./ErrorIsMobile";
 import MenuBar from "./Menu";
+import { useFileSystem } from "react-local-file-system";
 
 function App() {
+    // get folder handler and status with useFileSystem hook
+    const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
+
     const [menuStructure, setMenuStructure] = useState({
         title: "CircuitPython Online IDE",
         menu: [
@@ -15,7 +19,8 @@ function App() {
                     {
                         text: "CircuitPy Drive",
                         handler: () => {
-                            console.log("clicked on CircuitPy");
+                            console.log("clicked on `CircuitPy Drive`");
+                            openDirectory();
                         },
                     },
                     {
@@ -47,7 +52,7 @@ function App() {
     });
 
     if (isMobile) {
-        return <ErrorIsMoble></ErrorIsMoble>;
+        return <ErrorIsMobile />;
     }
 
     return (
@@ -56,9 +61,9 @@ function App() {
                 <MenuBar menuStructure={menuStructure} />
             </div>
             <div className="ide-body">
-                <IdeBody />
+                <IdeBody openDirectory={openDirectory} directoryReady={directoryReady} rootDirHandle={rootDirHandle} />
             </div>
-            <div className="ide-tail">tail</div>
+            <div className="ide-tail">CircuitPy Drive: {statusText}</div>
         </div>
     );
 }

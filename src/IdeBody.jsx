@@ -1,5 +1,5 @@
 // React
-import { useState } from "react";
+import { useRef, useState } from "react";
 // layout
 import * as FlexLayout from "flexlayout-react";
 import layout from "./layout.json";
@@ -26,14 +26,18 @@ layout.global.tabEnableFloat = !build_config["single-file"];
 export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }) {
     const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));
     const [text, setText] = useState("# Hello, *world*!");
+    const fileHandleLookUp = useRef({});
 
     async function onFileClick(fileHandle) {
         const text = await getFileText(fileHandle);
         console.log("file content of", fileHandle.name, ":", text);
         setText(text);
+
+        const fileHandleKey = crypto.randomUUID();
+        fileHandleLookUp[fileHandleKey] = fileHandle;
         model.doAction(
             FlexLayout.Actions.addNode(
-                { type: "tab", name: fileHandle.name, component: "editor" },
+                { type: "tab", name: fileHandle.name, component: "editor", config: { fileHandleKey: fileHandleKey } },
                 model.getActiveTabset().getId(),
                 FlexLayout.DockLocation.CENTER,
                 -1
@@ -43,7 +47,11 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }
 
     const factory = (node) => {
         var component = node.getComponent();
+        node.get;
         if (component === "editor") {
+            console.log('in factory:editor', node.getConfig())
+            node.getExtraData().fileHandle = fileHandleLookUp[node.getConfig().fileHandleKey]
+            console.log(node.getExtraData().fileHandle)
             return (
                 <div className="tab_content">
                     <AceEditor value={text} />

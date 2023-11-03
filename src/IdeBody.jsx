@@ -1,13 +1,13 @@
 /* eslint-disable react/prop-types */
 // React
-import { useRef, useState } from "react";
+import { useState } from "react";
 // layout
 import * as FlexLayout from "flexlayout-react";
 import layout from "./layout.json";
-// ace
-import AceEditor from "react-ace";
 // folder view
 import FolderView, { getFileText } from "react-local-file-system";
+// editor tab
+import IdeEditor from "./IdeEditor";
 // config
 import build_config from "../build-config.json";
 layout.global.tabEnableFloat = !build_config["single-file"];
@@ -20,19 +20,6 @@ function IdeFolderView({ onFileClick, openDirectory, directoryReady, rootDirHand
         <>
             <button onClick={openDirectory}>Open Dir</button>
         </>
-    );
-}
-
-function IdeEditor({ fileKey, fileLookUp, setFileLookUp }) {
-    return (
-        <AceEditor
-            value={fileLookUp[fileKey].userText}
-            onChange={(newValue) => {
-                setFileLookUp((cur) => {
-                    return { ...cur, [fileKey]: { ...cur[fileKey], userText: newValue } };
-                });
-            }}
-        />
     );
 }
 

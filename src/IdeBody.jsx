@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 // React
 import { useRef, useState } from "react";
 // layout
@@ -9,6 +10,7 @@ import AceEditor from "react-ace";
 import FolderView, { getFileText } from "react-local-file-system";
 // config
 import build_config from "../build-config.json";
+layout.global.tabEnableFloat = !build_config["single-file"];
 
 function IdeFolderView({ onFileClick, openDirectory, directoryReady, rootDirHandle }) {
     // Show FolderView component only when its ready
@@ -21,23 +23,43 @@ function IdeFolderView({ onFileClick, openDirectory, directoryReady, rootDirHand
     );
 }
 
-layout.global.tabEnableFloat = !build_config["single-file"];
+function IdeEditor({ fileKey, fileLookUp, setFileLookUp }) {
+    return (
+        <AceEditor
+            value={fileLookUp[fileKey].userText}
+            onChange={(newValue) => {
+                setFileLookUp((cur) => {
+                    return { ...cur, fileKey: { ...cur[fileKey], userText: newValue } };
+                });
+            }}
+        />
+    );
+}
 
 export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }) {
     const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));
     const [text, setText] = useState("# Hello, *world*!");
-    const fileHandleLookUp = useRef({});
+    const [fileLookUp, setFileLookUp] = useState({});
 
     async function onFileClick(fileHandle) {
-        const text = await getFileText(fileHandle);
+        const fileText = await getFileText(fileHandle);
         console.log("file content of", fileHandle.name, ":", text);
         setText(text);
 
-        const fileHandleKey = crypto.randomUUID();
-        fileHandleLookUp[fileHandleKey] = fileHandle;
+        const fileKey = crypto.randomUUID();
+        setFileLookUp((cur) => {
+            return {
+                ...cur,
+                [fileKey]: {
+                    handle: fileHandle,
+                    fileText: fileText,
+                    userText: fileText,
+                },
+            };
+        });
         model.doAction(
             FlexLayout.Actions.addNode(
-                { type: "tab", name: fileHandle.name, component: "editor", config: { fileHandleKey: fileHandleKey } },
+                { type: "tab", name: fileHandle.name, component: "editor", config: { fileKey: fileKey } },
                 model.getActiveTabset().getId(),
                 FlexLayout.DockLocation.CENTER,
                 -1
@@ -47,14 +69,14 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }
 
     const factory = (node) => {
         var component = node.getComponent();
-        node.get;
         if (component === "editor") {
-            console.log('in factory:editor', node.getConfig())
-            node.getExtraData().fileHandle = fileHandleLookUp[node.getConfig().fileHandleKey]
-            console.log(node.getExtraData().fileHandle)
             return (
                 <div className="tab_content">
-                    <AceEditor value={text} />
+                    <IdeEditor
+                        fileKey={node.getConfig().fileKey}
+                        fileLookUp={fileLookUp}
+                        setFileLookUp={setFileLookUp}
+                    />
                 </div>
             );
         } else if (component === "placeholder") {

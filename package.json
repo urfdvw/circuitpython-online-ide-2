@@ -26,6 +26,7 @@
     "react-device-detect": "^2.2.3",
     "react-dom": "^18.2.0",
     "react-local-file-system": "^1.0.17",
+    "react-new-window": "^1.0.1",
     "react-router-dom": "^6.15.0",
     "tslib": "^2.6.2"
   },

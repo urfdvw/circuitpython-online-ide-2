@@ -58,11 +58,12 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }
         var component = node.getComponent();
         if (component === "editor") {
             return (
-                <div className="tab_content">
+                <div className="tab_content" >
                     <IdeEditor
                         fileKey={node.getConfig().fileKey}
                         fileLookUp={fileLookUp}
                         setFileLookUp={setFileLookUp}
+                        node={node}
                     />
                 </div>
             );

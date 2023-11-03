@@ -5,7 +5,7 @@ import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import Button from "@mui/material/Button";
 
-export default function PopUp({ children, title }) {
+export default function PopUp({ children, title, parentStyle }) {
     const [popped, setPopped] = useState(false);
     return popped ? (
         <>
@@ -31,17 +31,17 @@ export default function PopUp({ children, title }) {
             </NewWindow>
         </>
     ) : (
-        <>
-            <Tooltip title="Open the tab in a popup window" sx={{ position: "absolute", top: 3, right: 3, zIndex:1}}>
-                <IconButton>
-                    <OpenInNewIcon
-                        onClick={() => {
-                            setPopped(true);
-                        }}
-                    />
+        <div style={parentStyle}>
+            <Tooltip title="Open the tab in a popup window" sx={{ position: "absolute", top: 3, right: 3, zIndex: 1 }}>
+                <IconButton
+                    onClick={() => {
+                        setPopped(true);
+                    }}
+                >
+                    <OpenInNewIcon />
                 </IconButton>
             </Tooltip>
             {children}
-        </>
+        </div>
     );
 }

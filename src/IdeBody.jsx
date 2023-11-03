@@ -29,7 +29,7 @@ function IdeEditor({ fileKey, fileLookUp, setFileLookUp }) {
             value={fileLookUp[fileKey].userText}
             onChange={(newValue) => {
                 setFileLookUp((cur) => {
-                    return { ...cur, fileKey: { ...cur[fileKey], userText: newValue } };
+                    return { ...cur, [fileKey]: { ...cur[fileKey], userText: newValue } };
                 });
             }}
         />

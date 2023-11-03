@@ -4,7 +4,10 @@
 import { useEffect, useState } from "react";
 import AceEditor from "react-ace";
 import PopUp from "./PopUp";
-import { getFileText } from "react-local-file-system";
+import { getFileText, writeFileText } from "react-local-file-system";
+import SaveIcon from "@mui/icons-material/Save";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
 
 export default function IdeEditor({ fileHandle, node }) {
     const [text, setText] = useState("");
@@ -26,6 +29,15 @@ export default function IdeEditor({ fileHandle, node }) {
                     setText(newValue);
                 }}
             />
+            <Tooltip title="Save and Run" sx={{ position: "absolute", bottom: 16, right: 16, zIndex: 1 }}>
+                <IconButton
+                    onClick={() => {
+                        writeFileText(fileHandle, text);
+                    }}
+                >
+                    <SaveIcon />
+                </IconButton>
+            </Tooltip>
         </PopUp>
     );
 }

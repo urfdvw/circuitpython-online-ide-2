@@ -32,7 +32,7 @@ export default function PopUp({ children, title, parentStyle }) {
         </>
     ) : (
         <div style={parentStyle}>
-            <Tooltip title="Open the tab in a popup window" sx={{ position: "absolute", top: 3, right: 3, zIndex: 1 }}>
+            <Tooltip title="Open the tab in a popup window" sx={{ position: "absolute", top: 16, right: 16, zIndex: 1 }}>
                 <IconButton
                     onClick={() => {
                         setPopped(true);

@@ -29,19 +29,11 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }
     const [fileLookUp, setFileLookUp] = useState({});
 
     async function onFileClick(fileHandle) {
-        const fileText = await getFileText(fileHandle);
-        console.log("file content of", fileHandle.name, ":", text);
-        setText(text);
-
         const fileKey = crypto.randomUUID();
         setFileLookUp((cur) => {
             return {
                 ...cur,
-                [fileKey]: {
-                    handle: fileHandle,
-                    fileText: fileText,
-                    userText: fileText,
-                },
+                [fileKey]: fileHandle,
             };
         });
         model.doAction(
@@ -58,13 +50,8 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }
         var component = node.getComponent();
         if (component === "editor") {
             return (
-                <div className="tab_content" >
-                    <IdeEditor
-                        fileKey={node.getConfig().fileKey}
-                        fileLookUp={fileLookUp}
-                        setFileLookUp={setFileLookUp}
-                        node={node}
-                    />
+                <div className="tab_content">
+                    <IdeEditor fileHandle={fileLookUp[node.getConfig().fileKey]} node={node} />
                 </div>
             );
         } else if (component === "placeholder") {

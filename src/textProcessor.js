@@ -48,19 +48,19 @@ export const splitByInBetween = (text, start, end, middle = "*") => {
         return [];
     }
     // to break 2 possible results in different lines
-    text = text.split(end).join(end + constants.SEPARATER);
+    text = text.split(end).join(end + constants.SEPARATOR);
     // get regex
     const re = globStringToRegex(start + middle + end);
     // remove match
     text = text.split(re).join("");
     // process partial match
     text = text
-        .split(end + constants.SEPARATER)
+        .split(end + constants.SEPARATOR)
         .at(-1)
         .split(start)
         .at(0);
-    // remove constants.SEPARATER
-    return text.split(constants.SEPARATER);
+    // remove constants.SEPARATOR
+    return text.split(constants.SEPARATOR);
 };
 
 export const removeInBetween = (text, start, end) => {

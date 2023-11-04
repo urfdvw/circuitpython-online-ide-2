@@ -60,7 +60,7 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, 
                         output={serialOutput}
                         config={{
                             raw_console: {
-                                hide_title: false,
+                                hide_title: true,
                                 hide_cv: true,
                             },
                         }}

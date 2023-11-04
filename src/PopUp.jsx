@@ -40,6 +40,7 @@ export default function PopUp({ children, title, parentStyle }) {
                 <IconButton
                     onClick={() => {
                         setPopped(true);
+                        toggleHover(false); // because the component is no longer there, will not exit properly, set manually.
                     }}
                     onMouseEnter={() => {
                         toggleHover(true);

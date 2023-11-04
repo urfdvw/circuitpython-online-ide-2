@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 
 export default function PopUp({ children, title, parentStyle }) {
     const [popped, setPopped] = useState(false);
+    const [isHovered, toggleHover] = useState(false);
     return popped ? (
         <>
             <p>This tab is opened in a popup window.</p>
@@ -32,13 +33,22 @@ export default function PopUp({ children, title, parentStyle }) {
         </>
     ) : (
         <div style={parentStyle}>
-            <Tooltip title="Open the tab in a popup window" sx={{ position: "absolute", top: 16, right: 16, zIndex: 1 }}>
+            <Tooltip
+                title="Open the tab in a popup window"
+                sx={{ position: "absolute", top: 16, right: 16, zIndex: 1 }}
+            >
                 <IconButton
                     onClick={() => {
                         setPopped(true);
                     }}
+                    onMouseEnter={() => {
+                        toggleHover(true);
+                    }}
+                    onMouseLeave={() => {
+                        toggleHover(false);
+                    }}
                 >
-                    <OpenInNewIcon />
+                    <OpenInNewIcon sx={{ visibility: isHovered ? "visible" : "hidden" }} /> {/* not working */}
                 </IconButton>
             </Tooltip>
             {children}

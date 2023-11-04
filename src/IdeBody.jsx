@@ -5,12 +5,11 @@ import { useState } from "react";
 import * as FlexLayout from "flexlayout-react";
 import layout from "./layout.json";
 // folder view
-import FolderView, { getFileText } from "react-local-file-system";
+import FolderView from "react-local-file-system";
 // editor tab
 import IdeEditor from "./IdeEditor";
-// config
-import build_config from "../build-config.json";
-layout.global.tabEnableFloat = !build_config["single-file"];
+// serial tab
+import RawConsole from "./RawConsole";
 
 function IdeFolderView({ onFileClick, openDirectory, directoryReady, rootDirHandle }) {
     // Show FolderView component only when its ready
@@ -23,7 +22,7 @@ function IdeFolderView({ onFileClick, openDirectory, directoryReady, rootDirHand
     );
 }
 
-export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }) {
+export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, sendDataToSerialPort, serialOutput }) {
     const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));
     const [text, setText] = useState("# Hello, *world*!");
     const [fileLookUp, setFileLookUp] = useState({});
@@ -54,20 +53,36 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle }
                     <IdeEditor fileHandle={fileLookUp[node.getConfig().fileKey]} node={node} />
                 </div>
             );
+        } else if (component === "serial_raw") {
+            return (
+                <div className="tab_content" style={{height: 'calc(100% - 30px)'}}>
+                    <RawConsole
+                        output={serialOutput}
+                        config={{
+                            raw_console: {
+                                hide_title: false,
+                                hide_cv: true,
+                            },
+                        }}
+                    />
+                </div>
+            );
+        } else if (component === "folder_view") {
+            return (
+                <div className="tab_content">
+                    <IdeFolderView
+                        onFileClick={onFileClick}
+                        openDirectory={openDirectory}
+                        directoryReady={directoryReady}
+                        rootDirHandle={rootDirHandle}
+                    />
+                </div>
+            );
         } else if (component === "placeholder") {
             return (
                 <div className="tab_content">
                     <p>{node.getName()}</p>
                 </div>
-            );
-        } else if (component === "folder_view") {
-            return (
-                <IdeFolderView
-                    onFileClick={onFileClick}
-                    openDirectory={openDirectory}
-                    directoryReady={directoryReady}
-                    rootDirHandle={rootDirHandle}
-                />
             );
         }
     };

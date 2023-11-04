@@ -5,10 +5,12 @@ import { isMobile } from "react-device-detect";
 import ErrorIsMobile from "./ErrorIsMobile";
 import MenuBar from "./Menu";
 import { useFileSystem } from "react-local-file-system";
+import useSerial from "./useSerial";
 
 function App() {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
+    const { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected } = useSerial();
 
     const [menuStructure, setMenuStructure] = useState({
         title: "CircuitPython Online IDE",
@@ -27,6 +29,7 @@ function App() {
                         text: "Serial",
                         handler: () => {
                             console.log("clicked on Serial");
+                            connectToSerialPort();
                         },
                     },
                 ],
@@ -61,9 +64,17 @@ function App() {
                 <MenuBar menuStructure={menuStructure} />
             </div>
             <div className="ide-body">
-                <IdeBody openDirectory={openDirectory} directoryReady={directoryReady} rootDirHandle={rootDirHandle} />
+                <IdeBody
+                    openDirectory={openDirectory}
+                    directoryReady={directoryReady}
+                    rootDirHandle={rootDirHandle}
+                    sendDataToSerialPort={sendDataToSerialPort}
+                    serialOutput={serialOutput}
+                />
             </div>
-            <div className="ide-tail">CircuitPy Drive: {statusText}</div>
+            <div className="ide-tail">
+                CircuitPy Drive: {statusText} | Serial: {isSerialPortConnected ? "connected" : "not connected"}
+            </div>
         </div>
     );
 }

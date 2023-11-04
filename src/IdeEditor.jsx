@@ -8,6 +8,10 @@ import { getFileText, writeFileText } from "react-local-file-system";
 import SaveIcon from "@mui/icons-material/Save";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import "ace-builds/src-noconflict/mode-python";
+import "ace-builds/src-noconflict/mode-json";
+import "ace-builds/src-noconflict/mode-markdown";
+import "ace-builds/src-noconflict/theme-tomorrow";
 
 export default function IdeEditor({ fileHandle, node }) {
     const [text, setText] = useState("");
@@ -19,9 +23,22 @@ export default function IdeEditor({ fileHandle, node }) {
         loadText();
     }, [fileHandle]);
     const parentHeight = node.getParent()._rect.height - node.getParent()._tabHeaderRect.height;
+    var mode = "text";
+    if (fileHandle.name.toLowerCase().endsWith(".py")) {
+        mode = "python";
+    }
+    if (fileHandle.name.toLowerCase().endsWith(".md")) {
+        mode = "markdown";
+    }
+    if (fileHandle.name.toLowerCase().endsWith(".json")) {
+        mode = "json";
+    }
+
     return (
         <PopUp title={fileHandle.name} parentStyle={{ height: parentHeight + "px" }}>
             <AceEditor
+                mode={mode}
+                theme="tomorrow"
                 value={text}
                 height="100%"
                 width="100%"

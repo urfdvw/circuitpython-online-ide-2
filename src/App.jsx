@@ -6,6 +6,7 @@ import ErrorIsMobile from "./ErrorIsMobile";
 import MenuBar from "./Menu";
 import { useFileSystem } from "react-local-file-system";
 import useSerial from "./useSerial";
+import GlobalDarkTheme from "./GlobalDarkTheme";
 
 function App() {
     // get folder handler and status with useFileSystem hook
@@ -60,6 +61,7 @@ function App() {
 
     return (
         <div className="ide">
+            <GlobalDarkTheme dark={true} />
             <div className="ide-header">
                 <MenuBar menuStructure={menuStructure} />
             </div>

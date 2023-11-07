@@ -7,11 +7,13 @@ import MenuBar from "./Menu";
 import { useFileSystem } from "react-local-file-system";
 import useSerial from "./useSerial";
 import GlobalDarkTheme from "./GlobalDarkTheme";
+import useThemeDetector from "./useThemeDetector";
 
 function App() {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
     const { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected } = useSerial();
+    const isDarkTheme = useThemeDetector();
 
     const [menuStructure, setMenuStructure] = useState({
         title: "CircuitPython Online IDE",
@@ -61,7 +63,7 @@ function App() {
 
     return (
         <div className="ide">
-            <GlobalDarkTheme dark={true} />
+            <GlobalDarkTheme dark={isDarkTheme} />
             <div className="ide-header">
                 <MenuBar menuStructure={menuStructure} />
             </div>

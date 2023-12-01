@@ -10,6 +10,8 @@ import FolderView from "react-local-file-system";
 import IdeEditor from "./IdeEditor";
 // serial tab
 import RawConsole from "./RawConsole";
+// config 
+import { ConfigForms } from "react-user-config";
 
 function IdeFolderView({ onFileClick, openDirectory, directoryReady, rootDirHandle }) {
     // Show FolderView component only when its ready
@@ -22,7 +24,7 @@ function IdeFolderView({ onFileClick, openDirectory, directoryReady, rootDirHand
     );
 }
 
-export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, sendDataToSerialPort, serialOutput }) {
+export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, sendDataToSerialPort, serialOutput, schemas, config, set_config }) {
     const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));
     const [text, setText] = useState("# Hello, *world*!");
     const [fileLookUp, setFileLookUp] = useState({});
@@ -84,6 +86,8 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, 
                     <p>{node.getName()}</p>
                 </div>
             );
+        } else if (component === "settings") {
+            return <ConfigForms schemas={schemas} config={config} set_config={set_config} />
         }
     };
 

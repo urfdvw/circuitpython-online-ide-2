@@ -1,0 +1,12 @@
+{
+    "title": "Editor",
+    "description": "Code editor settings.",
+    "type": "object",
+    "properties": {
+        "font": {
+            "title": "Text font size",
+            "type": "number",
+            "default": 14
+        }
+    }
+}

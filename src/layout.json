@@ -27,7 +27,7 @@
                 {
                     "type": "tab",
                     "name": "Settings",
-                    "component": "placeholder",
+                    "component": "settings",
                     "enableClose": false
                 }
             ]

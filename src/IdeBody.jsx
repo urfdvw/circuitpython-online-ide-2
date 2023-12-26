@@ -60,6 +60,7 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, 
                 <div className="tab_content" style={{height: 'calc(100% - 30px)'}}>
                     <RawConsole
                         output={serialOutput}
+                        send = {sendDataToSerialPort}
                         config={{
                             raw_console: {
                                 hide_title: true,

@@ -36,6 +36,7 @@ export default function PopUp({ children, title, parentStyle }) {
             <Tooltip
                 title="Open the tab in a popup window"
                 sx={{ position: "absolute", top: 16, right: 16, zIndex: 1 }}
+                followCursor={true}
             >
                 <IconButton
                     onClick={() => {

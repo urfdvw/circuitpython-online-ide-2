@@ -46,7 +46,11 @@ export default function IdeEditor({ fileHandle, node }) {
                     setText(newValue);
                 }}
             />
-            <Tooltip title="Save and Run" sx={{ position: "absolute", bottom: 16, right: 16, zIndex: 1 }}>
+            <Tooltip
+                title="Save and Run"
+                sx={{ position: "absolute", bottom: 16, right: 16, zIndex: 1 }}
+                followCursor={true}
+            >
                 <IconButton
                     onClick={() => {
                         writeFileText(fileHandle, text);

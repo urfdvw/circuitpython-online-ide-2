@@ -17,8 +17,6 @@ import SendIcon from "@mui/icons-material/Send";
 const rawSerialBoxStyles = {
     bgcolor: "background.paper",
     borderColor: "text.primary",
-    m: 1,
-    padding: "10px",
     height: "100%",
 };
 
@@ -37,6 +35,7 @@ const RawSerialIn = ({ output, config }) => {
 const RawSerialOut = ({ send }) => {
     const [mode, setMode] = useState("python");
     const [text, setText] = useState("");
+    const [isHovered, toggleHover] = useState(false);
 
     return (
         <>
@@ -50,16 +49,55 @@ const RawSerialOut = ({ send }) => {
                     setText(newValue);
                 }}
             />
-            <Tooltip title="Send to microcontroller" sx={{ position: "absolute", bottom: 16, right: 36, zIndex: 1 }}>
-                <IconButton
-                    onClick={() => {
-                        send(text + "\x0D");
-                        setText("");
-                    }}
+            <div
+                onMouseEnter={() => {
+                    toggleHover(true);
+                }}
+                onMouseLeave={() => {
+                    toggleHover(false);
+                }}
+            >
+                <Tooltip
+                    title="Send text to microcontroller"
+                    sx={{ position: "absolute", bottom: 16, right: 16, zIndex: 1 }}
+                    followCursor={true}
                 >
-                    <SendIcon />
-                </IconButton>
-            </Tooltip>
+                    <IconButton
+                        onClick={() => {
+                            send(text + "\x0D");
+                            setText("");
+                        }}
+                    >
+                        <SendIcon />
+                    </IconButton>
+                </Tooltip>
+                <Tooltip
+                    title="Send Ctrl-C to microcontroller"
+                    sx={{ position: "absolute", bottom: 46, right: 16, zIndex: 1 }}
+                    followCursor={true}
+                >
+                    <IconButton
+                        onClick={() => {
+                            send("\x03");
+                        }}
+                    >
+                        <span style={{ visibility: isHovered ? "visible" : "hidden" }}>Ⓒ</span>
+                    </IconButton>
+                </Tooltip>
+                <Tooltip
+                    title="Send Ctrl-D to microcontroller"
+                    sx={{ position: "absolute", bottom: 76, right: 16, zIndex: 1 }}
+                    followCursor={true}
+                >
+                    <IconButton
+                        onClick={() => {
+                            send("\x04");
+                        }}
+                    >
+                        <span style={{ visibility: isHovered ? "visible" : "hidden" }}>Ⓓ</span>
+                    </IconButton>
+                </Tooltip>
+            </div>
         </>
     );
 };

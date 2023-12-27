@@ -16,12 +16,6 @@ import SendIcon from "@mui/icons-material/Send";
 // default
 import Button from "@mui/material/Button";
 
-const rawSerialBoxStyles = {
-    bgcolor: "background.paper",
-    borderColor: "text.primary",
-    height: "100%",
-};
-
 const RawSerialIn = ({ output, config }) => {
     if (config.raw_console.hide_title) {
         output = removeInBetween(output, constants.TITLE_START, constants.TITLE_END);
@@ -106,7 +100,11 @@ const RawSerialOut = ({ send }) => {
 
 const RawConsole = ({ connect, output, send, ready, config }) => {
     return ready ? (
-        <Box sx={rawSerialBoxStyles}>
+        <Box
+            sx={{
+                height: "100%"
+            }}
+        >
             <ScrollableFeed>
                 <RawSerialIn output={output} config={config} />
                 <RawSerialOut send={send} />

@@ -54,7 +54,12 @@ export default function IdeBody({
             );
         } else if (component === "serial_raw") {
             return (
-                <div className="tab_content" style={{ height: "calc(100% - 30px)" }}>
+                <div
+                    className="tab_content"
+                    style={{
+                        height: "100%",
+                    }}
+                >
                     <RawConsole
                         connect={connectToSerialPort}
                         output={serialOutput}

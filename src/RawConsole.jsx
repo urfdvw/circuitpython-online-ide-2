@@ -13,6 +13,8 @@ import { useState } from "react";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
 import SendIcon from "@mui/icons-material/Send";
+// default
+import Button from "@mui/material/Button";
 
 const rawSerialBoxStyles = {
     bgcolor: "background.paper",
@@ -44,7 +46,7 @@ const RawSerialOut = ({ send }) => {
                 theme="tomorrow"
                 value={text}
                 width="100%"
-                maxLines={"Infinity"}
+                maxLines={Infinity}
                 onChange={(newValue) => {
                     setText(newValue);
                 }}
@@ -102,14 +104,16 @@ const RawSerialOut = ({ send }) => {
     );
 };
 
-const RawConsole = ({ output, config, send }) => {
-    return (
+const RawConsole = ({ connect, output, send, ready, config }) => {
+    return ready ? (
         <Box sx={rawSerialBoxStyles}>
             <ScrollableFeed>
                 <RawSerialIn output={output} config={config} />
                 <RawSerialOut send={send} />
             </ScrollableFeed>
         </Box>
+    ) : (
+        <Button onClick={connect}>Connect to Serial Port</Button>
     );
 };
 

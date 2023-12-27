@@ -87,8 +87,10 @@ function App() {
                     openDirectory={openDirectory}
                     directoryReady={directoryReady}
                     rootDirHandle={rootDirHandle}
+                    connectToSerialPort={connectToSerialPort}
                     sendDataToSerialPort={sendDataToSerialPort}
                     serialOutput={serialOutput}
+                    isSerialPortConnected={isSerialPortConnected}
                     schemas={schemas}
                     config={config}
                     set_config={set_config}

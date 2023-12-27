@@ -4,27 +4,24 @@ import { useState } from "react";
 // layout
 import * as FlexLayout from "flexlayout-react";
 import layout from "./layout.json";
-// folder view
-import FolderView from "react-local-file-system";
-// editor tab
+// Tabs
+import IdeFolderView from "./IdeFolderView";
 import IdeEditor from "./IdeEditor";
-// serial tab
 import RawConsole from "./RawConsole";
-// config 
 import { ConfigForms } from "react-user-config";
 
-function IdeFolderView({ onFileClick, openDirectory, directoryReady, rootDirHandle }) {
-    // Show FolderView component only when its ready
-    return directoryReady ? (
-        <FolderView rootFolder={rootDirHandle} onFileClick={onFileClick} />
-    ) : (
-        <>
-            <button onClick={openDirectory}>Open Dir</button>
-        </>
-    );
-}
-
-export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, sendDataToSerialPort, serialOutput, schemas, config, set_config }) {
+export default function IdeBody({
+    openDirectory,
+    directoryReady,
+    rootDirHandle,
+    connectToSerialPort,
+    sendDataToSerialPort,
+    serialOutput,
+    isSerialPortConnected,
+    schemas,
+    config,
+    set_config,
+}) {
     const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));
     const [text, setText] = useState("# Hello, *world*!");
     const [fileLookUp, setFileLookUp] = useState({});
@@ -57,10 +54,12 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, 
             );
         } else if (component === "serial_raw") {
             return (
-                <div className="tab_content" style={{height: 'calc(100% - 30px)'}}>
+                <div className="tab_content" style={{ height: "calc(100% - 30px)" }}>
                     <RawConsole
+                        connect={connectToSerialPort}
                         output={serialOutput}
-                        send = {sendDataToSerialPort}
+                        send={sendDataToSerialPort}
+                        ready={isSerialPortConnected}
                         config={{
                             raw_console: {
                                 hide_title: true,
@@ -88,7 +87,7 @@ export default function IdeBody({ openDirectory, directoryReady, rootDirHandle, 
                 </div>
             );
         } else if (component === "settings") {
-            return <ConfigForms schemas={schemas} config={config} set_config={set_config} />
+            return <ConfigForms schemas={schemas} config={config} set_config={set_config} />;
         }
     };
 

@@ -3,11 +3,11 @@
 import { useState } from "react";
 // layout
 import * as FlexLayout from "flexlayout-react";
-import layout from "./layout.json";
+import layout from "./layout/layout.json";
 // Tabs
-import IdeFolderView from "./IdeFolderView";
-import IdeEditor from "./IdeEditor";
-import RawConsole from "./RawConsole";
+import IdeFolderView from "./tabs/IdeFolderView";
+import IdeEditor from "./tabs/IdeEditor";
+import RawConsole from "./tabs/RawConsole";
 import { ConfigForms } from "react-user-config";
 
 export default function IdeBody({

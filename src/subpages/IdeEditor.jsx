@@ -3,7 +3,7 @@
 // ace
 import { useEffect, useState } from "react";
 import AceEditor from "react-ace";
-import PopUp from "./PopUp";
+import PopUp from "../layout/PopUp";
 import { getFileText, writeFileText } from "react-local-file-system";
 import SaveIcon from "@mui/icons-material/Save";
 import IconButton from "@mui/material/IconButton";

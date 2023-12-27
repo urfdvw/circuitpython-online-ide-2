@@ -3,8 +3,8 @@ import Box from "@mui/material/Box";
 // Other packages
 import ScrollableFeed from "react-scrollable-feed"; // https://stackoverflow.com/a/52673227/7037749
 // Mine
-import { removeInBetween } from "./textProcessor";
-import * as constants from "./constants";
+import { removeInBetween } from "../textProcessor";
+import * as constants from "../serial/constants";
 // command
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-python";

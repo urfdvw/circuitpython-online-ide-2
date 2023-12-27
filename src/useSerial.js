@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import * as constants from "./constants";
+import { matchesInBetween } from "./textProcessor";
 
 const useSerial = () => {
     const [port, setPort] = useState(null);
     const [serialOutput, setSerialOutput] = useState("");
+    const [serialTitle, setSerialTitle] = useState("");
     const [isSerialPortConnected, setIsSerialPortConnected] = useState(false);
 
     useEffect(() => {
@@ -27,9 +29,7 @@ const useSerial = () => {
                             break;
                         }
                         setSerialOutput(
-                            (previousOutput) =>
-                                previousOutput.slice(-100000) +
-                                new TextDecoder().decode(value)
+                            (previousOutput) => previousOutput.slice(-100000) + new TextDecoder().decode(value)
                         );
                     }
                 } catch (err) {
@@ -50,6 +50,10 @@ const useSerial = () => {
             close();
         };
     }, [port]);
+
+    useEffect(() => {
+        setSerialTitle(matchesInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END).at(-1));
+    }, [serialOutput]);
 
     const connectToSerialPort = async () => {
         try {
@@ -81,7 +85,7 @@ const useSerial = () => {
         /**
          * This effect has two benefits
          * * There will not be any "half blocks" when staring the IDE
-         * * Behaviour of CPY each time when IDE starts are consistent
+         * * Behavior of CPY each time when IDE starts are consistent
          * Please ignore whatever is before the first `soft reboot` text
          */
         async function clean_start() {
@@ -111,7 +115,7 @@ const useSerial = () => {
         setSerialOutput("");
     };
 
-    return { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected };
+    return { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected, serialTitle };
 };
 
 export default useSerial;

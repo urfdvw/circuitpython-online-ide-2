@@ -14,7 +14,7 @@ import editor_config_schema from "./schemas/editor.json";
 function App() {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
-    const { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected } = useSerial();
+    const { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected, serialTitle } = useSerial();
     const schemas = [global_config_schema, editor_config_schema];
     const { config, set_config, ready: configReady } = useConfig(schemas);
 
@@ -97,7 +97,7 @@ function App() {
                 />
             </div>
             <div className="ide-tail">
-                CircuitPy Drive: {statusText} | Serial: {isSerialPortConnected ? "connected" : "not connected"}
+                CircuitPy Drive: {statusText} | Serial: {isSerialPortConnected ? serialTitle : "not connected"}
             </div>
         </div>
     );

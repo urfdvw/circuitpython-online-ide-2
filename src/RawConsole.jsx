@@ -17,9 +17,7 @@ import SendIcon from "@mui/icons-material/Send";
 import Button from "@mui/material/Button";
 
 const RawSerialIn = ({ output, config }) => {
-    if (config.raw_console.hide_title) {
-        output = removeInBetween(output, constants.TITLE_START, constants.TITLE_END);
-    }
+    output = removeInBetween(output, constants.TITLE_START, constants.TITLE_END);
 
     if (config.raw_console.hide_cv) {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
@@ -100,11 +98,7 @@ const RawSerialOut = ({ send }) => {
 
 const RawConsole = ({ connect, output, send, ready, config }) => {
     return ready ? (
-        <Box
-            sx={{
-                height: "100%"
-            }}
-        >
+        <Box sx={{ height: "100%" }}>
             <ScrollableFeed>
                 <RawSerialIn output={output} config={config} />
                 <RawSerialOut send={send} />

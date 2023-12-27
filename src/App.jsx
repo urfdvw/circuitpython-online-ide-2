@@ -14,10 +14,19 @@ function App() {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
     const { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected, serialTitle } = useSerial();
-
     const { config, set_config, ready: configReady } = useConfig(schemas);
 
-    const [menuStructure, setMenuStructure] = useState({
+    // if mobile, display error
+    if (isMobile) {
+        return <ErrorIsMobile />;
+    }
+
+    // If config initialization not done, don't continue.
+    if (!configReady) {
+        return;
+    }
+
+    const menuStructure = {
         title: "CircuitPython Online IDE",
         menu: [
             {
@@ -31,7 +40,7 @@ function App() {
                         },
                     },
                     {
-                        text: "Serial",
+                        text: "Serial Port",
                         handler: () => {
                             console.log("clicked on Serial");
                             connectToSerialPort();
@@ -41,32 +50,11 @@ function App() {
             },
             {
                 label: "open",
-                options: [
-                    {
-                        text: "Settings",
-                        handler: () => {
-                            console.log("clicked on Settings");
-                        },
-                    },
-                    {
-                        text: "Folder View",
-                        handler: () => {
-                            console.log("clicked on Folder View");
-                        },
-                    },
-                ],
+                options: [],
             },
         ],
-    });
+    };
 
-    if (isMobile) {
-        return <ErrorIsMobile />;
-    }
-
-    // If config initialization not done, don't continue.
-    if (!configReady) {
-        return;
-    }
     // theme config
     var dark = null;
     if (config.global.theme === "light") {

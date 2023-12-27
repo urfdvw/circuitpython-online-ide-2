@@ -7,7 +7,7 @@ export default function IdeFolderView({ onFileClick, openDirectory, directoryRea
         <FolderView rootFolder={rootDirHandle} onFileClick={onFileClick} />
     ) : (
         <>
-            <Button onClick={openDirectory}>Open Dir</Button>
+            <Button onClick={openDirectory}>Open CircuitPy Drive</Button>
         </>
     );
 }

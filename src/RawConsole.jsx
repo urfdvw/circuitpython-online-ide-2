@@ -23,10 +23,10 @@ const RawSerialIn = ({ output, config }) => {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
     }
 
-    return <pre style={{ whiteSpace: "pre-wrap" }}>{output}</pre>;
+    return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>{output}</pre>;
 };
 
-const RawSerialOut = ({ send }) => {
+const RawSerialOut = ({ send, config }) => {
     const [mode, setMode] = useState("python");
     const [text, setText] = useState("");
     const [isHovered, toggleHover] = useState(false);
@@ -42,6 +42,7 @@ const RawSerialOut = ({ send }) => {
                 onChange={(newValue) => {
                     setText(newValue);
                 }}
+                fontSize={config.raw_console.font + "pt"}
             />
             <div
                 onMouseEnter={() => {
@@ -101,7 +102,7 @@ const RawConsole = ({ connect, output, send, ready, config }) => {
         <Box sx={{ height: "100%" }}>
             <ScrollableFeed>
                 <RawSerialIn output={output} config={config} />
-                <RawSerialOut send={send} />
+                <RawSerialOut send={send} config={config} />
             </ScrollableFeed>
         </Box>
     ) : (

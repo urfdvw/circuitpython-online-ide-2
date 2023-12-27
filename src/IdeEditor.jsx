@@ -13,7 +13,7 @@ import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-tomorrow";
 
-export default function IdeEditor({ fileHandle, node }) {
+export default function IdeEditor({ fileHandle, node, config }) {
     const [text, setText] = useState("");
     useEffect(() => {
         async function loadText() {
@@ -45,6 +45,7 @@ export default function IdeEditor({ fileHandle, node }) {
                 onChange={(newValue) => {
                     setText(newValue);
                 }}
+                fontSize={config.editor.font + "pt"}
             />
             <Tooltip
                 title="Save and Run"

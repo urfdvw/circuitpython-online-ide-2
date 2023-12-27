@@ -1,0 +1,17 @@
+{
+    "title": "Raw Console",
+    "description": "Raw serial console settings.",
+    "type": "object",
+    "properties": {
+        "font": {
+            "title": "Text font size",
+            "type": "number",
+            "default": 14
+        },
+        "hide_cv": {
+            "title": "Hide <CV> commination",
+            "type": "boolean",
+            "default": true
+        }
+    }
+}

@@ -8,14 +8,13 @@ import { useFileSystem } from "react-local-file-system";
 import useSerial from "./useSerial";
 import DarkTheme from "react-lazy-dark-theme";
 import { useConfig } from "react-user-config";
-import global_config_schema from "./schemas/global.json";
-import editor_config_schema from "./schemas/editor.json";
+import schemas from "./schemas";
 
 function App() {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
     const { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected, serialTitle } = useSerial();
-    const schemas = [global_config_schema, editor_config_schema];
+
     const { config, set_config, ready: configReady } = useConfig(schemas);
 
     const [menuStructure, setMenuStructure] = useState({

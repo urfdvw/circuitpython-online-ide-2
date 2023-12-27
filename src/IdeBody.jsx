@@ -49,7 +49,7 @@ export default function IdeBody({
         if (component === "editor") {
             return (
                 <div className="tab_content">
-                    <IdeEditor fileHandle={fileLookUp[node.getConfig().fileKey]} node={node} />
+                    <IdeEditor fileHandle={fileLookUp[node.getConfig().fileKey]} node={node} config={config} />
                 </div>
             );
         } else if (component === "serial_raw") {
@@ -65,12 +65,7 @@ export default function IdeBody({
                         output={serialOutput}
                         send={sendDataToSerialPort}
                         ready={isSerialPortConnected}
-                        config={{
-                            raw_console: {
-                                hide_title: true,
-                                hide_cv: true,
-                            },
-                        }}
+                        config={config}
                     />
                 </div>
             );

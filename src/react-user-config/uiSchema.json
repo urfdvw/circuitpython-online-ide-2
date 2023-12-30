@@ -1,5 +1,5 @@
 {
     "ui:submitButtonOptions": {
-        "submitText": "Save Config"
+        "submitText": "Apply"
     }
 }

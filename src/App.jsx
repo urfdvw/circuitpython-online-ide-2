@@ -6,7 +6,7 @@ import ErrorIsMobile from "./infopages/ErrorIsMobile";
 import MenuBar from "./layout/Menu";
 import { useFileSystem } from "react-local-file-system";
 import useSerial from "./serial/useSerial";
-import DarkTheme from "react-lazy-dark-theme";
+import DarkTheme from "./react-lazy-dark-theme";
 import { useConfig } from "./react-user-config";
 import schemas from "./schemas";
 

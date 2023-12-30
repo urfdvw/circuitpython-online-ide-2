@@ -8,7 +8,7 @@ import layout from "./layout/layout.json";
 import IdeFolderView from "./tabs/IdeFolderView";
 import IdeEditor from "./tabs/IdeEditor";
 import RawConsole from "./tabs/RawConsole";
-import { ConfigForms } from "react-user-config";
+import { ConfigForms } from "./react-user-config";
 
 export default function IdeBody({
     openDirectory,

@@ -1,0 +1,5 @@
+{
+    "ui:submitButtonOptions": {
+        "submitText": "Save Config"
+    }
+}

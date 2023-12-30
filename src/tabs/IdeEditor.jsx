@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 
 // ace
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import AceEditor from "react-ace";
 import PopUp from "../layout/PopUp";
 import { getFileText, writeFileText } from "react-local-file-system";
@@ -14,6 +14,7 @@ import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-tomorrow";
 
 export default function IdeEditor({ fileHandle, node, config }) {
+    const aceEditorRef = useRef(null);
     const [text, setText] = useState("");
     useEffect(() => {
         async function loadText() {
@@ -33,10 +34,25 @@ export default function IdeEditor({ fileHandle, node, config }) {
     if (fileHandle.name.toLowerCase().endsWith(".json")) {
         mode = "json";
     }
+    function saveFile(text) {
+        writeFileText(fileHandle, text);
+    }
+
+    if (aceEditorRef.current !== null) {
+        // add key bindings
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "save",
+            bindKey: { win: "Ctrl-S", mac: "Command-S" },
+            exec: () => {
+                saveFile(text);
+            },
+        });
+    }
 
     return (
         <PopUp title={fileHandle.name} parentStyle={{ height: parentHeight + "px" }}>
             <AceEditor
+                ref={aceEditorRef}
                 mode={mode}
                 theme="tomorrow"
                 value={text}
@@ -54,7 +70,7 @@ export default function IdeEditor({ fileHandle, node, config }) {
             >
                 <IconButton
                     onClick={() => {
-                        writeFileText(fileHandle, text);
+                        saveFile(text);
                     }}
                 >
                     <SaveIcon />

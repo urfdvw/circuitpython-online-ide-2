@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 
 // ace
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useContext } from "react";
 import AceEditor from "react-ace";
 import PopUp from "../layout/PopUp";
 import { getFileText, writeFileText } from "react-local-file-system";
@@ -12,8 +12,10 @@ import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-tomorrow";
+import ideContext from "../ideContext";
 
-export default function IdeEditor({ fileHandle, node, config }) {
+export default function IdeEditor({ fileHandle, node }) {
+    const { config } = useContext(ideContext);
     const aceEditorRef = useRef(null);
     const [text, setText] = useState("");
     useEffect(() => {

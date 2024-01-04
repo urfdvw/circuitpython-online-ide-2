@@ -9,12 +9,17 @@ import useSerial from "./serial/useSerial";
 import DarkTheme from "./react-lazy-dark-theme";
 import { useConfig } from "./react-user-config";
 import schemas from "./schemas";
+import ideContext from "./ideContext";
+// layout
+import * as FlexLayout from "flexlayout-react";
+import layout from "./layout/layout.json";
 
 function App() {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
     const { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected, serialTitle } = useSerial();
     const { config, set_config, ready: configReady } = useConfig(schemas);
+    const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
 
     // if mobile, display error
     if (isMobile) {
@@ -64,29 +69,34 @@ function App() {
     }
 
     return (
-        <div className="ide">
-            <DarkTheme dark={dark} />
-            <div className="ide-header">
-                <MenuBar menuStructure={menuStructure} />
+        <ideContext.Provider
+            value={{
+                flexModel: flexModel,
+                openDirectory: openDirectory,
+                directoryReady: directoryReady,
+                rootDirHandle: rootDirHandle,
+                connectToSerialPort: connectToSerialPort,
+                sendDataToSerialPort: sendDataToSerialPort,
+                serialOutput: serialOutput,
+                isSerialPortConnected: isSerialPortConnected,
+                schemas: schemas,
+                config: config,
+                set_config: set_config,
+            }}
+        >
+            <div className="ide">
+                <DarkTheme dark={dark} />
+                <div className="ide-header">
+                    <MenuBar menuStructure={menuStructure} />
+                </div>
+                <div className="ide-body">
+                    <IdeBody />
+                </div>
+                <div className="ide-tail">
+                    CircuitPy Drive: {statusText} | Serial: {isSerialPortConnected ? serialTitle : "not connected"}
+                </div>
             </div>
-            <div className="ide-body">
-                <IdeBody
-                    openDirectory={openDirectory}
-                    directoryReady={directoryReady}
-                    rootDirHandle={rootDirHandle}
-                    connectToSerialPort={connectToSerialPort}
-                    sendDataToSerialPort={sendDataToSerialPort}
-                    serialOutput={serialOutput}
-                    isSerialPortConnected={isSerialPortConnected}
-                    schemas={schemas}
-                    config={config}
-                    set_config={set_config}
-                />
-            </div>
-            <div className="ide-tail">
-                CircuitPy Drive: {statusText} | Serial: {isSerialPortConnected ? serialTitle : "not connected"}
-            </div>
-        </div>
+        </ideContext.Provider>
     );
 }
 

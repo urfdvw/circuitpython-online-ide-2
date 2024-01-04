@@ -1,3 +1,4 @@
+import { useContext } from "react";
 // MUI
 import Box from "@mui/material/Box";
 // Other packages
@@ -15,9 +16,12 @@ import Tooltip from "@mui/material/Tooltip";
 import SendIcon from "@mui/icons-material/Send";
 // default
 import Button from "@mui/material/Button";
+//context
+import ideContext from "../ideContext";
 
-const RawSerialIn = ({ output, config }) => {
-    output = removeInBetween(output, constants.TITLE_START, constants.TITLE_END);
+const RawSerialIn = () => {
+    const { config, serialOutput } = useContext(ideContext);
+    let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
 
     if (config.raw_console.hide_cv) {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
@@ -26,7 +30,8 @@ const RawSerialIn = ({ output, config }) => {
     return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>{output}</pre>;
 };
 
-const RawSerialOut = ({ send, config }) => {
+const RawSerialOut = () => {
+    const { config, sendDataToSerialPort: send } = useContext(ideContext);
     const [mode, setMode] = useState("python");
     const [text, setText] = useState("");
     const [isHovered, toggleHover] = useState(false);
@@ -97,12 +102,13 @@ const RawSerialOut = ({ send, config }) => {
     );
 };
 
-const RawConsole = ({ connect, output, send, ready, config }) => {
+const RawConsole = () => {
+    const { isSerialPortConnected: ready, connectToSerialPort: connect } = useContext(ideContext);
     return ready ? (
         <Box sx={{ height: "100%" }}>
             <ScrollableFeed>
-                <RawSerialIn output={output} config={config} />
-                <RawSerialOut send={send} config={config} />
+                <RawSerialIn />
+                <RawSerialOut />
             </ScrollableFeed>
         </Box>
     ) : (

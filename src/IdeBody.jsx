@@ -1,29 +1,18 @@
 /* eslint-disable react/prop-types */
 // React
-import { useState } from "react";
-// layout
-import * as FlexLayout from "flexlayout-react";
-import layout from "./layout/layout.json";
+import { useState, useContext } from "react";
 // Tabs
 import IdeFolderView from "./tabs/IdeFolderView";
 import IdeEditor from "./tabs/IdeEditor";
 import RawConsole from "./tabs/RawConsole";
 import { ConfigForms } from "./react-user-config";
+// Flex layout
+import * as FlexLayout from "flexlayout-react";
+//context
+import ideContext from "./ideContext";
 
-export default function IdeBody({
-    openDirectory,
-    directoryReady,
-    rootDirHandle,
-    connectToSerialPort,
-    sendDataToSerialPort,
-    serialOutput,
-    isSerialPortConnected,
-    schemas,
-    config,
-    set_config,
-}) {
-    const [model, setModel] = useState(FlexLayout.Model.fromJson(layout));
-    const [text, setText] = useState("# Hello, *world*!");
+export default function IdeBody() {
+    const { flexModel: model, schemas, config, set_config } = useContext(ideContext);
     const [fileLookUp, setFileLookUp] = useState({});
 
     async function onFileClick(fileHandle) {
@@ -49,7 +38,7 @@ export default function IdeBody({
         if (component === "editor") {
             return (
                 <div className="tab_content">
-                    <IdeEditor fileHandle={fileLookUp[node.getConfig().fileKey]} node={node} config={config} />
+                    <IdeEditor fileHandle={fileLookUp[node.getConfig().fileKey]} node={node} />
                 </div>
             );
         } else if (component === "serial_raw") {
@@ -60,34 +49,23 @@ export default function IdeBody({
                         height: "100%",
                     }}
                 >
-                    <RawConsole
-                        connect={connectToSerialPort}
-                        output={serialOutput}
-                        send={sendDataToSerialPort}
-                        ready={isSerialPortConnected}
-                        config={config}
-                    />
+                    <RawConsole />
                 </div>
             );
         } else if (component === "folder_view") {
             return (
                 <div className="tab_content">
-                    <IdeFolderView
-                        onFileClick={onFileClick}
-                        openDirectory={openDirectory}
-                        directoryReady={directoryReady}
-                        rootDirHandle={rootDirHandle}
-                    />
+                    <IdeFolderView onFileClick={onFileClick} />
                 </div>
             );
+        } else if (component === "settings") {
+            return <ConfigForms schemas={schemas} config={config} set_config={set_config} />;
         } else if (component === "placeholder") {
             return (
                 <div className="tab_content">
                     <p>{node.getName()}</p>
                 </div>
             );
-        } else if (component === "settings") {
-            return <ConfigForms schemas={schemas} config={config} set_config={set_config} />;
         }
     };
 

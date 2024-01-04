@@ -1,7 +1,11 @@
+// React
 import { useState } from "react";
+// Style
 import "./App.css";
+// Ide parts
 import IdeBody from "./IdeBody";
 import IdeHead from "./IdeHead";
+// Features
 import { isMobile } from "react-device-detect";
 import ErrorIsMobile from "./infopages/ErrorIsMobile";
 import { useFileSystem } from "react-local-file-system";
@@ -9,6 +13,7 @@ import useSerial from "./serial/useSerial";
 import DarkTheme from "./react-lazy-dark-theme";
 import { useConfig } from "./react-user-config";
 import schemas from "./schemas";
+// context
 import ideContext from "./ideContext";
 // layout
 import * as FlexLayout from "flexlayout-react";

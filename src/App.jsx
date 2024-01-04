@@ -1,9 +1,9 @@
 import { useState } from "react";
 import "./App.css";
 import IdeBody from "./IdeBody";
+import IdeHead from "./IdeHead";
 import { isMobile } from "react-device-detect";
 import ErrorIsMobile from "./infopages/ErrorIsMobile";
-import MenuBar from "./layout/Menu";
 import { useFileSystem } from "react-local-file-system";
 import useSerial from "./serial/useSerial";
 import DarkTheme from "./react-lazy-dark-theme";
@@ -30,35 +30,6 @@ function App() {
     if (!configReady) {
         return;
     }
-
-    const menuStructure = {
-        title: "CircuitPython Online IDE",
-        menu: [
-            {
-                label: "connect",
-                options: [
-                    {
-                        text: "CircuitPy Drive",
-                        handler: () => {
-                            console.log("clicked on `CircuitPy Drive`");
-                            openDirectory();
-                        },
-                    },
-                    {
-                        text: "Serial Port",
-                        handler: () => {
-                            console.log("clicked on Serial");
-                            connectToSerialPort();
-                        },
-                    },
-                ],
-            },
-            {
-                label: "open",
-                options: [],
-            },
-        ],
-    };
 
     // theme config
     var dark = null;
@@ -87,7 +58,7 @@ function App() {
             <div className="ide">
                 <DarkTheme dark={dark} />
                 <div className="ide-header">
-                    <MenuBar menuStructure={menuStructure} />
+                    <IdeHead />
                 </div>
                 <div className="ide-body">
                     <IdeBody />

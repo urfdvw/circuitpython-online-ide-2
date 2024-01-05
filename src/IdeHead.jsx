@@ -38,8 +38,8 @@ export default function IdeHead() {
                         handler: () => {
                             model.doAction(
                                 FlexLayout.Actions.addNode(
-                                    { type: "tab", name: "navigation", component: "navigation" },
-                                    model.getActiveTabset().getId(),
+                                    { type: "tab", name: "Navigation", component: "navigation" },
+                                    model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
                                     FlexLayout.DockLocation.CENTER,
                                     -1
                                 )

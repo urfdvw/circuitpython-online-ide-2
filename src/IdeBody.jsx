@@ -27,7 +27,8 @@ export default function IdeBody() {
         model.doAction(
             FlexLayout.Actions.addNode(
                 { type: "tab", name: fileHandle.name, component: "editor", config: { fileKey: fileKey } },
-                model.getActiveTabset().getId(),
+
+                model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
                 FlexLayout.DockLocation.CENTER,
                 -1
             )

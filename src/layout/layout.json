@@ -53,6 +53,7 @@
         "children": [
             {
                 "type": "tabset",
+                "id": "initial_tabset",
                 "weight": 50,
                 "selected": 0,
                 "children": [

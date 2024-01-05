@@ -30,7 +30,7 @@ function App() {
     const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
 
     // error info
-    let WarningModal = null;
+    let WarningModal = () => {};
     if (isMobile) {
         return <ErrorIsMobile />;
     } else if (isSafari || isFirefox || isIE) {

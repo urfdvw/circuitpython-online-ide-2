@@ -78,7 +78,8 @@ function App() {
                     <IdeBody />
                 </div>
                 <div className="ide-tail">
-                    CircuitPy Drive: {statusText} | Serial: {serialReady ? serialTitle : "not connected"}
+                    CircuitPy Drive: {statusText} | Serial: {" "}
+                    {serialReady ? (serialTitle ? serialTitle : "Connected") : "No Port Connected"}
                 </div>
             </div>
         </ideContext.Provider>

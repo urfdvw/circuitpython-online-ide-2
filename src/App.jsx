@@ -5,11 +5,12 @@ import "./App.css";
 // Ide parts
 import IdeBody from "./IdeBody";
 import IdeHead from "./IdeHead";
-// Features
-import { isMobile } from "react-device-detect";
+// Device Support Warnings
+import { isMobile, isMacOs, isSafari, isFirefox, isIE } from "react-device-detect";
 import ErrorIsMobile from "./infopages/ErrorIsMobile";
 import ErrorIsNotChrome from "./infopages/ErrorIsNotChrome";
 import WarningIsMac from "./infopages/WarningIsMac";
+// Features
 import { useFileSystem } from "react-local-file-system";
 import useSerial from "./serial/useSerial";
 import DarkTheme from "./react-lazy-dark-theme";
@@ -28,9 +29,14 @@ function App() {
     const { config, set_config, ready: configReady } = useConfig(schemas);
     const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
 
-    // if mobile, display error
+    // error info
+    let WarningModal = null;
     if (isMobile) {
         return <ErrorIsMobile />;
+    } else if (isSafari || isFirefox || isIE) {
+        WarningModal = ErrorIsNotChrome;
+    } else if (isMacOs) {
+        WarningModal = WarningIsMac;
     }
 
     // If config initialization not done, don't continue.
@@ -62,8 +68,7 @@ function App() {
                 set_config: set_config,
             }}
         >
-            <WarningIsMac />
-            <ErrorIsNotChrome /> {/* later one is on top */}
+            <WarningModal />
             <div className="ide">
                 <DarkTheme dark={dark} />
                 <div className="ide-header">

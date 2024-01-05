@@ -6,7 +6,7 @@ const useSerial = () => {
     const [port, setPort] = useState(null);
     const [serialOutput, setSerialOutput] = useState("");
     const [serialTitle, setSerialTitle] = useState("");
-    const [isSerialPortConnected, setIsSerialPortConnected] = useState(false);
+    const [serialReady, setSerialReady] = useState(false);
 
     useEffect(() => {
         if (!navigator.serial) {
@@ -60,7 +60,7 @@ const useSerial = () => {
             const newPort = await navigator.serial.requestPort();
             await newPort.open({ baudRate: 115200 });
             setPort(newPort);
-            setIsSerialPortConnected(true);
+            setSerialReady(true);
         } catch (err) {
             console.error("Failed to connect:", err);
         }
@@ -89,7 +89,7 @@ const useSerial = () => {
          * Please ignore whatever is before the first `soft reboot` text
          */
         async function clean_start() {
-            if (isSerialPortConnected) {
+            if (serialReady) {
                 // break any current run (no effect/harm in repl)
                 await sendDataToSerialPort(constants.CTRL_C);
                 // start a fresh run (No matter from REPL or code)
@@ -97,7 +97,7 @@ const useSerial = () => {
             }
         }
         clean_start();
-    }, [isSerialPortConnected]);
+    }, [serialReady]);
 
     const disconnect = async () => {
         // not working yet
@@ -111,11 +111,11 @@ const useSerial = () => {
 
         await port.close();
         setPort(null);
-        setIsSerialPortConnected(false);
+        setSerialReady(false);
         setSerialOutput("");
     };
 
-    return { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected, serialTitle };
+    return { connectToSerialPort, sendDataToSerialPort, serialOutput, serialReady, serialTitle };
 };
 
 export default useSerial;

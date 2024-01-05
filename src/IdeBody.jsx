@@ -6,6 +6,7 @@ import IdeFolderView from "./tabs/IdeFolderView";
 import IdeEditor from "./tabs/IdeEditor";
 import RawConsole from "./tabs/RawConsole";
 import { ConfigForms } from "./react-user-config";
+import Navigation from "./tabs/Navigation";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context
@@ -56,6 +57,12 @@ export default function IdeBody() {
             return (
                 <div className="tab_content">
                     <IdeFolderView onFileClick={onFileClick} />
+                </div>
+            );
+        } else if (component === "navigation") {
+            return (
+                <div className="tab_content">
+                    <Navigation />
                 </div>
             );
         } else if (component === "settings") {

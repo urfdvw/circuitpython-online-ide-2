@@ -55,7 +55,13 @@
                 "type": "tabset",
                 "weight": 50,
                 "selected": 0,
-                "children": []
+                "children": [
+                    {
+                        "type": "tab",
+                        "name": "Navigation",
+                        "component": "navigation",
+                        "enableClose": true
+                    }]
             }
         ]
     }

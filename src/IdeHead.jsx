@@ -1,11 +1,13 @@
 // React
 import { useContext } from "react";
 import MenuBar from "./layout/Menu";
-
+// Flex layout
+import * as FlexLayout from "flexlayout-react";
 //context
 import ideContext from "./ideContext";
+
 export default function IdeHead() {
-    const { openDirectory, connectToSerialPort } = useContext(ideContext);
+    const { flexModel: model, openDirectory, connectToSerialPort } = useContext(ideContext);
     const menuStructure = {
         title: "CircuitPython Online IDE",
         menu: [
@@ -30,7 +32,21 @@ export default function IdeHead() {
             },
             {
                 label: "open",
-                options: [],
+                options: [
+                    {
+                        text: "Navigation",
+                        handler: () => {
+                            model.doAction(
+                                FlexLayout.Actions.addNode(
+                                    { type: "tab", name: "navigation", component: "navigation" },
+                                    model.getActiveTabset().getId(),
+                                    FlexLayout.DockLocation.CENTER,
+                                    -1
+                                )
+                            );
+                        },
+                    },
+                ],
             },
         ],
     };

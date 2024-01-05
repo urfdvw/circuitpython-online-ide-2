@@ -22,7 +22,7 @@ import layout from "./layout/layout.json";
 function App() {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
-    const { connectToSerialPort, sendDataToSerialPort, serialOutput, isSerialPortConnected, serialTitle } = useSerial();
+    const { connectToSerialPort, sendDataToSerialPort, serialOutput, serialReady, serialTitle } = useSerial();
     const { config, set_config, ready: configReady } = useConfig(schemas);
     const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
 
@@ -54,7 +54,7 @@ function App() {
                 connectToSerialPort: connectToSerialPort,
                 sendDataToSerialPort: sendDataToSerialPort,
                 serialOutput: serialOutput,
-                isSerialPortConnected: isSerialPortConnected,
+                serialReady: serialReady,
                 schemas: schemas,
                 config: config,
                 set_config: set_config,
@@ -69,7 +69,7 @@ function App() {
                     <IdeBody />
                 </div>
                 <div className="ide-tail">
-                    CircuitPy Drive: {statusText} | Serial: {isSerialPortConnected ? serialTitle : "not connected"}
+                    CircuitPy Drive: {statusText} | Serial: {serialReady ? serialTitle : "not connected"}
                 </div>
             </div>
         </ideContext.Provider>

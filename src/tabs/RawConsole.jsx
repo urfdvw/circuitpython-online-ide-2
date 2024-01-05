@@ -103,7 +103,7 @@ const RawSerialOut = () => {
 };
 
 const RawConsole = () => {
-    const { isSerialPortConnected: ready, connectToSerialPort: connect } = useContext(ideContext);
+    const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
     return ready ? (
         <Box sx={{ height: "100%" }}>
             <ScrollableFeed>

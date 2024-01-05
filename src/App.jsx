@@ -8,6 +8,7 @@ import IdeHead from "./IdeHead";
 // Features
 import { isMobile } from "react-device-detect";
 import ErrorIsMobile from "./infopages/ErrorIsMobile";
+import ErrorIsNotChrome from "./infopages/ErrorIsNotChrome";
 import WarningIsMac from "./infopages/WarningIsMac";
 import { useFileSystem } from "react-local-file-system";
 import useSerial from "./serial/useSerial";
@@ -62,6 +63,7 @@ function App() {
             }}
         >
             <WarningIsMac />
+            <ErrorIsNotChrome /> {/* later one is on top */}
             <div className="ide">
                 <DarkTheme dark={dark} />
                 <div className="ide-header">

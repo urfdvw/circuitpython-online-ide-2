@@ -4,7 +4,7 @@ import { useState } from "react";
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import HyperLink from "../layout/HyperLink";
 
 export default function WarningIsMac() {
     const [open, setOpen] = useState(true);
@@ -35,16 +35,10 @@ export default function WarningIsMac() {
                 <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                     If you have issues writing files to microcontrollers, it is not a bug of the IDE or CircuitPython,
                     but a known issue of MacOS 14 (Sonoma). Please check
-                    <Button
-                        onClick={() => {
-                            window.open(
-                                "https://github.com/adafruit/circuitpython/issues/8449#issuecomment-1743922060",
-                                "_blank"
-                            );
-                        }}
-                    >
-                        this link
-                    </Button>
+                    <HyperLink
+                        text="this link"
+                        link="https://github.com/adafruit/circuitpython/issues/8449#issuecomment-1743922060"
+                    />
                     for a walkaround that temporary fix this issue.
                 </Typography>
             </Box>

@@ -46,6 +46,19 @@ export default function IdeHead() {
                             );
                         },
                     },
+                    {
+                        text: "About",
+                        handler: () => {
+                            model.doAction(
+                                FlexLayout.Actions.addNode(
+                                    { type: "tab", name: "About", component: "about" },
+                                    model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
+                                    FlexLayout.DockLocation.CENTER,
+                                    -1
+                                )
+                            );
+                        },
+                    },
                 ],
             },
         ],

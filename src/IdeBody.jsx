@@ -7,6 +7,7 @@ import IdeEditor from "./tabs/IdeEditor";
 import RawConsole from "./tabs/RawConsole";
 import { ConfigForms } from "./react-user-config";
 import Navigation from "./tabs/Navigation";
+import About from "./infopages/About";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context
@@ -64,6 +65,12 @@ export default function IdeBody() {
             return (
                 <div className="tab_content">
                     <Navigation />
+                </div>
+            );
+        } else if (component === "about") {
+            return (
+                <div className="tab_content">
+                    <About />
                 </div>
             );
         } else if (component === "settings") {

@@ -1,6 +1,6 @@
 // MUI
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import HyperLink from "../layout/HyperLink";
 export default function ErrorIsMobile() {
     return (
         <>
@@ -10,16 +10,10 @@ export default function ErrorIsMobile() {
             <Typography variant="h6" component="body">
                 CircuitPython Online IDE is not supported on mobile devices. Please use Chrome, MS Edge, or other
                 Chromium-based browsers on a Windows PC, Mac or Chromebook. Check out
-                <Button
-                    onClick={() => {
-                        window.open(
-                            "https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility",
-                            "_blank"
-                        );
-                    }}
-                >
-                    this link
-                </Button>
+                <HyperLink
+                    text="this link"
+                    link="https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility"
+                />
                 for more information
             </Typography>
         </>

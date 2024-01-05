@@ -2,7 +2,7 @@
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
 import Typography from "@mui/material/Typography";
-import Button from "@mui/material/Button";
+import HyperLink from "../layout/HyperLink";
 
 export default function ErrorIsNotChrome() {
     const style = {
@@ -17,11 +17,7 @@ export default function ErrorIsNotChrome() {
         p: 4,
     };
     return (
-        <Modal
-            open={true}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-        >
+        <Modal open={true} aria-labelledby="modal-modal-title" aria-describedby="modal-modal-description">
             <Box sx={style}>
                 <Typography id="modal-modal-title" variant="h6" component="h2">
                     Your Browser Is Not Supported!
@@ -29,16 +25,10 @@ export default function ErrorIsNotChrome() {
                 <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                     CircuitPython Online IDE only supports Chrome, MS Edge, or other Chromium-based browsers on a
                     Windows PC, Mac or Chromebook. Check out
-                    <Button
-                        onClick={() => {
-                            window.open(
-                                "https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility",
-                                "_blank"
-                            );
-                        }}
-                    >
-                        this link
-                    </Button>
+                    <HyperLink
+                        text="this link"
+                        link="https://developer.mozilla.org/en-US/docs/Web/API/Web_Serial_API#browser_compatibility"
+                    />
                     for more information
                 </Typography>
             </Box>

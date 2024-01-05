@@ -8,6 +8,7 @@ import IdeHead from "./IdeHead";
 // Features
 import { isMobile } from "react-device-detect";
 import ErrorIsMobile from "./infopages/ErrorIsMobile";
+import WarningIsMac from "./infopages/WarningIsMac";
 import { useFileSystem } from "react-local-file-system";
 import useSerial from "./serial/useSerial";
 import DarkTheme from "./react-lazy-dark-theme";
@@ -60,6 +61,7 @@ function App() {
                 set_config: set_config,
             }}
         >
+            <WarningIsMac />
             <div className="ide">
                 <DarkTheme dark={dark} />
                 <div className="ide-header">

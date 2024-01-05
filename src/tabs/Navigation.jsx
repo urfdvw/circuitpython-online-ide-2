@@ -2,11 +2,12 @@
 import { useContext } from "react";
 //context
 import ideContext from "../ideContext";
-// button
+// mui
 import Button from "@mui/material/Button";
 
 export default function Navigation() {
     const { openDirectory, directoryReady, serialReady, connectToSerialPort } = useContext(ideContext);
+
     return (
         <>
             <p> Please connect your microcontroller to this computer by a usb data cable before following the steps.</p>

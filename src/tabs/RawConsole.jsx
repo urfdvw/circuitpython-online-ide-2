@@ -18,6 +18,8 @@ import SendIcon from "@mui/icons-material/Send";
 import Button from "@mui/material/Button";
 //context
 import ideContext from "../ideContext";
+// commands
+import useSerialCommands from "../serial/useSerialCommands";
 
 const RawSerialIn = () => {
     const { config, serialOutput } = useContext(ideContext);
@@ -31,10 +33,19 @@ const RawSerialIn = () => {
 };
 
 const RawSerialOut = () => {
-    const { config, sendDataToSerialPort: send } = useContext(ideContext);
+    const { config } = useContext(ideContext);
     const [mode, setMode] = useState("python");
     const [text, setText] = useState("");
     const [isHovered, toggleHover] = useState(false);
+    const { sendCtrlC, sendCtrlD, sendCode } = useSerialCommands();
+
+    function consoleSendCommand() {
+        if (text.trim().length === 0) {
+            return;
+        }
+        sendCode(text, true);
+        setText("");
+    }
 
     return (
         <>
@@ -62,12 +73,7 @@ const RawSerialOut = () => {
                     sx={{ position: "absolute", bottom: 16, right: 16, zIndex: 1 }}
                     followCursor={true}
                 >
-                    <IconButton
-                        onClick={() => {
-                            send(text + "\x0D");
-                            setText("");
-                        }}
-                    >
+                    <IconButton onClick={consoleSendCommand}>
                         <SendIcon />
                     </IconButton>
                 </Tooltip>
@@ -76,11 +82,7 @@ const RawSerialOut = () => {
                     sx={{ position: "absolute", bottom: 46, right: 16, zIndex: 1 }}
                     followCursor={true}
                 >
-                    <IconButton
-                        onClick={() => {
-                            send("\x03");
-                        }}
-                    >
+                    <IconButton onClick={sendCtrlC}>
                         <span style={{ visibility: isHovered ? "visible" : "hidden" }}>Ⓒ</span>
                     </IconButton>
                 </Tooltip>
@@ -89,11 +91,7 @@ const RawSerialOut = () => {
                     sx={{ position: "absolute", bottom: 76, right: 16, zIndex: 1 }}
                     followCursor={true}
                 >
-                    <IconButton
-                        onClick={() => {
-                            send("\x04");
-                        }}
-                    >
+                    <IconButton onClick={sendCtrlD}>
                         <span style={{ visibility: isHovered ? "visible" : "hidden" }}>Ⓓ</span>
                     </IconButton>
                 </Tooltip>

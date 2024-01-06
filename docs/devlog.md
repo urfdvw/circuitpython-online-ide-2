@@ -148,3 +148,10 @@
 - added Wiki
 - add file system
     - `git submodule add https://github.com/urfdvw/useFileSystem.git`
+    
+## TODOs
+
+1. Editor tab name conflicting
+1. Command shortcut
+1. Editor serial shortcut
+1. Command history

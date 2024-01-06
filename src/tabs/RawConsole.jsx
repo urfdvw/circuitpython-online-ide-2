@@ -43,7 +43,7 @@ const RawSerialOut = () => {
         if (text.trim().length === 0) {
             return;
         }
-        sendCode(text, true);
+        sendCode(text);
         setText("");
     }
 

@@ -2,6 +2,9 @@ import { useContext } from "react";
 import ideContext from "../ideContext";
 import * as constants from "./constants";
 
+// https://sentry.io/answers/what-is-the-javascript-version-of-sleep/
+const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
+
 export default function useSerialCommands() {
     const { config, sendDataToSerialPort: send, serialOutput: output, serialReady: ready } = useContext(ideContext);
 
@@ -45,14 +48,17 @@ export default function useSerialCommands() {
         await sendSingleLineText('exec("""' + lines + '""")');
     }
 
-    async function sendCode(code, force = false) {
+    async function sendCode(code) {
         if (!ready) {
             return;
         }
-        if (force) {
+        if (config.raw_console.force_exec) {
             // if code running, break execution before send code
             if (output.slice(-4, -1) !== ">>>") {
-                await sendCtrlC();
+                await sendCtrlC(); // break execution
+                await sendCtrlC(); // jump RELP if necessary
+                // TODO: This might cause a second new line in RELP when no code running
+                // can be improved if know how to read updated output in the function
             }
         }
         if (code.split("\n").length > 1) {

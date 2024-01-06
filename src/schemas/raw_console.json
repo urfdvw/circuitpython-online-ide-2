@@ -8,6 +8,24 @@
             "type": "number",
             "default": 14
         },
+        "send_mode": {
+            "title": "Send mode",
+            "type": "string",
+            "enum": ["code", "text"],
+            "default": "code"
+        },
+        "enter_to_send": {
+            "title": "Enter to send, Shift-Enter to make newline",
+            "description": "Other wise, reversed.\nOnly effective when sending code.",
+            "type": "boolean",
+            "default": true
+        },
+        "force_exec": {
+            "title": "Force execute sent code",
+            "description": "When this is enabled, code will be executed at the moment it is sent, breaking any running processes.",
+            "type": "boolean",
+            "default": true
+        },
         "hide_cv": {
             "title": "Hide <CV> commination",
             "type": "boolean",

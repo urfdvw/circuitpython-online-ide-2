@@ -26,6 +26,7 @@
     "react-ace": "^10.1.0",
     "react-device-detect": "^2.2.3",
     "react-dom": "^18.2.0",
+    "react-helmet": "^6.1.0",
     "react-local-file-system": "^1.0.17",
     "react-new-window": "^1.0.1",
     "react-router-dom": "^6.15.0",

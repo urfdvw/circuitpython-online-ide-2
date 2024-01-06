@@ -16,9 +16,9 @@
         },
         "enter_to_send": {
             "title": "Enter to send, Shift-Enter to make newline",
-            "description": "Other wise, reversed.\nOnly effective when sending code.",
+            "description": "Only effective when sending code.",
             "type": "boolean",
-            "default": true
+            "default": false
         },
         "force_exec": {
             "title": "Force execute sent code",

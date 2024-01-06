@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useRef } from "react";
 // MUI
 import Box from "@mui/material/Box";
 // Other packages
@@ -34,7 +34,7 @@ const RawSerialIn = () => {
 
 const RawSerialOut = () => {
     const { config } = useContext(ideContext);
-    const [mode, setMode] = useState("python");
+    const aceEditorRef = useRef(null);
     const [text, setText] = useState("");
     const [isHovered, toggleHover] = useState(false);
     const { sendCtrlC, sendCtrlD, sendCode } = useSerialCommands();
@@ -47,10 +47,52 @@ const RawSerialOut = () => {
         setText("");
     }
 
+    function addNewline(editor) {
+        editor.session.insert(editor.getCursorPosition(), "\n");
+    }
+
+    if (aceEditorRef.current !== null) {
+        // add key bindings
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "ctrl-c",
+            bindKey: { win: "Ctrl-Shift-C", mac: "Ctrl-C" },
+            exec: sendCtrlC,
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "ctrl-d",
+            bindKey: { win: "Ctrl-Shift-D", mac: "Ctrl-D" },
+            exec: sendCtrlC,
+        });
+        if (config.raw_console.send_mode === "code") {
+            aceEditorRef.current.editor.commands.addCommand({
+                name: "send",
+                bindKey: config.raw_console.enter_to_send ? "Enter" : "Shift-Enter",
+                exec: consoleSendCommand,
+            });
+            aceEditorRef.current.editor.commands.addCommand({
+                name: "newline",
+                bindKey: config.raw_console.enter_to_send ? "Shift-Enter" : "Enter",
+                exec: addNewline,
+            });
+        } else {
+            aceEditorRef.current.editor.commands.addCommand({
+                name: "send",
+                bindKey: "Enter",
+                exec: consoleSendCommand,
+            });
+            aceEditorRef.current.editor.commands.addCommand({
+                name: "newline", // no newline allowed
+                bindKey: "Shift-Enter",
+                exec: consoleSendCommand,
+            });
+        }
+    }
+
     return (
         <>
             <AceEditor
-                mode={mode}
+                ref={aceEditorRef}
+                mode={config.raw_console.send_mode === "code" ? "python" : "text"}
                 theme="tomorrow"
                 value={text}
                 width="100%"

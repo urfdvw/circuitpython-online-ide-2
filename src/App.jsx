@@ -32,7 +32,7 @@ function App() {
     // error info
     let WarningModal = () => {};
     if (isMobile) {
-        return <ErrorIsMobile />;
+        WarningModal = ErrorIsMobile;
     } else if (isSafari || isFirefox || isIE) {
         WarningModal = ErrorIsNotChrome;
     } else if (isMacOs) {
@@ -78,7 +78,7 @@ function App() {
                     <IdeBody />
                 </div>
                 <div className="ide-tail">
-                    CircuitPy Drive: {statusText} | Serial: {" "}
+                    CircuitPy Drive: {statusText} | Serial:{" "}
                     {serialReady ? (serialTitle ? serialTitle : "Connected") : "No Port Connected"}
                 </div>
             </div>

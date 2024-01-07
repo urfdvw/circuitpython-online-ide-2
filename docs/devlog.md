@@ -153,7 +153,8 @@
 
 1. ~~Editor tab name conflicting~~
 1. ~~Command shortcut~~
+1. ~~close ide confirmation~~
+1. Command history
 1. Editor serial shortcut
 1. Editor tab edited indicator
-1. Command history
-1. close tab/ide confirmation
+1. close tab confirmation

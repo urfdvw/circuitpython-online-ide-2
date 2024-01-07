@@ -1,5 +1,5 @@
 // React
-import { useState } from "react";
+import { useState, useEffect } from "react";
 // Style
 import "./App.css";
 // Ide parts
@@ -28,6 +28,16 @@ function App() {
     const { connectToSerialPort, sendDataToSerialPort, serialOutput, serialReady, serialTitle } = useSerial();
     const { config, set_config, ready: configReady } = useConfig(schemas);
     const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
+    useEffect(() => {
+        // https://stackoverflow.com/a/47477519/7037749
+        if (directoryReady) {
+            window.onbeforeunload = function (e) {
+                var dialogText = "Are you sure to leave?"; // TODO: not shown up yet
+                e.returnValue = dialogText;
+                return dialogText;
+            };
+        }
+    }, [directoryReady]);
 
     // error info
     let WarningModal = () => {};

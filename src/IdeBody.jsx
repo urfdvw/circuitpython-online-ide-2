@@ -13,27 +13,49 @@ import * as FlexLayout from "flexlayout-react";
 //context
 import ideContext from "./ideContext";
 
+const findTabByName = (node, name) => {
+    if (node.getType() === "tab" && node.getName() === name) {
+        return node;
+    }
+    if (node.getChildren) {
+        for (let child of node.getChildren()) {
+            const found = findTabByName(child, name);
+            if (found) return found;
+        }
+    }
+    return null;
+};
+
 export default function IdeBody() {
     const { flexModel: model, schemas, config, set_config } = useContext(ideContext);
     const [fileLookUp, setFileLookUp] = useState({});
 
     async function onFileClick(fileHandle) {
-        const fileKey = crypto.randomUUID();
-        setFileLookUp((cur) => {
-            return {
-                ...cur,
-                [fileKey]: fileHandle,
-            };
-        });
-        model.doAction(
-            FlexLayout.Actions.addNode(
-                { type: "tab", name: fileHandle.name, component: "editor", config: { fileKey: fileKey } },
+        const fileName = fileHandle.name;
+        const tabNode = findTabByName(model.getRoot(), fileName);
 
-                model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
-                FlexLayout.DockLocation.CENTER,
-                -1
-            )
-        );
+        if (tabNode instanceof FlexLayout.TabNode) {
+            console.log(fileName + " already opened");
+            // Activate the found tab
+            model.doAction(FlexLayout.Actions.selectTab(tabNode.getId()));
+        } else {
+            const fileKey = crypto.randomUUID();
+            setFileLookUp((cur) => {
+                return {
+                    ...cur,
+                    [fileKey]: fileHandle,
+                };
+            });
+            model.doAction(
+                FlexLayout.Actions.addNode(
+                    { type: "tab", name: fileName, component: "editor", config: { fileKey: fileKey } },
+
+                    model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
+                    FlexLayout.DockLocation.CENTER,
+                    -1
+                )
+            );
+        }
     }
 
     const factory = (node) => {

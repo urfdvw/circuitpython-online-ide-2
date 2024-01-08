@@ -1,17 +1,23 @@
 /* eslint-disable react/prop-types */
-
-// ace
+// react
 import { useEffect, useState, useRef, useContext } from "react";
+// ace
 import AceEditor from "react-ace";
-import PopUp from "../layout/PopUp";
-import { getFileText, writeFileText } from "react-local-file-system";
-import SaveIcon from "@mui/icons-material/Save";
-import IconButton from "@mui/material/IconButton";
-import Tooltip from "@mui/material/Tooltip";
+import "ace-builds/src-min-noconflict/ext-searchbox";
+import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-tomorrow";
+// MUI
+import SaveIcon from "@mui/icons-material/Save";
+import IconButton from "@mui/material/IconButton";
+import Tooltip from "@mui/material/Tooltip";
+// Layout
+import PopUp from "../layout/PopUp";
+// file utils
+import { getFileText, writeFileText } from "react-local-file-system";
+// context
 import ideContext from "../ideContext";
 
 export default function IdeEditor({ fileHandle, node }) {
@@ -64,6 +70,13 @@ export default function IdeEditor({ fileHandle, node }) {
                     setText(newValue);
                 }}
                 fontSize={config.editor.font + "pt"}
+                setOptions={{
+                    enableBasicAutocompletion: true,
+                    enableLiveAutocompletion: config.editor.live_autocompletion,
+                    enableSnippets: true,
+                    showLineNumbers: true,
+                    tabSize: 4,
+                }}
             />
             <Tooltip
                 title="Save and Run"

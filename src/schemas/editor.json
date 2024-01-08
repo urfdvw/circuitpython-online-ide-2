@@ -7,6 +7,12 @@
             "title": "Text font size",
             "type": "number",
             "default": 14
+        },
+        "live_autocompletion": {
+            "title": "Enable Live Autocompletion",
+            "description": "When live is disabled, use [Ctrl-Space] for autocompletion.",
+            "type": "boolean",
+            "default": false
         }
     }
 }

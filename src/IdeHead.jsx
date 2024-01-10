@@ -8,11 +8,21 @@ import ideContext from "./ideContext";
 
 export default function IdeHead() {
     const { flexModel: model, openDirectory, connectToSerialPort } = useContext(ideContext);
+    function openTab(name, component) {
+        model.doAction(
+            FlexLayout.Actions.addNode(
+                { type: "tab", name: name, component: component },
+                model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
+                FlexLayout.DockLocation.CENTER,
+                -1
+            )
+        );
+    }
     const menuStructure = {
         title: "CircuitPython Online IDE",
         menu: [
             {
-                label: "connect",
+                label: "Connect",
                 options: [
                     {
                         text: "CircuitPy Drive",
@@ -31,32 +41,29 @@ export default function IdeHead() {
                 ],
             },
             {
-                label: "open",
+                label: "Tools",
                 options: [
                     {
                         text: "Navigation",
                         handler: () => {
-                            model.doAction(
-                                FlexLayout.Actions.addNode(
-                                    { type: "tab", name: "Navigation", component: "navigation" },
-                                    model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
-                                    FlexLayout.DockLocation.CENTER,
-                                    -1
-                                )
-                            );
+                            openTab("Navigation", "navigation");
                         },
                     },
+                ],
+            },
+            {
+                label: "Help",
+                options: [
                     {
                         text: "About",
                         handler: () => {
-                            model.doAction(
-                                FlexLayout.Actions.addNode(
-                                    { type: "tab", name: "About", component: "about" },
-                                    model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
-                                    FlexLayout.DockLocation.CENTER,
-                                    -1
-                                )
-                            );
+                            openTab("About", "about");
+                        },
+                    },
+                    {
+                        text: "Contact Me",
+                        handler: () => {
+                            openTab("Contact Me", "contact");
                         },
                     },
                 ],

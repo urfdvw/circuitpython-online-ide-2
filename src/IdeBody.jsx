@@ -8,6 +8,7 @@ import RawConsole from "./tabs/RawConsole";
 import { ConfigForms } from "./react-user-config";
 import Navigation from "./tabs/Navigation";
 import About from "./infopages/About";
+import ContactMe from "./infopages/ContactMe";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context
@@ -60,6 +61,7 @@ export default function IdeBody() {
 
     const factory = (node) => {
         var component = node.getComponent();
+        // main ones
         if (component === "editor") {
             return (
                 <div className="tab_content">
@@ -83,7 +85,11 @@ export default function IdeBody() {
                     <IdeFolderView onFileClick={onFileClick} />
                 </div>
             );
-        } else if (component === "navigation") {
+        } else if (component === "settings") {
+            return <ConfigForms schemas={schemas} config={config} set_config={set_config} />;
+        }
+        // info
+        else if (component === "navigation") {
             return (
                 <div className="tab_content">
                     <Navigation />
@@ -95,9 +101,15 @@ export default function IdeBody() {
                     <About />
                 </div>
             );
-        } else if (component === "settings") {
-            return <ConfigForms schemas={schemas} config={config} set_config={set_config} />;
-        } else if (component === "placeholder") {
+        } else if (component === "contact") {
+            return (
+                <div className="tab_content">
+                    <ContactMe />
+                </div>
+            );
+        }
+        // placeholder
+        else if (component === "placeholder") {
             return (
                 <div className="tab_content">
                     <p>{node.getName()}</p>

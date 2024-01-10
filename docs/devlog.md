@@ -162,3 +162,7 @@
 1. Editor serial shortcut
 1. Editor tab edited indicator
 1. Close tab confirmation
+
+## remove random component key
+- if use random component key,
+    - the component will be recreated every time there is a refresh.

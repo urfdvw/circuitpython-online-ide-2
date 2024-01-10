@@ -22,7 +22,7 @@ export default function MenuBar({ menuStructure }) {
                 {menuStructure.title}
             </Button>
             {menuStructure.menu.map((column) => {
-                return <Menu label={column.label} options={column.options} key={crypto.randomUUID()} />;
+                return <Menu label={column.label} options={column.options} key={"menu_key_" + column.label} />;
             })}
         </Stack>
     );
@@ -109,7 +109,7 @@ function Menu({ label, options }) {
                                                 handleClose(event);
                                                 opt.handler();
                                             }}
-                                            key={crypto.randomUUID()}
+                                            key={"item_key_" + opt.text}
                                         >
                                             {opt.text}
                                         </MenuItem>

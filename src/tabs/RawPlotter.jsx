@@ -31,11 +31,14 @@ function transpose(array) {
     return array[0].map((_, colIndex) => array.map((row) => parseFloat(row[colIndex])));
 }
 
-export default function RawPlotter() {
+export default function RawPlotter({ node }) {
     const { config, serialOutput } = useContext(ideContext);
     if (!serialOutput) {
         return <></>;
     }
+    console.log(node);
+    const parentHeight = node.getParent()._rect.height - node.getParent()._tabHeaderRect.height;
+    const parentWidth = node.getParent()._rect.width;
 
     var data = [];
     var xLabel = "index";
@@ -48,7 +51,6 @@ export default function RawPlotter() {
         var plot_data_lines = plot_raw_lines.slice(1, plot_lines_find_end(plot_raw_lines) + 1);
         var plot_data = transpose(plot_data_lines);
 
-        const checked = true;
         if (config.plot.x_axis & (plot_labels.length > 1)) {
             xLabel = plot_labels[0];
             for (var i = 1; i < plot_labels.length; i++) {
@@ -78,6 +80,8 @@ export default function RawPlotter() {
         xaxis: {
             title: xLabel,
         },
+        height: parentHeight,
+        width: parentWidth,
     };
 
     return <Plot data={data} layout={layout} />;

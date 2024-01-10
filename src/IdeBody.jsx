@@ -99,7 +99,7 @@ export default function IdeBody() {
         } else if (component === "raw_plot") {
             return (
                 <div className="tab_content">
-                    <RawPlotter />
+                    <RawPlotter node={node} />
                 </div>
             );
         }

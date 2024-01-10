@@ -1,12 +1,23 @@
 {
     "title": "Plot",
-    "description": "Graph plotter settings.",
+    "description": "Plot tab setting settings.",
     "type": "object",
     "properties": {
         "x_axis": {
             "title": "Use first column as x-axis",
             "type": "boolean",
             "default": false
+        },
+        "truncate": {
+            "title": "Truncate history points",
+            "type": "boolean",
+            "default": false
+        },
+        "history_len": {
+            "title": "Maximum number of history points to keep",
+            "description": "Only effective when truncate is on.",
+            "type": "number",
+            "default": 100
         }
     }
 }

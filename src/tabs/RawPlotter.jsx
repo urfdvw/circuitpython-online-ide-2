@@ -36,7 +36,6 @@ export default function RawPlotter({ node }) {
     if (!serialOutput) {
         return <></>;
     }
-    console.log(node);
     const parentHeight = node.getParent()._rect.height - node.getParent()._tabHeaderRect.height;
     const parentWidth = node.getParent()._rect.width;
 
@@ -49,6 +48,10 @@ export default function RawPlotter({ node }) {
         var plot_raw_lines = text_to_data(plot_raw_text);
         var plot_labels = plot_raw_lines[0];
         var plot_data_lines = plot_raw_lines.slice(1, plot_lines_find_end(plot_raw_lines) + 1);
+
+        if (config.plot.truncate) {
+            plot_data_lines = plot_data_lines.slice(-config.plot.history_len);
+        }
         var plot_data = transpose(plot_data_lines);
 
         if (config.plot.x_axis & (plot_labels.length > 1)) {

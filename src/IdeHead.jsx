@@ -49,6 +49,12 @@ export default function IdeHead() {
                             openTab("Navigation", "navigation");
                         },
                     },
+                    {
+                        text: "Plot",
+                        handler: () => {
+                            openTab("Plot", "raw_plot");
+                        },
+                    },
                 ],
             },
             {

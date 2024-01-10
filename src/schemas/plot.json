@@ -1,0 +1,12 @@
+{
+    "title": "Plot",
+    "description": "Graph plotter settings.",
+    "type": "object",
+    "properties": {
+        "x_axis": {
+            "title": "Use first column as x-axis",
+            "type": "boolean",
+            "default": false
+        }
+    }
+}

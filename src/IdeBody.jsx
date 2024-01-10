@@ -7,6 +7,7 @@ import IdeEditor from "./tabs/IdeEditor";
 import RawConsole from "./tabs/RawConsole";
 import { ConfigForms } from "./react-user-config";
 import Navigation from "./tabs/Navigation";
+import RawPlotter from "./tabs/RawPlotter";
 import About from "./infopages/About";
 import ContactMe from "./infopages/ContactMe";
 // Flex layout
@@ -88,14 +89,22 @@ export default function IdeBody() {
         } else if (component === "settings") {
             return <ConfigForms schemas={schemas} config={config} set_config={set_config} />;
         }
-        // info
+        // tools
         else if (component === "navigation") {
             return (
                 <div className="tab_content">
                     <Navigation />
                 </div>
             );
-        } else if (component === "about") {
+        } else if (component === "raw_plot") {
+            return (
+                <div className="tab_content">
+                    <RawPlotter />
+                </div>
+            );
+        }
+        // info
+        else if (component === "about") {
             return (
                 <div className="tab_content">
                     <About />

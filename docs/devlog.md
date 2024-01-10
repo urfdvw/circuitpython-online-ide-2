@@ -154,6 +154,10 @@
 1. ~~Editor tab name conflicting~~
 1. ~~Command shortcut~~
 1. ~~Close ide confirmation~~
+1. Plot
+    1. popup
+    1. dynamic size
+    1. bug: graph updating wrong when data flow in fast
 1. Serial Command history
 1. Editor serial shortcut
 1. Editor tab edited indicator

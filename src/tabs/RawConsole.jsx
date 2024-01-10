@@ -22,6 +22,7 @@ import ideContext from "../ideContext";
 import useSerialCommands from "../serial/useSerialCommands";
 
 const RawSerialIn = () => {
+    // "in" to computer, "out" from microcontroller
     const { config, serialOutput } = useContext(ideContext);
     let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
 

@@ -86,7 +86,7 @@ function ApplyContextMenu({ children, items }) {
                     {items.map((item) => {
                         return (
                             <MenuItem
-                                key={crypto.randomUUID()}
+                                key={"local_file_system_menu_item_key_" + item.name}
                                 onClick={(event) => {
                                     handleClose();
                                     item.handler(event);
@@ -332,7 +332,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
                     <DragContext.Provider value={{ setEntryOnDrag, handleDrop }}>
                         <Breadcrumbs aria-label="breadcrumb">
                             {path.map((entry) => (
-                                <PathEntry entryHandle={entry} key={crypto.randomUUID()} />
+                                <PathEntry entryHandle={entry} key={"local_file_system_path_key_" + entry.name} />
                             ))}
                         </Breadcrumbs>
                     </DragContext.Provider>
@@ -368,7 +368,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
                                     return !entry.name.startsWith(".");
                                 })
                                 .map((entry) => (
-                                    <ContentEntry entryHandle={entry} key={crypto.randomUUID()} />
+                                    <ContentEntry entryHandle={entry} key={"file_system_content_key_" + entry.name} />
                                 ))}
                         </List>
                     </DragContext.Provider>

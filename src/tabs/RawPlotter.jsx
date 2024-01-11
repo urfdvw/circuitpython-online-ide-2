@@ -83,8 +83,8 @@ export default function RawPlotter({ node }) {
         xaxis: {
             title: xLabel,
         },
-        height: parentHeight,
-        width: parentWidth,
+        height: parentHeight - 10,
+        width: parentWidth - 10,
     };
 
     return <Plot data={data} layout={layout} />;

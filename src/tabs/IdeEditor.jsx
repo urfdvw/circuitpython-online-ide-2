@@ -16,7 +16,7 @@ import Tooltip from "@mui/material/Tooltip";
 // Layout
 import PopUp from "../layout/PopUp";
 // file utils
-import { getFileText, writeFileText } from "react-local-file-system";
+import { getFileText, writeFileText } from "../react-local-file-system";
 // context
 import ideContext from "../ideContext";
 

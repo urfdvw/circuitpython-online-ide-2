@@ -11,7 +11,7 @@ import ErrorIsMobile from "./infopages/ErrorIsMobile";
 import ErrorIsNotChrome from "./infopages/ErrorIsNotChrome";
 import WarningIsMac from "./infopages/WarningIsMac";
 // Features
-import { useFileSystem } from "react-local-file-system";
+import { useFileSystem } from "./react-local-file-system";
 import useSerial from "./serial/useSerial";
 import DarkTheme from "./react-lazy-dark-theme";
 import { useConfig } from "./react-user-config";

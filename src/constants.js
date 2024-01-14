@@ -11,4 +11,4 @@ export const SEPARATOR = RARE + "\n" + RARE;
 export const SOFT_REBOOT = "soft reboot";
 
 // Editor
-export const Edited = "*";
+export const FILE_EDITED = "✨";

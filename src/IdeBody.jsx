@@ -14,9 +14,11 @@ import ContactMe from "./infopages/ContactMe";
 import * as FlexLayout from "flexlayout-react";
 //context
 import ideContext from "./ideContext";
+// constant
+import { FILE_EDITED } from "./constants";
 
 const findTabByName = (node, name) => {
-    if (node.getType() === "tab" && node.getName() === name) {
+    if (node.getType() === "tab" && (node.getName() === name || node.getName() === FILE_EDITED + name)) {
         return node;
     }
     if (node.getChildren) {

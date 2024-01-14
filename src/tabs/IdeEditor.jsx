@@ -3,7 +3,6 @@
 import { useEffect, useState, useRef, useContext } from "react";
 // ace
 import AceEditor from "react-ace";
-import { Ace } from "ace-builds";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-noconflict/mode-python";
@@ -22,19 +21,30 @@ import { getFileText, writeFileText } from "../react-local-file-system";
 import ideContext from "../ideContext";
 // commands
 import useSerialCommands from "../serial/useSerialCommands";
+// constant
+import { FILE_EDITED } from "../constants";
+// Flex layout
+import * as FlexLayout from "flexlayout-react";
 
 export default function IdeEditor({ fileHandle, node }) {
     const { sendCtrlC, sendCtrlD, sendCode } = useSerialCommands();
     const { config } = useContext(ideContext);
     const aceEditorRef = useRef(null);
     const [text, setText] = useState("");
+    const [fileEdited, setFileEdited] = useState(false);
+    useEffect(() => {
+        const name = (fileEdited ? FILE_EDITED : "") + fileHandle.name;
+        node.getModel().doAction(FlexLayout.Actions.renameTab(node.getId(), name));
+    }, [fileEdited]);
     useEffect(() => {
         async function loadText() {
             const fileText = (await getFileText(fileHandle)).split("\r").join(""); // circuitPython turned to used \r but not very easy to handle
             setText(fileText);
+            setFileEdited(false);
         }
         loadText();
     }, [fileHandle]);
+
     const parentHeight = node.getParent()._rect.height - node.getParent()._tabHeaderRect.height;
     var mode = "text";
     if (fileHandle.name.toLowerCase().endsWith(".py")) {
@@ -48,6 +58,7 @@ export default function IdeEditor({ fileHandle, node }) {
     }
     function saveFile(text) {
         writeFileText(fileHandle, text);
+        setFileEdited(false);
     }
 
     // send code from editor
@@ -189,6 +200,7 @@ export default function IdeEditor({ fileHandle, node }) {
                 width="100%"
                 onChange={(newValue) => {
                     setText(newValue);
+                    setFileEdited(true);
                 }}
                 fontSize={config.editor.font + "pt"}
                 setOptions={{

@@ -160,7 +160,7 @@
     1. ~~bug: graph updating wrong when data flow in fast~~ not a bug
 1. ~~Serial Command history~~
 1. ~~Editor serial shortcut~~
-1. Editor tab edited indicator
+1. ~~Editor tab edited indicator~~
 1. Close tab confirmation
 
 ## remove random component key

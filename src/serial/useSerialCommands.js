@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import ideContext from "../ideContext";
 import * as constants from "./constants";
 
@@ -7,6 +7,15 @@ const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export default function useSerialCommands() {
     const { config, sendDataToSerialPort: send, serialOutput: output, serialReady: ready } = useContext(ideContext);
+    const [codeHistory, setCodeHistory] = useState(['print("Hello CircuitPython!")']);
+
+    function addCodeHistory(code) {
+        setCodeHistory((curCodeHistory) => {
+            const newHistory = [...curCodeHistory.filter((historyCode) => historyCode != code), code];
+            console.log(newHistory);
+            return newHistory;
+        });
+    }
 
     async function sendCtrlC() {
         if (!ready) {
@@ -52,6 +61,7 @@ export default function useSerialCommands() {
         if (!ready) {
             return;
         }
+        addCodeHistory(code);
         if (config.raw_console.force_exec) {
             // if code running, break execution before send code
             if (output.slice(-4, -1) !== ">>>") {

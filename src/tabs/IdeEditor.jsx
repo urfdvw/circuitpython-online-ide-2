@@ -62,6 +62,9 @@ export default function IdeEditor({ fileHandle, node }) {
             <AceEditor
                 ref={aceEditorRef}
                 mode={mode}
+                useSoftTabs={true}
+                wrapEnabled={true}
+                tabSize={4}
                 theme="tomorrow"
                 value={text}
                 height="100%"

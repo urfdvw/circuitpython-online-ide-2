@@ -94,6 +94,9 @@ const RawSerialOut = () => {
             <AceEditor
                 ref={aceEditorRef}
                 mode={config.raw_console.send_mode === "code" ? "python" : "text"}
+                useSoftTabs={true}
+                wrapEnabled={true}
+                tabSize={4}
                 theme="tomorrow"
                 value={text}
                 width="100%"

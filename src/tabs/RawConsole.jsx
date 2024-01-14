@@ -118,7 +118,7 @@ const RawSerialOut = () => {
         aceEditorRef.current.editor.commands.addCommand({
             name: "ctrl-d",
             bindKey: { win: "Ctrl-Shift-D", mac: "Ctrl-D" },
-            exec: sendCtrlC,
+            exec: sendCtrlD,
         });
         aceEditorRef.current.editor.commands.addCommand({
             name: "histUp",

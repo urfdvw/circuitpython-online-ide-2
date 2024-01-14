@@ -78,5 +78,5 @@ export default function useSerialCommands() {
         }
     }
 
-    return { sendCtrlC, sendCtrlD, sendSingleLineText, sendCode };
+    return { sendCtrlC, sendCtrlD, sendSingleLineText, sendCode, codeHistory };
 }

@@ -38,14 +38,70 @@ const RawSerialOut = () => {
     const aceEditorRef = useRef(null);
     const [text, setText] = useState("");
     const [isHovered, toggleHover] = useState(false);
-    const { sendCtrlC, sendCtrlD, sendCode } = useSerialCommands();
+    const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
+    const [tempCode, setTempCode] = useState("");
+    const [codeHistIndex, setCodeHistIndex] = useState(-1);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
             return;
         }
         sendCode(text);
+        setCodeHistIndex(-1);
         setText("");
+    }
+
+    // code history related
+    function histUp() {
+        let newCodeHistoryIndex = codeHistIndex;
+        let newTempCode = tempCode;
+        if (aceEditorRef.current.editor.getCursorPosition().row == 0) {
+            if (codeHistIndex == -1) {
+                newCodeHistoryIndex = codeHistory.length - 1;
+                newTempCode = aceEditorRef.current.editor.getValue();
+            } else {
+                newCodeHistoryIndex = codeHistIndex - 1;
+            }
+            if (newCodeHistoryIndex < 0) {
+                newCodeHistoryIndex = 0;
+            }
+            console.log(codeHistIndex, codeHistory[codeHistIndex]);
+            aceEditorRef.current.editor.session.setValue(codeHistory[newCodeHistoryIndex]);
+            aceEditorRef.current.editor.gotoLine(0, 0, true);
+        } else {
+            aceEditorRef.current.editor.gotoLine(
+                aceEditorRef.current.editor.getCursorPosition().row,
+                aceEditorRef.current.editor.getCursorPosition().column,
+                true
+            );
+        }
+        setCodeHistIndex(newCodeHistoryIndex);
+        setTempCode(newTempCode);
+    }
+
+    function histDown() {
+        let newCodeHistoryIndex = codeHistIndex;
+        if (
+            aceEditorRef.current.editor.getCursorPosition().row ==
+            aceEditorRef.current.editor.session.getLength() - 1
+        ) {
+            if (codeHistIndex == -1) {
+            } else if (codeHistIndex == codeHistory.length - 1) {
+                aceEditorRef.current.editor.session.setValue(tempCode);
+                newCodeHistoryIndex = -1;
+            } else {
+                newCodeHistoryIndex = codeHistIndex + 1;
+                aceEditorRef.current.editor.session.setValue(codeHistory[newCodeHistoryIndex]);
+            }
+            aceEditorRef.current.editor.gotoLine(Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY, true);
+        } else {
+            aceEditorRef.current.editor.gotoLine(
+                aceEditorRef.current.editor.getCursorPosition().row + 2,
+                command.getCursorPosition().column,
+                true
+            );
+        }
+        setCodeHistIndex(newCodeHistoryIndex);
     }
 
     function addNewline(editor) {
@@ -63,6 +119,22 @@ const RawSerialOut = () => {
             name: "ctrl-d",
             bindKey: { win: "Ctrl-Shift-D", mac: "Ctrl-D" },
             exec: sendCtrlC,
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "histUp",
+            bindKey: { win: "Up", mac: "Up" },
+            exec: function (editor) {
+                console.log("histUp");
+                histUp(editor);
+            },
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "histDown",
+            bindKey: { win: "Down", mac: "Down" },
+            exec: function (editor) {
+                console.log("histDown");
+                histDown(editor);
+            },
         });
         if (config.raw_console.send_mode === "code") {
             aceEditorRef.current.editor.commands.addCommand({

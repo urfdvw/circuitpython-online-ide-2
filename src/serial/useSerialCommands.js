@@ -1,6 +1,6 @@
 import { useContext, useState } from "react";
 import ideContext from "../ideContext";
-import * as constants from "./constants";
+import * as constants from "../constants";
 
 // https://sentry.io/answers/what-is-the-javascript-version-of-sleep/
 const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));

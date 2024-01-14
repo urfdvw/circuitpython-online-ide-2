@@ -1,4 +1,4 @@
-import * as constants from "./constants";
+import * as constants from "../constants";
 
 export function globStringToRegex(str) {
     // https://stackoverflow.com/a/13818704/7037749

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import * as constants from "./constants";
+import * as constants from "../constants";
 import { matchesInBetween } from "./textProcessor";
 
 const useSerial = () => {

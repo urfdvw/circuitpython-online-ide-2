@@ -100,13 +100,13 @@ export default function IdeEditor({ fileHandle, node }) {
     }
 
     function run_cell() {
-        var current_line = editor.getSelectionRange().start.row;
+        var current_line = aceEditorRef.current.editor.getCursorPosition().row;
         var topline = current_line; // included
         while (true) {
             if (topline == 0) {
                 break;
             }
-            if (editor.session.getLine(topline).startsWith("#%%")) {
+            if (aceEditorRef.current.editor.session.getLine(topline).startsWith("#%%")) {
                 break;
             }
             topline -= 1;
@@ -114,20 +114,20 @@ export default function IdeEditor({ fileHandle, node }) {
         var bottonline = current_line; // not included
         while (true) {
             bottonline += 1;
-            if (bottonline == editor.session.getLength()) {
-                editor.gotoLine(editor.session.getLength(), 0, true);
+            if (bottonline == aceEditorRef.current.editor.session.getLength()) {
+                aceEditorRef.current.editor.gotoLine(aceEditorRef.current.editor.session.getLength(), 0, true);
                 break;
             }
-            if (editor.session.getLine(bottonline).startsWith("#%%")) {
-                editor.gotoLine(bottonline + 1, 0, true);
+            if (aceEditorRef.current.editor.session.getLine(bottonline).startsWith("#%%")) {
+                aceEditorRef.current.editor.gotoLine(bottonline + 1, 0, true);
                 break;
             }
         }
-        var cell = editor.getValue().split("\n").slice(topline, bottonline).join("\n");
+        var cell = aceEditorRef.current.editor.getValue().split("\n").slice(topline, bottonline).join("\n");
 
         console.log("DEBUG", "cell detected", cell);
 
-        send_multiple_lines(cell);
+        sendCode(cell);
     }
 
     if (aceEditorRef.current !== null) {
@@ -163,6 +163,14 @@ export default function IdeEditor({ fileHandle, node }) {
             exec: function (editor) {
                 console.log("run_current_and_del");
                 run_current_and_del(editor);
+            },
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "run_cell",
+            bindKey: { win: "Ctrl-Enter", mac: "Cmd-Enter" },
+            exec: function (editor) {
+                console.log("run_cell");
+                run_cell(editor);
             },
         });
     }

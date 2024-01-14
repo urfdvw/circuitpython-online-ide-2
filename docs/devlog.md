@@ -159,10 +159,18 @@
     1. ~~dynamic size~~
     1. ~~bug: graph updating wrong when data flow in fast~~ not a bug
 1. ~~Serial Command history~~
-1. Editor serial shortcut
+1. ~~Editor serial shortcut~~
 1. Editor tab edited indicator
 1. Close tab confirmation
 
 ## remove random component key
 - if use random component key,
     - the component will be recreated every time there is a refresh.
+
+## about editor serial shortcut
+- removed the feature drag command from console,
+    - didn't actually ever used
+    - can achieve the same goal by undo
+- editor serial commands are not going to show up n raw console,
+    - not very clean
+    - can achieve the same goal by undo

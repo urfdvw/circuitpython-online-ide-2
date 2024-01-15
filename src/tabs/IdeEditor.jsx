@@ -35,7 +35,15 @@ export default function IdeEditor({ fileHandle, node }) {
     useEffect(() => {
         const name = (fileEdited ? FILE_EDITED : "") + fileHandle.name;
         node.getModel().doAction(FlexLayout.Actions.renameTab(node.getId(), name));
-    }, [fileEdited]);
+        if (config.editor.block_closing_unsaved_tab) {
+            node.getModel().doAction(
+                FlexLayout.Actions.updateNodeAttributes(node.getId(), { enableClose: !fileEdited })
+            );
+        } else {
+            // just incase config change in the middle
+            node.getModel().doAction(FlexLayout.Actions.updateNodeAttributes(node.getId(), { enableClose: true }));
+        }
+    }, [fileEdited, config.editor.block_closing_unsaved_tab]);
     useEffect(() => {
         async function loadText() {
             const fileText = (await getFileText(fileHandle)).split("\r").join(""); // circuitPython turned to used \r but not very easy to handle

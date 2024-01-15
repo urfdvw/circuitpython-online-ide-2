@@ -13,6 +13,11 @@
             "description": "When live is disabled, use [Ctrl-Space] for autocompletion.",
             "type": "boolean",
             "default": false
+        },
+        "block_closing_unsaved_tab": {
+            "title": "Hide close tab button if there are unsaved changed",
+            "type": "boolean",
+            "default": true
         }
     }
 }

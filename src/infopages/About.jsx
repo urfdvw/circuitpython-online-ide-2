@@ -6,7 +6,7 @@ export default function About() {
     return (
         <Box>
             <Typography variant="h5" component="h1" textAlign="center">
-                CircuitPython Online IDE 2.0 Dev
+                CircuitPython Online IDE 2.0 Alpha
             </Typography>
             <Typography component="p" textAlign="center">
                 <HyperLink text="CircuitPython" link="https://circuitpython.org/" />

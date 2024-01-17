@@ -1,4 +1,4 @@
-# Summary
+# Version 1 Draft
 
 I am over excide to announce that
 CircuitPython Online IDE 2.0 Alpha is launched!
@@ -103,3 +103,40 @@ Also please comment below and let me know what you think.
 Will see you in the next one.
 And as always,
 stay pythonic.
+
+# version 2 GPT (modified)
+
+Hey everyone, I'm super excited to announce that CircuitPython Online IDE 2.0 Alpha is now launched!
+Find the link in the description below to try it out.
+
+In this video, I'm going to talk about:
+
+-   What '2.0' means.
+-   What 'alpha' means.
+-   And what's coming up next.
+
+Welcome to CircuitPythonic! I'm River.
+
+Just a quick intro, if you're new here: CircuitPython is a version of Python for microcontrollers and single-board computers. Its development is supported by Adafruit. CircuitPython Online IDE is a community open source project by me. It's a browser-based IDE that works on pretty much any computers, even Chromebooks, with zero setup.
+
+So, let's get started.
+
+First, what does '2.0' mean?
+
+If you've followed my work or used the CircuitPython Online IDE before, you might remember the very basic version 0 and the nicer version 1. Version 0 was my first try at JavaScript – you can kinda tell. Version 1 was better but it is still written in Vanilla JavaScript. It worked, but the code became messier as I keep adding new stuff to it. Basically, I got to a point where I couldn't even understand my own code! That pushed me to re-write everything using React.js, which I call it the version 2.
+
+Now, what does 'Alpha' mean?
+
+So here is how I define the release cycles: 'Alpha' version, aka inner test version, means all the core features are implemented, but not really used in any real projects yet. In this phase, I'm using it for one of my CircuitPython projects and fixing problems as they pop up. You are very welcome to try it out and give feedbacks, but I'm not pushing it too hard on social media yet. Another big thing I'm doing now is writing up all the text documentations so everyone can get it easily when it's ready for public test.
+
+After I finish my first project with it and sort out any issues, it's going to move to 'Beta', aka public test. That's when version 2.0 will take over the old version on the website. I will push it as hard as possible with tutorial videos and v-logs on my social media. I'll be looking for feedback from users and fixing any bugs they find. The old versions will still be around but hosted on archived repos. Plus, I'll do another DIY project with it myself.
+
+Once I'm done with that second project and fix any issues that come up, version 2.0 will be officially released. But that's not the end. As the code is much more organized than before, it is easier to add new feature to it, and I do have a list of them planned. They are going to land on version 2.1, 2.2 etc.
+
+What about a version 3? Well, version 2 is a pure front-end project hosted on GitHub Pages, but some of the ideas I have need something more, like a back-end. So, I'm thinking those will come in a future version 3.
+
+So, that's the scoop! If you liked this video or find the IDE helpful, please hit like and share so more folks can see it. Drop a comment too and let me know what you think.
+
+Catch you in the next one.
+
+And always, stay pythonic.

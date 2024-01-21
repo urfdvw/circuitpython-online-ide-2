@@ -17,6 +17,8 @@ import ideContext from "./ideContext";
 // constant
 import { FILE_EDITED } from "./constants";
 
+const fullSize = { height: "100%", width: "100%" };
+
 const findTabByName = (node, name) => {
     if (node.getType() === "tab" && (node.getName() === name || node.getName() === FILE_EDITED + name)) {
         return node;
@@ -67,40 +69,39 @@ export default function IdeBody() {
         // main ones
         if (component === "editor") {
             return (
-                <div className="tab_content">
+                <div className="tab_content" style={fullSize}>
                     <IdeEditor fileHandle={fileLookUp[node.getConfig().fileKey]} node={node} />
                 </div>
             );
         } else if (component === "serial_raw") {
             return (
-                <div
-                    className="tab_content"
-                    style={{
-                        height: "100%",
-                    }}
-                >
+                <div className="tab_content" style={fullSize}>
                     <RawConsole />
                 </div>
             );
         } else if (component === "folder_view") {
             return (
-                <div className="tab_content">
+                <div className="tab_content" style={fullSize}>
                     <IdeFolderView onFileClick={onFileClick} node={node} />
                 </div>
             );
         } else if (component === "settings") {
-            return <ConfigForms schemas={schemas} config={config} set_config={set_config} />;
+            return (
+                <div className="tab_content" style={fullSize}>
+                    <ConfigForms schemas={schemas} config={config} set_config={set_config} />
+                </div>
+            );
         }
         // tools
         else if (component === "navigation") {
             return (
-                <div className="tab_content">
+                <div className="tab_content" style={fullSize}>
                     <Navigation />
                 </div>
             );
         } else if (component === "raw_plot") {
             return (
-                <div className="tab_content">
+                <div className="tab_content" style={fullSize}>
                     <RawPlotter node={node} />
                 </div>
             );
@@ -108,13 +109,13 @@ export default function IdeBody() {
         // info
         else if (component === "about") {
             return (
-                <div className="tab_content">
+                <div className="tab_content" style={fullSize}>
                     <About />
                 </div>
             );
         } else if (component === "contact") {
             return (
-                <div className="tab_content">
+                <div className="tab_content" style={fullSize}>
                     <ContactMe />
                 </div>
             );
@@ -122,7 +123,7 @@ export default function IdeBody() {
         // placeholder
         else if (component === "placeholder") {
             return (
-                <div className="tab_content">
+                <div className="tab_content" style={fullSize}>
                     <p>{node.getName()}</p>
                 </div>
             );

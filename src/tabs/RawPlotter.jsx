@@ -36,8 +36,8 @@ export default function RawPlotter({ node }) {
     if (!serialOutput) {
         return <></>;
     }
-    const parentHeight = node.getParent()._rect.height - node.getParent()._tabHeaderRect.height;
-    const parentWidth = node.getParent()._rect.width;
+    const height = node.getRect().height;
+    const width = node.getRect().width;
 
     var data = [];
     var xLabel = "index";
@@ -83,8 +83,8 @@ export default function RawPlotter({ node }) {
         xaxis: {
             title: xLabel,
         },
-        height: parentHeight - 10,
-        width: parentWidth - 10,
+        height: height - 10,
+        width: width - 10,
     };
 
     return <Plot data={data} layout={layout} />;

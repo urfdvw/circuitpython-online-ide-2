@@ -53,7 +53,7 @@ export default function IdeEditor({ fileHandle, node }) {
         loadText();
     }, [fileHandle]);
 
-    const parentHeight = node.getParent()._rect.height - node.getParent()._tabHeaderRect.height;
+    const height = node.getRect().height;
     var mode = "text";
     if (fileHandle.name.toLowerCase().endsWith(".py")) {
         mode = "python";
@@ -195,7 +195,7 @@ export default function IdeEditor({ fileHandle, node }) {
     }
 
     return (
-        <PopUp title={fileHandle.name} parentStyle={{ height: parentHeight + "px" }}>
+        <PopUp title={fileHandle.name} parentStyle={{ height: height + "px" }}>
             <AceEditor
                 ref={aceEditorRef}
                 mode={mode}

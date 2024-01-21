@@ -85,7 +85,7 @@ export default function IdeBody() {
         } else if (component === "folder_view") {
             return (
                 <div className="tab_content">
-                    <IdeFolderView onFileClick={onFileClick} />
+                    <IdeFolderView onFileClick={onFileClick} node={node} />
                 </div>
             );
         } else if (component === "settings") {

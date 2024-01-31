@@ -524,6 +524,7 @@ export async function isEntryHealthy(entryHandle) {
 export async function getFolderContent(folderHandle) {
     const layer = [];
     for await (const entry of await folderHandle.values()) {
+        entry.fullPath = (folderHandle.fullPath || "") + "/" + entry.name;
         layer.push(entry);
     }
     return layer;

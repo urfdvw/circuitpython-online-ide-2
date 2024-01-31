@@ -36,15 +36,32 @@ export default function IdeBody() {
     const { flexModel: model, schemas, config, set_config } = useContext(ideContext);
     const [fileLookUp, setFileLookUp] = useState({});
 
+    const findTabByFilePath = (node, name) => {
+        if (node.getType() === "tab") {
+            const config = node.getConfig();
+            if (config && config.fullPath === name) {
+                return node;
+            }
+        }
+        if (node.getChildren) {
+            for (let child of node.getChildren()) {
+                const found = findTabByFilePath(child, name);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
     async function onFileClick(fileHandle) {
         const fileName = fileHandle.name;
-        const tabNode = findTabByName(model.getRoot(), fileName);
+        const fullPath = fileHandle.fullPath;
+        const tabNode = findTabByFilePath(model.getRoot(), fullPath);
 
         if (tabNode instanceof FlexLayout.TabNode) {
-            console.log(fileName + " already opened");
             // Activate the found tab
             model.doAction(FlexLayout.Actions.selectTab(tabNode.getId()));
         } else {
+            // Open a new tab
             const fileKey = crypto.randomUUID();
             setFileLookUp((cur) => {
                 return {
@@ -54,7 +71,15 @@ export default function IdeBody() {
             });
             model.doAction(
                 FlexLayout.Actions.addNode(
-                    { type: "tab", name: fileName, component: "editor", config: { fileKey: fileKey } },
+                    {
+                        type: "tab",
+                        name: fileName,
+                        component: "editor",
+                        config: {
+                            fileKey: fileKey,
+                            fullPath: fullPath,
+                        }
+                    },
 
                     model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
                     FlexLayout.DockLocation.CENTER,

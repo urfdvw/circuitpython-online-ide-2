@@ -182,9 +182,9 @@ function ContentEntry({ entryHandle }) {
     }
     const entry = (
         <ApplyContextMenu items={items}>
-            <ListItem disablePadding>
+            <ListItem disablePadding dense>
                 <ListItemButton onClick={onClickHandler}>
-                    <ListItemIcon>{isFolder(entryHandle) ? <FolderIcon /> : <InsertDriveFileIcon />}</ListItemIcon>
+                    <ListItemIcon sx={{ minWidth: "30px" }}>{isFolder(entryHandle) ? <FolderIcon /> : <InsertDriveFileIcon />}</ListItemIcon>
                     <ListItemText draggable={true} onDragStart={onDragHandler} primary={entryHandle.name} />
                 </ListItemButton>
             </ListItem>

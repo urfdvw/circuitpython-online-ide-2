@@ -8,16 +8,42 @@ import ideContext from "./ideContext";
 
 export default function IdeHead() {
     const { flexModel: model, openDirectory, connectToSerialPort } = useContext(ideContext);
-    function openTab(name, component) {
-        model.doAction(
-            FlexLayout.Actions.addNode(
-                { type: "tab", name: name, component: component },
-                model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
-                FlexLayout.DockLocation.CENTER,
-                -1
-            )
-        );
+
+    function findTabByName (node, name) {
+        if (node.getType() === "tab" && node.getName() === name) {
+            return node;
+        }
+        if (node.getChildren) {
+            for (let child of node.getChildren()) {
+                const found = findTabByName(child, name);
+                if (found) return found;
+            }
+        }
+        return null;
     }
+
+    function openTab(name, component) {
+        const tabNode = findTabByName(model.getRoot(), name);
+        if (tabNode instanceof FlexLayout.TabNode) {
+            // Activate the found tab
+            model.doAction(FlexLayout.Actions.selectTab(tabNode.getId()));
+        } else {
+            // Open a new tab
+            model.doAction(
+                FlexLayout.Actions.addNode(
+                    {
+                        type: "tab",
+                        name: name,
+                        component: component,
+                    },
+                    model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
+                    FlexLayout.DockLocation.CENTER,
+                    -1
+                )
+            );
+        }
+    }
+
     const menuStructure = {
         title: "CircuitPython Online IDE",
         menu: [

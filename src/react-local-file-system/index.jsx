@@ -126,12 +126,8 @@ function ContentEntry({ entryHandle }) {
             name: "rename",
             handler: async (event) => {
                 console.log("ContentEntry rename handler called", event);
-                const newName = prompt("new name", "");
+                const newName = await promptUniqueName(currentFolderHandle, "Rename from '" + entryHandle.name + "' to:", entryHandle.name);
                 if (!newName) {
-                    return;
-                }
-                if (await checkEntryExists(currentFolderHandle, newName)) {
-                    alert('"' + newName + '" is an existing name.\nPlease try again with another name.');
                     return;
                 }
                 setIsLoading(true);
@@ -220,8 +216,12 @@ function AddEntry({ showFolderView, currentFolderHandle, setIsLoading }) {
             name: "new file",
             handler: async (event) => {
                 console.log("AddEntry new file called", event);
+                const newName = await promptUniqueName(currentFolderHandle, "New file name:", "");
+                if (!newName) {
+                    return;
+                }
                 setIsLoading(true);
-                await addNewFile(currentFolderHandle, "new_file_" + dateString());
+                await addNewFile(currentFolderHandle, newName);
                 await showFolderView(currentFolderHandle);
                 setIsLoading(false);
             },
@@ -231,8 +231,12 @@ function AddEntry({ showFolderView, currentFolderHandle, setIsLoading }) {
             name: "new folder",
             handler: async (event) => {
                 console.log("AddEntry new folder called", event);
+                const newName = await promptUniqueName(currentFolderHandle, "New folder name:", "");
+                if (!newName) {
+                    return;
+                }
                 setIsLoading(true);
-                await addNewFolder(currentFolderHandle, "new_folder_" + dateString());
+                await addNewFolder(currentFolderHandle, newName);
                 await showFolderView(currentFolderHandle);
                 setIsLoading(false);
             },
@@ -470,6 +474,18 @@ export const useFileSystem = () => {
 // *****************************************
 // UTILITIES
 // *****************************************
+
+async function promptUniqueName(folderHandle, promptLabel, actualName) {
+    const newName = prompt(promptLabel, actualName);
+    if (!newName || newName === actualName) {
+        return;
+    }
+    if (await checkEntryExists(folderHandle, newName)) {
+        alert('"' + newName + '" is an existing name.\nPlease try again with another name.');
+        return;
+    }
+    return newName;
+}
 
 // file level ====================================
 

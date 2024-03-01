@@ -20,6 +20,9 @@ import Button from "@mui/material/Button";
 import ideContext from "../ideContext";
 // commands
 import useSerialCommands from "../serial/useSerialCommands";
+// toolbar
+import Toolbar from "@mui/material/Toolbar";
+import Typography from "@mui/material/Typography";
 
 const RawSerialIn = () => {
     // "in" to computer, "out" from microcontroller
@@ -218,15 +221,88 @@ const RawSerialOut = () => {
     );
 };
 
+// toolbar
+function ToolbarEntry({ children, fixedWidth = null }) {
+    const sx = {
+        flexGrow: 1,
+        pl: 1,
+        fontSize: "14px",
+    };
+
+    if (fixedWidth) {
+        sx.width = fixedWidth;
+    }
+
+    return (
+        <Typography component="div" noWrap={true} sx={sx}>
+            {children}
+        </Typography>
+    );
+}
+
 const RawConsole = () => {
     const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
     return ready ? (
-        <Box sx={{ height: "100%" }}>
-            <ScrollableFeed>
-                <RawSerialIn />
-                <RawSerialOut />
-            </ScrollableFeed>
-        </Box>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "left",
+                    width: "100%",
+                    borderBottomColor: "rgb(239,239,239)",
+                    borderBottom: "solid",
+                }}
+            >
+                <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
+                    <ToolbarEntry>hi</ToolbarEntry>
+                </Toolbar>
+            </div>
+
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
+                {" "}
+                {/* Ensures B is scrollable if content overflows */}
+                <ScrollableFeed
+                    style={{
+                        flexShrink: 0,
+                        display: "flex",
+                    }}
+                >
+                    <RawSerialIn />
+                </ScrollableFeed>
+            </div>
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    borderTopColor: "rgb(239,239,239)",
+                    borderTop: "solid",
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginTop: "1px",
+                        flex: 1,
+                    }}
+                >
+                    <RawSerialOut />
+                </div>
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        width: "200px",
+                    }}
+                >
+                    D - Footer Right
+                    {/* <Button onClick={consoleSendCommand}>Send</Button> */}
+                </div>
+            </div>
+        </div>
     ) : (
         <Button onClick={connect}>Connect to Serial Port</Button>
     );

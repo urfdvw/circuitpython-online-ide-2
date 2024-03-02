@@ -73,6 +73,7 @@ function App() {
                 sendDataToSerialPort: sendDataToSerialPort,
                 serialOutput: serialOutput,
                 serialReady: serialReady,
+                serialTitle: serialTitle,
                 schemas: schemas,
                 config: config,
                 set_config: set_config,

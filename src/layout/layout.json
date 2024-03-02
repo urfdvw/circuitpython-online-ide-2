@@ -2,7 +2,8 @@
     "global": {
         "tabEnableClose": true,
         "tabEnableFloat": false,
-        "tabEnableRename": false
+        "tabEnableRename": false,
+        "rootOrientationVertical": true
     },
     "borders": [
         {
@@ -36,15 +37,7 @@
             "type": "border",
             "location": "bottom",
             "size": 300,
-            "selected": 0,
-            "children": [
-                {
-                    "type": "tab",
-                    "name": "Serial Console",
-                    "component": "serial_raw",
-                    "enableClose": false
-                }
-            ]
+            "children": []
         }
     ],
     "layout": {
@@ -62,7 +55,22 @@
                         "name": "Navigation",
                         "component": "navigation",
                         "enableClose": true
-                    }]
+                    }
+                ]
+            },
+            {
+                "type": "tabset",
+                "id": "initial_tabset_2",
+                "weight": 50,
+                "selected": 0,
+                "children": [
+                    {
+                        "type": "tab",
+                        "name": "Serial Console",
+                        "component": "serial_raw",
+                        "enableClose": false
+                    }
+                ]
             }
         ]
     }

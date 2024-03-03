@@ -23,6 +23,7 @@ import useSerialCommands from "../serial/useSerialCommands";
 // toolbar
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import { Menu } from "../layout/Menu";
 
 const RawSerialIn = () => {
     // "in" to computer, "out" from microcontroller
@@ -207,9 +208,24 @@ const RawConsole = () => {
         setCodeHistIndex(-1);
         setText("");
     }
+    const hiddenMenuLabelOptions = [
+        {
+            text: "Clear",
+            handler: () => {
+                console.log("Clear");
+            },
+        },
+        {
+            text: "Connect",
+            handler: () => {
+                console.log("Connect");
+                connect();
+            },
+        },
+    ];
 
     return ready ? (
-        <div style={{ display: "flex", flexDirection: "column", height: "100%" }}>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
             <div
                 style={{
                     display: "flex",
@@ -246,6 +262,7 @@ const RawConsole = () => {
                                 <Button onClick={sendCtrlD}>Ctrl-D</Button>
                             </Tooltip>
                         </ToolbarEntry>
+                        <Menu label="⋮" options={hiddenMenuLabelOptions} />
                     </Toolbar>
                 </div>
             </div>

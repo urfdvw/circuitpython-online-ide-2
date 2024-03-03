@@ -28,7 +28,7 @@ export default function MenuBar({ menuStructure }) {
     );
 }
 
-function Menu({ label, options }) {
+export function Menu({ label, options }) {
     const [open, setOpen] = React.useState(false);
     const anchorRef = React.useRef(null);
 
@@ -75,6 +75,7 @@ function Menu({ label, options }) {
                 style={{
                     textTransform: "none",
                     color: grey[900],
+                    minWidth: '30px',
                 }}
             >
                 {label}

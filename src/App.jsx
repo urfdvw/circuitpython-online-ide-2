@@ -90,7 +90,11 @@ function App() {
                 </div>
                 <div className="ide-tail">
                     CircuitPy Drive: {statusText} | Serial:{" "}
-                    {serialReady ? (serialTitle ? serialTitle : "Connected") : "No Port Connected"}
+                    {serialReady
+                        ? serialTitle && config.global.serial_status === "title"
+                            ? serialTitle
+                            : "Connected"
+                        : "No Port Connected"}
                 </div>
             </div>
         </ideContext.Provider>

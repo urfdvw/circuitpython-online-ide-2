@@ -25,7 +25,7 @@ import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
 import { Menu } from "../layout/Menu";
 
-const RawSerialIn = () => {
+const RawSerialIn = ({ startIndex, setCurrentLength }) => {
     // "in" to computer, "out" from microcontroller
     const { config, serialOutput } = useContext(ideContext);
     let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
@@ -33,8 +33,12 @@ const RawSerialIn = () => {
     if (config.raw_console.hide_cv) {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
     }
-
-    return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>{output}</pre>;
+    setCurrentLength(output.length);
+    return (
+        <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>
+            {output.slice(startIndex)}
+        </pre>
+    );
 };
 
 const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleSendCommand }) => {
@@ -195,10 +199,14 @@ function ToolbarEntry({ children, fixedWidth = null }) {
 
 const RawConsole = () => {
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
+    const { serialTitle } = useContext(ideContext);
+    // Serial Out states
     const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
-    const { serialTitle } = useContext(ideContext);
+    // Serial In states
+    const [startIndex, setStartIndex] = useState(0);
+    const [currentLength, setCurrentLength] = useState(0);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
@@ -213,6 +221,7 @@ const RawConsole = () => {
             text: "Clear",
             handler: () => {
                 console.log("Clear");
+                setStartIndex(currentLength);
             },
         },
         {
@@ -274,7 +283,7 @@ const RawConsole = () => {
                         display: "flex",
                     }}
                 >
-                    <RawSerialIn />
+                    <RawSerialIn startIndex={startIndex} setCurrentLength={setCurrentLength} />
                 </ScrollableFeed>
             </div>
             <div

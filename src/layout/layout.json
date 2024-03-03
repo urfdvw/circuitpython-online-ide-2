@@ -2,8 +2,7 @@
     "global": {
         "tabEnableClose": true,
         "tabEnableFloat": false,
-        "tabEnableRename": false,
-        "rootOrientationVertical": true
+        "tabEnableRename": false
     },
     "borders": [
         {

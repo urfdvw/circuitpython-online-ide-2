@@ -228,7 +228,7 @@ export default function IdeEditor({ fileHandle, node }) {
                             flex: 1,
                         }}
                     >
-                        {fileHandle.name}
+                        Code Editor
                     </div>
                     <div
                         style={{

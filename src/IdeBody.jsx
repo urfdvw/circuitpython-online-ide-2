@@ -56,7 +56,9 @@ export default function IdeBody() {
                 FlexLayout.Actions.addNode(
                     { type: "tab", name: fileName, component: "editor", config: { fileKey: fileKey } },
 
-                    model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
+                    model.getActiveTabset()
+                        ? model.getActiveTabset().getId()
+                        : model.getRoot().getChildren()[0].getId(), // there should be at least one tabset
                     FlexLayout.DockLocation.CENTER,
                     -1
                 )

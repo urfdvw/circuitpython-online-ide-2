@@ -45,7 +45,6 @@
         "children": [
             {
                 "type": "tabset",
-                "id": "initial_tabset",
                 "weight": 50,
                 "selected": 0,
                 "children": [
@@ -59,7 +58,6 @@
             },
             {
                 "type": "tabset",
-                "id": "initial_tabset_2",
                 "weight": 50,
                 "selected": 0,
                 "children": [

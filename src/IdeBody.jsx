@@ -95,7 +95,10 @@ export default function IdeBody() {
         // tools
         else if (component === "navigation") {
             return (
-                <div className="tab_content" style={fullSize}>
+                <div
+                    className="tab_content"
+                    // TODO style={fullSize} // no idea why this is causing a y-scroll bar
+                >
                     <Navigation />
                 </div>
             );

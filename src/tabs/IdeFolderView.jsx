@@ -6,7 +6,6 @@ import ideContext from "../ideContext";
 
 export default function IdeFolderView({ onFileClick, node }) {
     const { openDirectory, directoryReady, rootDirHandle } = useContext(ideContext);
-    console.log(node.getParent());
     // Show FolderView component only when its ready
     return directoryReady ? (
         <div style={{ height: "100%" }}>

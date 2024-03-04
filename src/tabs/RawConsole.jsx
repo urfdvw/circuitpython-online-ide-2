@@ -1,6 +1,5 @@
 import { useContext, useRef } from "react";
 // MUI
-import Box from "@mui/material/Box";
 // Other packages
 import ScrollableFeed from "react-scrollable-feed"; // https://stackoverflow.com/a/52673227/7037749
 // Mine
@@ -11,9 +10,7 @@ import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import { useState } from "react";
-import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import SendIcon from "@mui/icons-material/Send";
 // default
 import Button from "@mui/material/Button";
 //context
@@ -22,7 +19,6 @@ import ideContext from "../ideContext";
 import useSerialCommands from "../serial/useSerialCommands";
 // toolbar
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
 import { Menu } from "../layout/Menu";
 
 const RawSerialIn = ({ startIndex, setCurrentLength }) => {
@@ -178,25 +174,6 @@ const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleS
     );
 };
 
-// toolbar
-function ToolbarEntry({ children, fixedWidth = null }) {
-    const sx = {
-        flexGrow: 1,
-        pl: 1,
-        fontSize: "14px",
-    };
-
-    if (fixedWidth) {
-        sx.width = fixedWidth;
-    }
-
-    return (
-        <Typography component="div" noWrap={true} sx={sx}>
-            {children}
-        </Typography>
-    );
-}
-
 const RawConsole = () => {
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
     const { serialTitle } = useContext(ideContext);
@@ -261,16 +238,12 @@ const RawConsole = () => {
                     }}
                 >
                     <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
-                        <ToolbarEntry>
-                            <Tooltip title="Send Ctrl-C to the microcontroller" followCursor={true}>
-                                <Button onClick={sendCtrlC}>Ctrl-C</Button>
-                            </Tooltip>
-                        </ToolbarEntry>
-                        <ToolbarEntry>
-                            <Tooltip title="Send Ctrl-D to the microcontroller" followCursor={true}>
-                                <Button onClick={sendCtrlD}>Ctrl-D</Button>
-                            </Tooltip>
-                        </ToolbarEntry>
+                        <Tooltip title="Send Ctrl-C to the microcontroller" followCursor={true}>
+                            <Button onClick={sendCtrlC}>Ctrl-C</Button>
+                        </Tooltip>
+                        <Tooltip title="Send Ctrl-D to the microcontroller" followCursor={true}>
+                            <Button onClick={sendCtrlD}>Ctrl-D</Button>
+                        </Tooltip>
                         <Menu label="⋮" options={hiddenMenuLabelOptions} />
                     </Toolbar>
                 </div>

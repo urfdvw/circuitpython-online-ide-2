@@ -441,15 +441,6 @@ export default function FolderView({ rootFolder, onFileClick }) {
                 }}
             >
                 <Divider />
-                <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px" }}>
-                    <Typography component="div" noWrap={true} sx={{ flexGrow: 1, pl: 1, fontSize: "14px" }}>
-                        {foldersCount} folders
-                    </Typography>
-                    <Typography component="div" noWrap={true} sx={{ flexGrow: 1, pl: 1, fontSize: "14px" }}>
-                        {filesCount} files
-                    </Typography>
-                </Toolbar>
-                <Divider />
             </div>
             <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
                 <CircularProgress color="inherit" />

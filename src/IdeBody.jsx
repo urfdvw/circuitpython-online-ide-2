@@ -38,12 +38,17 @@ export default function IdeBody() {
 
     async function onFileClick(fileHandle) {
         const fileName = fileHandle.name;
+        const fullPath = fileHandle.fullPath;
         const tabNode = findTabByName(model.getRoot(), fileName);
 
         if (tabNode instanceof FlexLayout.TabNode) {
-            console.log(fileName + " already opened");
-            // Activate the found tab
-            model.doAction(FlexLayout.Actions.selectTab(tabNode.getId()));
+            if (fileLookUp[tabNode.getConfig().fileKey].fullPath === fullPath) {
+                console.log(fileName + " already opened");
+                // Activate the found tab
+                model.doAction(FlexLayout.Actions.selectTab(tabNode.getId()));
+            } else {
+                confirm("A file named '" + fileName + "' is already opened.\nCannot open two files with the same name");
+            }
         } else {
             const fileKey = crypto.randomUUID();
             setFileLookUp((cur) => {
@@ -54,7 +59,14 @@ export default function IdeBody() {
             });
             model.doAction(
                 FlexLayout.Actions.addNode(
-                    { type: "tab", name: fileName, component: "editor", config: { fileKey: fileKey } },
+                    {
+                        type: "tab",
+                        name: fileName,
+                        component: "editor",
+                        config: {
+                            fileKey: fileKey,
+                        },
+                    },
 
                     model.getActiveTabset()
                         ? model.getActiveTabset().getId()

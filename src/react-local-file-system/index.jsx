@@ -1,51 +1,39 @@
 import { useState, createContext, useContext, useEffect } from "react";
-import Breadcrumbs from "@mui/material/Breadcrumbs";
-import { Button } from "@mui/material";
-import List from "@mui/material/List";
-import ListItem from "@mui/material/ListItem";
-import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
-import ListItemText from "@mui/material/ListItemText";
-import Divider from "@mui/material/Divider";
-import FolderIcon from "@mui/icons-material/Folder";
-import InsertDriveFileIcon from "@mui/icons-material/InsertDriveFile";
-import SpeedDial from "@mui/material/SpeedDial";
-import SpeedDialIcon from "@mui/material/SpeedDialIcon";
-import SpeedDialAction from "@mui/material/SpeedDialAction";
-import Menu from "@mui/material/Menu";
-import MenuItem from "@mui/material/MenuItem";
-import Backdrop from "@mui/material/Backdrop";
-import CircularProgress from "@mui/material/CircularProgress";
+
+import {
+    Backdrop,
+    Breadcrumbs,
+    Button,
+    CircularProgress,
+    Divider,
+    IconButton,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemIcon,
+    ListItemText,
+    Menu,
+    MenuItem,
+    Toolbar,
+    Tooltip,
+    Typography,
+} from "@mui/material";
+
+import {
+    CreateNewFolderOutlined as NewFolderIcon,
+    DescriptionOutlined as FileIcon,
+    FolderOutlined as FolderIcon,
+    InsertDriveFileOutlined as BinaryFileIcon,
+    KeyboardReturnOutlined as ReturnIcon,
+    NoteAddOutlined as NewFileIcon,
+    RefreshOutlined as RefreshIcon,
+} from "@mui/icons-material";
+
+import filesSettings from "./filesSettings.json";
 
 // *****************************************
 // COMPONENTS
 // *****************************************
-
-//util
-function dateString() {
-    try {
-        Object.defineProperty(Date.prototype, "YYYYMMDDHHMMSS", {
-            // https://stackoverflow.com/a/19449076/7037749
-            value: function () {
-                function pad2(n) {
-                    // always returns a string
-                    return (n < 10 ? "0" : "") + n;
-                }
-
-                return (
-                    this.getFullYear() +
-                    pad2(this.getMonth() + 1) +
-                    pad2(this.getDate()) +
-                    pad2(this.getHours()) +
-                    pad2(this.getMinutes()) +
-                    pad2(this.getSeconds())
-                );
-            },
-        });
-    } catch {}
-    const now = new Date();
-    return now.YYYYMMDDHHMMSS();
-}
 
 // wrapper
 
@@ -120,18 +108,40 @@ function ApplyDrop({ children, onDropHandler }) {
 function ContentEntry({ entryHandle }) {
     const { currentFolderHandle, onFileClick, showFolderView, setIsLoading } = useContext(CurFolderContext);
     const { setEntryOnDrag, handleDrop } = useContext(DragContext);
+
+    const entryName = entryHandle.isParent ? ".." : entryHandle.name;
+    const isDraggable = !entryHandle.isParent;
+    const fileOptions =
+        (entryHandle.extension && filesSettings.extension[entryHandle.extension]) || filesSettings.default;
+    const isReadOnly = fileOptions.isBinary;
+
+    const itemSize = 30;
+    const iconSize = itemSize - 10;
+
+    const iconSx = { width: `${iconSize}px`, height: `${iconSize}px` };
+    let icon = <FileIcon sx={iconSx} />;
+    if (entryHandle.isParent) {
+        icon = <ReturnIcon sx={iconSx} />;
+    } else if (isFolder(entryHandle)) {
+        icon = <FolderIcon sx={iconSx} />;
+    } else if (fileOptions.isBinary) {
+        icon = <BinaryFileIcon sx={iconSx} />;
+    }
+
+    const className = fileOptions.class || "";
+
     // handler
     const items = [
         {
-            name: "rename",
+            name: "Rename",
             handler: async (event) => {
                 console.log("ContentEntry rename handler called", event);
-                const newName = prompt("new name", "");
+                const newName = await promptUniqueName(
+                    currentFolderHandle,
+                    "Rename from '" + entryHandle.name + "' to:",
+                    entryHandle.name
+                );
                 if (!newName) {
-                    return;
-                }
-                if (await checkEntryExists(currentFolderHandle, newName)) {
-                    alert('"' + newName + '" is an existing name.\nPlease try again with another name.');
                     return;
                 }
                 setIsLoading(true);
@@ -141,17 +151,18 @@ function ContentEntry({ entryHandle }) {
             },
         },
         {
-            name: "duplicate",
+            name: "Duplicate",
             handler: async (event) => {
                 console.log("ContentEntry duplicate handler called", event);
+                const cloneName = await getDuplicateName(currentFolderHandle, entryHandle);
                 setIsLoading(true);
-                await copyEntry(entryHandle, currentFolderHandle, entryHandle.name + "_copy_" + dateString());
+                await copyEntry(entryHandle, currentFolderHandle, cloneName);
                 await showFolderView(currentFolderHandle);
                 setIsLoading(false);
             },
         },
         {
-            name: "remove",
+            name: "Remove",
             handler: async (event) => {
                 console.log("ContentEntry remove handler called", event);
                 if (!confirm('Are you sure to remove "' + entryHandle.name + '"?\nThis is not revertible!')) {
@@ -169,7 +180,7 @@ function ContentEntry({ entryHandle }) {
         if (isFolder(entryHandle)) {
             showFolderView(entryHandle);
         } else {
-            onFileClick(entryHandle);
+            onFileClick(entryHandle, isReadOnly);
         }
     }
     function onDragHandler(event) {
@@ -180,17 +191,25 @@ function ContentEntry({ entryHandle }) {
         console.log("ContentEntry onDropHandler called", event);
         handleDrop(entryHandle);
     }
+
     const entry = (
-        <ApplyContextMenu items={items}>
-            <ListItem disablePadding>
-                <ListItemButton onClick={onClickHandler}>
-                    <ListItemIcon>{isFolder(entryHandle) ? <FolderIcon /> : <InsertDriveFileIcon />}</ListItemIcon>
-                    <ListItemText draggable={true} onDragStart={onDragHandler} primary={entryHandle.name} />
-                </ListItemButton>
-            </ListItem>
-        </ApplyContextMenu>
+        <ListItem onContextMenu={(e) => e.preventDefault()} disablePadding dense sx={{ height: `${itemSize}px` }}>
+            <ListItemButton onClick={onClickHandler} sx={{ height: `${itemSize}px` }}>
+                <ListItemIcon sx={{ minWidth: `${iconSize + 5}px` }} className={className}>
+                    {icon}
+                </ListItemIcon>
+                <ListItemText draggable={isDraggable} onDragStart={onDragHandler} primary={entryName} />
+            </ListItemButton>
+        </ListItem>
     );
-    return isFolder(entryHandle) ? <ApplyDrop onDropHandler={onDropHandler}>{entry}</ApplyDrop> : entry;
+
+    const entryContextMenu = !entryHandle.isParent ? <ApplyContextMenu items={items}>{entry}</ApplyContextMenu> : entry;
+
+    return isFolder(entryHandle) ? (
+        <ApplyDrop onDropHandler={onDropHandler}>{entryContextMenu}</ApplyDrop>
+    ) : (
+        entryContextMenu
+    );
 }
 
 function PathEntry({ entryHandle }) {
@@ -207,52 +226,9 @@ function PathEntry({ entryHandle }) {
     return (
         <ApplyDrop onDropHandler={onDropHandler}>
             <Button size="small" onClick={onClickHandler} sx={{ minWidth: 10, textTransform: "none" }}>
-                {entryHandle.name === "\\" ? "ROOT" : entryHandle.name}
+                {getPathEntryLabel(entryHandle.name)}
             </Button>
         </ApplyDrop>
-    );
-}
-
-function AddEntry({ showFolderView, currentFolderHandle, setIsLoading }) {
-    const actions = [
-        {
-            icon: <InsertDriveFileIcon />,
-            name: "new file",
-            handler: async (event) => {
-                console.log("AddEntry new file called", event);
-                setIsLoading(true);
-                await addNewFile(currentFolderHandle, "new_file_" + dateString());
-                await showFolderView(currentFolderHandle);
-                setIsLoading(false);
-            },
-        },
-        {
-            icon: <FolderIcon />,
-            name: "new folder",
-            handler: async (event) => {
-                console.log("AddEntry new folder called", event);
-                setIsLoading(true);
-                await addNewFolder(currentFolderHandle, "new_folder_" + dateString());
-                await showFolderView(currentFolderHandle);
-                setIsLoading(false);
-            },
-        },
-    ];
-    return (
-        <SpeedDial
-            ariaLabel="SpeedDial basic example"
-            sx={{ position: "absolute", bottom: 16, right: 16 }}
-            icon={<SpeedDialIcon />}
-        >
-            {actions.map((action) => (
-                <SpeedDialAction
-                    key={action.name}
-                    icon={action.icon}
-                    tooltipTitle={action.name}
-                    onClick={action.handler}
-                />
-            ))}
-        </SpeedDial>
     );
 }
 
@@ -280,7 +256,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
         // set context
         setCurrentFolderHandle(folderHandle);
         // set content
-        setContent(await getFolderContent(folderHandle));
+        setContent(await getFolderContent(folderHandle, true));
         // set path
         // if folderHandle in path, cut what ever behind it
         for (var i = 0; i < path.length; i++) {
@@ -296,6 +272,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
             return [...curPath, folderHandle];
         });
     }
+
     async function handleDrop(targetFolder) {
         if (await targetFolder.isSameEntry(entryOnDrag)) {
             return;
@@ -312,6 +289,60 @@ export default function FolderView({ rootFolder, onFileClick }) {
         await showFolderView(currentFolderHandle);
         setIsLoading(false);
     }
+
+    const toolbarItems = [
+        {
+            name: "new_file",
+            title: "New file",
+            icon: NewFileIcon,
+            handler: async () => {
+                console.log("FolderView new file called", event);
+                const newName = await promptUniqueName(currentFolderHandle, "New file name:", "");
+                if (!newName) {
+                    return;
+                }
+                setIsLoading(true);
+                const newFileHandle = await addNewFile(currentFolderHandle, newName);
+                await showFolderView(currentFolderHandle);
+                setIsLoading(false);
+                newFileHandle.fullPath = (currentFolderHandle.fullPath || "") + "/" + newFileHandle.name;
+                onFileClick(newFileHandle);
+            },
+        },
+        {
+            name: "new_folder",
+            title: "New folder",
+            icon: NewFolderIcon,
+            handler: async (event) => {
+                console.log("FolderView new folder called", event);
+                const newName = await promptUniqueName(currentFolderHandle, "New folder name:", "");
+                if (!newName) {
+                    return;
+                }
+                setIsLoading(true);
+                await addNewFolder(currentFolderHandle, newName);
+                await showFolderView(currentFolderHandle);
+                setIsLoading(false);
+            },
+        },
+        {
+            name: "refresh",
+            title: "Refresh",
+            icon: RefreshIcon,
+            handler: async (event) => {
+                console.log("Toolbar refresh called", event);
+                setIsLoading(true);
+                await showFolderView(currentFolderHandle);
+                setIsLoading(false);
+            },
+        },
+    ];
+
+    const foldersCount = content.filter((entry) => {
+        return isFolder(entry) && !entry.isParent && !entry.name.startsWith(".");
+    }).length;
+    const filesCount = content.filter((entry) => !isFolder(entry)).length;
+
     return (
         <div
             style={{
@@ -338,6 +369,30 @@ export default function FolderView({ rootFolder, onFileClick }) {
                     </DragContext.Provider>
                 </CurFolderContext.Provider>
                 <Divider />
+                <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px" }}>
+                    <Typography component="div" noWrap={true} sx={{ flexGrow: 1, pl: 1, fontSize: "14px" }}>
+                        {getPathEntryLabel(path[path.length - 1].name)}
+                    </Typography>
+                    {toolbarItems.map((item) => {
+                        return (
+                            <Tooltip
+                                key={"local_file_system_toolbar_item_key_" + item.name}
+                                id={item.name}
+                                title={item.title}
+                            >
+                                <IconButton
+                                    edge="start"
+                                    size="small"
+                                    style={{ borderRadius: 0 }}
+                                    onClick={item.handler}
+                                >
+                                    <item.icon />
+                                </IconButton>
+                            </Tooltip>
+                        );
+                    })}
+                </Toolbar>
+                <Divider />
             </div>
             <div
                 style={{
@@ -350,6 +405,12 @@ export default function FolderView({ rootFolder, onFileClick }) {
                         <List>
                             {content
                                 .sort((a, b) => {
+                                    if (a.isParent && !b.isParent) {
+                                        return -1;
+                                    }
+                                    if (!a.isParent && b.isParent) {
+                                        return 1;
+                                    }
                                     if (isFolder(a) && !isFolder(b)) {
                                         return -1;
                                     }
@@ -374,11 +435,13 @@ export default function FolderView({ rootFolder, onFileClick }) {
                     </DragContext.Provider>
                 </CurFolderContext.Provider>
             </div>
-            <AddEntry
-                showFolderView={showFolderView}
-                currentFolderHandle={currentFolderHandle}
-                setIsLoading={setIsLoading}
-            />
+            <div
+                style={{
+                    flexGrow: 0,
+                }}
+            >
+                <Divider />
+            </div>
             <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
                 <CircularProgress color="inherit" />
             </Backdrop>
@@ -471,6 +534,44 @@ export const useFileSystem = () => {
 // UTILITIES
 // *****************************************
 
+async function promptUniqueName(folderHandle, promptLabel, actualName) {
+    const newName = prompt(promptLabel, actualName);
+    if (!newName || newName === actualName) {
+        return;
+    }
+    if (await checkEntryExists(folderHandle, newName)) {
+        alert('"' + newName + '" is an existing name.\nPlease try again with another name.');
+        return;
+    }
+    return newName;
+}
+
+export function getPathEntryLabel(entryName) {
+    return entryName === "\\" ? "ROOT" : entryName;
+}
+
+export async function getDuplicateName(parentHandle, entry) {
+    let cloneIndex = 0;
+    let namePart = entry.name;
+    let extensionPart = null;
+
+    if (!isFolder(entry)) {
+        const fileNameParts = entry.name.match(/^(.*)(\.[^\.]+)$/);
+        if (fileNameParts) {
+            namePart = fileNameParts[1];
+            extensionPart = fileNameParts[2];
+        }
+    }
+
+    let cloneName = namePart + "_copy" + (extensionPart || "");
+    while (await checkEntryExists(parentHandle, cloneName)) {
+        cloneIndex++;
+        cloneName = namePart + "_copy_" + cloneIndex.toString() + (extensionPart || "");
+    }
+
+    return cloneName;
+}
+
 // file level ====================================
 
 export async function writeFileText(fileHandle, text) {
@@ -521,9 +622,21 @@ export async function isEntryHealthy(entryHandle) {
     }
 }
 
-export async function getFolderContent(folderHandle) {
+export async function getFolderContent(folderHandle, withParent = false) {
     const layer = [];
+    if (withParent && folderHandle.parent) {
+        const parentEntry = folderHandle.parent;
+        parentEntry.isParent = true;
+        layer.push(parentEntry);
+    }
     for await (const entry of await folderHandle.values()) {
+        const matchExtension = entry.name.match(/\.([^\.]+)$/i);
+
+        entry.parent = folderHandle;
+        entry.isParent = false;
+        entry.fullPath = (folderHandle.fullPath || "") + "/" + entry.name;
+        entry.extension = matchExtension ? matchExtension[1].toLowerCase() : null;
+
         layer.push(entry);
     }
     return layer;

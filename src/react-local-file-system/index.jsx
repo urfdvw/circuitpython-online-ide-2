@@ -306,7 +306,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
                 await showFolderView(currentFolderHandle);
                 setIsLoading(false);
                 newFileHandle.fullPath = (currentFolderHandle.fullPath || "") + "/" + newFileHandle.name;
-                onFileClick(newFileHandle, false, true);
+                onFileClick(newFileHandle);
             },
         },
         {

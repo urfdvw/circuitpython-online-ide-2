@@ -29,8 +29,6 @@ import {
     RefreshOutlined as RefreshIcon,
 } from "@mui/icons-material";
 
-import filesSettings from "./filesSettings.json";
-
 // *****************************************
 // COMPONENTS
 // *****************************************
@@ -111,9 +109,6 @@ function ContentEntry({ entryHandle }) {
 
     const entryName = entryHandle.isParent ? ".." : entryHandle.name;
     const isDraggable = !entryHandle.isParent;
-    const fileOptions =
-        (entryHandle.extension && filesSettings.extension[entryHandle.extension]) || filesSettings.default;
-    const isReadOnly = fileOptions.isBinary;
 
     const itemSize = 30;
     const iconSize = itemSize - 10;
@@ -124,12 +119,7 @@ function ContentEntry({ entryHandle }) {
         icon = <ReturnIcon sx={iconSx} />;
     } else if (isFolder(entryHandle)) {
         icon = <FolderIcon sx={iconSx} />;
-    } else if (fileOptions.isBinary) {
-        icon = <BinaryFileIcon sx={iconSx} />;
     }
-
-    const className = fileOptions.class || "";
-
     // handler
     const items = [
         {
@@ -180,7 +170,7 @@ function ContentEntry({ entryHandle }) {
         if (isFolder(entryHandle)) {
             showFolderView(entryHandle);
         } else {
-            onFileClick(entryHandle, isReadOnly);
+            onFileClick(entryHandle);
         }
     }
     function onDragHandler(event) {
@@ -195,9 +185,7 @@ function ContentEntry({ entryHandle }) {
     const entry = (
         <ListItem onContextMenu={(e) => e.preventDefault()} disablePadding dense sx={{ height: `${itemSize}px` }}>
             <ListItemButton onClick={onClickHandler} sx={{ height: `${itemSize}px` }}>
-                <ListItemIcon sx={{ minWidth: `${iconSize + 5}px` }} className={className}>
-                    {icon}
-                </ListItemIcon>
+                <ListItemIcon sx={{ minWidth: `${iconSize + 5}px` }}>{icon}</ListItemIcon>
                 <ListItemText draggable={isDraggable} onDragStart={onDragHandler} primary={entryName} />
             </ListItemButton>
         </ListItem>
@@ -295,7 +283,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
             name: "new_file",
             title: "New file",
             icon: NewFileIcon,
-            handler: async () => {
+            handler: async (event) => {
                 console.log("FolderView new file called", event);
                 const newName = await promptUniqueName(currentFolderHandle, "New file name:", "");
                 if (!newName) {
@@ -337,11 +325,6 @@ export default function FolderView({ rootFolder, onFileClick }) {
             },
         },
     ];
-
-    const foldersCount = content.filter((entry) => {
-        return isFolder(entry) && !entry.isParent && !entry.name.startsWith(".");
-    }).length;
-    const filesCount = content.filter((entry) => !isFolder(entry)).length;
 
     return (
         <div

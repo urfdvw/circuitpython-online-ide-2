@@ -1,10 +1,12 @@
 import { Helmet } from "react-helmet";
 import useThemeDetector from "./useThemeDetector";
 
+// eslint-disable-next-line react/prop-types
 export default function DarkTheme({ dark = null }) {
+    const systemIsDark = useThemeDetector();
     var isDarkTheme;
     if (dark === null) {
-        isDarkTheme = useThemeDetector();
+        isDarkTheme = systemIsDark;
     } else {
         isDarkTheme = dark;
     }

@@ -16,7 +16,7 @@ import Tooltip from "@mui/material/Tooltip";
 // Layout
 import PopUp from "../layout/PopUp";
 // file utils
-import { getFileText, writeFileText, isEntryHealthy } from "../react-local-file-system";
+import { getFileText, writeFileText, isEntryHealthy, isfileSame } from "../react-local-file-system";
 // context
 import ideContext from "../ideContext";
 // commands
@@ -30,6 +30,16 @@ import Toolbar from "@mui/material/Toolbar";
 import { Menu } from "../layout/Menu";
 import Button from "@mui/material/Button";
 
+function generateRandomNumber(a) {
+    // Calculate the range between a and a/4
+    const min = a;
+    const max = a / 4;
+    // Generate a random number within the range
+    // Using Math.floor() for an integer result
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    return randomNumber;
+}
+
 export default function IdeEditor({ fileHandle, node }) {
     const { sendCtrlC, sendCtrlD, sendCode } = useSerialCommands();
     const { config } = useContext(ideContext);
@@ -38,13 +48,14 @@ export default function IdeEditor({ fileHandle, node }) {
     const [fileEdited, setFileEdited] = useState(false);
     const [popped, setPopped] = useState(false);
     const [fileExists, setFileExists] = useState(true);
-    // directoryReady
+    // scheduled state checking
     useEffect(() => {
         const interval = setInterval(async () => {
             setFileExists(await isEntryHealthy(fileHandle));
-        }, 1000);
+            setFileEdited(!(await isfileSame(fileHandle, text)));
+        }, generateRandomNumber(1000));
         return () => clearInterval(interval);
-    }, [fileHandle]);
+    }, [fileHandle, text]);
 
     useEffect(() => {
         const name = (fileEdited ? FILE_EDITED : "") + fileHandle.name;
@@ -239,6 +250,7 @@ export default function IdeEditor({ fileHandle, node }) {
                     >
                         Editor: {fileHandle.fullPath}
                         {fileExists ? "" : " (deleted)"}
+                        {fileEdited ? " (unsaved changes)" : ""}
                     </div>
                     <div
                         style={{
@@ -275,7 +287,6 @@ export default function IdeEditor({ fileHandle, node }) {
                         width="100%"
                         onChange={(newValue) => {
                             setText(newValue);
-                            setFileEdited(true);
                         }}
                         fontSize={config.editor.font + "pt"}
                         setOptions={{

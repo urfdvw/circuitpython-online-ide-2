@@ -31,6 +31,24 @@ import {
 } from "../utilities/fileSystemUtils";
 import { promptUniqueName, getPathEntryLabel } from "../utilities/uiUtils";
 
+function compareFolderContent(A, B) {
+    if (A.length != B.length) {
+        return false;
+    }
+    const A_paths = A.map((entry) => {
+        return entry.fullPath;
+    }).sort();
+    const B_paths = B.map((entry) => {
+        return entry.fullPath;
+    }).sort();
+    for (var i = 0; i < A.length; i++) {
+        if (A_paths[i] !== B_paths[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
 export default function FolderView({ rootFolder, onFileClick }) {
     const [currentFolderHandle, setCurrentFolderHandle] = useState(rootFolder);
     const [entryOnDrag, setEntryOnDrag] = useState();
@@ -45,6 +63,17 @@ export default function FolderView({ rootFolder, onFileClick }) {
         }
         showRoot();
     }, [rootFolder]);
+
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            const curContent = await getFolderContent(currentFolderHandle);
+            if (!compareFolderContent(curContent, content)) {
+                await showFolderView(currentFolderHandle);
+                console.log("refresh triggered by file changes");
+            }
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [content, currentFolderHandle]);
 
     async function showFolderView(folderHandle) {
         // set context

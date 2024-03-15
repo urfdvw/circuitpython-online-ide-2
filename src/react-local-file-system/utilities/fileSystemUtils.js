@@ -48,6 +48,18 @@ export async function isEntryHealthy(entryHandle) {
     }
 }
 
+export async function isfileSame(entryHandle, text) {
+    if (entryHandle === null) {
+        return false;
+    }
+    try {
+        const fileText = await getFileText(entryHandle);
+        return text === fileText;
+    } catch {
+        return false;
+    }
+}
+
 export async function getFolderContent(folderHandle, withParent = false) {
     const layer = [];
     if (withParent && folderHandle.parent) {

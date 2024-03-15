@@ -7,12 +7,12 @@ import * as FlexLayout from "flexlayout-react";
 import ideContext from "./ideContext";
 
 export default function IdeHead() {
-    const { flexModel: model, openDirectory, connectToSerialPort } = useContext(ideContext);
+    const { flexModel: model, openDirectory, openBackupDirectory, connectToSerialPort } = useContext(ideContext);
     function openTab(name, component) {
         model.doAction(
             FlexLayout.Actions.addNode(
                 { type: "tab", name: name, component: component },
-                model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
+                model.getActiveTabset() ? model.getActiveTabset().getId() : model.getRoot().getChildren()[0].getId(), // there should be at least one tabset
                 FlexLayout.DockLocation.CENTER,
                 -1
             )
@@ -38,6 +38,13 @@ export default function IdeHead() {
                             connectToSerialPort();
                         },
                     },
+                    {
+                        text: "Backup Folder",
+                        handler: () => {
+                            console.log("clicked on `Backup Folder`");
+                            openBackupDirectory();
+                        },
+                    },
                 ],
             },
             {
@@ -53,6 +60,12 @@ export default function IdeHead() {
                         text: "Plot",
                         handler: () => {
                             openTab("Plot", "raw_plot");
+                        },
+                    },
+                    {
+                        text: "Backup",
+                        handler: () => {
+                            openTab("Backup", "backup_drive");
                         },
                     },
                 ],

@@ -16,7 +16,7 @@ import Tooltip from "@mui/material/Tooltip";
 // Layout
 import PopUp from "../layout/PopUp";
 // file utils
-import { getFileText, writeFileText } from "../react-local-file-system";
+import { getFileText, writeFileText, isEntryHealthy } from "../react-local-file-system";
 // context
 import ideContext from "../ideContext";
 // commands
@@ -37,6 +37,15 @@ export default function IdeEditor({ fileHandle, node }) {
     const [text, setText] = useState("");
     const [fileEdited, setFileEdited] = useState(false);
     const [popped, setPopped] = useState(false);
+    const [fileExists, setFileExists] = useState(true);
+    // directoryReady
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            setFileExists(await isEntryHealthy(fileHandle));
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [fileHandle]);
+
     useEffect(() => {
         const name = (fileEdited ? FILE_EDITED : "") + fileHandle.name;
         node.getModel().doAction(FlexLayout.Actions.renameTab(node.getId(), name));
@@ -229,6 +238,7 @@ export default function IdeEditor({ fileHandle, node }) {
                         }}
                     >
                         Editor: {fileHandle.fullPath}
+                        {fileExists ? "" : " (deleted)"}
                     </div>
                     <div
                         style={{

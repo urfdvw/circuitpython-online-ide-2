@@ -70,7 +70,11 @@ export default function ContentEntry({ entryHandle }) {
                     return;
                 }
                 setIsLoading(true);
-                await removeEntry(currentFolderHandle, entryHandle);
+                try {
+                    await removeEntry(currentFolderHandle, entryHandle);
+                } catch {
+                    console.warn("remove file failed");
+                }
                 await showFolderView(currentFolderHandle);
                 setIsLoading(false);
             },

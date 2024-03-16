@@ -30,6 +30,7 @@ import {
     checkEntryExists,
     getFolderTree,
     compareFolderTrees,
+    isEntryHealthy,
 } from "../utilities/fileSystemUtils";
 import { promptUniqueName, getPathEntryLabel } from "../utilities/uiUtils";
 
@@ -71,7 +72,13 @@ export default function FolderView({ rootFolder, onFileClick }) {
         const interval = setInterval(async () => {
             const curTree = await getFolderTree(rootFolder);
             if (!compareFolderTrees(curTree, folderTree)) {
-                await showFolderView(currentFolderHandle);
+                const healthy = await isEntryHealthy(currentFolderHandle);
+                if (!healthy) {
+                    await showFolderView(rootFolder);
+                    setCurrentFolderHandle(rootFolder);
+                } else {
+                    await showFolderView(currentFolderHandle);
+                }
                 console.log(curTree, folderTree, "not eq");
                 console.log("refresh triggered by file changes");
             }

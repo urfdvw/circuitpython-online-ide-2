@@ -28,8 +28,6 @@ import {
     addNewFolder,
     moveEntry,
     checkEntryExists,
-    getFolderTree,
-    compareFolderTrees,
     isEntryHealthy,
 } from "../utilities/fileSystemUtils";
 import { promptUniqueName, getPathEntryLabel } from "../utilities/uiUtils";
@@ -89,7 +87,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
         if (compareFolderContent(curContent, content)) {
             return;
         }
-        setContent(await getFolderContent(folderHandle, true));
+        setContent(curContent);
         // set path
         // if folderHandle in path, cut what ever behind it
         for (var i = 0; i < path.length; i++) {

@@ -8,6 +8,7 @@ import RawConsole from "./tabs/RawConsole";
 import { ConfigForms } from "./react-user-config";
 import Navigation from "./tabs/Navigation";
 import RawPlotter from "./tabs/RawPlotter";
+import BackupDrive from "./tabs/BackupDrive";
 import About from "./infopages/About";
 import ContactMe from "./infopages/ContactMe";
 // Flex layout
@@ -120,6 +121,12 @@ export default function IdeBody() {
             return (
                 <div className="tab_content" style={fullSize}>
                     <RawPlotter node={node} />
+                </div>
+            );
+        } else if (component === "backup_drive") {
+            return (
+                <div className="tab_content" style={fullSize}>
+                    <BackupDrive node={node} />
                 </div>
             );
         }

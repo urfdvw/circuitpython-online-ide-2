@@ -1,0 +1,22 @@
+{
+    "title": "Backup",
+    "description": "Backup folder settings.",
+    "type": "object",
+    "properties": {
+        "enable_schedule": {
+            "title": "Auto backup by period",
+            "type": "boolean",
+            "default": false
+        },
+        "period": {
+            "title": "Backup period length (minutes)",
+            "type": "number",
+            "default": 5
+        },
+        "clean": {
+            "title": "Clean up before each backup",
+            "type": "boolean",
+            "default": false
+        }
+    }
+}

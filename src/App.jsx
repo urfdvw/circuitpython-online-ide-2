@@ -25,6 +25,12 @@ import layout from "./layout/layout.json";
 function App() {
     // get folder handler and status with useFileSystem hook
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
+    const {
+        openDirectory: openBackupDirectory,
+        directoryReady: backupDirectoryReady,
+        statusText: backupStatusText,
+        rootDirHandle: backupDirectoryDirHandle,
+    } = useFileSystem();
     const { connectToSerialPort, sendDataToSerialPort, serialOutput, serialReady, serialTitle } = useSerial();
     const { config, set_config, ready: configReady } = useConfig(schemas);
     const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
@@ -69,6 +75,10 @@ function App() {
                 openDirectory: openDirectory,
                 directoryReady: directoryReady,
                 rootDirHandle: rootDirHandle,
+                openBackupDirectory: openBackupDirectory,
+                backupDirectoryReady: backupDirectoryReady,
+                backupStatusText: backupStatusText,
+                backupDirectoryDirHandle: backupDirectoryDirHandle,
                 connectToSerialPort: connectToSerialPort,
                 sendDataToSerialPort: sendDataToSerialPort,
                 serialOutput: serialOutput,

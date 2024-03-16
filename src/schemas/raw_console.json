@@ -6,7 +6,7 @@
         "font": {
             "title": "Text font size",
             "type": "number",
-            "default": 14
+            "default": 12
         },
         "send_mode": {
             "title": "Send mode",

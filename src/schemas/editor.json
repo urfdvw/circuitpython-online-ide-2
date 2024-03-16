@@ -6,7 +6,7 @@
         "font": {
             "title": "Text font size",
             "type": "number",
-            "default": 14
+            "default": 12
         },
         "live_autocompletion": {
             "title": "Enable Live Autocompletion",
@@ -17,7 +17,7 @@
         "block_closing_unsaved_tab": {
             "title": "Hide close tab button if there are unsaved changed",
             "type": "boolean",
-            "default": true
+            "default": false
         }
     }
 }

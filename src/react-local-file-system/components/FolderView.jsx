@@ -28,8 +28,27 @@ import {
     addNewFolder,
     moveEntry,
     checkEntryExists,
+    isEntryHealthy,
 } from "../utilities/fileSystemUtils";
 import { promptUniqueName, getPathEntryLabel } from "../utilities/uiUtils";
+
+function compareFolderContent(A, B) {
+    if (A.length != B.length) {
+        return false;
+    }
+    const A_paths = A.map((entry) => {
+        return entry.fullPath;
+    }).sort();
+    const B_paths = B.map((entry) => {
+        return entry.fullPath;
+    }).sort();
+    for (var i = 0; i < A.length; i++) {
+        if (A_paths[i] !== B_paths[i]) {
+            return false;
+        }
+    }
+    return true;
+}
 
 export default function FolderView({ rootFolder, onFileClick }) {
     const [currentFolderHandle, setCurrentFolderHandle] = useState(rootFolder);
@@ -37,6 +56,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
     const [path, setPath] = useState([rootFolder]);
     const [content, setContent] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [folderTree, setFolderTree] = useState(null);
     useEffect(() => {
         async function showRoot() {
             setCurrentFolderHandle(rootFolder);
@@ -46,11 +66,28 @@ export default function FolderView({ rootFolder, onFileClick }) {
         showRoot();
     }, [rootFolder]);
 
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            // console.log("periodic refresh");
+            await showFolderView(currentFolderHandle);
+        }, 1000);
+        return () => clearInterval(interval);
+    }, [content, currentFolderHandle]);
+
     async function showFolderView(folderHandle) {
+        const healthy = await isEntryHealthy(folderHandle);
+        if (!healthy) {
+            await showFolderView(rootFolder);
+            return;
+        }
         // set context
         setCurrentFolderHandle(folderHandle);
         // set content
-        setContent(await getFolderContent(folderHandle, true));
+        const curContent = await getFolderContent(folderHandle, true);
+        if (compareFolderContent(curContent, content)) {
+            return;
+        }
+        setContent(curContent);
         // set path
         // if folderHandle in path, cut what ever behind it
         for (var i = 0; i < path.length; i++) {
@@ -65,6 +102,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
         setPath((curPath) => {
             return [...curPath, folderHandle];
         });
+        console.log("Folder view updated");
     }
 
     async function handleDrop(targetFolder) {

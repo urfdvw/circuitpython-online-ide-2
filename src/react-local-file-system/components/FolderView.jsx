@@ -28,6 +28,8 @@ import {
     addNewFolder,
     moveEntry,
     checkEntryExists,
+    getFolderTree,
+    compareFolderTrees,
 } from "../utilities/fileSystemUtils";
 import { promptUniqueName, getPathEntryLabel } from "../utilities/uiUtils";
 
@@ -55,6 +57,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
     const [path, setPath] = useState([rootFolder]);
     const [content, setContent] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
+    const [folderTree, setFolderTree] = useState(null);
     useEffect(() => {
         async function showRoot() {
             setCurrentFolderHandle(rootFolder);
@@ -66,11 +69,13 @@ export default function FolderView({ rootFolder, onFileClick }) {
 
     useEffect(() => {
         const interval = setInterval(async () => {
-            const curContent = await getFolderContent(currentFolderHandle);
-            if (!compareFolderContent(curContent, content)) {
+            const curTree = await getFolderTree(rootFolder);
+            if (!compareFolderTrees(curTree, folderTree)) {
                 await showFolderView(currentFolderHandle);
+                console.log(curTree, folderTree, "not eq");
                 console.log("refresh triggered by file changes");
             }
+            setFolderTree(curTree);
         }, 1000);
         return () => clearInterval(interval);
     }, [content, currentFolderHandle]);

@@ -89,7 +89,39 @@ export async function getFolderTree(folderHandle) {
             children: isFolder(entry) ? await getFolderTree(entry) : null,
         });
     }
+    out.sort((a, b) => (a.handle.fullPath > b.handle.fullPath ? 1 : b.handle.fullPath > a.handle.fullPath ? -1 : 0));
     return out;
+}
+
+export function compareFolderTrees(tree1, tree2) {
+    // Check if both trees are empty/null
+    if (!tree1 && !tree2) return true;
+
+    // If one of them is null but not both, they are not the same
+    if (!tree1 || !tree2) return false;
+
+    // Check if the number of nodes at the current level is the same
+    if (tree1.length !== tree2.length) return false;
+
+    // Recursively compare each node in the tree
+    for (let i = 0; i < tree1.length; i++) {
+        // Compare current node's properties other than children
+        if (tree1[i].handle.fullPath !== tree2[i].handle.fullPath) {
+            console.log(tree1[i].handle.fullPath, tree2[i].handle.fullPath, "not eq");
+            return false;
+        }
+
+        // If both nodes have children, compare them recursively
+        if (tree1[i].children && tree2[i].children) {
+            if (!compareFolderTrees(tree1[i].children, tree2[i].children)) return false;
+        } else if (tree1[i].children || tree2[i].children) {
+            // If one has children but the other does not, they are not the same
+            return false;
+        }
+    }
+
+    // If all checks passed, the trees are the same
+    return true;
 }
 
 export async function checkFileExists(parentHandle, fileName) {

@@ -16,7 +16,7 @@ import Tooltip from "@mui/material/Tooltip";
 // Layout
 import PopUp from "../layout/PopUp";
 // file utils
-import { getFileText, writeFileText } from "../react-local-file-system";
+import { getFileText, writeFileText, isEntryHealthy, isfileSame } from "../react-local-file-system";
 // context
 import ideContext from "../ideContext";
 // commands
@@ -25,6 +25,20 @@ import useSerialCommands from "../serial/useSerialCommands";
 import { FILE_EDITED } from "../constants";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
+// toolbar
+import Toolbar from "@mui/material/Toolbar";
+import { Menu } from "../layout/Menu";
+import Button from "@mui/material/Button";
+
+function generateRandomNumber(a) {
+    // Calculate the range between a and a/4
+    const min = a;
+    const max = a / 4;
+    // Generate a random number within the range
+    // Using Math.floor() for an integer result
+    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
+    return randomNumber;
+}
 
 export default function IdeEditor({ fileHandle, node }) {
     const { sendCtrlC, sendCtrlD, sendCode } = useSerialCommands();
@@ -32,6 +46,17 @@ export default function IdeEditor({ fileHandle, node }) {
     const aceEditorRef = useRef(null);
     const [text, setText] = useState("");
     const [fileEdited, setFileEdited] = useState(false);
+    const [popped, setPopped] = useState(false);
+    const [fileExists, setFileExists] = useState(true);
+    // scheduled state checking
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            setFileExists(await isEntryHealthy(fileHandle));
+            setFileEdited(!(await isfileSame(fileHandle, text)));
+        }, generateRandomNumber(1000));
+        return () => clearInterval(interval);
+    }, [fileHandle, text]);
+
     useEffect(() => {
         const name = (fileEdited ? FILE_EDITED : "") + fileHandle.name;
         node.getModel().doAction(FlexLayout.Actions.renameTab(node.getId(), name));
@@ -194,44 +219,86 @@ export default function IdeEditor({ fileHandle, node }) {
         });
     }
 
+    const hiddenMenuLabelOptions = [
+        {
+            text: "Pop Up",
+            handler: () => {
+                console.log("Pop Up");
+                setPopped(true);
+            },
+        },
+    ];
+
     return (
-        <PopUp title={fileHandle.name} parentStyle={{ height: height + "px" }}>
-            <AceEditor
-                ref={aceEditorRef}
-                mode={mode}
-                useSoftTabs={true}
-                wrapEnabled={true}
-                tabSize={4}
-                theme="tomorrow"
-                value={text}
-                height="100%"
-                width="100%"
-                onChange={(newValue) => {
-                    setText(newValue);
-                    setFileEdited(true);
-                }}
-                fontSize={config.editor.font + "pt"}
-                setOptions={{
-                    enableBasicAutocompletion: true,
-                    enableLiveAutocompletion: config.editor.live_autocompletion,
-                    enableSnippets: true,
-                    showLineNumbers: true,
-                    tabSize: 4,
-                }}
-            />
-            <Tooltip
-                title="Save and Run"
-                sx={{ position: "absolute", bottom: 16, right: 16, zIndex: 1 }}
-                followCursor={true}
-            >
-                <IconButton
-                    onClick={() => {
-                        saveFile(text);
+        <PopUp popped={popped} setPopped={setPopped} title={fileHandle.name} parentStyle={{ height: height + "px" }}>
+            <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        borderBottom: "2px solid rgb(239,239,239)",
+                        width: "100%",
                     }}
                 >
-                    <SaveIcon />
-                </IconButton>
-            </Tooltip>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "left",
+                            flex: 1,
+                        }}
+                    >
+                        Editor: {fileHandle.fullPath}
+                        {fileExists ? "" : " (deleted)"}
+                        {fileEdited ? " (unsaved changes)" : ""}
+                    </div>
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "left",
+                        }}
+                    >
+                        <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
+                            <Tooltip title="Save and Run" followCursor={true}>
+                                <Button
+                                    onClick={() => {
+                                        saveFile(text);
+                                    }}
+                                >
+                                    Save
+                                </Button>
+                            </Tooltip>
+                            <Menu label="⋮" options={hiddenMenuLabelOptions} />
+                        </Toolbar>
+                    </div>
+                </div>
+                <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
+                    {/* Ensures B is scrollable if content overflows */}
+                    <AceEditor
+                        ref={aceEditorRef}
+                        mode={mode}
+                        useSoftTabs={true}
+                        wrapEnabled={true}
+                        tabSize={4}
+                        theme="tomorrow"
+                        value={text}
+                        height="100%"
+                        width="100%"
+                        onChange={(newValue) => {
+                            setText(newValue);
+                        }}
+                        fontSize={config.editor.font + "pt"}
+                        setOptions={{
+                            enableBasicAutocompletion: true,
+                            enableLiveAutocompletion: config.editor.live_autocompletion,
+                            enableSnippets: true,
+                            showLineNumbers: true,
+                            tabSize: 4,
+                        }}
+                    />
+                </div>
+            </div>
         </PopUp>
     );
 }

@@ -7,9 +7,9 @@ import * as FlexLayout from "flexlayout-react";
 import ideContext from "./ideContext";
 
 export default function IdeHead() {
-    const { flexModel: model, openDirectory, connectToSerialPort } = useContext(ideContext);
+    const { flexModel: model, openDirectory, openBackupDirectory, connectToSerialPort } = useContext(ideContext);
 
-    function findTabByName (node, name) {
+    function findTabByName(node, name) {
         if (node.getType() === "tab" && node.getName() === name) {
             return node;
         }
@@ -21,7 +21,6 @@ export default function IdeHead() {
         }
         return null;
     }
-
     function openTab(name, component) {
         const tabNode = findTabByName(model.getRoot(), name);
         if (tabNode instanceof FlexLayout.TabNode) {
@@ -36,7 +35,9 @@ export default function IdeHead() {
                         name: name,
                         component: component,
                     },
-                    model.getActiveTabset() ? model.getActiveTabset().getId() : "initial_tabset",
+                    model.getActiveTabset()
+                        ? model.getActiveTabset().getId()
+                        : model.getRoot().getChildren()[0].getId(),
                     FlexLayout.DockLocation.CENTER,
                     -1
                 )
@@ -64,6 +65,13 @@ export default function IdeHead() {
                             connectToSerialPort();
                         },
                     },
+                    {
+                        text: "Backup Folder",
+                        handler: () => {
+                            console.log("clicked on `Backup Folder`");
+                            openBackupDirectory();
+                        },
+                    },
                 ],
             },
             {
@@ -79,6 +87,12 @@ export default function IdeHead() {
                         text: "Plot",
                         handler: () => {
                             openTab("Plot", "raw_plot");
+                        },
+                    },
+                    {
+                        text: "Backup",
+                        handler: () => {
+                            openTab("Backup", "backup_drive");
                         },
                     },
                 ],

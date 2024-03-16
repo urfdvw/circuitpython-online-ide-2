@@ -36,15 +36,7 @@
             "type": "border",
             "location": "bottom",
             "size": 300,
-            "selected": 0,
-            "children": [
-                {
-                    "type": "tab",
-                    "name": "Serial Console",
-                    "component": "serial_raw",
-                    "enableClose": false
-                }
-            ]
+            "children": []
         }
     ],
     "layout": {
@@ -53,7 +45,6 @@
         "children": [
             {
                 "type": "tabset",
-                "id": "initial_tabset",
                 "weight": 50,
                 "selected": 0,
                 "children": [
@@ -62,7 +53,21 @@
                         "name": "Navigation",
                         "component": "navigation",
                         "enableClose": true
-                    }]
+                    }
+                ]
+            },
+            {
+                "type": "tabset",
+                "weight": 50,
+                "selected": 0,
+                "children": [
+                    {
+                        "type": "tab",
+                        "name": "Serial Console",
+                        "component": "serial_raw",
+                        "enableClose": false
+                    }
+                ]
             }
         ]
     }

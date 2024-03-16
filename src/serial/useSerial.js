@@ -33,6 +33,10 @@ const useSerial = () => {
                         );
                     }
                 } catch (err) {
+                    setPort(null);
+                    setSerialReady(false);
+                    setSerialOutput("");
+                    setSerialTitle("");
                     console.error("Failed to read data:", err);
                 } finally {
                     reader && reader.releaseLock();
@@ -113,6 +117,7 @@ const useSerial = () => {
         setPort(null);
         setSerialReady(false);
         setSerialOutput("");
+        setSerialTitle("");
     };
 
     return { connectToSerialPort, sendDataToSerialPort, serialOutput, serialReady, serialTitle };

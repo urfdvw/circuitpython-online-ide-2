@@ -1,6 +1,5 @@
 import { useContext, useRef } from "react";
 // MUI
-import Box from "@mui/material/Box";
 // Other packages
 import ScrollableFeed from "react-scrollable-feed"; // https://stackoverflow.com/a/52673227/7037749
 // Mine
@@ -11,17 +10,18 @@ import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import { useState } from "react";
-import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
-import SendIcon from "@mui/icons-material/Send";
 // default
 import Button from "@mui/material/Button";
 //context
 import ideContext from "../ideContext";
 // commands
 import useSerialCommands from "../serial/useSerialCommands";
+// toolbar
+import Toolbar from "@mui/material/Toolbar";
+import { Menu } from "../layout/Menu";
 
-const RawSerialIn = () => {
+const RawSerialIn = ({ startIndex, setCurrentLength }) => {
     // "in" to computer, "out" from microcontroller
     const { config, serialOutput } = useContext(ideContext);
     let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
@@ -29,27 +29,19 @@ const RawSerialIn = () => {
     if (config.raw_console.hide_cv) {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
     }
-
-    return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>{output}</pre>;
+    setCurrentLength(output.length);
+    return (
+        <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>
+            {output.slice(startIndex)}
+        </pre>
+    );
 };
 
-const RawSerialOut = () => {
+const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleSendCommand }) => {
     const { config } = useContext(ideContext);
     const aceEditorRef = useRef(null);
-    const [text, setText] = useState("");
-    const [isHovered, toggleHover] = useState(false);
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
     const [tempCode, setTempCode] = useState("");
-    const [codeHistIndex, setCodeHistIndex] = useState(-1);
-
-    function consoleSendCommand() {
-        if (text.trim().length === 0) {
-            return;
-        }
-        sendCode(text);
-        setCodeHistIndex(-1);
-        setText("");
-    }
 
     // code history related
     function histUp() {
@@ -178,55 +170,129 @@ const RawSerialOut = () => {
                 }}
                 fontSize={config.raw_console.font + "pt"}
             />
-            <div
-                onMouseEnter={() => {
-                    toggleHover(true);
-                }}
-                onMouseLeave={() => {
-                    toggleHover(false);
-                }}
-            >
-                <Tooltip
-                    title="Send text to microcontroller"
-                    sx={{ position: "absolute", bottom: 16, right: 16, zIndex: 1 }}
-                    followCursor={true}
-                >
-                    <IconButton onClick={consoleSendCommand}>
-                        <SendIcon />
-                    </IconButton>
-                </Tooltip>
-                <Tooltip
-                    title="Send Ctrl-C to microcontroller"
-                    sx={{ position: "absolute", bottom: 46, right: 16, zIndex: 1 }}
-                    followCursor={true}
-                >
-                    <IconButton onClick={sendCtrlC}>
-                        <span style={{ visibility: isHovered ? "visible" : "hidden" }}>Ⓒ</span>
-                    </IconButton>
-                </Tooltip>
-                <Tooltip
-                    title="Send Ctrl-D to microcontroller"
-                    sx={{ position: "absolute", bottom: 76, right: 16, zIndex: 1 }}
-                    followCursor={true}
-                >
-                    <IconButton onClick={sendCtrlD}>
-                        <span style={{ visibility: isHovered ? "visible" : "hidden" }}>Ⓓ</span>
-                    </IconButton>
-                </Tooltip>
-            </div>
         </>
     );
 };
 
 const RawConsole = () => {
+    const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
+    const { serialTitle } = useContext(ideContext);
+    // Serial Out states
     const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
+    const [text, setText] = useState("");
+    const [codeHistIndex, setCodeHistIndex] = useState(-1);
+    // Serial In states
+    const [startIndex, setStartIndex] = useState(0);
+    const [currentLength, setCurrentLength] = useState(0);
+
+    function consoleSendCommand() {
+        if (text.trim().length === 0) {
+            return;
+        }
+        sendCode(text);
+        setCodeHistIndex(-1);
+        setText("");
+    }
+    const hiddenMenuLabelOptions = [
+        {
+            text: "Clear",
+            handler: () => {
+                console.log("Clear");
+                setStartIndex(currentLength);
+            },
+        },
+        {
+            text: "Connect",
+            handler: () => {
+                console.log("Connect");
+                connect();
+            },
+        },
+    ];
+
     return ready ? (
-        <Box sx={{ height: "100%" }}>
-            <ScrollableFeed>
-                <RawSerialIn />
-                <RawSerialOut />
-            </ScrollableFeed>
-        </Box>
+        <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    borderBottom: "2px solid rgb(239,239,239)",
+                    width: "100%",
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "left",
+                        flex: 1,
+                    }}
+                >
+                    {serialTitle}
+                </div>
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "left",
+                    }}
+                >
+                    <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
+                        <Tooltip title="Send Ctrl-C to the microcontroller" followCursor={true}>
+                            <Button onClick={sendCtrlC}>Ctrl-C</Button>
+                        </Tooltip>
+                        <Tooltip title="Send Ctrl-D to the microcontroller" followCursor={true}>
+                            <Button onClick={sendCtrlD}>Ctrl-D</Button>
+                        </Tooltip>
+                        <Menu label="⋮" options={hiddenMenuLabelOptions} />
+                    </Toolbar>
+                </div>
+            </div>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
+                {/* Ensures B is scrollable if content overflows */}
+                <ScrollableFeed
+                    style={{
+                        flexShrink: 0,
+                        display: "flex",
+                    }}
+                >
+                    <RawSerialIn startIndex={startIndex} setCurrentLength={setCurrentLength} />
+                </ScrollableFeed>
+            </div>
+            <div
+                style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    borderTop: "2px solid rgb(239,239,239)",
+                }}
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "left",
+                        flex: 1,
+                    }}
+                >
+                    <RawSerialOut
+                        text={text}
+                        setText={setText}
+                        consoleSendCommand={consoleSendCommand}
+                        codeHistIndex={codeHistIndex}
+                        setCodeHistIndex={setCodeHistIndex}
+                    />
+                </div>
+                <div
+                    style={{
+                        display: "flex",
+                        alignItems: "end",
+                        justifyContent: "right",
+                    }}
+                >
+                    <Button onClick={consoleSendCommand}>Send</Button>
+                </div>
+            </div>
+        </div>
     ) : (
         <Button onClick={connect}>Connect to Serial Port</Button>
     );

@@ -70,27 +70,25 @@ export default function FolderView({ rootFolder, onFileClick }) {
 
     useEffect(() => {
         const interval = setInterval(async () => {
-            const curTree = await getFolderTree(rootFolder);
-            if (!compareFolderTrees(curTree, folderTree)) {
-                const healthy = await isEntryHealthy(currentFolderHandle);
-                if (!healthy) {
-                    await showFolderView(rootFolder);
-                    setCurrentFolderHandle(rootFolder);
-                } else {
-                    await showFolderView(currentFolderHandle);
-                }
-                console.log(curTree, folderTree, "not eq");
-                console.log("refresh triggered by file changes");
-            }
-            setFolderTree(curTree);
+            // console.log("periodic refresh");
+            await showFolderView(currentFolderHandle);
         }, 1000);
         return () => clearInterval(interval);
     }, [content, currentFolderHandle]);
 
     async function showFolderView(folderHandle) {
+        const healthy = await isEntryHealthy(folderHandle);
+        if (!healthy) {
+            await showFolderView(rootFolder);
+            return;
+        }
         // set context
         setCurrentFolderHandle(folderHandle);
         // set content
+        const curContent = await getFolderContent(folderHandle, true);
+        if (compareFolderContent(curContent, content)) {
+            return;
+        }
         setContent(await getFolderContent(folderHandle, true));
         // set path
         // if folderHandle in path, cut what ever behind it
@@ -106,6 +104,7 @@ export default function FolderView({ rootFolder, onFileClick }) {
         setPath((curPath) => {
             return [...curPath, folderHandle];
         });
+        console.log("Folder view updated");
     }
 
     async function handleDrop(targetFolder) {

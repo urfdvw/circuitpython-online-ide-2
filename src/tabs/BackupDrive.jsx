@@ -1,5 +1,5 @@
 // React
-import { useContext, useState } from "react";
+import { useContext, useState, useEffect } from "react";
 //context
 import ideContext from "../ideContext";
 // mui
@@ -9,32 +9,37 @@ import Checkbox from "@mui/material/Checkbox";
 import { backupFolder } from "../react-local-file-system";
 
 export default function BackupDrive() {
-    const { openBackupDirectory, rootDirHandle, backupDirectoryDirHandle, backupStatusText } = useContext(ideContext);
+    const { openBackupDirectory, rootDirHandle, backupDirectoryDirHandle, backupStatusText, config } =
+        useContext(ideContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
-    const [clean, setClean] = useState(false);
+    async function backup() {
+        if (!(backupDirectoryDirHandle && rootDirHandle)) {
+            return;
+        }
+        await backupFolder(rootDirHandle, backupDirectoryDirHandle, config.backup.clean);
+        console.log("backed up");
+        const now = new Date().toLocaleTimeString();
+        setLastBackupTime(now);
+    }
+    // scheduled state checking
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            if (!config.backup.enable_schedule) {
+                return;
+            }
+            backup();
+        }, 60000 * config.backup.period);
+        return () => clearInterval(interval);
+    }, [backupDirectoryDirHandle, config.backup.period, config.backup.clean]);
     return (
         <>
+            <Button onClick={openBackupDirectory}>Open Backup Directory</Button>
+            <br />
             {backupStatusText}
             <br />
+            <Button onClick={backup}>Manual Backup</Button>
+            <br />
             {lastBackupTime ? "Last backup at: " + lastBackupTime : ""}
-            <br />
-            Clean up before each backup
-            <Checkbox
-                checked={clean}
-                onChange={(event) => {
-                    setClean(event.target.checked);
-                }}
-            />
-            <br />
-            <Button
-                onClick={() => {
-                    backupFolder(rootDirHandle, backupDirectoryDirHandle, clean);
-                    const now = new Date().toLocaleTimeString();
-                    setLastBackupTime(now);
-                }}
-            >
-                Manual Backup
-            </Button>
         </>
     );
 }

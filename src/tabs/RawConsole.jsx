@@ -1,4 +1,4 @@
-import { useContext, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
 // MUI
 // Other packages
 import ScrollableFeed from "react-scrollable-feed"; // https://stackoverflow.com/a/52673227/7037749
@@ -176,7 +176,7 @@ const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleS
 
 const RawConsole = () => {
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
-    const { serialTitle } = useContext(ideContext);
+    const { serialTitle, serialReady } = useContext(ideContext);
     // Serial Out states
     const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
     const [text, setText] = useState("");
@@ -184,6 +184,12 @@ const RawConsole = () => {
     // Serial In states
     const [startIndex, setStartIndex] = useState(0);
     const [currentLength, setCurrentLength] = useState(0);
+
+    useEffect(() => {
+        if (!serialReady) {
+            setStartIndex(0);
+        }
+    }, [serialReady]);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {

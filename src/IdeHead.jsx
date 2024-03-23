@@ -1,10 +1,52 @@
 // React
 import { useContext } from "react";
 import MenuBar from "./layout/Menu";
+// MUI
+import { grey, deepPurple } from "@mui/material/colors";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context
 import ideContext from "./ideContext";
+
+const wikiBase = "https://github.com/urfdvw/CircuitPython-online-IDE2/wiki/";
+const wikiLinks = [
+    {
+        text: "Quick start",
+        link: "Quick-start",
+    },
+    {
+        text: "Layout",
+        link: "Layout",
+    },
+    {
+        text: "Folder View",
+        link: "Folder-View",
+    },
+    {
+        text: "Editor",
+        link: "Editor",
+    },
+    {
+        text: "Serial Console",
+        link: "Serial-Console-%28raw%29",
+    },
+    {
+        text: "Settings",
+        link: "Settings",
+    },
+    {
+        text: "Plot",
+        link: "Plot-%28raw%29",
+    },
+    {
+        text: "Backup",
+        link: "Backup",
+    },
+    {
+        text: "...More",
+        link: "",
+    },
+];
 
 export default function IdeHead() {
     const { flexModel: model, openDirectory, openBackupDirectory, connectToSerialPort } = useContext(ideContext);
@@ -21,6 +63,7 @@ export default function IdeHead() {
         }
         return null;
     }
+
     function openTab(name, component) {
         const tabNode = findTabByName(model.getRoot(), name);
         if (tabNode instanceof FlexLayout.TabNode) {
@@ -46,10 +89,28 @@ export default function IdeHead() {
     }
 
     const menuStructure = {
-        title: "CircuitPython Online IDE",
         menu: [
             {
+                label: "CircuitPython Online IDE",
+                color: deepPurple[500],
+                options: [
+                    {
+                        text: "About",
+                        handler: () => {
+                            openTab("About", "about");
+                        },
+                    },
+                    {
+                        text: "GitHub Repo",
+                        handler: () => {
+                            window.open("https://github.com/urfdvw/CircuitPython-online-IDE2", "_blank");
+                        },
+                    },
+                ],
+            },
+            {
                 label: "Connect",
+                color: grey[900],
                 options: [
                     {
                         text: "CircuitPy Drive",
@@ -76,6 +137,7 @@ export default function IdeHead() {
             },
             {
                 label: "Tools",
+                color: grey[900],
                 options: [
                     {
                         text: "Navigation",
@@ -99,17 +161,30 @@ export default function IdeHead() {
             },
             {
                 label: "Help",
+                color: grey[900],
                 options: [
                     {
-                        text: "About",
+                        text: "Quick Start",
                         handler: () => {
-                            openTab("About", "about");
+                            window.open(
+                                "https://github.com/urfdvw/CircuitPython-online-IDE2/wiki/Quick-start",
+                                "_blank"
+                            );
                         },
                     },
                     {
-                        text: "Contact Me",
+                        text: "Help & Learn",
                         handler: () => {
-                            openTab("Contact Me", "contact");
+                            window.open("https://github.com/urfdvw/CircuitPython-online-IDE2/wiki/", "_blank");
+                        },
+                    },
+                    {
+                        text: "Feedback",
+                        handler: () => {
+                            window.open(
+                                "https://docs.google.com/forms/d/e/1FAIpQLSdupiJIRViFwPpuQC1hMp8gRvhxACLoAjgepm_-IRZumwK7Cg/viewform",
+                                "_blank"
+                            );
                         },
                     },
                 ],

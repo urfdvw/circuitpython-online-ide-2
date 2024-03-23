@@ -157,17 +157,17 @@ export default function FolderView({ rootFolder, onFileClick }) {
                 setIsLoading(false);
             },
         },
-        {
-            name: "refresh",
-            title: "Refresh",
-            icon: RefreshIcon,
-            handler: async (event) => {
-                console.log("Toolbar refresh called", event);
-                setIsLoading(true);
-                await showFolderView(currentFolderHandle);
-                setIsLoading(false);
-            },
-        },
+        // {
+        //     name: "refresh",
+        //     title: "Refresh",
+        //     icon: RefreshIcon,
+        //     handler: async (event) => {
+        //         console.log("Toolbar refresh called", event);
+        //         setIsLoading(true);
+        //         await showFolderView(currentFolderHandle);
+        //         setIsLoading(false);
+        //     },
+        // },
     ];
 
     return (

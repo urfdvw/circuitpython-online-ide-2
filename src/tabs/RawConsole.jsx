@@ -207,13 +207,6 @@ const RawConsole = () => {
                 setStartIndex(currentLength);
             },
         },
-        {
-            text: "Connect",
-            handler: () => {
-                console.log("Connect");
-                connect();
-            },
-        },
     ];
 
     return ready ? (

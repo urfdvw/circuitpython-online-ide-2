@@ -10,7 +10,6 @@ import Navigation from "./tabs/Navigation";
 import RawPlotter from "./tabs/RawPlotter";
 import BackupDrive from "./tabs/BackupDrive";
 import About from "./infopages/About";
-import ContactMe from "./infopages/ContactMe";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context
@@ -135,12 +134,6 @@ export default function IdeBody() {
             return (
                 <div className="tab_content" style={fullSize}>
                     <About />
-                </div>
-            );
-        } else if (component === "contact") {
-            return (
-                <div className="tab_content" style={fullSize}>
-                    <ContactMe />
                 </div>
             );
         }

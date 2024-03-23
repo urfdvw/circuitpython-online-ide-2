@@ -6,29 +6,27 @@ import Paper from "@mui/material/Paper";
 import Popper from "@mui/material/Popper";
 import MenuItem from "@mui/material/MenuItem";
 import MenuList from "@mui/material/MenuList";
-import { grey, deepPurple } from "@mui/material/colors";
+// import { grey, deepPurple } from "@mui/material/colors";deepPurple[500],grey[900]
 import Stack from "@mui/material/Stack";
 
 export default function MenuBar({ menuStructure }) {
     return (
         <Stack direction="row" spacing={0}>
-            <Button
-                disabled
-                style={{
-                    textTransform: "none",
-                    color: deepPurple[500],
-                }}
-            >
-                {menuStructure.title}
-            </Button>
             {menuStructure.menu.map((column) => {
-                return <Menu label={column.label} options={column.options} key={"menu_key_" + column.label} />;
+                return (
+                    <Menu
+                        label={column.label}
+                        options={column.options}
+                        color={column.color}
+                        key={"menu_key_" + column.label}
+                    />
+                );
             })}
         </Stack>
     );
 }
 
-export function Menu({ label, options }) {
+export function Menu({ label, options, color }) {
     const [open, setOpen] = React.useState(false);
     const anchorRef = React.useRef(null);
 
@@ -74,8 +72,8 @@ export function Menu({ label, options }) {
                 onClick={handleToggle}
                 style={{
                     textTransform: "none",
-                    color: grey[900],
-                    minWidth: '30px',
+                    color: color,
+                    minWidth: "30px",
                 }}
             >
                 {label}

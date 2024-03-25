@@ -3,9 +3,8 @@ import { useState } from "react";
 // MUI
 import Modal from "@mui/material/Modal";
 import Box from "@mui/material/Box";
-import Typography from "@mui/material/Typography";
 
-export default function WarningModal({ title, children, closeEnabled }) {
+export default function WarningModal({ children, closeEnabled }) {
     const [open, setOpen] = useState(true);
     const handleClose = closeEnabled ? () => setOpen(false) : () => {};
 
@@ -21,17 +20,8 @@ export default function WarningModal({ title, children, closeEnabled }) {
         p: 4,
     };
     return (
-        <Modal
-            open={open}
-            onClose={handleClose}
-            aria-labelledby="modal-modal-title"
-            aria-describedby="modal-modal-description"
-        >
-            <Box sx={style}>
-                <Typography id="modal-modal-description" sx={{ mt: 2 }}>
-                    {children}
-                </Typography>
-            </Box>
+        <Modal open={open} onClose={handleClose}>
+            <Box sx={style}>{children}</Box>
         </Modal>
     );
 }

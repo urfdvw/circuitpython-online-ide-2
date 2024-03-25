@@ -9,7 +9,7 @@ import { ConfigForms } from "./react-user-config";
 import Navigation from "./tabs/Navigation";
 import RawPlotter from "./tabs/RawPlotter";
 import BackupDrive from "./tabs/BackupDrive";
-import About from "./infopages/About";
+import About from "./tabs/About";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context

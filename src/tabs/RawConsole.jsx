@@ -26,6 +26,10 @@ const RawSerialIn = ({ startIndex, setCurrentLength }) => {
     const { config, serialOutput } = useContext(ideContext);
     let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
 
+    // temp fix of the ANSI parsing
+    // TODO: https://github.com/urfdvw/CircuitPython-online-IDE2/issues/45
+    output = output.split("\x1B[2K\x1B[0G").join("\n"); 
+
     if (config.raw_console.hide_cv) {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
     }

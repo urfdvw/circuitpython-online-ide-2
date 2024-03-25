@@ -166,10 +166,7 @@ export default function IdeHead() {
                     {
                         text: "Quick Start",
                         handler: () => {
-                            window.open(
-                                "https://github.com/urfdvw/CircuitPython-online-IDE2/wiki/Quick-start",
-                                "_blank"
-                            );
+                            openTab("Quick Start", "quick_start");
                         },
                     },
                     {

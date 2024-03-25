@@ -139,6 +139,12 @@ export default function IdeBody() {
                     <Document info={AboutInfo} />
                 </div>
             );
+        } else if (component === "quick_start") {
+            return (
+                <div className="tab_content" style={fullSize}>
+                    <Document info={QuickStartInfo} />
+                </div>
+            );
         }
         // placeholder
         else if (component === "placeholder") {

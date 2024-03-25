@@ -28,9 +28,6 @@ export default function WarningModal({ title, children, closeEnabled }) {
             aria-describedby="modal-modal-description"
         >
             <Box sx={style}>
-                <Typography id="modal-modal-title" variant="h6" component="h2">
-                    {title}
-                </Typography>
                 <Typography id="modal-modal-description" sx={{ mt: 2 }}>
                     {children}
                 </Typography>

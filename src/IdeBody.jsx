@@ -127,7 +127,7 @@ export default function IdeBody() {
             );
         } else if (component === "backup_drive") {
             return (
-                <div className="tab_content" style={fullSize}>
+                <div className="tab_content">
                     <BackupDrive node={node} />
                 </div>
             );
@@ -135,13 +135,13 @@ export default function IdeBody() {
         // document
         else if (component === "about") {
             return (
-                <div className="tab_content" style={fullSize}>
+                <div className="tab_content">
                     <Document info={AboutInfo} />
                 </div>
             );
         } else if (component === "quick_start") {
             return (
-                <div className="tab_content" style={fullSize}>
+                <div className="tab_content">
                     <Document info={QuickStartInfo} />
                 </div>
             );
@@ -149,7 +149,7 @@ export default function IdeBody() {
         // placeholder
         else if (component === "placeholder") {
             return (
-                <div className="tab_content" style={fullSize}>
+                <div className="tab_content">
                     <p>{node.getName()}</p>
                 </div>
             );

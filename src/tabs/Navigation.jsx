@@ -1,5 +1,6 @@
 // React
 import { useContext } from "react";
+import Typography from "@mui/material/Typography";
 //context
 import ideContext from "../ideContext";
 // mui
@@ -9,7 +10,7 @@ export default function Navigation() {
     const { openDirectory, directoryReady, serialReady, connectToSerialPort } = useContext(ideContext);
 
     return (
-        <>
+        <Typography component="div" sx={{ margin: "20pt" }}>
             <p> Please connect your microcontroller to this computer by a usb data cable before following the steps.</p>
             <ul>
                 <li>
@@ -34,8 +35,12 @@ export default function Navigation() {
                     Step 2. <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
                     {serialReady ? "✅" : ""}
                 </li>
-                {serialReady && directoryReady ? <li>🎉 All ready! Close this tab and start coding!</li> : ""}
+                {serialReady && directoryReady ? (
+                    <li>🎉 Setup complete! Open your file and let's start coding!</li>
+                ) : (
+                    ""
+                )}
             </ul>
-        </>
+        </Typography>
     );
 }

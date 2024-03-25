@@ -13,6 +13,7 @@ import "ace-builds/src-noconflict/theme-tomorrow";
 import SaveIcon from "@mui/icons-material/Save";
 import IconButton from "@mui/material/IconButton";
 import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
 // Layout
 import PopUp from "../layout/PopUp";
 // file utils
@@ -248,9 +249,11 @@ export default function IdeEditor({ fileHandle, node }) {
                             flex: 1,
                         }}
                     >
-                        Editor: {fileHandle.fullPath}
-                        {fileExists ? "" : " (deleted)"}
-                        {fileEdited ? " (unsaved changes)" : ""}
+                        <Typography component="p" sx={{ marginLeft: "10pt" }}>
+                            Editor: {fileHandle.fullPath}
+                            {fileExists ? "" : " (deleted)"}
+                            {fileEdited ? " (unsaved changes)" : ""}
+                        </Typography>
                     </div>
                     <div
                         style={{

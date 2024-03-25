@@ -5,6 +5,7 @@ import ideContext from "../ideContext";
 // mui
 import Button from "@mui/material/Button";
 import Checkbox from "@mui/material/Checkbox";
+import Typography from "@mui/material/Typography";
 // file system utils
 import { backupFolder } from "../react-local-file-system";
 
@@ -32,7 +33,7 @@ export default function BackupDrive() {
         return () => clearInterval(interval);
     }, [backupDirectoryDirHandle, config.backup.period, config.backup.clean]);
     return (
-        <>
+        <Typography component="div" sx={{ margin: "20pt" }}>
             <Button onClick={openBackupDirectory}>Open Backup Directory</Button>
             <br />
             {backupStatusText}
@@ -40,6 +41,6 @@ export default function BackupDrive() {
             <Button onClick={backup}>Manual Backup</Button>
             <br />
             {lastBackupTime ? "Last backup at: " + lastBackupTime : ""}
-        </>
+        </Typography>
     );
 }

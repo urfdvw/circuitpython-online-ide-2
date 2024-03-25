@@ -9,13 +9,16 @@ import { ConfigForms } from "./react-user-config";
 import Navigation from "./tabs/Navigation";
 import RawPlotter from "./tabs/RawPlotter";
 import BackupDrive from "./tabs/BackupDrive";
-import About from "./tabs/About";
+import Document from "./tabs/Document";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context
 import ideContext from "./ideContext";
 // constant
 import { FILE_EDITED } from "./constants";
+// document
+import AboutInfo from "./documents/wiki/About.md";
+import QuickStartInfo from "./documents/wiki/Quick start.md";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -129,11 +132,17 @@ export default function IdeBody() {
                 </div>
             );
         }
-        // info
+        // document
         else if (component === "about") {
             return (
                 <div className="tab_content" style={fullSize}>
-                    <About />
+                    <Document info={AboutInfo} />
+                </div>
+            );
+        } else if (component === "quick_start") {
+            return (
+                <div className="tab_content" style={fullSize}>
+                    <Document info={QuickStartInfo} />
                 </div>
             );
         }

@@ -1,5 +1,6 @@
 import { useContext, useEffect, useRef } from "react";
 // MUI
+import Typography from "@mui/material/Typography";
 // Other packages
 import ScrollableFeed from "react-scrollable-feed"; // https://stackoverflow.com/a/52673227/7037749
 // Mine
@@ -28,7 +29,7 @@ const RawSerialIn = ({ startIndex, setCurrentLength }) => {
 
     // temp fix of the ANSI parsing
     // TODO: https://github.com/urfdvw/CircuitPython-online-IDE2/issues/45
-    output = output.split("\x1B[2K\x1B[0G").join("\n"); 
+    output = output.split("\x1B[2K\x1B[0G").join("\n");
 
     if (config.raw_console.hide_cv) {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
@@ -231,7 +232,9 @@ const RawConsole = () => {
                         flex: 1,
                     }}
                 >
-                    {serialTitle}
+                    <Typography component="p" sx={{ marginLeft: "10pt" }}>
+                        {serialTitle}
+                    </Typography>
                 </div>
                 <div
                     style={{

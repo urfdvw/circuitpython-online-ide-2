@@ -23,6 +23,7 @@ async function generateMarkdown() {
             "# CircuitPython Online IDE 2",
             IntroContent,
             "# Quick Start",
+            "***For More help documents, please visit our [Wiki page](https://github.com/urfdvw/CircuitPython-online-IDE2/wiki/).***",
             QuickStartContent,
             "# About",
             AboutContent,

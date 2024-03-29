@@ -19,7 +19,7 @@ in case you don't know
 CircuitPython is a python version that can run on microcontrolers and single board computers.
 Its development is supported by Adafruit.
 And
-CircuitPython Online IDE is a community open source project by me.
+the CircuitPython Online IDE is a community open source project by me.
 It is a browser-based IDE for CircuitPython
 that can be easily used on almost any computer including Chromebooks with zero setup.
 Without further due, let jump to the meat.
@@ -117,7 +117,7 @@ In this video, I'm going to talk about:
 
 Welcome to CircuitPythonic! I'm River.
 
-Just a quick intro, if you're new here: CircuitPython is a version of Python for microcontrollers and single-board computers. Its development is supported by Adafruit. CircuitPython Online IDE is a community open source project by me. It's a browser-based IDE that works on pretty much any computers, even Chromebooks, with zero setup.
+Just a quick intro, if you're new here: CircuitPython is a version of Python for microcontrollers and single-board computers. Its development is supported by Adafruit. The CircuitPython Online IDE is a community open source project by me. It's a browser-based IDE that works on pretty much any computers, even Chromebooks, with zero setup.
 
 So, let's get started.
 

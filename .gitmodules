@@ -1,3 +1,3 @@
 [submodule "src/documents/wiki"]
 	path = src/documents/wiki
-	url = https://github.com/urfdvw/CircuitPython-online-IDE2.wiki.git
+	url = https://github.com/urfdvw/circuitpython-online-ide-2.wiki.git

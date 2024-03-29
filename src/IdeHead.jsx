@@ -8,7 +8,7 @@ import * as FlexLayout from "flexlayout-react";
 //context
 import ideContext from "./ideContext";
 
-const wikiBase = "https://github.com/urfdvw/CircuitPython-online-IDE2/wiki/";
+const wikiBase = "https://github.com/urfdvw/circuitpython-online-ide-2/wiki/";
 const wikiLinks = [
     {
         text: "Quick start",
@@ -103,7 +103,7 @@ export default function IdeHead() {
                     {
                         text: "GitHub Repo",
                         handler: () => {
-                            window.open("https://github.com/urfdvw/CircuitPython-online-IDE2", "_blank");
+                            window.open("https://github.com/urfdvw/circuitpython-online-ide-2", "_blank");
                         },
                     },
                 ],
@@ -172,7 +172,7 @@ export default function IdeHead() {
                     {
                         text: "Help & Learn",
                         handler: () => {
-                            window.open("https://github.com/urfdvw/CircuitPython-online-IDE2/wiki/", "_blank");
+                            window.open("https://github.com/urfdvw/circuitpython-online-ide-2/wiki/", "_blank");
                         },
                     },
                     {

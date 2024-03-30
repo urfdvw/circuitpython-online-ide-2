@@ -110,8 +110,6 @@ export default function IdeEditor({ fileHandle, node }) {
         run_current_raw(false);
     }
 
-    console.log([text]);
-
     function run_current_raw(del) {
         var currline = aceEditorRef.current.editor.getCursorPosition().row;
         var selected = aceEditorRef.current.editor.getSelectedText();

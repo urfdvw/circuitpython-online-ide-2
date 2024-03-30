@@ -1,6 +1,7 @@
 import { useContext, useState } from "react";
 import ideContext from "../ideContext";
 import * as constants from "../constants";
+import { removeCommonIndentation } from "./utils";
 
 // https://sentry.io/answers/what-is-the-javascript-version-of-sleep/
 const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -37,6 +38,7 @@ export default function useSerialCommands() {
         if (!ready) {
             return;
         }
+        text = text.trim();
         console.log("sending text serial port: " + text);
         await send(text + constants.LINE_END);
     }
@@ -45,16 +47,17 @@ export default function useSerialCommands() {
         if (!ready) {
             return;
         }
+        code = removeCommonIndentation(code);
         // dealing with linebreaks and '\n' in text
-        let lines = code.split("\\").join("\\\\").split("\n").join("\\n");
+        code = code.split("\\").join("\\\\").split("\n").join("\\n");
         // remove comments by """
-        lines = lines.split('"""');
-        for (let i = 0; i < lines.length; i++) {
-            lines.splice(i + 1, 1);
+        code = code.split('"""');
+        for (let i = 0; i < code.length; i++) {
+            code.splice(i + 1, 1);
         }
-        lines = lines.join("");
+        code = code.join("");
         // send commands to device
-        await sendSingleLineText('exec("""' + lines + '""")');
+        await sendSingleLineText('exec("""' + code + '""")');
     }
 
     async function sendCode(code) {

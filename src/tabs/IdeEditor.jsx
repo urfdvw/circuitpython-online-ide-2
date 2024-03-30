@@ -73,7 +73,7 @@ export default function IdeEditor({ fileHandle, node }) {
     useEffect(() => {
         async function loadText() {
             const fileText = (await getFileText(fileHandle)).split("\r").join(""); // circuitPython turned to used \r but not very easy to handle
-            setText(fileText);
+            aceEditorRef.current.editor.session.setValue(fileText);
             setFileEdited(false);
         }
         loadText();

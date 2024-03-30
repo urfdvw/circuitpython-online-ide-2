@@ -226,11 +226,16 @@ export async function copyEntry(entryHandle, targetFolderHandle, newName) {
     }
 }
 
-export async function backupFolder(folderHandle, newFolderHandle, clean = false) {
+export async function backupFolder(folderHandle, newFolderHandle, clean = false, skipHidden = true) {
     if (clean) {
         await cleanFolder(newFolderHandle);
     }
     for (const entry of await getFolderContent(folderHandle)) {
+        if (skipHidden) {
+            if (entry.name.startsWith(".")) {
+                continue;
+            }
+        }
         await copyEntry(entry, newFolderHandle, entry.name);
     }
 }

@@ -22,7 +22,7 @@ export default function BackupDrive() {
         const now = new Date().toLocaleTimeString();
         setLastBackupTime(now);
     }
-    // scheduled state checking
+    // scheduled backup
     useEffect(() => {
         const interval = setInterval(async () => {
             if (!config.backup.enable_schedule) {

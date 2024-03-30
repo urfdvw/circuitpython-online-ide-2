@@ -87,5 +87,12 @@ export default function RawPlotter({ node }) {
         width: width - 10,
     };
 
+    if (config.plot.enable_axis_limits) {
+        layout.yaxis = { range: [config.plot.y_min, config.plot.y_max] };
+        if (config.plot.x_axis) {
+            layout.xaxis.range = [config.plot.x_min, config.plot.x_max];
+        }
+    }
+
     return <Plot data={data} layout={layout} />;
 }

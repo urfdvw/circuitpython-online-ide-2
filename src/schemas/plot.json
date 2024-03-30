@@ -18,6 +18,31 @@
             "description": "Only effective when truncate is on.",
             "type": "number",
             "default": 100
+        },
+        "enable_axis_limits": {
+            "title": "Plot only a specific range",
+            "type": "boolean",
+            "default": false
+        },
+        "x_min": {
+            "title": "Lower bound of x-axis",
+            "type": "number",
+            "default": -5
+        },
+        "x_max": {
+            "title": "Upper bound of x-axis",
+            "type": "number",
+            "default": 5
+        },
+        "y_min": {
+            "title": "Lower bound of y-axis",
+            "type": "number",
+            "default": -5
+        },
+        "y_max": {
+            "title": "Upper bound of y-axis",
+            "type": "number",
+            "default": 5
         }
     }
 }

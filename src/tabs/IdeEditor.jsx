@@ -70,14 +70,19 @@ export default function IdeEditor({ fileHandle, node }) {
             node.getModel().doAction(FlexLayout.Actions.updateNodeAttributes(node.getId(), { enableClose: true }));
         }
     }, [fileEdited, config.editor.block_closing_unsaved_tab]);
+
     useEffect(() => {
         async function loadText() {
-            const fileText = (await getFileText(fileHandle)).split("\r").join(""); // circuitPython turned to used \r but not very easy to handle
+            const fileText = await getFileText(fileHandle);
             aceEditorRef.current.editor.session.setValue(fileText);
             setFileEdited(false);
         }
         loadText();
     }, [fileHandle]);
+
+    useEffect(() => {
+        aceEditorRef.current.editor.session.setNewLineMode(config.editor.newline_mode);
+    }, [config.editor.newline_mode]);
 
     const height = node.getRect().height;
     var mode = "text";
@@ -104,6 +109,8 @@ export default function IdeEditor({ fileHandle, node }) {
     function run_current() {
         run_current_raw(false);
     }
+
+    console.log([text]);
 
     function run_current_raw(del) {
         var currline = aceEditorRef.current.editor.getCursorPosition().row;

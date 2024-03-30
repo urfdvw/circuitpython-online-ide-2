@@ -18,6 +18,12 @@
             "title": "Hide close tab button if there are unsaved changed",
             "type": "boolean",
             "default": false
+        },
+        "newline_mode": {
+            "title": "Newline mode",
+            "type": "string",
+            "enum": ["auto", "unix", "windows"],
+            "default": "auto"
         }
     }
 }

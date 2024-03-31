@@ -1,5 +1,5 @@
 // React
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 // Style
 import "./App.css";
 // Ide parts
@@ -11,7 +11,7 @@ import ErrorIsMobile from "./infopages/ErrorIsMobile";
 import ErrorIsNotChrome from "./infopages/ErrorIsNotChrome";
 import WarningIsMac from "./infopages/WarningIsMac";
 // Features
-import { useFileSystem } from "./react-local-file-system";
+import { useFileSystem, backupFolder } from "./react-local-file-system";
 import useSerial from "./serial/useSerial";
 import DarkTheme from "./react-lazy-dark-theme";
 import { useConfig } from "./react-user-config";
@@ -23,17 +23,22 @@ import * as FlexLayout from "flexlayout-react";
 import layout from "./layout/layout.json";
 
 function App() {
-    // get folder handler and status with useFileSystem hook
+    // main directory for folderView
     const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
+    // backup directory
     const {
         openDirectory: openBackupDirectory,
-        directoryReady: backupDirectoryReady,
         statusText: backupStatusText,
         rootDirHandle: backupDirectoryDirHandle,
     } = useFileSystem();
+    const [lastBackupTime, setLastBackupTime] = useState(null);
+    // serial
     const { connectToSerialPort, sendDataToSerialPort, serialOutput, serialReady, serialTitle } = useSerial();
+    // config
     const { config, set_config, ready: configReady } = useConfig(schemas);
+    // flex layout
     const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
+    // confirm leave
     useEffect(() => {
         // https://stackoverflow.com/a/47477519/7037749
         if (directoryReady) {
@@ -44,6 +49,32 @@ function App() {
             };
         }
     }, [directoryReady]);
+    // backup schedule
+    const backup = useCallback(async () => {
+        if (await backupDirectoryDirHandle.isSameEntry(rootDirHandle)) {
+            console.log(backupDirectoryDirHandle.name);
+            console.log(rootDirHandle.name);
+            console.error("Cannot backup to the folder itself.");
+            confirm("Cannot backup to the folder itself.");
+            return;
+        }
+        if (!(backupDirectoryDirHandle && rootDirHandle)) {
+            return;
+        }
+        await backupFolder(rootDirHandle, backupDirectoryDirHandle, configReady && config.backup.clean);
+        const now = new Date().toLocaleTimeString();
+        setLastBackupTime(now);
+        console.log("backed up at " + now);
+    }, [backupDirectoryDirHandle, rootDirHandle, configReady && config.backup.clean]);
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            if (!(configReady && config.backup.enable_schedule)) {
+                return;
+            }
+            backup();
+        }, 60000 * (configReady && config.backup.period));
+        return () => clearInterval(interval);
+    }, [backup, configReady && config.backup.enable_schedule, configReady && config.backup.period]);
 
     // error info
     let WarningModal = () => {};
@@ -76,9 +107,9 @@ function App() {
                 directoryReady: directoryReady,
                 rootDirHandle: rootDirHandle,
                 openBackupDirectory: openBackupDirectory,
-                backupDirectoryReady: backupDirectoryReady,
                 backupStatusText: backupStatusText,
-                backupDirectoryDirHandle: backupDirectoryDirHandle,
+                backup: backup,
+                lastBackupTime: lastBackupTime,
                 connectToSerialPort: connectToSerialPort,
                 sendDataToSerialPort: sendDataToSerialPort,
                 serialOutput: serialOutput,

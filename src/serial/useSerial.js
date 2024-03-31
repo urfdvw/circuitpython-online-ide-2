@@ -4,6 +4,7 @@ import { matchesInBetween } from "./textProcessor";
 
 const useSerial = () => {
     const [port, setPort] = useState(null);
+    const [fullSerialHistory, setFullSerialHistory] = useState("");
     const [serialOutput, setSerialOutput] = useState("");
     const [serialTitle, setSerialTitle] = useState("");
     const [serialReady, setSerialReady] = useState(false);
@@ -28,9 +29,7 @@ const useSerial = () => {
                             reader.releaseLock();
                             break;
                         }
-                        setSerialOutput(
-                            (previousOutput) => previousOutput.slice(-100000) + new TextDecoder().decode(value)
-                        );
+                        setSerialOutput((previousOutput) => previousOutput + new TextDecoder().decode(value));
                     }
                 } catch (err) {
                     setPort(null);
@@ -120,7 +119,22 @@ const useSerial = () => {
         setSerialTitle("");
     };
 
-    return { connectToSerialPort, sendDataToSerialPort, serialOutput, serialReady, serialTitle };
+    function clearSerialOutput() {
+        setFullSerialHistory((hist) => {
+            return hist + serialOutput;
+        });
+        setSerialOutput("");
+    }
+
+    return {
+        connectToSerialPort,
+        sendDataToSerialPort,
+        clearSerialOutput,
+        serialOutput,
+        fullSerialHistory,
+        serialReady,
+        serialTitle,
+    };
 };
 
 export default useSerial;

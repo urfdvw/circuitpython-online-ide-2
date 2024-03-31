@@ -22,7 +22,7 @@ import useSerialCommands from "../serial/useSerialCommands";
 import Toolbar from "@mui/material/Toolbar";
 import { Menu } from "../layout/Menu";
 
-const RawSerialIn = ({ startIndex, setCurrentLength }) => {
+const RawSerialIn = () => {
     // "in" to computer, "out" from microcontroller
     const { config, serialOutput } = useContext(ideContext);
     let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
@@ -34,12 +34,9 @@ const RawSerialIn = ({ startIndex, setCurrentLength }) => {
     if (config.raw_console.hide_cv) {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
     }
-    setCurrentLength(output.length);
-    return (
-        <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>
-            {output.slice(startIndex)}
-        </pre>
-    );
+    // keep 1k lines to save GPU
+    output = output.split("\n").slice(-1000).join("\n");
+    return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>{output}</pre>;
 };
 
 const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleSendCommand }) => {
@@ -94,7 +91,7 @@ const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleS
         } else {
             aceEditorRef.current.editor.gotoLine(
                 aceEditorRef.current.editor.getCursorPosition().row + 2,
-                command.getCursorPosition().column,
+                aceEditorRef.current.editor.getCursorPosition().column,
                 true
             );
         }
@@ -181,20 +178,11 @@ const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleS
 
 const RawConsole = () => {
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
-    const { serialTitle, serialReady } = useContext(ideContext);
+    const { serialTitle, serialReady, clearSerialOutput } = useContext(ideContext);
     // Serial Out states
     const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
-    // Serial In states
-    const [startIndex, setStartIndex] = useState(0);
-    const [currentLength, setCurrentLength] = useState(0);
-
-    useEffect(() => {
-        if (!serialReady) {
-            setStartIndex(0);
-        }
-    }, [serialReady]);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
@@ -209,7 +197,7 @@ const RawConsole = () => {
             text: "Clear",
             handler: () => {
                 console.log("Clear");
-                setStartIndex(currentLength);
+                clearSerialOutput();
             },
         },
     ];
@@ -262,7 +250,7 @@ const RawConsole = () => {
                         display: "flex",
                     }}
                 >
-                    <RawSerialIn startIndex={startIndex} setCurrentLength={setCurrentLength} />
+                    <RawSerialIn/>
                 </ScrollableFeed>
             </div>
             <div

@@ -33,7 +33,8 @@ function App() {
     } = useFileSystem();
     const [lastBackupTime, setLastBackupTime] = useState(null);
     // serial
-    const { connectToSerialPort, sendDataToSerialPort, serialOutput, serialReady, serialTitle } = useSerial();
+    const { connectToSerialPort, sendDataToSerialPort, clearSerialOutput, serialOutput, serialReady, serialTitle } =
+        useSerial();
     // config
     const { config, set_config, ready: configReady } = useConfig(schemas);
     // flex layout
@@ -112,6 +113,7 @@ function App() {
                 lastBackupTime: lastBackupTime,
                 connectToSerialPort: connectToSerialPort,
                 sendDataToSerialPort: sendDataToSerialPort,
+                clearSerialOutput: clearSerialOutput,
                 serialOutput: serialOutput,
                 serialReady: serialReady,
                 serialTitle: serialTitle,

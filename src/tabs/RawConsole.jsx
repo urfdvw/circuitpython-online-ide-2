@@ -41,11 +41,21 @@ const RawSerialIn = () => {
     return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>{output}</pre>;
 };
 
-const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleSendCommand }) => {
+const RawSerialOut = ({
+    text,
+    setText,
+    codeHistIndex,
+    setCodeHistIndex,
+    consoleSendCommand,
+    sendCtrlC,
+    sendCtrlD,
+    codeHistory,
+}) => {
     const { config } = useContext(ideContext);
     const aceEditorRef = useRef(null);
-    const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
     const [tempCode, setTempCode] = useState("");
+
+    console.log(["RawSerialOut", codeHistory]);
 
     // code history related
     function histUp() {
@@ -186,6 +196,8 @@ const RawConsole = () => {
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
 
+    console.log(["RawConsole", codeHistory]);
+
     function consoleSendCommand() {
         if (text.trim().length === 0) {
             return;
@@ -206,7 +218,7 @@ const RawConsole = () => {
             text: "Download Log",
             handler: () => {
                 console.log("Download Log");
-                downloadAsFile('serial log.txt', fullSerialHistory);
+                downloadAsFile("serial log.txt", fullSerialHistory);
             },
         },
     ];
@@ -283,6 +295,9 @@ const RawConsole = () => {
                         consoleSendCommand={consoleSendCommand}
                         codeHistIndex={codeHistIndex}
                         setCodeHistIndex={setCodeHistIndex}
+                        sendCtrlC={sendCtrlC}
+                        sendCtrlD={sendCtrlD}
+                        codeHistory={codeHistory}
                     />
                 </div>
                 <div

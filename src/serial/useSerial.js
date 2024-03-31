@@ -4,7 +4,7 @@ import { matchesInBetween } from "./textProcessor";
 
 const useSerial = () => {
     const [port, setPort] = useState(null);
-    const [fullHistory, setFullHistory] = useState("");
+    const [fullSerialHistory, setFullSerialHistory] = useState("");
     const [serialOutput, setSerialOutput] = useState("");
     const [serialTitle, setSerialTitle] = useState("");
     const [serialReady, setSerialReady] = useState(false);
@@ -120,13 +120,21 @@ const useSerial = () => {
     };
 
     function clearSerialOutput() {
-        setFullHistory((hist) => {
-            hist + serialOutput;
+        setFullSerialHistory((hist) => {
+            return hist + serialOutput;
         });
         setSerialOutput("");
     }
 
-    return { connectToSerialPort, sendDataToSerialPort, clearSerialOutput, serialOutput, serialReady, serialTitle };
+    return {
+        connectToSerialPort,
+        sendDataToSerialPort,
+        clearSerialOutput,
+        serialOutput,
+        fullSerialHistory,
+        serialReady,
+        serialTitle,
+    };
 };
 
 export default useSerial;

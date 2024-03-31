@@ -21,6 +21,8 @@ import useSerialCommands from "../serial/useSerialCommands";
 // toolbar
 import Toolbar from "@mui/material/Toolbar";
 import { Menu } from "../layout/Menu";
+// download log
+import { downloadAsFile } from "../react-local-file-system";
 
 const RawSerialIn = () => {
     // "in" to computer, "out" from microcontroller
@@ -178,7 +180,7 @@ const RawSerialOut = ({ text, setText, codeHistIndex, setCodeHistIndex, consoleS
 
 const RawConsole = () => {
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
-    const { serialTitle, serialReady, clearSerialOutput } = useContext(ideContext);
+    const { fullSerialHistory, serialTitle, serialReady, clearSerialOutput } = useContext(ideContext);
     // Serial Out states
     const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
     const [text, setText] = useState("");
@@ -198,6 +200,13 @@ const RawConsole = () => {
             handler: () => {
                 console.log("Clear");
                 clearSerialOutput();
+            },
+        },
+        {
+            text: "Download Log",
+            handler: () => {
+                console.log("Download Log");
+                downloadAsFile('serial log.txt', fullSerialHistory);
             },
         },
     ];
@@ -250,7 +259,7 @@ const RawConsole = () => {
                         display: "flex",
                     }}
                 >
-                    <RawSerialIn/>
+                    <RawSerialIn />
                 </ScrollableFeed>
             </div>
             <div

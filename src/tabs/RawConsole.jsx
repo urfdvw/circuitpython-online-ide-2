@@ -55,8 +55,6 @@ const RawSerialOut = ({
     const aceEditorRef = useRef(null);
     const [tempCode, setTempCode] = useState("");
 
-    console.log(["RawSerialOut", codeHistory]);
-
     // code history related
     function histUp() {
         let newCodeHistoryIndex = codeHistIndex;
@@ -190,13 +188,11 @@ const RawSerialOut = ({
 
 const RawConsole = () => {
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
-    const { fullSerialHistory, serialTitle, serialReady, clearSerialOutput } = useContext(ideContext);
+    const { fullSerialHistory, serialTitle, serialOutput, clearSerialOutput } = useContext(ideContext);
     // Serial Out states
     const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
-
-    console.log(["RawConsole", codeHistory]);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
@@ -218,7 +214,7 @@ const RawConsole = () => {
             text: "Download Log",
             handler: () => {
                 console.log("Download Log");
-                downloadAsFile("serial log.txt", fullSerialHistory);
+                downloadAsFile("serial log.txt", fullSerialHistory + serialOutput);
             },
         },
     ];

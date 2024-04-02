@@ -5,6 +5,7 @@ import "./App.css";
 // Ide parts
 import IdeBody from "./IdeBody";
 import IdeHead from "./IdeHead";
+import Typography from "@mui/material/Typography";
 // Device Support Warnings
 import { isMobile, isMacOs, isSafari, isFirefox, isIE } from "react-device-detect";
 import ErrorIsMobile from "./infopages/ErrorIsMobile";
@@ -28,6 +29,7 @@ function App() {
     // backup directory
     const {
         openDirectory: openBackupDirectory,
+        directoryReady: backupDirectoryReady,
         statusText: backupStatusText,
         rootDirHandle: backupDirectoryDirHandle,
     } = useFileSystem();
@@ -58,6 +60,11 @@ function App() {
         }
     }, [directoryReady]);
     // backup schedule
+    useEffect(() => {
+        if (!backupDirectoryReady) {
+            setLastBackupTime(null);
+        }
+    }, [backupDirectoryReady]);
     const backup = useCallback(async () => {
         if (await backupDirectoryDirHandle.isSameEntry(rootDirHandle)) {
             console.log(backupDirectoryDirHandle.name);
@@ -71,8 +78,8 @@ function App() {
         }
         await backupFolder(rootDirHandle, backupDirectoryDirHandle, configReady && config.backup.clean);
         const now = new Date().toLocaleTimeString();
-        setLastBackupTime(now);
-        console.log("backed up at " + now);
+        setLastBackupTime("Last backup at: " + now);
+        console.log("Last backup at: " + now);
     }, [backupDirectoryDirHandle, rootDirHandle, configReady && config.backup.clean]);
     useEffect(() => {
         const interval = setInterval(async () => {
@@ -139,14 +146,17 @@ function App() {
                 <div className="ide-body">
                     <IdeBody />
                 </div>
-                <div className="ide-tail">
-                    CircuitPy Drive: {statusText} | Serial:{" "}
+                <Typography component="div" className="ide-tail" sx={{ paddingLeft: "5pt" }}>
+                    CircuitPy Drive: {statusText} | Serial:
                     {serialReady
                         ? serialTitle && config.global.serial_status === "title"
                             ? serialTitle
                             : "Connected"
                         : "No Port Connected"}
-                </div>
+                    {backupDirectoryReady
+                        ? " | Backup Folder: " + backupStatusText + (lastBackupTime ? ", " + lastBackupTime : "")
+                        : ""}
+                </Typography>
             </div>
         </ideContext.Provider>
     );

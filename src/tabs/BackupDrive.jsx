@@ -17,7 +17,7 @@ export default function BackupDrive() {
             <br />
             <Button onClick={backup}>Manual Backup</Button>
             <br />
-            {lastBackupTime ? "Last backup at: " + lastBackupTime : ""}
+            {lastBackupTime ? lastBackupTime : ""}
         </Typography>
     );
 }

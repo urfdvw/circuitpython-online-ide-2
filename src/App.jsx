@@ -153,13 +153,17 @@ function App() {
                 <div className="ide-body">
                     <IdeBody />
                 </div>
-                <Typography component="div" className="ide-tail" sx={{ paddingLeft: "5pt" }}>
-                    CircuitPy Drive: {rootFolderStatusText} | Serial:
-                    {serialReady ? "Connected" : "No Port Connected"}
-                    {backupDirectoryReady
-                        ? " | Backup Folder: " + backupStatusText + (lastBackupTime ? ", " + lastBackupTime : "")
-                        : ""}
-                </Typography>
+                {config.global.show_status_bar ? (
+                    <Typography component="div" className="ide-tail" sx={{ paddingLeft: "5pt" }}>
+                        CircuitPy Drive: {rootFolderStatusText} | Serial:
+                        {serialReady ? "Connected" : "No Port Connected"}
+                        {backupDirectoryReady
+                            ? " | Backup Folder: " + backupStatusText + (lastBackupTime ? ", " + lastBackupTime : "")
+                            : ""}
+                    </Typography>
+                ) : (
+                    <></>
+                )}
             </div>
         </ideContext.Provider>
     );

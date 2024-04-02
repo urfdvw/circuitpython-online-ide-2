@@ -10,11 +10,10 @@
             "enum": ["system", "dark", "light"],
             "default": "system"
         },
-        "serial_status": {
-            "title": "Show in status bar",
-            "type": "string",
-            "enum": ["status", "title"],
-            "default": "status"
+        "show_status_bar": {
+            "title": "Show status bar",
+            "type": "boolean",
+            "default": "true"
         }
     }
 }

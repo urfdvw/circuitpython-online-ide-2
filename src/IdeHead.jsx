@@ -67,6 +67,7 @@ export default function IdeHead() {
         serialReady,
         backupDirectoryReady,
         backupStatusText,
+        lastBackupTime,
     } = useContext(ideContext);
 
     function findTabByName(node, name) {
@@ -266,6 +267,8 @@ export default function IdeHead() {
                                 <b>Backup Folder:</b>
                                 <br />
                                 {backupStatusText}
+                                <br />
+                                {lastBackupTime}
                             </>
                         }
                     >

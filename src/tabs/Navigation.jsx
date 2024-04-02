@@ -7,7 +7,7 @@ import ideContext from "../ideContext";
 import Button from "@mui/material/Button";
 
 export default function Navigation() {
-    const { openDirectory, directoryReady, serialReady, connectToSerialPort } = useContext(ideContext);
+    const { openDirectory, rootFolderDirectoryReady, serialReady, connectToSerialPort } = useContext(ideContext);
 
     return (
         <Typography component="div" sx={{ margin: "20pt" }}>
@@ -29,13 +29,13 @@ export default function Navigation() {
                 </li>
                 <li>
                     Step 1. <Button onClick={openDirectory}>Open CircuitPy Drive</Button>
-                    {directoryReady ? "✅" : ""}
+                    {rootFolderDirectoryReady ? "✅" : ""}
                 </li>
                 <li>
                     Step 2. <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
                     {serialReady ? "✅" : ""}
                 </li>
-                {serialReady && directoryReady ? (
+                {serialReady && rootFolderDirectoryReady ? (
                     <li>🎉 Setup complete! Open your file and let's start coding!</li>
                 ) : (
                     ""

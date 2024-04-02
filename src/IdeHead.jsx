@@ -2,7 +2,13 @@
 import { useContext } from "react";
 import MenuBar from "./layout/Menu";
 // MUI
-import { grey, deepPurple } from "@mui/material/colors";
+import { grey, deepPurple, purple, blue, teal } from "@mui/material/colors";
+import Tooltip from "@mui/material/Tooltip";
+import Typography from "@mui/material/Typography";
+// Icons
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
+import DeveloperBoardOutlinedIcon from "@mui/icons-material/DeveloperBoardOutlined";
+import FolderCopyOutlinedIcon from "@mui/icons-material/FolderCopyOutlined";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context
@@ -47,9 +53,21 @@ const wikiLinks = [
         link: "",
     },
 ];
+//https://stackoverflow.com/a/2998874/7037749
+const zeroPad = (num, places) => String(num).padStart(places, "0");
 
 export default function IdeHead() {
-    const { flexModel: model, openDirectory, openBackupDirectory, connectToSerialPort } = useContext(ideContext);
+    const {
+        flexModel: model,
+        openDirectory,
+        openBackupDirectory,
+        connectToSerialPort,
+        rootFolderDirectoryReady,
+        rootFolderStatusText,
+        serialReady,
+        backupDirectoryReady,
+        backupStatusText,
+    } = useContext(ideContext);
 
     function findTabByName(node, name) {
         if (node.getType() === "tab" && node.getName() === name) {
@@ -87,6 +105,8 @@ export default function IdeHead() {
             );
         }
     }
+
+    var dateWithouthSecond = new Date();
 
     const menuStructure = {
         menu: [
@@ -188,5 +208,74 @@ export default function IdeHead() {
             },
         ],
     };
-    return <MenuBar menuStructure={menuStructure} />;
+    return (
+        <div
+            style={{
+                display: "flex",
+                justifyContent: "space-between",
+                borderBottom: "2px solid rgb(239,239,239)",
+                width: "100%",
+            }}
+        >
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "left",
+                    flex: 1,
+                }}
+            >
+                <MenuBar menuStructure={menuStructure} />
+            </div>
+            <div
+                style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "left",
+                    paddingRight: "5pt",
+                }}
+            >
+                <Tooltip
+                    title={
+                        <>
+                            <b>CircuitPy Drive:</b>
+                            <br />
+                            {rootFolderStatusText}
+                        </>
+                    }
+                >
+                    &nbsp;
+                    <FolderOutlinedIcon sx={{ color: rootFolderDirectoryReady ? purple[400] : grey[500] }} />
+                </Tooltip>
+                <Tooltip
+                    title={
+                        <>
+                            <b>Serial Port:</b>
+                            <br />
+                            {serialReady ? "Connected" : "No Port Connected"}
+                        </>
+                    }
+                >
+                    &nbsp;
+                    <DeveloperBoardOutlinedIcon sx={{ color: serialReady ? teal[500] : grey[500] }} />
+                </Tooltip>
+                {backupDirectoryReady ? (
+                    <Tooltip
+                        title={
+                            <>
+                                <b>Backup Folder:</b>
+                                <br />
+                                {backupStatusText}
+                            </>
+                        }
+                    >
+                        &nbsp;
+                        <FolderCopyOutlinedIcon sx={{ color: blue[600] }} />
+                    </Tooltip>
+                ) : (
+                    <></>
+                )}
+            </div>
+        </div>
+    );
 }

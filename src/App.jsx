@@ -25,7 +25,12 @@ import layout from "./layout/layout.json";
 
 function App() {
     // main directory for folderView
-    const { openDirectory, directoryReady, statusText, rootDirHandle } = useFileSystem();
+    const {
+        openDirectory,
+        directoryReady: rootFolderDirectoryReady,
+        statusText: rootFolderStatusText,
+        rootDirHandle,
+    } = useFileSystem();
     // backup directory
     const {
         openDirectory: openBackupDirectory,
@@ -51,14 +56,14 @@ function App() {
     // confirm leave
     useEffect(() => {
         // https://stackoverflow.com/a/47477519/7037749
-        if (directoryReady) {
+        if (rootFolderDirectoryReady) {
             window.onbeforeunload = function (e) {
                 var dialogText = "Are you sure to leave?"; // TODO: not shown up yet
                 e.returnValue = dialogText;
                 return dialogText;
             };
         }
-    }, [directoryReady]);
+    }, [rootFolderDirectoryReady]);
     // backup schedule
     useEffect(() => {
         if (!backupDirectoryReady) {
@@ -119,9 +124,11 @@ function App() {
             value={{
                 flexModel: flexModel,
                 openDirectory: openDirectory,
-                directoryReady: directoryReady,
+                rootFolderDirectoryReady: rootFolderDirectoryReady,
                 rootDirHandle: rootDirHandle,
+                rootFolderStatusText: rootFolderStatusText,
                 openBackupDirectory: openBackupDirectory,
+                backupDirectoryReady: backupDirectoryReady,
                 backupStatusText: backupStatusText,
                 backup: backup,
                 lastBackupTime: lastBackupTime,
@@ -147,12 +154,8 @@ function App() {
                     <IdeBody />
                 </div>
                 <Typography component="div" className="ide-tail" sx={{ paddingLeft: "5pt" }}>
-                    CircuitPy Drive: {statusText} | Serial:
-                    {serialReady
-                        ? serialTitle && config.global.serial_status === "title"
-                            ? serialTitle
-                            : "Connected"
-                        : "No Port Connected"}
+                    CircuitPy Drive: {rootFolderStatusText} | Serial:
+                    {serialReady ? "Connected" : "No Port Connected"}
                     {backupDirectoryReady
                         ? " | Backup Folder: " + backupStatusText + (lastBackupTime ? ", " + lastBackupTime : "")
                         : ""}

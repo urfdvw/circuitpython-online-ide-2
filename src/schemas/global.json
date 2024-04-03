@@ -13,7 +13,7 @@
         "show_status_bar": {
             "title": "Show status bar",
             "type": "boolean",
-            "default": "true"
+            "default": false
         }
     }
 }

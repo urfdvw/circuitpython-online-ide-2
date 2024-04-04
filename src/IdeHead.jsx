@@ -1,5 +1,5 @@
 // React
-import { useContext } from "react";
+import { useState, useEffect, useContext } from "react";
 import MenuBar from "./layout/Menu";
 // MUI
 import { grey, deepPurple, purple, blue, teal } from "@mui/material/colors";
@@ -14,9 +14,6 @@ import * as FlexLayout from "flexlayout-react";
 //context
 import ideContext from "./ideContext";
 
-//https://stackoverflow.com/a/2998874/7037749
-const zeroPad = (num, places) => String(num).padStart(places, "0");
-
 export default function IdeHead() {
     const {
         flexModel: model,
@@ -29,7 +26,19 @@ export default function IdeHead() {
         backupDirectoryReady,
         backupStatusText,
         lastBackupTime,
+        config,
     } = useContext(ideContext);
+
+    const [time, setTime] = useState("");
+    const [timeFull, setTimeFull] = useState("");
+    useEffect(() => {
+        const interval = setInterval(() => {
+            var date = new Date();
+            setTime(date.toLocaleTimeString([], { timeStyle: "short" }).slice(0, -3));
+            setTimeFull(date.toLocaleString());
+        }, 1000);
+        return () => clearInterval(interval);
+    }, []);
 
     function findTabByName(node, name) {
         if (node.getType() === "tab" && node.getName() === name) {
@@ -67,8 +76,6 @@ export default function IdeHead() {
             );
         }
     }
-
-    var dateWithouthSecond = new Date();
 
     const menuStructure = {
         menu: [
@@ -194,7 +201,7 @@ export default function IdeHead() {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "left",
-                    paddingRight: "5pt",
+                    paddingRight: "10pt",
                 }}
             >
                 <Tooltip
@@ -235,6 +242,14 @@ export default function IdeHead() {
                     >
                         &nbsp;
                         <FolderCopyOutlinedIcon sx={{ color: blue[600] }} />
+                    </Tooltip>
+                ) : (
+                    <></>
+                )}
+                {config.global.show_time ? (
+                    <Tooltip title={timeFull}>
+                        &nbsp;
+                        <Typography component={"span"}>{time}</Typography>
                     </Tooltip>
                 ) : (
                     <></>

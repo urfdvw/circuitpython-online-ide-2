@@ -36,7 +36,7 @@ export default function Navigation() {
                     {serialReady ? "✅" : ""}
                 </li>
                 {serialReady && rootFolderDirectoryReady ? (
-                    <li>🎉 Setup complete! Open your file and let's start coding!</li>
+                    <li>🎉 Setup complete! Open your files and let's start coding!</li>
                 ) : (
                     ""
                 )}

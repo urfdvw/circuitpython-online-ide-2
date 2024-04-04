@@ -33,12 +33,12 @@ const RawSerialIn = () => {
     // TODO: https://github.com/urfdvw/circuitpython-online-ide-2/issues/45
     output = output.split("\x1B[2K\x1B[0G").join("\n");
 
-    if (config.raw_console.hide_cv) {
+    if (config.serial_console.hide_cv) {
         output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
     }
     // keep 1k lines to save GPU
     output = output.split("\n").slice(-1000).join("\n");
-    return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.raw_console.font + "pt" }}>{output}</pre>;
+    return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.serial_console.font + "pt" }}>{output}</pre>;
 };
 
 const RawSerialOut = ({
@@ -140,15 +140,15 @@ const RawSerialOut = ({
                 histDown(editor);
             },
         });
-        if (config.raw_console.send_mode === "code") {
+        if (config.serial_console.send_mode === "code") {
             aceEditorRef.current.editor.commands.addCommand({
                 name: "send",
-                bindKey: config.raw_console.enter_to_send ? "Enter" : "Shift-Enter",
+                bindKey: config.serial_console.enter_to_send ? "Enter" : "Shift-Enter",
                 exec: consoleSendCommand,
             });
             aceEditorRef.current.editor.commands.addCommand({
                 name: "newline",
-                bindKey: config.raw_console.enter_to_send ? "Shift-Enter" : "Enter",
+                bindKey: config.serial_console.enter_to_send ? "Shift-Enter" : "Enter",
                 exec: addNewline,
             });
         } else {
@@ -169,7 +169,7 @@ const RawSerialOut = ({
         <>
             <AceEditor
                 ref={aceEditorRef}
-                mode={config.raw_console.send_mode === "code" ? "python" : "text"}
+                mode={config.serial_console.send_mode === "code" ? "python" : "text"}
                 useSoftTabs={true}
                 wrapEnabled={true}
                 tabSize={4}
@@ -180,7 +180,7 @@ const RawSerialOut = ({
                 onChange={(newValue) => {
                     setText(newValue);
                 }}
-                fontSize={config.raw_console.font + "pt"}
+                fontSize={config.serial_console.font + "pt"}
             />
         </>
     );

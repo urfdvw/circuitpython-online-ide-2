@@ -14,45 +14,6 @@ import * as FlexLayout from "flexlayout-react";
 //context
 import ideContext from "./ideContext";
 
-const wikiBase = "https://github.com/urfdvw/circuitpython-online-ide-2/wiki/";
-const wikiLinks = [
-    {
-        text: "Quick start",
-        link: "Quick-start",
-    },
-    {
-        text: "Layout",
-        link: "Layout",
-    },
-    {
-        text: "Folder View",
-        link: "Folder-View",
-    },
-    {
-        text: "Editor",
-        link: "Editor",
-    },
-    {
-        text: "Serial Console",
-        link: "Serial-Console-%28raw%29",
-    },
-    {
-        text: "Settings",
-        link: "Settings",
-    },
-    {
-        text: "Plot",
-        link: "Plot-%28raw%29",
-    },
-    {
-        text: "Backup",
-        link: "Backup",
-    },
-    {
-        text: "...More",
-        link: "",
-    },
-];
 //https://stackoverflow.com/a/2998874/7037749
 const zeroPad = (num, places) => String(num).padStart(places, "0");
 

@@ -7,6 +7,7 @@ import { TabPanel, a11yProps } from "./TabPanel";
 // schema form
 import Form from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
+import CheckboxWidget from "./CheckboxWidget";
 // user data
 import uiSchema from "./uiSchema.json";
 // utils
@@ -34,6 +35,9 @@ function SchemaForm({ initFormData, schema, onSubmit }) {
             onSubmit={handleSubmit}
             omitExtraData={true}
             onChange={handleChange}
+            widgets={{
+                CheckboxWidget: CheckboxWidget,
+            }}
         />
     );
 }

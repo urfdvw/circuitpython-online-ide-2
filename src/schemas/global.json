@@ -14,11 +14,6 @@
             "title": "Show time in menu bar",
             "type": "boolean",
             "default": false
-        },
-        "show_status_bar": {
-            "title": "Show status bar",
-            "type": "boolean",
-            "default": false
         }
     }
 }

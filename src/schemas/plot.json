@@ -5,11 +5,13 @@
     "properties": {
         "x_axis": {
             "title": "Use first column as x-axis",
+            "description": "When checked, the first data column will be used for the x-axis. Otherwise, all columns of the data are considered parallel y-axes, and the x-axis on the figure will be the index.",
             "type": "boolean",
             "default": false
         },
         "truncate": {
             "title": "Truncate history points",
+            "description": "When checked, will only keep up to a certain number of data points. Otherwise, will keep all history.",
             "type": "boolean",
             "default": false
         },

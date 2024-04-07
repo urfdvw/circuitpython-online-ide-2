@@ -5,6 +5,7 @@
     "properties": {
         "enable_schedule": {
             "title": "Auto backup by period",
+            "description": "Check this item to enable periodic backup.",
             "type": "boolean",
             "default": false
         },
@@ -15,6 +16,7 @@
         },
         "clean": {
             "title": "Clean up before each backup",
+            "description": "When checked, all contents within the backup folder will be deleted prior to backup. If unchecked, the backup process will only overwrite files with matching names.",
             "type": "boolean",
             "default": false
         }

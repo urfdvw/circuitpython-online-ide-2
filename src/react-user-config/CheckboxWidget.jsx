@@ -2,13 +2,12 @@ import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
 import {
     ariaDescribedByIds,
-    descriptionId,
     getTemplate,
     labelValue,
     schemaRequiresTrueValue,
     // Removed specific type imports that are TypeScript only
 } from "@rjsf/utils";
-import MarkdownExtended from "./MarkdownExtended";
+import Typography from "@mui/material/Typography";
 
 /** The `CheckBoxWidget` is a widget for rendering boolean properties.
  *  It is typically used to represent a boolean.
@@ -64,7 +63,10 @@ export default function CheckboxWidget(props) {
                 }
                 label={labelValue(label, hideLabel, false)}
             />
-            <MarkdownExtended>{description}</MarkdownExtended>
+
+            {!hideLabel && !!description && (
+                <Typography style={{ fontSize: "14px", color: "rgb(102, 102, 102)" }}>{description}</Typography>
+            )}
         </>
     );
 }

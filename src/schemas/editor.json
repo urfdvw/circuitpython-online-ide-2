@@ -14,11 +14,6 @@
             "type": "boolean",
             "default": false
         },
-        "block_closing_unsaved_tab": {
-            "title": "Hide close tab button if there are unsaved changed",
-            "type": "boolean",
-            "default": false
-        },
         "newline_mode": {
             "title": "Newline mode",
             "type": "string",

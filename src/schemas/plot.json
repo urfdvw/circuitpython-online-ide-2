@@ -1,28 +1,28 @@
 {
     "title": "Plot",
-    "description": "Plot tab setting settings.",
+    "description": "Plot tab settings.",
     "type": "object",
     "properties": {
         "x_axis": {
             "title": "Use first column as x-axis",
-            "description": "When checked, the first data column will be used for the x-axis. Otherwise, all columns of the data are considered parallel y-axes, and the x-axis on the figure will be the index.",
+            "description": "When selected, the first data column will be used for the x-axis. Otherwise, all columns of the data are considered parallel y-axes, and the x-axis on the figure will be the index.",
             "type": "boolean",
             "default": false
         },
         "truncate": {
             "title": "Truncate history points",
-            "description": "When checked, will only keep up to a certain number of data points. Otherwise, will keep all history.",
+            "description": "When selected, will only keep up to a certain number of data points. Otherwise, will keep all history.",
             "type": "boolean",
             "default": false
         },
         "history_len": {
             "title": "Maximum number of history points to keep",
-            "description": "Only effective when truncate is on.",
             "type": "number",
             "default": 100
         },
         "enable_axis_limits": {
-            "title": "Plot only a specific range",
+            "title": "Limit plotting to a defined range",
+            "description": "When selected, plotting will be confined to the specified range. If not selected, the range will adjust based on the plot's data.",
             "type": "boolean",
             "default": false
         },

@@ -65,7 +65,7 @@ export default function useSerialCommands() {
             return;
         }
         addCodeHistory(code);
-        if (config.serial_console.force_exec) {
+        if (config.serial_console.force_exec && config.serial_console.send_mode === "code") {
             // if code running, break execution before send code
             if (output.slice(-4, -1) !== ">>>") {
                 await sendCtrlC(); // break execution

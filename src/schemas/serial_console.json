@@ -1,6 +1,6 @@
 {
     "title": "Serial Console",
-    "description": "Serial console settings.",
+    "description": "Serial console tab settings.",
     "type": "object",
     "properties": {
         "font": {
@@ -10,24 +10,26 @@
         },
         "send_mode": {
             "title": "Send mode",
+            "description": "Code mode is for sending Python code in the REPL. Text mode is for communicating with the microcontroller when your Python code contains the print() function.",
             "type": "string",
             "enum": ["code", "text"],
             "default": "code"
         },
         "enter_to_send": {
             "title": "Enter to send, Shift-Enter to make newline",
-            "description": "Only effective when sending code.",
+            "description": "When not selected, the shortcuts will be reversed. This setting is applicable exclusively in code mode. In text mode, however, both shortcuts function to send text.",
             "type": "boolean",
             "default": false
         },
         "force_exec": {
-            "title": "Force execute sent code",
-            "description": "When this is enabled, code will be executed at the moment it is sent, breaking any running processes.",
+            "title": "Enforce execution of sent code",
+            "description": "When selected, this option ensures code executes instantly upon submission, interrupting any active processes. This configuration is applicable exclusively in code mode.",
             "type": "boolean",
             "default": true
         },
         "hide_cv": {
-            "title": "Hide <CV> commination",
+            "title": "Hide <CV> communication",
+            "description": "When deselected, raw communication data for connected variable widgets will be displayed.",
             "type": "boolean",
             "default": true
         }

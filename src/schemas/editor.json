@@ -1,6 +1,6 @@
 {
     "title": "Editor",
-    "description": "Code editor settings.",
+    "description": "Code editor tab settings.",
     "type": "object",
     "properties": {
         "font": {
@@ -9,7 +9,7 @@
             "default": 12
         },
         "live_autocompletion": {
-            "title": "Enable Live Autocompletion",
+            "title": "Enable live autocompletion",
             "description": "When live is disabled, use [Ctrl-Space] for autocompletion.",
             "type": "boolean",
             "default": false

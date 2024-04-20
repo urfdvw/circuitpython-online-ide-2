@@ -25,7 +25,7 @@ export default function Navigation() {
                     >
                         Install CircuitPython
                     </Button>
-                    (Skip if you already did)
+                    (Skip if installed recently)
                 </li>
                 <li>
                     Step 1. <Button onClick={openDirectory}>Open CircuitPy Drive</Button>

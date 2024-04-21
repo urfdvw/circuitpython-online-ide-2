@@ -11,6 +11,8 @@ export default function DarkTheme({ dark = null }) {
         isDarkTheme = dark;
     }
 
+    localStorage.setItem("isDarkTheme", isDarkTheme);
+
     return isDarkTheme ? (
         <Helmet>
             <style type="text/css">{`

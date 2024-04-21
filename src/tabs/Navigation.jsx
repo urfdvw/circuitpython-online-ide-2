@@ -5,6 +5,25 @@ import Typography from "@mui/material/Typography";
 import ideContext from "../ideContext";
 // mui
 import Button from "@mui/material/Button";
+// theme
+import { NoTheme } from "../react-lazy-dark-theme";
+
+const video_parent_css = {
+    position: "relative",
+    width: "100%",
+    height: 0,
+    paddingTop: (9 / 16) * 100 + "%",
+};
+
+const video_css = {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    width: "100%",
+    height: "100%",
+};
 
 export default function Navigation() {
     const { openDirectory, rootFolderDirectoryReady, serialReady, connectToSerialPort } = useContext(ideContext);
@@ -41,6 +60,20 @@ export default function Navigation() {
                     ""
                 )}
             </ul>
+
+            <NoTheme style={{ width: "100%" }}>
+                <div style={video_parent_css}>
+                    <iframe
+                        style={video_css}
+                        frameBorder={0}
+                        src="https://www.youtube.com/embed/kq554m21G4A?si=xLRUJNfd6tvAqGuH&cc_load_policy=1&cc_lang_pref=en"
+                        title="Quick Start Guide"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                        referrerPolicy="strict-origin-when-cross-origin"
+                        allowFullScreen
+                    ></iframe>
+                </div>
+            </NoTheme>
         </Typography>
     );
 }

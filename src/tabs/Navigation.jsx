@@ -65,7 +65,7 @@ export default function Navigation() {
                 <div style={video_parent_css}>
                     <iframe
                         style={video_css}
-                        src="https://www.youtube.com/embed/kq554m21G4A?si=xLRUJNfd6tvAqGuH"
+                        src="https://www.youtube.com/embed/kq554m21G4A?si=xLRUJNfd6tvAqGuH&cc_load_policy=1&cc_lang_pref=en"
                         title="Quick Start Guide"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
                         referrerPolicy="strict-origin-when-cross-origin"

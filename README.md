@@ -18,6 +18,8 @@ This IDE includes essential tools and useful features for CircuitPython microcon
 
 ***For More help documents, please visit our [Wiki page](https://github.com/urfdvw/circuitpython-online-ide-2/wiki/).***
 
+[![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)
+
 ### Set up
 - Connect your CircuitPython-supported microcontroller board to your computer via a USB cable.
 - **Open the [CircuitPython Online IDE](https://urfdvw.github.io/circuitpython-online-ide-2/) in a supported browser (Chrome, Edge, etc.).**

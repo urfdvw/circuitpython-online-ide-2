@@ -24,6 +24,7 @@ async function generateMarkdown() {
             IntroContent,
             "# Quick Start",
             "***For More help documents, please visit our [Wiki page](https://github.com/urfdvw/circuitpython-online-ide-2/wiki/).***",
+            "[![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)",
             QuickStartContent,
             "# About",
             AboutContent,

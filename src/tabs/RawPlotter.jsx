@@ -4,6 +4,9 @@ import { useEffect, useState, useRef, useContext } from "react";
 import Plot from "react-plotly.js";
 // context
 import ideContext from "../ideContext";
+// help
+import Document from "./Document";
+import plotHelp from "../documents/wiki/Plot.md";
 
 function text_to_data(text) {
     var lines = text.split("\n");
@@ -11,6 +14,10 @@ function text_to_data(text) {
         lines[i] = lines[i].trim().split(" ");
     }
     return lines;
+}
+
+function Help() {
+    return <Document info={plotHelp} />;
 }
 
 function plot_lines_find_end(lines) {
@@ -34,7 +41,7 @@ function transpose(array) {
 export default function RawPlotter({ node }) {
     const { config, serialOutput } = useContext(ideContext);
     if (!serialOutput) {
-        return <></>;
+        return <Help />;
     }
     const height = node.getRect().height;
     const width = node.getRect().width;
@@ -91,7 +98,7 @@ export default function RawPlotter({ node }) {
         }
     } catch (e) {
         console.error("Exception thrown", e.stack);
-        return <></>;
+        return <Document info="*An error occurred during plotting. Please try again.*" />;
     }
 
     return <Plot data={data} layout={layout} />;

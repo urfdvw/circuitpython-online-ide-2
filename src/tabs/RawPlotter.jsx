@@ -98,7 +98,7 @@ export default function RawPlotter({ node }) {
         }
     } catch (e) {
         console.error("Exception thrown", e.stack);
-        return <Document>*An error occurred during plotting. Please try again.*</Document>;
+        return <Document info="*An error occurred during plotting. Please try again.*" />;
     }
 
     return <Plot data={data} layout={layout} />;

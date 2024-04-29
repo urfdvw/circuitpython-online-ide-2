@@ -140,6 +140,26 @@ const RawSerialOut = ({
                 histDown(editor);
             },
         });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "MyIntdent",
+            bindKey: { win: "Ctrl-]", mac: "Cmd-]" },
+            exec: function (editor) {
+                console.log("MyIntdent");
+                editor.blockIndent();
+            },
+            multiSelectAction: "forEach",
+            scrollIntoView: "selectionPart",
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "MyOutdent",
+            bindKey: { win: "Ctrl-[", mac: "Cmd-[" },
+            exec: function (editor) {
+                console.log("MyOutdent");
+                editor.blockOutdent();
+            },
+            multiSelectAction: "forEach",
+            scrollIntoView: "selectionPart",
+        });
         if (config.serial_console.send_mode === "code") {
             aceEditorRef.current.editor.commands.addCommand({
                 name: "send",

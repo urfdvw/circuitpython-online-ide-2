@@ -215,6 +215,26 @@ export default function IdeEditor({ fileHandle, node }) {
                 run_cell(editor);
             },
         });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "MyIntdent",
+            bindKey: { win: "Ctrl-]", mac: "Cmd-]" },
+            exec: function (editor) {
+                console.log("MyIntdent");
+                editor.blockIndent();
+            },
+            multiSelectAction: "forEach",
+            scrollIntoView: "selectionPart",
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "MyOutdent",
+            bindKey: { win: "Ctrl-[", mac: "Cmd-[" },
+            exec: function (editor) {
+                console.log("MyOutdent");
+                editor.blockOutdent();
+            },
+            multiSelectAction: "forEach",
+            scrollIntoView: "selectionPart",
+        });
     }
 
     const hiddenMenuLabelOptions = [

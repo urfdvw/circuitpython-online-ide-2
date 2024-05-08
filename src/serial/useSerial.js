@@ -1,58 +1,25 @@
 import { useState, useEffect } from "react";
 import * as constants from "../constants";
 import { matchesInBetween } from "./textProcessor";
+import SerialCommunication from "./serial";
+
+const serial = new SerialCommunication();
 
 const useSerial = () => {
-    const [port, setPort] = useState(null);
+    const [serialReady, setSerialReady] = useState(false);
     const [fullSerialHistory, setFullSerialHistory] = useState("");
     const [serialOutput, setSerialOutput] = useState("");
     const [serialTitle, setSerialTitle] = useState("");
-    const [serialReady, setSerialReady] = useState(false);
 
     useEffect(() => {
         if (!navigator.serial) {
             console.warn("Web Serial API not supported");
         }
+
+        serial.registerReaderCallback("dataFromMcu", (data) => {
+            setSerialOutput((previousOutput) => previousOutput + data);
+        });
     }, []);
-
-    useEffect(() => {
-        let reader;
-        let active = true;
-
-        const readData = async () => {
-            while (port && port.readable && active) {
-                try {
-                    reader = port.readable.getReader();
-                    while (true) {
-                        const { value, done } = await reader.read();
-                        if (done) {
-                            reader.releaseLock();
-                            break;
-                        }
-                        setSerialOutput((previousOutput) => previousOutput + new TextDecoder().decode(value));
-                    }
-                } catch (err) {
-                    setPort(null);
-                    setSerialReady(false);
-                    setSerialOutput("");
-                    setSerialTitle("");
-                    console.error("Failed to read data:", err);
-                } finally {
-                    reader && reader.releaseLock();
-                }
-            }
-        };
-
-        readData();
-
-        return () => {
-            const close = async () => {
-                active = false;
-                reader && (await reader.releaseLock());
-            };
-            close();
-        };
-    }, [port]);
 
     useEffect(() => {
         setSerialTitle(matchesInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END).at(-1));
@@ -60,63 +27,37 @@ const useSerial = () => {
 
     const connectToSerialPort = async () => {
         try {
-            const newPort = await navigator.serial.requestPort();
-            await newPort.open({ baudRate: 115200 });
-            setPort(newPort);
-            setSerialReady(true);
+            const status = await serial.open();
+            setSerialReady(status);
+            if (status) {
+                /**
+                 * This effect has two benefits
+                 * * There will not be any "half blocks" when staring the IDE
+                 * * Behavior of CPY each time when IDE starts are consistent
+                 * Please ignore whatever is before the first `soft reboot` text
+                 */
+                // break any current run (no effect/harm in repl)
+                await sendDataToSerialPort(constants.CTRL_C);
+                // start a fresh run (No matter from REPL or code)
+                await sendDataToSerialPort(constants.CTRL_D);
+            } else {
+                serial.close();
+            }
         } catch (err) {
             console.error("Failed to connect:", err);
         }
     };
 
-    const sendDataToSerialPort = async (data) => {
-        if (!port || !port.writable) return;
-
-        const writer = port.writable.getWriter();
-        const encodedData = new TextEncoder().encode(data);
-
-        try {
-            await writer.write(encodedData);
-        } catch (err) {
-            console.error("Failed to send data:", err);
-        } finally {
-            writer.releaseLock();
-        }
+    const disconnectFromSerialPort = async function () {
+        await serial.close();
     };
 
-    useEffect(() => {
-        /**
-         * This effect has two benefits
-         * * There will not be any "half blocks" when staring the IDE
-         * * Behavior of CPY each time when IDE starts are consistent
-         * Please ignore whatever is before the first `soft reboot` text
-         */
-        async function clean_start() {
-            if (serialReady) {
-                // break any current run (no effect/harm in repl)
-                await sendDataToSerialPort(constants.CTRL_C);
-                // start a fresh run (No matter from REPL or code)
-                await sendDataToSerialPort(constants.CTRL_D);
-            }
-        }
-        clean_start();
-    }, [serialReady]);
-
-    const disconnect = async () => {
-        // not working yet
-        if (!port) return;
-
-        const reader = port.readable.getReader();
-        // Close the input stream (reader).
-        if (reader) {
-            await reader.cancel();
+    const sendDataToSerialPort = async (data) => {
+        if (!serialReady) {
+            return;
         }
 
-        await port.close();
-        setPort(null);
-        setSerialReady(false);
-        setSerialOutput("");
-        setSerialTitle("");
+        serial.write(data);
     };
 
     function clearSerialOutput() {
@@ -128,6 +69,7 @@ const useSerial = () => {
 
     return {
         connectToSerialPort,
+        disconnectFromSerialPort,
         sendDataToSerialPort,
         clearSerialOutput,
         serialOutput,
@@ -138,3 +80,11 @@ const useSerial = () => {
 };
 
 export default useSerial;
+
+/**
+ * TODO
+ * move Title to console, this is not the place
+ * change name according to docs/terms.md
+ * add callback to returns
+ * change the code structure, serial and use Serial to a folder, serial console to a folder.
+ */

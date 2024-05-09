@@ -55,7 +55,7 @@ const useSerial = () => {
                 console.log("trying to restart MCU program");
                 // break any current run (no effect/harm in repl)
                 await sendDataToSerialPort(constants.CTRL_C);
-                sleep(200);
+                sleep(2000);// TODO: this is not working sometimes, even if the next line is ran, still not started.
                 // start a fresh run (No matter from REPL or code)
                 await sendDataToSerialPort(constants.CTRL_D);
             } else {

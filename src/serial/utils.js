@@ -17,3 +17,6 @@ export function removeCommonIndentation(text) {
     // Remove the common indentation from each non-empty line and join them back into a single string.
     return lines.map((line) => line.substring(commonIndent)).join("\n");
 }
+
+// https://sentry.io/answers/what-is-the-javascript-version-of-sleep/
+export const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));

@@ -20,18 +20,19 @@ const useSerial = () => {
     }, []);
 
     const connectToSerialPort = async () => {
-            if (serialReady) {
-                if (confirm("Do you want to connect to a new device?")) {
+        if (serialReady) {
+            if (confirm("Do you want to connect to a new device?")) {
                 await disconnectFromSerialPort();
-                } else {
-                    return;
-                }
+            } else {
+                return;
             }
+        }
         try {
             const status = await serial.open();
             setSerialReady(status);
             if (status) {
                 /* cleanup history */
+                console.log("cleanup from MCU serial history");
                 setFullSerialHistory("");
                 setSerialOutput("");
                 /** restart the script on mcu, with benefits:
@@ -39,6 +40,7 @@ const useSerial = () => {
                  * * Behavior of CPY each time when IDE starts are consistent
                  * Please ignore whatever is before the first `soft reboot` text
                  */
+                console.log("trying to restart MCU program");
                 // break any current run (no effect/harm in repl)
                 await sendDataToSerialPort(constants.CTRL_C);
                 // start a fresh run (No matter from REPL or code)
@@ -57,12 +59,12 @@ const useSerial = () => {
     };
 
     const sendDataToSerialPort = async (data) => {
-        if (!serialReady) {
-            return;
+        try {
+            serial.write(data);
+            console.log("sent data to mcu:", [data]);
+        } catch (err) {
+            console.error("Failed to send data to MCU:", err);
         }
-
-        serial.write(data);
-        console.log("sent data to mcu:", [data]);
     };
 
     function clearSerialOutput() {

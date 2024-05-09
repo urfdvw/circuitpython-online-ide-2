@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import * as constants from "../constants";
-import { matchesInBetween } from "./textProcessor";
 import SerialCommunication from "./serial";
 
 const serial = new SerialCommunication();
@@ -9,7 +8,6 @@ const useSerial = () => {
     const [serialReady, setSerialReady] = useState(false);
     const [fullSerialHistory, setFullSerialHistory] = useState("");
     const [serialOutput, setSerialOutput] = useState("");
-    const [serialTitle, setSerialTitle] = useState("");
 
     useEffect(() => {
         if (!navigator.serial) {
@@ -21,18 +19,14 @@ const useSerial = () => {
         });
     }, []);
 
-    useEffect(() => {
-        setSerialTitle(matchesInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END).at(-1));
-    }, [serialOutput]);
-
     const connectToSerialPort = async () => {
-        if (serialReady) {
-            if (confirm("Do you want to connect to a new device?")) {
+            if (serialReady) {
+                if (confirm("Do you want to connect to a new device?")) {
                 await disconnectFromSerialPort();
-            } else {
-                return;
+                } else {
+                    return;
+                }
             }
-        }
         try {
             const status = await serial.open();
             setSerialReady(status);
@@ -68,6 +62,7 @@ const useSerial = () => {
         }
 
         serial.write(data);
+        console.log("sent data to mcu:", [data]);
     };
 
     function clearSerialOutput() {
@@ -85,7 +80,6 @@ const useSerial = () => {
         serialOutput,
         fullSerialHistory,
         serialReady,
-        serialTitle,
     };
 };
 

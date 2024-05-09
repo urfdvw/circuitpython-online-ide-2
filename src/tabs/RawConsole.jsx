@@ -23,6 +23,8 @@ import Toolbar from "@mui/material/Toolbar";
 import { Menu } from "../layout/Menu";
 // download log
 import { downloadAsFile } from "../react-local-file-system";
+// textProcessor
+import { matchesInBetween } from "../serial/textProcessor";
 
 const RawSerialIn = () => {
     // "in" to computer, "out" from microcontroller
@@ -188,11 +190,15 @@ const RawSerialOut = ({
 
 const RawConsole = () => {
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
-    const { fullSerialHistory, serialTitle, serialOutput, clearSerialOutput } = useContext(ideContext);
-    // Serial Out states
-    const { serialReady: ready, connectToSerialPort: connect } = useContext(ideContext);
+    const { fullSerialHistory, serialOutput, clearSerialOutput, serialReady, connectToSerialPort } =
+        useContext(ideContext);
+    const [serialTitle, setSerialTitle] = useState("");
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
+
+    useEffect(() => {
+        setSerialTitle(matchesInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END).at(-1));
+    }, [serialOutput]);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
@@ -219,7 +225,7 @@ const RawConsole = () => {
         },
     ];
 
-    return ready ? (
+    return serialReady ? (
         <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
             <div
                 style={{
@@ -308,7 +314,7 @@ const RawConsole = () => {
             </div>
         </div>
     ) : (
-        <Button onClick={connect}>Connect to Serial Port</Button>
+        <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
     );
 };
 

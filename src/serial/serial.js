@@ -9,11 +9,12 @@ export default class SerialCommunication {
     }
 
     async open(portOptions) {
-        if ('serial' in navigator) {
+        console.log("trying to open serial communication");
+        if ("serial" in navigator) {
             try {
                 this.port = await navigator.serial.requestPort(portOptions);
             } catch (error) {
-                console.error('Error requesting serial port:', error);
+                console.error("Error requesting serial port:", error);
                 return false;
             }
             try {
@@ -24,34 +25,51 @@ export default class SerialCommunication {
 
                 this.readLoop();
                 this.writeLoop();
+
+                console.log("successfully opened serial communication");
                 return true;
             } catch (error) {
-                console.error('Error opening serial port:', error);
+                console.error("Error opening serial port:", error);
             }
         } else {
-            console.error('Web Serial API not supported.');
+            console.error("Web Serial API not supported.");
         }
         return false;
     }
 
     async close() {
+        console.log("trying to close serial communication");
         this.keepRunning = false;
 
         if (this.reader) {
-            await this.reader.cancel();
-            await this.reader.releaseLock();
+            try {
+                await this.reader.cancel();
+                await this.reader.releaseLock();
+            } catch (err) {
+                console.error("Failed to close reader:", err);
+            }
             this.reader = null;
         }
 
         if (this.writer) {
-            await this.writer.releaseLock();
+            try {
+                await this.writer.releaseLock();
+            } catch (err) {
+                console.error("Failed to close writer:", err);
+            }
             this.writer = null;
         }
 
         if (this.port) {
-            await this.port.close();
+            try {
+                await this.port.close();
+            } catch (err) {
+                console.error("Failed to close port:", err);
+            }
             this.port = null;
         }
+
+        console.log("closed serial communication");
     }
 
     registerReaderCallback(id, callback) {
@@ -80,7 +98,8 @@ export default class SerialCommunication {
                     this.readerCallbacks[id](decoded);
                 }
             } catch (error) {
-                console.error('Error reading from serial port:', error);
+                console.error("Error reading from serial port:", error);
+                this.close();
             }
         }
     }
@@ -97,7 +116,7 @@ export default class SerialCommunication {
                     try {
                         await this.writer.write(encoder.encode(data));
                     } catch (error) {
-                        console.error('Error writing to serial port:', error);
+                        console.error("Error writing to serial port:", error);
                         this.keepRunning = false;
                     }
                 }

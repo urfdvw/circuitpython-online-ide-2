@@ -13,7 +13,7 @@ const useSerial = () => {
 
     useEffect(() => {
         if (!navigator.serial) {
-            console.warn("Web Serial API not supported");
+            console.error("Web Serial API not supported");
         }
 
         serial.registerReaderCallback("dataFromMcu", (data) => {
@@ -26,12 +26,21 @@ const useSerial = () => {
     }, [serialOutput]);
 
     const connectToSerialPort = async () => {
+        if (serialReady) {
+            if (confirm("Do you want to connect to a new device?")) {
+                await disconnectFromSerialPort();
+            } else {
+                return;
+            }
+        }
         try {
             const status = await serial.open();
             setSerialReady(status);
             if (status) {
-                /**
-                 * This effect has two benefits
+                /* cleanup history */
+                setFullSerialHistory("");
+                setSerialOutput("");
+                /** restart the script on mcu, with benefits:
                  * * There will not be any "half blocks" when staring the IDE
                  * * Behavior of CPY each time when IDE starts are consistent
                  * Please ignore whatever is before the first `soft reboot` text
@@ -50,6 +59,7 @@ const useSerial = () => {
 
     const disconnectFromSerialPort = async function () {
         await serial.close();
+        setSerialReady(false);
     };
 
     const sendDataToSerialPort = async (data) => {

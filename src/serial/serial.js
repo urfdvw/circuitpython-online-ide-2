@@ -40,6 +40,7 @@ export default class SerialCommunication {
     async close() {
         console.log("trying to close serial communication");
         this.keepRunning = false;
+        this.writeBuffer = [];
 
         if (this.reader) {
             try {

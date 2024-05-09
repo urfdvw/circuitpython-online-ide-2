@@ -10,13 +10,24 @@ const useSerial = () => {
     const [serialOutput, setSerialOutput] = useState("");
 
     useEffect(() => {
+        // check if browser compatible
         if (!navigator.serial) {
             console.error("Web Serial API not supported");
         }
 
+        // setup callback to get full history
         serial.registerReaderCallback("dataFromMcu", (data) => {
             setSerialOutput((previousOutput) => previousOutput + data);
         });
+    }, []);
+    // check if port closed unexpected
+    useEffect(() => {
+        const interval = setInterval(() => {
+            if (serial.port === null) {
+                setSerialReady(false);
+            }
+        }, 1000);
+        return () => clearInterval(interval);
     }, []);
 
     const connectToSerialPort = async () => {

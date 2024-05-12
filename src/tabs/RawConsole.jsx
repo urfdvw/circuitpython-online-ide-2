@@ -37,62 +37,6 @@ const invert_css = {
     msFilter: "invert(100%) hue-rotate(180deg)",
 };
 
-const RawSerialIn = () => {
-    const terminalOptions = {
-        cursorBlink: true,
-    };
-    const terminal = useRef(new Terminal(terminalOptions));
-    const terminalRef = useRef(null);
-    const { sendDataToSerialPort, registerReaderCallback } = useContext(ideContext);
-    const fitAddon = useRef(new FitAddon());
-    console.log(terminal.current);
-    useEffect(() => {
-        /* terminal init */
-        terminal.current.open(terminalRef.current);
-        // fit
-        terminal.current.loadAddon(fitAddon.current);
-        fitAddon.current.fit();
-        // data stream
-        terminal.current.onData((data) => {
-            sendDataToSerialPort(data);
-            console.log("sent", data);
-        });
-        registerReaderCallback("terminal", (data) => {
-            terminal.current.write(data);
-        });
-        // other events
-        terminal.current.onTitleChange((title) => {
-            console.log(title);
-        });
-        // size
-    }, []);
-    return (
-        <div
-            ref={terminalRef}
-            style={{
-                marginLeft: "10px",
-                width: "300px",
-                height: "300px",
-                ...invert_css,
-            }}
-        />
-    );
-    // // "in" to computer, "out" from microcontroller
-    // const { config, serialOutput } = useContext(ideContext);
-    // let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
-
-    // // temp fix of the ANSI parsing
-    // // TODO: https://github.com/urfdvw/circuitpython-online-ide-2/issues/45
-    // output = output.split("\x1B[2K\x1B[0G").join("\n");
-
-    // if (config.serial_console.hide_cv) {
-    //     output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
-    // }
-    // // keep 1k lines to save GPU
-    // output = output.split("\n").slice(-1000).join("\n");
-    // return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.serial_console.font + "pt" }}>{output}</pre>;
-};
-
 const RawSerialOut = ({
     text,
     setText,
@@ -239,16 +183,50 @@ const RawSerialOut = ({
 };
 
 const RawConsole = () => {
-    const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
-    const { fullSerialHistory, serialOutput, clearSerialOutput, serialReady, connectToSerialPort } =
+    // context
+    const { fullSerialHistory, serialOutput, clearSerialOutput, serialReady, connectToSerialPort, config } =
         useContext(ideContext);
+    // terminal
+
+    const terminalOptions = {
+        cursorBlink: true,
+        fontSize: config.serial_console.font,
+    };
+    const terminal = useRef(new Terminal(terminalOptions));
+    const terminalRef = useRef(null);
+    const { sendDataToSerialPort, registerReaderCallback } = useContext(ideContext);
+    const fitAddon = useRef(new FitAddon());
+    console.log(terminal.current);
+    useEffect(() => {
+        /* terminal init */
+        if (!terminalRef.current) {
+            return;
+        }
+        terminal.current.open(terminalRef.current);
+        // fit
+        terminal.current.loadAddon(fitAddon.current);
+        fitAddon.current.fit();
+        // data stream
+        terminal.current.onData((data) => {
+            sendDataToSerialPort(data);
+            console.log("sent", data);
+        });
+        registerReaderCallback("terminal", (data) => {
+            terminal.current.write(data);
+        });
+        // other events
+        terminal.current.onTitleChange((title) => {
+            console.log(title);
+            setSerialTitle(title);
+        });
+        // size
+    }, [terminalRef.current]);
+
+    //
+    const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
     const [serialTitle, setSerialTitle] = useState("");
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
-
-    useEffect(() => {
-        setSerialTitle(matchesInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END).at(-1));
-    }, [serialOutput]);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
@@ -323,7 +301,15 @@ const RawConsole = () => {
                         display: "flex",
                     }}
                 >
-                    <RawSerialIn />
+                    <div
+                        ref={terminalRef}
+                        style={{
+                            marginLeft: "10px",
+                            width: "300px",
+                            height: "300px",
+                            ...invert_css,
+                        }}
+                    />
                 </ScrollableFeed>
             </div>
             <div

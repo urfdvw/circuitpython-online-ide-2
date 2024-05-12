@@ -42,11 +42,14 @@ function App() {
     // serial
     const {
         connectToSerialPort,
+        disconnectFromSerialPort,
         sendDataToSerialPort,
         clearSerialOutput,
         serialOutput,
         fullSerialHistory,
         serialReady,
+        registerReaderCallback,
+        unregisterReaderCallback,
     } = useSerial();
     // config
     const { config, set_config, ready: configReady } = useConfig(schemas);
@@ -137,6 +140,7 @@ function App() {
                 serialOutput: serialOutput,
                 fullSerialHistory: fullSerialHistory,
                 serialReady: serialReady,
+                registerReaderCallback: registerReaderCallback,
                 schemas: schemas,
                 config: config,
                 set_config: set_config,

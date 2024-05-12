@@ -95,6 +95,12 @@ const useSerial = () => {
         serialOutput,
         fullSerialHistory,
         serialReady,
+        registerReaderCallback: (id, fun) => {
+            serial.registerReaderCallback(id, fun);
+        },
+        unregisterReaderCallback: (fun) => {
+            serial.unregisterReaderCallback(fun);
+        },
     };
 };
 
@@ -102,7 +108,6 @@ export default useSerial;
 
 /**
  * TODO
- * move Title to console, this is not the place
  * change name according to docs/terms.md
  * add callback to returns
  * change the code structure, serial and use Serial to a folder, serial console to a folder.

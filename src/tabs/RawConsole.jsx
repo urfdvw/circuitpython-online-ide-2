@@ -25,22 +25,72 @@ import { Menu } from "../layout/Menu";
 import { downloadAsFile } from "../react-local-file-system";
 // textProcessor
 import { matchesInBetween } from "../serial/textProcessor";
+// terminal
+import { Terminal } from "xterm";
+import { FitAddon } from "xterm-addon-fit";
+import "xterm/css/xterm.css";
+
+const invert_css = {
+    WebkitFilter: "invert(100%) hue-rotate(180deg)",
+    MozFilter: "invert(100%) hue-rotate(180deg)",
+    OFilter: "invert(100%) hue-rotate(180deg)",
+    msFilter: "invert(100%) hue-rotate(180deg)",
+};
 
 const RawSerialIn = () => {
-    // "in" to computer, "out" from microcontroller
-    const { config, serialOutput } = useContext(ideContext);
-    let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
+    const terminalOptions = {
+        cursorBlink: true,
+    };
+    const terminal = useRef(new Terminal(terminalOptions));
+    const terminalRef = useRef(null);
+    const { sendDataToSerialPort, registerReaderCallback } = useContext(ideContext);
+    const fitAddon = useRef(new FitAddon());
+    console.log(terminal.current);
+    useEffect(() => {
+        /* terminal init */
+        terminal.current.open(terminalRef.current);
+        // fit
+        terminal.current.loadAddon(fitAddon.current);
+        fitAddon.current.fit();
+        // data stream
+        terminal.current.onData((data) => {
+            sendDataToSerialPort(data);
+            console.log("sent", data);
+        });
+        registerReaderCallback("terminal", (data) => {
+            terminal.current.write(data);
+        });
+        // other events
+        terminal.current.onTitleChange((title) => {
+            console.log(title);
+        });
+        // size
+    }, []);
+    return (
+        <div
+            ref={terminalRef}
+            style={{
+                marginLeft: "10px",
+                width: "300px",
+                height: "300px",
+                ...invert_css,
+            }}
+        />
+    );
+    // // "in" to computer, "out" from microcontroller
+    // const { config, serialOutput } = useContext(ideContext);
+    // let output = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
 
-    // temp fix of the ANSI parsing
-    // TODO: https://github.com/urfdvw/circuitpython-online-ide-2/issues/45
-    output = output.split("\x1B[2K\x1B[0G").join("\n");
+    // // temp fix of the ANSI parsing
+    // // TODO: https://github.com/urfdvw/circuitpython-online-ide-2/issues/45
+    // output = output.split("\x1B[2K\x1B[0G").join("\n");
 
-    if (config.serial_console.hide_cv) {
-        output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
-    }
-    // keep 1k lines to save GPU
-    output = output.split("\n").slice(-1000).join("\n");
-    return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.serial_console.font + "pt" }}>{output}</pre>;
+    // if (config.serial_console.hide_cv) {
+    //     output = removeInBetween(output, constants.CV_JSON_START, constants.CV_JSON_END);
+    // }
+    // // keep 1k lines to save GPU
+    // output = output.split("\n").slice(-1000).join("\n");
+    // return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.serial_console.font + "pt" }}>{output}</pre>;
 };
 
 const RawSerialOut = ({

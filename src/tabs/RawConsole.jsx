@@ -222,6 +222,14 @@ const RawConsole = () => {
         // size
     }, [terminalRef.current]);
 
+    useEffect(() => {
+        if (!terminal.current) {
+            return;
+        }
+        terminal.current.options.fontSize = config.serial_console.font;
+        fitAddon.current.fit();
+    }, [config.serial_console.font]);
+
     //
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands();
     const [serialTitle, setSerialTitle] = useState("");

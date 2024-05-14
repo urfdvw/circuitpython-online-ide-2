@@ -71,7 +71,6 @@ const RawSerialOut = ({
             if (newCodeHistoryIndex < 0) {
                 newCodeHistoryIndex = 0;
             }
-            console.log(codeHistIndex, codeHistory[codeHistIndex]);
             aceEditorRef.current.editor.session.setValue(codeHistory[newCodeHistoryIndex]);
             aceEditorRef.current.editor.gotoLine(0, 0, true);
         } else {

@@ -13,7 +13,6 @@ export default function useSerialCommands() {
     function addCodeHistory(code) {
         setCodeHistory((curCodeHistory) => {
             const newHistory = [...curCodeHistory.filter((historyCode) => historyCode != code), code];
-            console.log(newHistory);
             return newHistory;
         });
     }

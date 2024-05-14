@@ -47,7 +47,6 @@ function App() {
         serialOutput,
         fullSerialHistory,
         serialReady,
-        serialTitle,
     } = useSerial();
     // config
     const { config, set_config, ready: configReady } = useConfig(schemas);
@@ -138,7 +137,6 @@ function App() {
                 serialOutput: serialOutput,
                 fullSerialHistory: fullSerialHistory,
                 serialReady: serialReady,
-                serialTitle: serialTitle,
                 schemas: schemas,
                 config: config,
                 set_config: set_config,

@@ -10,6 +10,12 @@
 - tweaks
     - [ ] auto send ctrl-c then ctrl-d on connect, to restart the script.
 - UI
+    - serial console
+    - flex layout
+        - opening Editor tab order
+            - [ ] when there is "initial_tabset", always open editor tab to "initial_tabset"
+            - [ ] else when there is active tab, open editor in active tab
+            - [ ] else open in the first tabset. 
     - [ ] terminal size react to tab size
 - Config
     - [ ] terminal font size react to settings

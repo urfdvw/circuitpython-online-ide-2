@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
 import ideContext from "../ideContext";
 import * as constants from "../constants";
-import { removeCommonIndentation } from "./utils";
+import { removeCommonIndentation, sleep } from "./utils";
 
 // https://sentry.io/answers/what-is-the-javascript-version-of-sleep/
 const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -64,10 +64,12 @@ export default function useSerialCommands() {
             return;
         }
         addCodeHistory(code);
+        code = code.split("\r").join("");
         if (config.serial_console.force_exec && config.serial_console.send_mode === "code") {
             // if code running, break execution before send code
             if (output.slice(-4, -1) !== ">>>") {
                 await sendCtrlC(); // break execution
+                await sleep(500);
                 await sendCtrlC(); // jump RELP if necessary
                 // TODO: This might cause a second new line in RELP when no code running
                 // can be improved if know how to read updated output in the function

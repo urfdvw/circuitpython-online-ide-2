@@ -68,6 +68,7 @@ export default function useSerialCommands() {
                 await sendCtrlC(); // break execution
                 await sleep(500);
                 await sendCtrlC(); // jump RELP if necessary
+                await sleep(500);
                 // TODO: This might cause a second new line in RELP when no code running
                 // can be improved if know how to read updated output in the function
             }

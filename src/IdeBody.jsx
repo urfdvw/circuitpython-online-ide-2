@@ -35,6 +35,18 @@ const findTabByName = (node, name) => {
     return null;
 };
 
+const findTabsetById = (model, tabsetId) => {
+    let foundTabset = null; // Default to null if not found
+
+    model.visitNodes((node) => {
+        if (node.getType() === "tabset" && node.getId() === tabsetId) {
+            foundTabset = node;
+        }
+    });
+
+    return foundTabset;
+};
+
 export default function IdeBody() {
     const { flexModel: model, schemas, config, set_config } = useContext(ideContext);
     const [fileLookUp, setFileLookUp] = useState({});
@@ -71,7 +83,9 @@ export default function IdeBody() {
                         },
                     },
 
-                    model.getActiveTabset()
+                    findTabsetById(model, "initial_tabset")
+                        ? "initial_tabset"
+                        : model.getActiveTabset()
                         ? model.getActiveTabset().getId()
                         : model.getRoot().getChildren()[0].getId(), // there should be at least one tabset
                     FlexLayout.DockLocation.CENTER,

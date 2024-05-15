@@ -47,6 +47,7 @@
                 "type": "tabset",
                 "weight": 50,
                 "selected": 0,
+                "id": "initial_tabset",
                 "children": [
                     {
                         "type": "tab",

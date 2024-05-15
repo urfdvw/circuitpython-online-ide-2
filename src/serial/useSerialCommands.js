@@ -3,9 +3,6 @@ import ideContext from "../ideContext";
 import * as constants from "../constants";
 import { removeCommonIndentation, sleep } from "./utils";
 
-// https://sentry.io/answers/what-is-the-javascript-version-of-sleep/
-const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
-
 export default function useSerialCommands() {
     const { config, sendDataToSerialPort: send, serialOutput: output, serialReady: ready } = useContext(ideContext);
     const [codeHistory, setCodeHistory] = useState(['print("Hello CircuitPython!")']);

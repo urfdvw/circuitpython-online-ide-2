@@ -21,8 +21,7 @@ export default function ContentEntry({ entryHandle }) {
     const entryName = entryHandle.isParent ? ".." : entryHandle.name;
     const isDraggable = !entryHandle.isParent;
 
-    const itemSize = 30;
-    const iconSize = itemSize - 10;
+    const iconSize = 20;
 
     const iconSx = { width: `${iconSize}px`, height: `${iconSize}px` };
     let icon = <FileIcon sx={iconSx} />;
@@ -98,8 +97,8 @@ export default function ContentEntry({ entryHandle }) {
     }
 
     const entry = (
-        <ListItem onContextMenu={(e) => e.preventDefault()} disablePadding dense sx={{ height: `${itemSize}px` }}>
-            <ListItemButton onClick={onClickHandler} sx={{ height: `${itemSize}px` }}>
+        <ListItem onContextMenu={(e) => e.preventDefault()} disablePadding dense>
+            <ListItemButton onClick={onClickHandler}>
                 <ListItemIcon sx={{ minWidth: `${iconSize + 5}px` }}>{icon}</ListItemIcon>
                 <ListItemText draggable={isDraggable} onDragStart={onDragHandler} primary={entryName} />
             </ListItemButton>

@@ -64,6 +64,7 @@ export default function useSerialCommands() {
             return;
         }
         addCodeHistory(code);
+        code = code.split("\r").join("");
         if (config.serial_console.force_exec && config.serial_console.send_mode === "code") {
             // if code running, break execution before send code
             if (output.slice(-4, -1) !== ">>>") {

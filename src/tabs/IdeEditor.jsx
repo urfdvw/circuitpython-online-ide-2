@@ -3,6 +3,7 @@
 import { useEffect, useState, useRef, useContext } from "react";
 // ace
 import AceEditor from "react-ace";
+import { Range } from "ace-builds/src-noconflict/ace";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-noconflict/mode-python";
@@ -115,13 +116,13 @@ export default function IdeEditor({ fileHandle, node }) {
             var line_text = aceEditorRef.current.editor.session.getLine(currline);
             sendCode(line_text);
             if (del) {
-                aceEditorRef.current.editor.session.removeFullLines(currline, currline);
-                aceEditorRef.current.editor.gotoLine(
-                    currline,
-                    aceEditorRef.current.editor.session.getLine(currline).length,
-                    true
-                );
-                aceEditorRef.current.editor.insert("\n");
+                var session = aceEditorRef.current.editor.session;
+                var currentRow = aceEditorRef.current.editor.getCursorPosition().row;
+                var lineLength = session.getLine(currentRow).length;
+                // Define the range of the text to remove (excluding the line ending)
+                var range = new Range(currentRow, 0, currentRow, lineLength);
+                // Remove the text
+                session.remove(range);
             } else {
                 if (currline == aceEditorRef.current.editor.session.getLength() - 1) {
                     aceEditorRef.current.editor.gotoLine(
@@ -214,6 +215,26 @@ export default function IdeEditor({ fileHandle, node }) {
                 console.log("run_cell");
                 run_cell(editor);
             },
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "MyIntdent",
+            bindKey: { win: "Ctrl-]", mac: "Cmd-]" },
+            exec: function (editor) {
+                console.log("MyIntdent");
+                editor.blockIndent();
+            },
+            multiSelectAction: "forEach",
+            scrollIntoView: "selectionPart",
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "MyOutdent",
+            bindKey: { win: "Ctrl-[", mac: "Cmd-[" },
+            exec: function (editor) {
+                console.log("MyOutdent");
+                editor.blockOutdent();
+            },
+            multiSelectAction: "forEach",
+            scrollIntoView: "selectionPart",
         });
     }
 

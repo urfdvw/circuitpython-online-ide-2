@@ -15,8 +15,12 @@ import * as FlexLayout from "flexlayout-react";
 import ideContext from "./ideContext";
 
 export default function IdeHead() {
+    const queryParams = new URLSearchParams(window.location.search);
+    const channel = queryParams.get("channel"); // Retrieve the value of a specific query parameter
+    const isDev = channel === "dev";
+    const isBeta = channel === "beta";
+
     const {
-        channel: channel,
         flexModel: model,
         openDirectory,
         openBackupDirectory,
@@ -146,7 +150,7 @@ export default function IdeHead() {
                         openTab("Backup", "backup_drive");
                     },
                 },
-                channel === "dev"
+                isDev
                     ? {
                           text: "Debug (dev)",
                           handler: () => {
@@ -156,7 +160,7 @@ export default function IdeHead() {
                     : undefined,
             ].filter((x) => x), // remove undefined
         },
-        channel === "dev"
+        isDev
             ? {
                   label: "Widgets (dev)",
                   color: grey[900],

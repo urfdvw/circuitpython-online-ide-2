@@ -12,7 +12,7 @@ import Stack from "@mui/material/Stack";
 export default function MenuBar({ menuStructure }) {
     return (
         <Stack direction="row" spacing={0}>
-            {menuStructure.menu.map((column) => {
+            {menuStructure.map((column) => {
                 return (
                     <Menu
                         label={column.label}

@@ -77,106 +77,105 @@ export default function IdeHead() {
         }
     }
 
-    const menuStructure = {
-        menu: [
-            {
-                label: "CircuitPython Online IDE",
-                color: deepPurple[500],
-                options: [
-                    {
-                        text: "About",
-                        handler: () => {
-                            openTab("About", "about");
-                        },
+    let menuStructure = [
+        {
+            label: "CircuitPython Online IDE",
+            color: deepPurple[500],
+            options: [
+                {
+                    text: "About",
+                    handler: () => {
+                        openTab("About", "about");
                     },
-                    {
-                        text: "GitHub Repo",
-                        handler: () => {
-                            window.open("https://github.com/urfdvw/circuitpython-online-ide-2", "_blank");
-                        },
+                },
+                {
+                    text: "GitHub Repo",
+                    handler: () => {
+                        window.open("https://github.com/urfdvw/circuitpython-online-ide-2", "_blank");
                     },
-                ],
-            },
-            {
-                label: "Connect",
-                color: grey[900],
-                options: [
-                    {
-                        text: "CircuitPy Drive",
-                        handler: () => {
-                            console.log("clicked on `CircuitPy Drive`");
-                            openDirectory();
-                        },
+                },
+            ],
+        },
+        {
+            label: "Connect",
+            color: grey[900],
+            options: [
+                {
+                    text: "CircuitPy Drive",
+                    handler: () => {
+                        console.log("clicked on `CircuitPy Drive`");
+                        openDirectory();
                     },
-                    {
-                        text: "Serial Port",
-                        handler: () => {
-                            console.log("clicked on Serial");
-                            connectToSerialPort();
-                        },
+                },
+                {
+                    text: "Serial Port",
+                    handler: () => {
+                        console.log("clicked on Serial");
+                        connectToSerialPort();
                     },
-                    {
-                        text: "Backup Folder",
-                        handler: () => {
-                            console.log("clicked on `Backup Folder`");
-                            openBackupDirectory();
-                        },
+                },
+                {
+                    text: "Backup Folder",
+                    handler: () => {
+                        console.log("clicked on `Backup Folder`");
+                        openBackupDirectory();
                     },
-                ],
-            },
-            {
-                label: "Tools",
-                color: grey[900],
-                options: [
-                    {
-                        text: "Navigation",
-                        handler: () => {
-                            openTab("Navigation", "navigation");
-                        },
+                },
+            ],
+        },
+        {
+            label: "Tools",
+            color: grey[900],
+            options: [
+                {
+                    text: "Navigation",
+                    handler: () => {
+                        openTab("Navigation", "navigation");
                     },
-                    {
-                        text: "Plot",
-                        handler: () => {
-                            openTab("Plot", "raw_plot");
-                        },
+                },
+                {
+                    text: "Plot",
+                    handler: () => {
+                        openTab("Plot", "raw_plot");
                     },
-                    {
-                        text: "Backup",
-                        handler: () => {
-                            openTab("Backup", "backup_drive");
-                        },
+                },
+                {
+                    text: "Backup",
+                    handler: () => {
+                        openTab("Backup", "backup_drive");
                     },
-                ],
-            },
-            {
-                label: "Help",
-                color: grey[900],
-                options: [
-                    {
-                        text: "Quick Start",
-                        handler: () => {
-                            openTab("Quick Start", "quick_start");
-                        },
+                },
+            ],
+        },
+        {
+            label: "Help",
+            color: grey[900],
+            options: [
+                {
+                    text: "Quick Start",
+                    handler: () => {
+                        openTab("Quick Start", "quick_start");
                     },
-                    {
-                        text: "Help & Learn",
-                        handler: () => {
-                            window.open("https://github.com/urfdvw/circuitpython-online-ide-2/wiki/", "_blank");
-                        },
+                },
+                {
+                    text: "Help & Learn",
+                    handler: () => {
+                        window.open("https://github.com/urfdvw/circuitpython-online-ide-2/wiki/", "_blank");
                     },
-                    {
-                        text: "Feedback",
-                        handler: () => {
-                            window.open(
-                                "https://docs.google.com/forms/d/e/1FAIpQLSdupiJIRViFwPpuQC1hMp8gRvhxACLoAjgepm_-IRZumwK7Cg/viewform",
-                                "_blank"
-                            );
-                        },
+                },
+                {
+                    text: "Feedback",
+                    handler: () => {
+                        window.open(
+                            "https://docs.google.com/forms/d/e/1FAIpQLSdupiJIRViFwPpuQC1hMp8gRvhxACLoAjgepm_-IRZumwK7Cg/viewform",
+                            "_blank"
+                        );
                     },
-                ],
-            },
-        ],
-    };
+                },
+            ],
+        },
+    ];
+
     return (
         <div
             style={{

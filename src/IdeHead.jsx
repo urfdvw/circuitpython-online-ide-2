@@ -15,12 +15,8 @@ import * as FlexLayout from "flexlayout-react";
 import ideContext from "./ideContext";
 
 export default function IdeHead() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const channel = queryParams.get("channel"); // Retrieve the value of a specific query parameter
-    const isDev = channel === "dev";
-    const isBeta = channel === "beta";
-
     const {
+        channel: channel,
         flexModel: model,
         openDirectory,
         openBackupDirectory,
@@ -44,6 +40,9 @@ export default function IdeHead() {
         }, 1000);
         return () => clearInterval(interval);
     }, []);
+
+    const isDev = channel === "dev";
+    const isBeta = channel === "beta";
 
     function findTabByName(node, name) {
         if (node.getType() === "tab" && node.getName() === name) {

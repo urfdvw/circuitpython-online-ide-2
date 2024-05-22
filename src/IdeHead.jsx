@@ -16,6 +16,7 @@ import ideContext from "./ideContext";
 
 export default function IdeHead() {
     const {
+        channel: channel,
         flexModel: model,
         openDirectory,
         openBackupDirectory,
@@ -77,7 +78,7 @@ export default function IdeHead() {
         }
     }
 
-    let menuStructure = [
+    const menuStructure = [
         {
             label: "CircuitPython Online IDE",
             color: deepPurple[500],
@@ -145,8 +146,36 @@ export default function IdeHead() {
                         openTab("Backup", "backup_drive");
                     },
                 },
-            ],
+                channel === "dev"
+                    ? {
+                          text: "Debug (dev)",
+                          handler: () => {
+                              openTab("Debug", "placeholder");
+                          },
+                      }
+                    : undefined,
+            ].filter((x) => x), // remove undefined
         },
+        channel === "dev"
+            ? {
+                  label: "Widgets (dev)",
+                  color: grey[900],
+                  options: [
+                      {
+                          text: "View Variable",
+                          handler: () => {
+                              openTab("View Variable", "placeholder");
+                          },
+                      },
+                      {
+                          text: "Set Variable",
+                          handler: () => {
+                              openTab("Set Variable", "placeholder");
+                          },
+                      },
+                  ],
+              }
+            : undefined,
         {
             label: "Help",
             color: grey[900],
@@ -174,7 +203,7 @@ export default function IdeHead() {
                 },
             ],
         },
-    ];
+    ].filter((x) => x); // remove undefined;
 
     return (
         <div

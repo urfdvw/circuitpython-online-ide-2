@@ -24,6 +24,9 @@ import * as FlexLayout from "flexlayout-react";
 import layout from "./layout/layout.json";
 
 function App() {
+    const queryParams = new URLSearchParams(window.location.search);
+    const channel = queryParams.get("channel"); // Retrieve the value of a specific query parameter
+
     // main directory for folderView
     const {
         openDirectory,
@@ -121,6 +124,7 @@ function App() {
     return (
         <ideContext.Provider
             value={{
+                channel: channel,
                 flexModel: flexModel,
                 openDirectory: openDirectory,
                 rootFolderDirectoryReady: rootFolderDirectoryReady,

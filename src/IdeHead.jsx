@@ -16,7 +16,8 @@ import ideContext from "./ideContext";
 
 export default function IdeHead() {
     const {
-        channel: channel,
+        showDevFeatures,
+        showBetaFeatures,
         flexModel: model,
         openDirectory,
         openBackupDirectory,
@@ -40,9 +41,6 @@ export default function IdeHead() {
         }, 1000);
         return () => clearInterval(interval);
     }, []);
-
-    const isDev = channel === "dev";
-    const isBeta = channel === "beta";
 
     function findTabByName(node, name) {
         if (node.getType() === "tab" && node.getName() === name) {
@@ -149,7 +147,7 @@ export default function IdeHead() {
                         openTab("Backup", "backup_drive");
                     },
                 },
-                isDev
+                showDevFeatures
                     ? {
                           text: "Debug (dev)",
                           handler: () => {
@@ -159,9 +157,9 @@ export default function IdeHead() {
                     : undefined,
             ].filter((x) => x), // remove undefined
         },
-        isDev
+        showBetaFeatures
             ? {
-                  label: "Widgets (dev)",
+                  label: "Widgets (beta)",
                   color: grey[900],
                   options: [
                       {

@@ -26,6 +26,8 @@ import layout from "./layout/layout.json";
 function App() {
     const queryParams = new URLSearchParams(window.location.search);
     const channel = queryParams.get("channel"); // Retrieve the value of a specific query parameter
+    const showDevFeatures = channel === "dev";
+    const showBetaFeatures = channel === "dev" || channel === "beta"; // beta level feature shows in dev and beta channel
 
     // main directory for folderView
     const {
@@ -124,7 +126,8 @@ function App() {
     return (
         <ideContext.Provider
             value={{
-                channel: channel,
+                showDevFeatures: showDevFeatures,
+                showBetaFeatures: showBetaFeatures,
                 flexModel: flexModel,
                 openDirectory: openDirectory,
                 rootFolderDirectoryReady: rootFolderDirectoryReady,

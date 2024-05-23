@@ -26,3 +26,8 @@ This list grows as test steps are recorded when creating PRs.
     - [ ] terminal size react to tab size
 - Config
     - [ ] terminal font size react to settings
+
+## Channel test
+- [ ] visit http://localhost:5173/ to confirm dev and beta are not visible
+- [ ] visit http://localhost:5173/?channel=beta to confirm that beta features are available
+- [ ] visit http://localhost:5173/?channel=dev to confirm that dev and beta features are available

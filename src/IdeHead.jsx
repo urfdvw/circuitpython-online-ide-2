@@ -147,6 +147,14 @@ export default function IdeHead() {
                         openTab("Backup", "backup_drive");
                     },
                 },
+                showBetaFeatures
+                    ? {
+                          text: "Widgets (beta)",
+                          handler: () => {
+                              openTab("Widgets", "widgets");
+                          },
+                      }
+                    : undefined,
                 showDevFeatures
                     ? {
                           text: "Debug (dev)",
@@ -157,26 +165,6 @@ export default function IdeHead() {
                     : undefined,
             ].filter((x) => x), // remove undefined
         },
-        showBetaFeatures
-            ? {
-                  label: "Widgets (beta)",
-                  color: grey[900],
-                  options: [
-                      {
-                          text: "View Variable",
-                          handler: () => {
-                              openTab("View Variable", "placeholder");
-                          },
-                      },
-                      {
-                          text: "Set Variable",
-                          handler: () => {
-                              openTab("Set Variable", "placeholder");
-                          },
-                      },
-                  ],
-              }
-            : undefined,
         {
             label: "Help",
             color: grey[900],

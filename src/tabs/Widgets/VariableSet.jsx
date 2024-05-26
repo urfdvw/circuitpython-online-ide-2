@@ -44,6 +44,7 @@ const VariableSet = ({ connectedVariables, setVariable }) => {
                             // return option.label === value
                             return true;
                         }}
+                        freeSolo={true}
                         disableClearable
                         id="combo-box-demo"
                         value={variableName}

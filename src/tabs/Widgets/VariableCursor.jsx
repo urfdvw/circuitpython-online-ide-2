@@ -81,7 +81,7 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
     return (
         <VariableBase
             connectedVariables={connectedVariables}
-            widgetTitle="Set Variable"
+            widgetTitle="Cursor input"
             getWidgetProperty={getWidgetProperty}
             setWidgetProperty={setWidgetProperty}
         >

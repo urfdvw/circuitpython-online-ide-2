@@ -22,13 +22,13 @@ export default function useConnectedVariables(dataFromMcu, sendDataToMcu) {
         setConnectedVariables(aggregateConnectedVariable(getLatestSession(dataFromMcu)));
     }, [dataFromMcu]);
 
-    function getVariable(variableName) {
+    function getVariableOnMcu(variableName) {
         return connectedVariables[variableName];
     }
 
-    function setVariable(variableName, variableValue) {
+    function setVariableOnMcu(variableName, variableValue) {
         const updatedVariable = { [variableName]: variableValue };
         sendDataToMcu(CV_JSON_START + JSON.stringify(updatedVariable) + CV_JSON_END + LINE_END);
     }
-    return { setVariable, getVariable, connectedVariables };
+    return { setVariableOnMcu, getVariableOnMcu, connectedVariables };
 }

@@ -8,9 +8,14 @@ import Button from "@mui/material/Button";
 
 import VariableBase from "./VariableBase";
 
-const VariableSet = ({ connectedVariables, setVariable }) => {
-    const [description, setDescription] = useState("Set a test variable");
-    const [variableName, setVariableName] = useState("a");
+const VariableSet = ({
+    connectedVariables,
+    setVariableOnMcu,
+    variableName,
+    setVariableName,
+    description,
+    setDescription,
+}) => {
     const [value, setValue] = useState("0");
     const [type, setType] = useState("int");
 
@@ -32,7 +37,7 @@ const VariableSet = ({ connectedVariables, setVariable }) => {
                 alert("Input is not a valid json");
             }
         }
-        setVariable(variableName, variableValue);
+        setVariableOnMcu(variableName, variableValue);
         // don't up date variable value on web directly, let the change reflected by update echo
     };
     return (

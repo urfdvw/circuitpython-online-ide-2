@@ -11,22 +11,10 @@ export default function Widgets() {
         console.log(connectedVariables);
     }, [connectedVariables]);
 
-    const [description, setDescription] = useState("test description");
-    const [variableName, setVariableName] = useState("a name that does not exist");
-
     return (
         <>
             <VariableSet connectedVariables={connectedVariables} setVariable={setVariable} />
             <hr />
-            <VariableBase
-                connectedVariables={connectedVariables}
-                widgetTitle="test base"
-                variableName={variableName}
-                setVariableName={setVariableName}
-                hasDescription={true}
-                description={description}
-                setDescription={setDescription}
-            />
         </>
     );
 }

@@ -1,55 +1,30 @@
-import { useState } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { Input } from "@mui/material";
-import { InputAdornment } from "@mui/material";
-import CheckIcon from "@mui/icons-material/Check";
-import { IconButton } from "@mui/material";
-import ClickAwayListener from "react-click-away-listener";
+import Typography from "@mui/material/Typography";
 
 const VariableBase = ({
     connectedVariables,
     widgetTitle,
     variableName,
     setVariableName,
-    hasDescription,
     description,
     setDescription,
+    children,
 }) => {
-    const [editingDescription, setEditingDescription] = useState(false);
     return (
         <>
-            {widgetTitle}
+            <Typography variant="h7" component="h2">
+                {widgetTitle}
+            </Typography>
             <br />
-            {hasDescription ? (
-                <ClickAwayListener
-                    onClickAway={() => {
-                        setEditingDescription(false);
-                    }}
-                >
-                    <span
-                        onClick={() => {
-                            setEditingDescription(true);
-                        }}
-                    >
-                        {editingDescription ? (
-                            <Input
-                                value={description}
-                                onChange={(event) => {
-                                    setDescription(event.target.value);
-                                }}
-                                onKeyDown={(event) => {
-                                    if (event.key === "Enter") setEditingDescription(false);
-                                }}
-                            />
-                        ) : (
-                            description
-                        )}
-                    </span>
-                </ClickAwayListener>
-            ) : (
-                <></>
-            )}
+            <Input
+                placeholder="add description here"
+                value={description}
+                onChange={(event) => {
+                    setDescription(event.target.value);
+                }}
+            />
             <br />
             <Autocomplete
                 isOptionEqualToValue={(option, value) => {
@@ -71,6 +46,8 @@ const VariableBase = ({
                 sx={{ width: 100 }}
                 renderInput={(params) => <TextField {...params} label="Variable" />}
             />
+            <br />
+            {children}
         </>
     );
 };

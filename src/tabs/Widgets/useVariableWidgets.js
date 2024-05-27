@@ -6,7 +6,13 @@ export default function useVariableWidgets() {
             id: 1,
             widgetType: "VariableSet",
             variableName: "a",
-            description: "a test variable",
+            description: "set a test variable",
+        },
+        {
+            id: 2,
+            widgetType: "VariableDisplay",
+            variableName: "a",
+            description: "display a test variable",
         },
     ]);
     /**

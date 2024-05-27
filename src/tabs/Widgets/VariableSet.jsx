@@ -37,7 +37,7 @@ const VariableSet = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, 
     return (
         <VariableBase
             connectedVariables={connectedVariables}
-            widgetTitle="Set Variable Value"
+            widgetTitle="Set Variable"
             getWidgetProperty={getWidgetProperty}
             setWidgetProperty={setWidgetProperty}
         >

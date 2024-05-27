@@ -1,8 +1,9 @@
 import useConnectedVariables from "./useConnectedVariables";
 import { useContext, useEffect } from "react";
 import ideContext from "../../ideContext";
-import VariableSet from "./VariableSet";
 import useVariableWidgets from "./useVariableWidgets";
+import VariableSet from "./VariableSet";
+import VariableDisplay from "./VariableDisplay";
 
 export default function Widgets() {
     const { serialOutput, sendDataToSerialPort } = useContext(ideContext);
@@ -35,9 +36,20 @@ export default function Widgets() {
                             }
                         />
                     );
+                } else if (w.widgetType === "VariableDisplay") {
+                    return (
+                        <VariableDisplay
+                            connectedVariables={connectedVariables}
+                            getVariableOnMcu={getVariableOnMcu}
+                            key={w.id}
+                            getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                            setWidgetProperty={(propertyName, newValue) =>
+                                setWidgetProperty(w.id, propertyName, newValue)
+                            }
+                        />
+                    );
                 }
             })}
-            <hr />
         </>
     );
 }

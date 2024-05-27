@@ -4,6 +4,7 @@ import ideContext from "../../ideContext";
 import useVariableWidgets from "./useVariableWidgets";
 import VariableSet from "./VariableSet";
 import VariableDisplay from "./VariableDisplay";
+import VariableCursor from "./VariableCursor";
 
 export default function Widgets() {
     const { serialOutput, sendDataToSerialPort } = useContext(ideContext);
@@ -41,6 +42,18 @@ export default function Widgets() {
                         <VariableDisplay
                             connectedVariables={connectedVariables}
                             getVariableOnMcu={getVariableOnMcu}
+                            key={w.id}
+                            getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                            setWidgetProperty={(propertyName, newValue) =>
+                                setWidgetProperty(w.id, propertyName, newValue)
+                            }
+                        />
+                    );
+                } else if (w.widgetType === "VariableCursor") {
+                    return (
+                        <VariableCursor
+                            connectedVariables={connectedVariables}
+                            setVariableOnMcu={setVariableOnMcu}
                             key={w.id}
                             getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
                             setWidgetProperty={(propertyName, newValue) =>

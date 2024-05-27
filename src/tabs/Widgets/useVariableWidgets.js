@@ -14,6 +14,18 @@ export default function useVariableWidgets() {
             variableName: "a",
             description: "display a test variable",
         },
+        {
+            id: 3,
+            widgetType: "VariableCursor",
+            variableName: "draw_pos",
+            description: "control the drawing robot",
+            extra: {
+                x_min: -25,
+                x_max: 15,
+                y_min: 45,
+                y_max: 85,
+            },
+        },
     ]);
     /**
      * {

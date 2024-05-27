@@ -8,16 +8,10 @@ import Button from "@mui/material/Button";
 
 import VariableBase from "./VariableBase";
 
-const VariableSet = ({
-    connectedVariables,
-    setVariableOnMcu,
-    variableName,
-    setVariableName,
-    description,
-    setDescription,
-}) => {
+const VariableSet = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
     const [value, setValue] = useState("0");
     const [type, setType] = useState("int");
+    const variableName = getWidgetProperty("variableName");
 
     const handleSubmit = (event) => {
         event.preventDefault();
@@ -44,10 +38,8 @@ const VariableSet = ({
         <VariableBase
             connectedVariables={connectedVariables}
             widgetTitle="Set Variable Value"
-            variableName={variableName}
-            setVariableName={setVariableName}
-            description={description}
-            setDescription={setDescription}
+            getWidgetProperty={getWidgetProperty}
+            setWidgetProperty={setWidgetProperty}
         >
             <TextField
                 value={value}

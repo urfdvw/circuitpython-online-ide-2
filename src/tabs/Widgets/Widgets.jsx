@@ -1,5 +1,5 @@
 import useConnectedVariables from "./useConnectedVariables";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect } from "react";
 import ideContext from "../../ideContext";
 import VariableSet from "./VariableSet";
 import useVariableWidgets from "./useVariableWidgets";
@@ -10,8 +10,7 @@ export default function Widgets() {
         serialOutput,
         sendDataToSerialPort
     );
-    const { variableWidgets, setVariableWidgets, variableName, description, setVariableName, setDescription } =
-        useVariableWidgets();
+    const { variableWidgets, setVariableWidgets, getWidgetProperty, setWidgetProperty } = useVariableWidgets();
 
     // debug
     useEffect(() => {
@@ -30,10 +29,10 @@ export default function Widgets() {
                             connectedVariables={connectedVariables}
                             setVariableOnMcu={setVariableOnMcu}
                             key={w.id}
-                            variableName={variableName(w.id)}
-                            setVariableName={(name) => setVariableName(w.id, name)}
-                            description={description(w.id)}
-                            setDescription={(desc) => setDescription(w.id, desc)}
+                            getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                            setWidgetProperty={(propertyName, newValue) =>
+                                setWidgetProperty(w.id, propertyName, newValue)
+                            }
                         />
                     );
                 }

@@ -15,6 +15,7 @@ export default function useVariableWidgets() {
      *  widgetType: string,
      *  variableName: string,
      *  description: string,
+     *  extra: obj,
      *  x: number,
      *  y: number,
      *  width: number,
@@ -29,23 +30,15 @@ export default function useVariableWidgets() {
         })[0];
     }
 
-    function variableName(id) {
+    function getWidgetProperty(id, propertyName) {
         try {
-            return getWidget(variableWidgets, id).variableName;
+            return getWidget(variableWidgets, id)[propertyName];
         } catch (e) {
             console.error(e);
-            return "";
         }
     }
-    function description(id) {
-        try {
-            return getWidget(variableWidgets, id).description;
-        } catch (e) {
-            console.error(e);
-            return "";
-        }
-    }
-    function setVariableName(id, newVariableName) {
+
+    function setWidgetProperty(id, propertyName, newValue) {
         setVariableWidgets((widgets) => {
             return [
                 ...widgets.filter((w) => {
@@ -53,23 +46,10 @@ export default function useVariableWidgets() {
                 }),
                 {
                     ...getWidget(widgets, id),
-                    variableName: newVariableName,
+                    [propertyName]: newValue,
                 },
             ];
         });
     }
-    function setDescription(id, newDescription) {
-        setVariableWidgets((widgets) => {
-            return [
-                ...widgets.filter((w) => {
-                    return w.id !== id;
-                }),
-                {
-                    ...getWidget(widgets, id),
-                    description: newDescription,
-                },
-            ];
-        });
-    }
-    return { variableWidgets, setVariableWidgets, variableName, description, setVariableName, setDescription };
+    return { variableWidgets, setVariableWidgets, getWidgetProperty, setWidgetProperty };
 }

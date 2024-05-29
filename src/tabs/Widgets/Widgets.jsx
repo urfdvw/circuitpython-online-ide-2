@@ -7,7 +7,10 @@ import VariableDisplay from "./VariableDisplay";
 import VariableCursor from "./VariableCursor";
 import { Typography, Toolbar, Tooltip, Button } from "@mui/material";
 import { Menu } from "../../layout/Menu";
+import { saveToPath } from "../../react-local-file-system";
+
 export default function Widgets() {
+    const { rootDirHandle } = useContext(ideContext);
     const { serialOutput, sendDataToSerialPort } = useContext(ideContext);
     const { setVariableOnMcu, getVariableOnMcu, connectedVariables } = useConnectedVariables(
         serialOutput,
@@ -25,7 +28,21 @@ export default function Widgets() {
 
     const hiddenMenuLabelOptions = [
         {
-            text: "Pop Up",
+            text: "Help",
+            handler: () => {},
+        },
+        {
+            text: "Install Library",
+            handler: () => {},
+        },
+        {
+            text: "Save Widgets",
+            handler: async () => {
+                await saveToPath(rootDirHandle, "/ide/widgets.json", JSON.stringify(variableWidgets));
+            },
+        },
+        {
+            text: "Load Widgets",
             handler: () => {},
         },
     ];
@@ -49,7 +66,7 @@ export default function Widgets() {
                     }}
                 >
                     <Typography component="p" sx={{ marginLeft: "10pt" }}>
-                        Title
+                        {/* Title */}
                     </Typography>
                 </div>
                 <div
@@ -60,9 +77,10 @@ export default function Widgets() {
                     }}
                 >
                     <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
-                        <Tooltip title="Save and Run" followCursor={true}>
-                            <Button onClick={() => {}}>Save</Button>
-                        </Tooltip>
+                        <Button>Edit Widgets</Button>
+                        <Button>Lock Layout</Button>
+                        {/* make a state so changeable */}
+
                         <Menu label="⋮" options={hiddenMenuLabelOptions} />
                     </Toolbar>
                 </div>

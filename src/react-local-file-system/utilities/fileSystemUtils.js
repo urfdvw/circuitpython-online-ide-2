@@ -1,3 +1,33 @@
+// path level ====================================
+export async function path2Handles(directoryHandle, path, opt) {
+    if (!opt) {
+        opt = {
+            create: true,
+        };
+    }
+    // change windows path to the world standard
+    path.replace("\\", "/");
+    // split path to levels
+    const levels = path
+        .split("/")
+        .map((l) => l.trim())
+        .filter((x) => x);
+    // get dir handle
+    let curDirectoryHandle = directoryHandle;
+    for (const l of levels.slice(0, -1)) {
+        const nextHandle = await curDirectoryHandle.getDirectoryHandle(l, opt);
+        curDirectoryHandle = nextHandle;
+    }
+    // get file handle
+    const fileHandle = levels.at(-1) === "" ? null : await curDirectoryHandle.getFileHandle(levels.at(-1), opt);
+    return { dirHandle: curDirectoryHandle, fileHandle };
+}
+
+export async function saveToPath(rootDirHandle, path, text) {
+    const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
+    await writeFileText(fileHandle, text);
+}
+
 // file level ====================================
 
 export async function writeFileText(fileHandle, text) {

@@ -8,6 +8,8 @@ import VariableCursor from "./VariableCursor";
 import { Typography, Toolbar, Tooltip, Button } from "@mui/material";
 import { Menu } from "../../layout/Menu";
 import { saveToPath } from "../../react-local-file-system";
+import connected_variables from "./CIRCUITPY/connected_variables.py";
+import matcher from "./CIRCUITPY/matcher.py";
 
 export default function Widgets() {
     const { rootDirHandle } = useContext(ideContext);
@@ -33,7 +35,10 @@ export default function Widgets() {
         },
         {
             text: "Install Library",
-            handler: () => {},
+            handler: async () => {
+                await saveToPath(rootDirHandle, "/lib/connected_variables.py", connected_variables);
+                await saveToPath(rootDirHandle, "/lib/matcher.py", matcher);
+            },
         },
         {
             text: "Save Widgets",

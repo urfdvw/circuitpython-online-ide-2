@@ -23,11 +23,15 @@ export async function path2Handles(directoryHandle, path, opt) {
     return { dirHandle: curDirectoryHandle, fileHandle };
 }
 
-export async function saveToPath(rootDirHandle, path, text) {
+export async function writeToPath(rootDirHandle, path, text) {
     const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
     await writeFileText(fileHandle, text);
 }
 
+export async function getFromPath(rootDirHandle, path) {
+    const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
+    return await getFileText(fileHandle);
+}
 // file level ====================================
 
 export async function writeFileText(fileHandle, text) {

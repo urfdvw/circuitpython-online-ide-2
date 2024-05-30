@@ -7,7 +7,7 @@ import VariableDisplay from "./VariableDisplay";
 import VariableCursor from "./VariableCursor";
 import { Typography, Toolbar, Tooltip, Button } from "@mui/material";
 import { Menu } from "../../layout/Menu";
-import { saveToPath } from "../../react-local-file-system";
+import { writeToPath, getFromPath } from "../../react-local-file-system";
 import connected_variables from "./CIRCUITPY/connected_variables.py";
 import matcher from "./CIRCUITPY/matcher.py";
 
@@ -36,19 +36,22 @@ export default function Widgets() {
         {
             text: "Install Library",
             handler: async () => {
-                await saveToPath(rootDirHandle, "/lib/connected_variables.py", connected_variables);
-                await saveToPath(rootDirHandle, "/lib/matcher.py", matcher);
+                await writeToPath(rootDirHandle, "/lib/connected_variables.py", connected_variables);
+                await writeToPath(rootDirHandle, "/lib/matcher.py", matcher);
             },
         },
         {
             text: "Save Widgets",
             handler: async () => {
-                await saveToPath(rootDirHandle, "/ide/widgets.json", JSON.stringify(variableWidgets));
+                await writeToPath(rootDirHandle, "/ide/widgets.json", JSON.stringify(variableWidgets, null, 2));
             },
         },
         {
             text: "Load Widgets",
-            handler: () => {},
+            handler: async () => {
+                const loadedText = await getFromPath(rootDirHandle, "/ide/widgets.json");
+                setVariableWidgets(JSON.parse(loadedText));
+            },
         },
     ];
 

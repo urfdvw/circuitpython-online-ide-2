@@ -85,13 +85,6 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
             getWidgetProperty={getWidgetProperty}
             setWidgetProperty={setWidgetProperty}
         >
-            <Button
-                onClick={() => {
-                    setLines([]);
-                }}
-            >
-                Clear
-            </Button>
             <Stage
                 style={{ border: "1px solid grey" }}
                 width={canvasRange.x}
@@ -115,6 +108,13 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
                     ))}
                 </Layer>
             </Stage>
+            <Button
+                onClick={() => {
+                    setLines([]);
+                }}
+            >
+                Clear
+            </Button>
         </VariableBase>
     );
 };

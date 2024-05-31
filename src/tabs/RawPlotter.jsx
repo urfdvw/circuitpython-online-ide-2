@@ -8,6 +8,9 @@ import ideContext from "../ideContext";
 import Document from "./Document";
 import plotHelp from "../documents/wiki/Plot.md";
 
+import { removeInBetween } from "../serial/textProcessor";
+import * as constants from "../constants";
+
 function text_to_data(text) {
     var lines = text.split("\n");
     for (var i = 0; i < lines.length; i++) {
@@ -49,8 +52,11 @@ export default function RawPlotter({ node }) {
     var data = [];
     var xLabel = "index";
 
+
+    const output = removeInBetween(serialOutput, constants.CV_JSON_START, constants.CV_JSON_END);
+
     try {
-        var plot_raw_list = serialOutput.split("startplot:").slice(1);
+        var plot_raw_list = output.split("startplot:").slice(1);
         var plot_raw_text = plot_raw_list.at(-1);
         var plot_raw_lines = text_to_data(plot_raw_text);
         var plot_labels = plot_raw_lines[0];

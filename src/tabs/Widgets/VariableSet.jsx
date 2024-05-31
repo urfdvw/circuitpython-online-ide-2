@@ -48,7 +48,7 @@ const VariableSet = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, 
                 }}
                 label="value"
             ></TextField>
-
+            <br />
             <FormControl fullWidth>
                 <InputLabel id="demo-simple-select-label">type</InputLabel>
                 <Select

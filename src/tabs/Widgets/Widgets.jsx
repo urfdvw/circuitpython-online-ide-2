@@ -5,6 +5,7 @@ import useVariableWidgets from "./useVariableWidgets";
 import VariableSet from "./VariableSet";
 import VariableDisplay from "./VariableDisplay";
 import VariableCursor from "./VariableCursor";
+import VariableSlider from "./VariableSlider";
 import { Typography, Toolbar, Tooltip, Button } from "@mui/material";
 import { Menu } from "../../layout/Menu";
 import { writeToPath, getFromPath } from "../../react-local-file-system";
@@ -112,7 +113,7 @@ export default function Widgets() {
             </div>
             <div style={{ height: "500pt", overflow: "auto" }}>
                 {variableWidgets.map((w) => {
-                    if (w.widgetType === "VariableSet") {
+                    if (w.widgetType === "Set") {
                         return (
                             <VariableSet
                                 connectedVariables={connectedVariables}
@@ -124,7 +125,7 @@ export default function Widgets() {
                                 }
                             />
                         );
-                    } else if (w.widgetType === "VariableDisplay") {
+                    } else if (w.widgetType === "Display") {
                         return (
                             <VariableDisplay
                                 connectedVariables={connectedVariables}
@@ -136,9 +137,21 @@ export default function Widgets() {
                                 }
                             />
                         );
-                    } else if (w.widgetType === "VariableCursor") {
+                    } else if (w.widgetType === "Cursor") {
                         return (
                             <VariableCursor
+                                connectedVariables={connectedVariables}
+                                setVariableOnMcu={setVariableOnMcu}
+                                key={w.id}
+                                getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                                setWidgetProperty={(propertyName, newValue) =>
+                                    setWidgetProperty(w.id, propertyName, newValue)
+                                }
+                            />
+                        );
+                    } else if (w.widgetType === "Slider") {
+                        return (
+                            <VariableSlider
                                 connectedVariables={connectedVariables}
                                 setVariableOnMcu={setVariableOnMcu}
                                 key={w.id}

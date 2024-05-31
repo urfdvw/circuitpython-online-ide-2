@@ -1,12 +1,7 @@
-import { useState, useRef, useEffect } from "react";
-import FormControl from "@mui/material/FormControl";
-import TextField from "@mui/material/TextField";
-import InputLabel from "@mui/material/InputLabel";
-import Select from "@mui/material/Select";
-import MenuItem from "@mui/material/MenuItem";
+import { useState, useEffect } from "react";
 import Button from "@mui/material/Button";
 
-import { Stage, Layer, Line, Text } from "react-konva";
+import { Stage, Layer, Line } from "react-konva";
 
 import VariableBase from "./VariableBase";
 import { useSlowChangeState } from "./utilities";

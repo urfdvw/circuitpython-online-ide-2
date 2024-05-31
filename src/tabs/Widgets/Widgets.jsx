@@ -12,6 +12,10 @@ import connected_variables from "./CIRCUITPY/connected_variables.py";
 import matcher from "./CIRCUITPY/matcher.py";
 import WidgetContext from "./WidgetsContext";
 
+import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
+import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
+import { IconButton } from "@mui/material";
+
 export default function Widgets() {
     const { rootDirHandle } = useContext(ideContext);
     const { serialOutput, sendDataToSerialPort } = useContext(ideContext);
@@ -23,8 +27,9 @@ export default function Widgets() {
     const [layoutIsLocked, setLayoutIsLocked] = useState(false);
 
     function toggleLayout() {
-        console.log(state);
+        console.log("toggleLayout");
         setLayoutIsLocked((state) => {
+            console.log(state);
             return !state;
         });
     }
@@ -65,7 +70,7 @@ export default function Widgets() {
     ];
 
     return (
-        <WidgetContext.Provider layoutIsLocked={layoutIsLocked}>
+        <WidgetContext.Provider value={{ layoutIsLocked: layoutIsLocked }}>
             <div
                 style={{
                     display: "flex",
@@ -95,8 +100,11 @@ export default function Widgets() {
                 >
                     <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
                         <Button>Edit Widgets</Button>
-                        <Button onChange={toggleLayout}>{layoutIsLocked ? "Unlock Layout" : "lock layout"}</Button>
-                        {/* make a state so changeable */}
+                        <IconButton onClick={toggleLayout}>
+                            <Tooltip title={layoutIsLocked ? "layout is locked" : "layout is editable"}>
+                                {layoutIsLocked ? <LockOutlinedIcon /> : <LockOpenOutlinedIcon />}
+                            </Tooltip>
+                        </IconButton>
 
                         <Menu label="⋮" options={hiddenMenuLabelOptions} />
                     </Toolbar>

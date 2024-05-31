@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useContext } from "react";
 import Autocomplete from "@mui/material/Autocomplete";
 import TextField from "@mui/material/TextField";
 import { Input } from "@mui/material";
@@ -7,6 +7,7 @@ import { Rnd } from "react-rnd";
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import { IconButton, Tooltip } from "@mui/material";
+import WidgetContext from "./WidgetsContext";
 
 const style = {
     // display: "flex",
@@ -32,7 +33,7 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
     const height = getWidgetProperty("height");
     const sethHeight = (height) => setWidgetProperty("height", height);
 
-    const [lockLayout, setLockLayout] = useState(false);
+    const {layoutIsLocked} = useContext(WidgetContext)
 
     return (
         <Rnd
@@ -49,24 +50,12 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
                 setWidth(ref.style.width);
                 sethHeight(ref.style.height);
             }}
-            disableDragging={lockLayout}
-            enableResizing={!lockLayout}
+            disableDragging={layoutIsLocked}
+            enableResizing={true}
         >
             <Typography variant="h7" component="h2">
                 {widgetTitle}
             </Typography>
-
-            <IconButton
-                onClick={() => {
-                    setLockLayout((value) => {
-                        return !value;
-                    });
-                }}
-            >
-                <Tooltip title={lockLayout ? "layout is locked" : "layout is editable"}>
-                    {lockLayout ? <LockOutlinedIcon /> : <LockOpenOutlinedIcon />}
-                </Tooltip>
-            </IconButton>
             <br />
             <Input
                 placeholder="add description here"

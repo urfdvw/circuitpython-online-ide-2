@@ -1,5 +1,5 @@
 import useConnectedVariables from "./useConnectedVariables";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import ideContext from "../../ideContext";
 import useVariableWidgets from "./useVariableWidgets";
 import VariableSet from "./VariableSet";
@@ -10,6 +10,7 @@ import { Menu } from "../../layout/Menu";
 import { writeToPath, getFromPath } from "../../react-local-file-system";
 import connected_variables from "./CIRCUITPY/connected_variables.py";
 import matcher from "./CIRCUITPY/matcher.py";
+import WidgetContext from "./WidgetsContext";
 
 export default function Widgets() {
     const { rootDirHandle } = useContext(ideContext);
@@ -19,14 +20,22 @@ export default function Widgets() {
         sendDataToSerialPort
     );
     const { variableWidgets, setVariableWidgets, getWidgetProperty, setWidgetProperty } = useVariableWidgets();
+    const [layoutIsLocked, setLayoutIsLocked] = useState(false);
 
-    // debug
-    useEffect(() => {
-        console.log(connectedVariables);
-    }, [connectedVariables]);
-    useEffect(() => {
-        console.log(variableWidgets);
-    }, [variableWidgets]);
+    function toggleLayout() {
+        console.log(state);
+        setLayoutIsLocked((state) => {
+            return !state;
+        });
+    }
+
+    // // debug
+    // useEffect(() => {
+    //     console.log(connectedVariables);
+    // }, [connectedVariables]);
+    // useEffect(() => {
+    //     console.log(variableWidgets);
+    // }, [variableWidgets]);
 
     const hiddenMenuLabelOptions = [
         {
@@ -56,7 +65,7 @@ export default function Widgets() {
     ];
 
     return (
-        <div>
+        <WidgetContext.Provider layoutIsLocked={layoutIsLocked}>
             <div
                 style={{
                     display: "flex",
@@ -86,7 +95,7 @@ export default function Widgets() {
                 >
                     <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
                         <Button>Edit Widgets</Button>
-                        <Button>Lock Layout</Button>
+                        <Button onChange={toggleLayout}>{layoutIsLocked ? "Unlock Layout" : "lock layout"}</Button>
                         {/* make a state so changeable */}
 
                         <Menu label="⋮" options={hiddenMenuLabelOptions} />
@@ -134,6 +143,6 @@ export default function Widgets() {
                     }
                 })}
             </div>
-        </div>
+        </WidgetContext.Provider>
     );
 }

@@ -5,7 +5,7 @@ import { NoTheme } from "../../react-lazy-dark-theme";
 
 import VariableBase from "./VariableBase";
 
-const VariableColor = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
+const VariableColorPicker = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
     const variableName = getWidgetProperty("variableName");
 
     const [color, setColor] = useState({
@@ -47,4 +47,4 @@ const VariableColor = ({ connectedVariables, setVariableOnMcu, getWidgetProperty
         </VariableBase>
     );
 };
-export default VariableColor;
+export default VariableColorPicker;

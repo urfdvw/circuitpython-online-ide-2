@@ -163,6 +163,30 @@
                         "default": 10
                     }
                 }
+            },
+            {
+                "title": "ColorPicker",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "ColorPicker",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    }
+                }
             }
         ]
     }

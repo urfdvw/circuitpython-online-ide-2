@@ -187,6 +187,34 @@
                         "default": 30
                     }
                 }
+            },
+            {
+                "title": "Button",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "Button",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "buttonText": {
+                        "type": "string",
+                        "default": "Button"
+                    }
+                }
             }
         ]
     }

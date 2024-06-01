@@ -8,6 +8,7 @@ import VariableCursor from "./VariableCursor";
 import VariableSlider from "./VariableSlider";
 import VariableSliderReadOnly from "./VariableSliderReadOnly";
 import VariableColorPicker from "./VariableColorPicker";
+import VariableButton from "./VariableButton";
 import { Typography, Toolbar, Tooltip, Button, Box } from "@mui/material";
 import { Menu } from "../../layout/Menu";
 import { writeToPath, getFromPath } from "../../react-local-file-system";
@@ -115,7 +116,7 @@ export default function Widgets({ node }) {
                         }}
                     >
                         <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
-                            <Button onClick={toggleEdit}>Edit Widgets</Button>
+                            <Button onClick={toggleEdit}>{showConfig ? "Back" : "Edit"}</Button>
                             <IconButton onClick={toggleLayout}>
                                 <Tooltip title={layoutIsLocked ? "layout is locked" : "layout is editable"}>
                                     {layoutIsLocked ? <LockOutlinedIcon /> : <LockOpenOutlinedIcon />}
@@ -197,6 +198,18 @@ export default function Widgets({ node }) {
                             } else if (w.widgetType === "ColorPicker") {
                                 return (
                                     <VariableColorPicker
+                                        connectedVariables={connectedVariables}
+                                        setVariableOnMcu={setVariableOnMcu}
+                                        key={w.id}
+                                        getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                                        setWidgetProperty={(propertyName, newValue) =>
+                                            setWidgetProperty(w.id, propertyName, newValue)
+                                        }
+                                    />
+                                );
+                            } else if (w.widgetType === "Button") {
+                                return (
+                                    <VariableButton
                                         connectedVariables={connectedVariables}
                                         setVariableOnMcu={setVariableOnMcu}
                                         key={w.id}

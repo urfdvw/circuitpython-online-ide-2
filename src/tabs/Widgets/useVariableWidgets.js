@@ -2,6 +2,7 @@ import { useState } from "react";
 export default function useVariableWidgets() {
     // planned feature
     const [variableWidgets, setVariableWidgets] = useState([
+        // // Examples
         // {
         //     id: 1,
         //     widgetType: "Set",
@@ -59,6 +60,15 @@ export default function useVariableWidgets() {
         //     description: "Color of the cursor",
         //     x: 30,
         //     y: 30,
+        // },
+        // {
+        //     id: 7,
+        //     widgetType: "Button",
+        //     variableName: "clear",
+        //     description: "Color of the cursor",
+        //     x: 30,
+        //     y: 30,
+        //     buttonText: "Clear"
         // },
     ]);
 

@@ -4,9 +4,12 @@ import VariableBase from "./VariableBase";
 import { useSlowChangeState } from "./utilities";
 
 const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
-    const { rangeMin, rangeMax, set: value } = getWidgetProperty("extra");
+    const rangeMin = getWidgetProperty("rangeMin");
+    const rangeMax = getWidgetProperty("rangeMax");
+    const step = getWidgetProperty("step");
+    const value = getWidgetProperty("set");
     const setValue = (value) => {
-        setWidgetProperty("extra", { rangeMin: rangeMin, rangeMax: rangeMax, set: value });
+        setWidgetProperty("set", value);
     };
     const variableName = getWidgetProperty("variableName");
 
@@ -26,9 +29,9 @@ const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
         >
             <Slider
                 sx={{ width: 300 }}
-                min={rangeMin}
-                max={rangeMax}
-                step={0.1}
+                min={rangeMin != undefined ? rangeMin : 0}
+                max={rangeMax != undefined ? rangeMax : 10}
+                step={step != undefined ? step : 1}
                 value={value != undefined ? value : 0}
                 onChange={(event) => {
                     setValue(event.target.value);

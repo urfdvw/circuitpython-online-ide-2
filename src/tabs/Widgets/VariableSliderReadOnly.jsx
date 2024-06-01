@@ -2,7 +2,8 @@ import Slider from "@mui/material/Slider";
 import VariableBase from "./VariableBase";
 
 const VariableSliderReadOnly = ({ connectedVariables, getVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
-    const { rangeMin, rangeMax } = getWidgetProperty("extra");
+    const rangeMin = getWidgetProperty("rangeMin");
+    const rangeMax = getWidgetProperty("rangeMax");
     const variableName = getWidgetProperty("variableName");
 
     return (

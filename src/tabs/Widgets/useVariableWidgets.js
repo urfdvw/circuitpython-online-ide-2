@@ -25,46 +25,34 @@ export default function useVariableWidgets() {
         //     description: "control the drawing robot",
         //     x: 30,
         //     y: 30,
-        //     extra: {
         //         x_min: -25,
         //         x_max: 15,
         //         y_min: 45,
         //         y_max: 85,
-        //     },
         // },
-        {
-            id: 4,
-            widgetType: "Slider",
-            variableName: "thr",
-            description: "volume threshold",
-            x: 30,
-            y: 30,
-            extra: { rangeMin: 0, rangeMax: 15, set: 7 },
-        },
-        {
-            id: 5,
-            widgetType: "SliderReadOnly",
-            variableName: "vol",
-            description: "volume",
-            x: 30,
-            y: 30,
-            extra: { rangeMin: 0, rangeMax: 15 },
-        },
+        // {
+        //     id: 4,
+        //     widgetType: "Slider",
+        //     variableName: "thr",
+        //     description: "volume threshold",
+        //     x: 30,
+        //     y: 30,
+        //     rangeMin: 0,
+        //     rangeMax: 15,
+        //     step: 0.1,
+        //     set: 7,
+        // },
+        // {
+        //     id: 5,
+        //     widgetType: "SliderReadOnly",
+        //     variableName: "vol",
+        //     description: "volume",
+        //     x: 30,
+        //     y: 30,
+        //     rangeMin: 0,
+        //     rangeMax: 15,
+        // },
     ]);
-    /**
-     * {
-     *  id: int,
-     *  widgetType: string,
-     *  variableName: string,
-     *  description: string,
-     *  extra: obj,
-     *  x: number,
-     *  y: number,
-     *  width: number,
-     *  height: number,
-     * }
-     * position and size are planned feature, ignore for now
-     */
 
     function getWidget(widgets, id) {
         return widgets.filter((w) => {

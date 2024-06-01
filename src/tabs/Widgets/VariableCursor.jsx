@@ -22,7 +22,10 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
         y: 0,
     });
 
-    const range = getWidgetProperty("extra");
+    const xMin = getWidgetProperty("xMin");
+    const xMax = getWidgetProperty("xMax");
+    const yMin = getWidgetProperty("yMin");
+    const yMax = getWidgetProperty("yMax");
     const canvasRange = { x: 300, y: 300 };
     // send data on change
     const slowPos = useSlowChangeState(pos, 0.2);
@@ -30,8 +33,8 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
 
     useEffect(() => {
         setVariableOnMcu(variableName, {
-            x: round((pos.x / canvasRange.x) * (range.x_max - range.x_min) + range.x_min),
-            y: round(((canvasRange.y - pos.y) / canvasRange.y) * (range.y_max - range.y_min) + range.y_min),
+            x: round((pos.x / canvasRange.x) * (xMax - xMin) + xMin),
+            y: round(((canvasRange.y - pos.y) / canvasRange.y) * (yMax - yMin) + yMin),
             z: cursorDown ? 1 : 0,
         });
     }, [slowPos, slowCursorDown]);

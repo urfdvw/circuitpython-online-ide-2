@@ -13,6 +13,7 @@ import { writeToPath, getFromPath } from "../../react-local-file-system";
 import connected_variables from "./CIRCUITPY/connected_variables.py";
 import matcher from "./CIRCUITPY/matcher.py";
 import WidgetContext from "./WidgetsContext";
+import WidgetsConfig from "./WidgetsConfig";
 
 import LockOpenOutlinedIcon from "@mui/icons-material/LockOpenOutlined";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
@@ -122,7 +123,7 @@ export default function Widgets() {
                 </div>
             </div>
             {showConfig ? (
-                <>config</>
+                <WidgetsConfig variableWidgets={variableWidgets} setVariableWidgets={setVariableWidgets} />
             ) : (
                 <div>
                     {variableWidgets.map((w) => {

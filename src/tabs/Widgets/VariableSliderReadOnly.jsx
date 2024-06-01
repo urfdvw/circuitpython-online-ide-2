@@ -12,18 +12,14 @@ const VariableSliderReadOnly = ({ connectedVariables, getVariableOnMcu, getWidge
             getWidgetProperty={getWidgetProperty}
             setWidgetProperty={setWidgetProperty}
         >
-            {getVariableOnMcu(variableName) != undefined ? (
-                <Slider
-                    sx={{ width: 300 }}
-                    min={rangeMin}
-                    max={rangeMax}
-                    value={getVariableOnMcu(variableName)}
-                    // disabled
-                    valueLabelDisplay="on"
-                />
-            ) : (
-                <></>
-            )}
+            <Slider
+                sx={{ width: 300 }}
+                min={rangeMin}
+                max={rangeMax}
+                value={getVariableOnMcu(variableName) != undefined ? getVariableOnMcu(variableName) : 0}
+                // disabled
+                valueLabelDisplay="on"
+            />
         </VariableBase>
     );
 };

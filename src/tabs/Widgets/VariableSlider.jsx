@@ -3,13 +3,21 @@ import Slider from "@mui/material/Slider";
 import VariableBase from "./VariableBase";
 import { useSlowChangeState } from "./utilities";
 
-const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
-    const { rangeMin, rangeMax } = getWidgetProperty("extra");
-
-    const [value, setValue] = useState(rangeMin);
+const VariableSlider = ({
+    connectedVariables,
+    setVariableOnMcu,
+    getVariableOnMcu,
+    getWidgetProperty,
+    setWidgetProperty,
+}) => {
+    const { rangeMin, rangeMax, set: value } = getWidgetProperty("extra");
+    const setValue = (value) => {
+        setWidgetProperty("extra", { rangeMin: rangeMin, rangeMax: rangeMax, set: value });
+    };
     const variableName = getWidgetProperty("variableName");
+
+    // const [value, setValue] = useState(-1);
     const slowValue = useSlowChangeState(value, 0.2);
-    // setVariableOnMcu(variableName, variableValue);
 
     useEffect(() => {
         setVariableOnMcu(variableName, value);
@@ -18,21 +26,28 @@ const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
     return (
         <VariableBase
             connectedVariables={connectedVariables}
-            widgetTitle="Set Variable"
+            widgetTitle="Slider"
             getWidgetProperty={getWidgetProperty}
             setWidgetProperty={setWidgetProperty}
         >
-            <Slider
-                sx={{ width: 300 }}
-                min={rangeMin}
-                max={rangeMax}
-                step={0.1}
-                value={value}
-                onChange={(event) => {
-                    setValue(event.target.value);
-                }}
-                valueLabelDisplay="auto"
-            />
+            {value != undefined ? (
+                <Slider
+                    sx={{ width: 300 }}
+                    min={rangeMin}
+                    max={rangeMax}
+                    step={0.1}
+                    value={value}
+                    onChange={(event) => {
+                        setValue(event.target.value);
+                    }}
+                    valueLabelDisplay="on"
+                    onMouseUp={() => {
+                        setVariableOnMcu(variableName, value);
+                    }}
+                />
+            ) : (
+                <></>
+            )}
         </VariableBase>
     );
 };

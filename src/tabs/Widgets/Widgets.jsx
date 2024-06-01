@@ -6,6 +6,7 @@ import VariableSet from "./VariableSet";
 import VariableDisplay from "./VariableDisplay";
 import VariableCursor from "./VariableCursor";
 import VariableSlider from "./VariableSlider";
+import VariableSliderReadOnly from "./VariableSliderReadOnly";
 import { Typography, Toolbar, Tooltip, Button } from "@mui/material";
 import { Menu } from "../../layout/Menu";
 import { writeToPath, getFromPath } from "../../react-local-file-system";
@@ -154,6 +155,19 @@ export default function Widgets() {
                             <VariableSlider
                                 connectedVariables={connectedVariables}
                                 setVariableOnMcu={setVariableOnMcu}
+                                getVariableOnMcu={getVariableOnMcu}
+                                key={w.id}
+                                getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                                setWidgetProperty={(propertyName, newValue) =>
+                                    setWidgetProperty(w.id, propertyName, newValue)
+                                }
+                            />
+                        );
+                    } else if (w.widgetType === "SliderReadOnly") {
+                        return (
+                            <VariableSliderReadOnly
+                                connectedVariables={connectedVariables}
+                                getVariableOnMcu={getVariableOnMcu}
                                 key={w.id}
                                 getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
                                 setWidgetProperty={(propertyName, newValue) =>

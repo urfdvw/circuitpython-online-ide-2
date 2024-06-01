@@ -9,9 +9,12 @@ import Button from "@mui/material/Button";
 import VariableBase from "./VariableBase";
 
 const VariableSet = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
-    const [value, setValue] = useState("0");
-    const [type, setType] = useState("int");
     const variableName = getWidgetProperty("variableName");
+    const type = getWidgetProperty("type");
+    const setType = (type) => {
+        setWidgetProperty("type", type);
+    };
+    const [value, setValue] = useState("0");
 
     const handleSubmit = (event) => {
         event.preventDefault();

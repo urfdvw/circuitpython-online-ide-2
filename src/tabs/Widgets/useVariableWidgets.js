@@ -10,6 +10,7 @@ export default function useVariableWidgets() {
         //     description: "set a test variable",
         //     x: 30,
         //     y: 30,
+        //     type: "int",
         // },
         // {
         //     id: 2,

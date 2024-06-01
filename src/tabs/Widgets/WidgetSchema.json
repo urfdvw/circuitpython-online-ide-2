@@ -49,6 +49,11 @@
                     "y": {
                         "type": "number",
                         "default": 30
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["int", "float", "string", "bool", "json"],
+                        "default": "int"
                     }
                 }
             },

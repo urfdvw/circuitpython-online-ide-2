@@ -29,16 +29,16 @@ class TargetMatcher:
     def push(self, segment):
         result = []
         segment = self.segment + segment
-        self.segment = ''
+        self.segment = ""
         for i in range(len(segment) - len(self.target), len(segment)):
             if i < 0:
                 continue
             tail = segment[i:]
             if tail == self.target:
                 break
-            if tail == self.target[:len(tail)]:
+            if tail == self.target[: len(tail)]:
                 self.segment = tail
-                segment = segment[:len(segment) - len(tail)]
+                segment = segment[: len(segment) - len(tail)]
                 break
             else:
                 self.segment = ""
@@ -53,7 +53,7 @@ class TargetMatcher:
         return result
 
     def clear_target(self):
-        self.target = 'You shall not pass! (∩๏‿‿๏)⊃━☆ﾟ.*'
+        self.target = "You shall not pass! (∩๏‿‿๏)⊃━☆ﾟ.*"
 
 
 class BracketMatcher:
@@ -80,20 +80,23 @@ class BracketMatcher:
                 else:
                     self.matcher = self.begin_matcher
                 rest = [p[0] for p in parts]
-                text = ''.join(rest)
+                text = "".join(rest)
                 parts = self.matcher.push(text)
         return outlet
 
-def none_fun (text, branch):
+
+def none_fun(text, branch):
     return None
 
+
 class MatcherProcessor:
-    def __init__(self, 
-        matcher, 
+    def __init__(
+        self,
+        matcher,
         in_action=none_fun,
         enter_action=none_fun,
         exit_action=none_fun,
-        out_action=none_fun
+        out_action=none_fun,
     ):
         self.matcher = matcher
         self.in_action = in_action
@@ -110,20 +113,20 @@ class MatcherProcessor:
                 text = part_out[0]
                 mood = part_out[1]
                 diff = part_out[2]
-                
+
                 # print('debug', part_out)
                 if diff == 1:
-                    self.enter_action(text, ''.join(self.branch))
+                    self.enter_action(text, "".join(self.branch))
                 if mood == 1:
-                    self.in_action(text, ''.join(self.branch))
+                    self.in_action(text, "".join(self.branch))
                     if self.through:
                         outlet.append(text)
                     else:
                         self.branch.append(text)
                 if diff == -1:
-                    self.exit_action(text, ''.join(self.branch))
+                    self.exit_action(text, "".join(self.branch))
                     self.branch = []
                 if mood == 0:
-                    self.out_action(text, ''.join(self.branch))
+                    self.out_action(text, "".join(self.branch))
                     outlet.append(text)
         return outlet

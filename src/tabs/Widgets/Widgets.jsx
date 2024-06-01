@@ -27,10 +27,19 @@ export default function Widgets() {
     );
     const { variableWidgets, setVariableWidgets, getWidgetProperty, setWidgetProperty } = useVariableWidgets();
     const [layoutIsLocked, setLayoutIsLocked] = useState(false);
+    const [showConfig, setShowConfig] = useState(false);
 
     function toggleLayout() {
         console.log("toggleLayout");
         setLayoutIsLocked((state) => {
+            console.log(state);
+            return !state;
+        });
+    }
+
+    function toggleEdit() {
+        console.log("toggleLayout");
+        setShowConfig((state) => {
             console.log(state);
             return !state;
         });
@@ -101,7 +110,7 @@ export default function Widgets() {
                     }}
                 >
                     <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
-                        <Button>Edit Widgets</Button>
+                        <Button onClick={toggleEdit}>Edit Widgets</Button>
                         <IconButton onClick={toggleLayout}>
                             <Tooltip title={layoutIsLocked ? "layout is locked" : "layout is editable"}>
                                 {layoutIsLocked ? <LockOutlinedIcon /> : <LockOpenOutlinedIcon />}
@@ -112,72 +121,76 @@ export default function Widgets() {
                     </Toolbar>
                 </div>
             </div>
-            <div style={{ height: "500pt", overflow: "auto" }}>
-                {variableWidgets.map((w) => {
-                    if (w.widgetType === "Set") {
-                        return (
-                            <VariableSet
-                                connectedVariables={connectedVariables}
-                                setVariableOnMcu={setVariableOnMcu}
-                                key={w.id}
-                                getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
-                                setWidgetProperty={(propertyName, newValue) =>
-                                    setWidgetProperty(w.id, propertyName, newValue)
-                                }
-                            />
-                        );
-                    } else if (w.widgetType === "Display") {
-                        return (
-                            <VariableDisplay
-                                connectedVariables={connectedVariables}
-                                getVariableOnMcu={getVariableOnMcu}
-                                key={w.id}
-                                getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
-                                setWidgetProperty={(propertyName, newValue) =>
-                                    setWidgetProperty(w.id, propertyName, newValue)
-                                }
-                            />
-                        );
-                    } else if (w.widgetType === "Cursor") {
-                        return (
-                            <VariableCursor
-                                connectedVariables={connectedVariables}
-                                setVariableOnMcu={setVariableOnMcu}
-                                key={w.id}
-                                getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
-                                setWidgetProperty={(propertyName, newValue) =>
-                                    setWidgetProperty(w.id, propertyName, newValue)
-                                }
-                            />
-                        );
-                    } else if (w.widgetType === "Slider") {
-                        return (
-                            <VariableSlider
-                                connectedVariables={connectedVariables}
-                                setVariableOnMcu={setVariableOnMcu}
-                                getVariableOnMcu={getVariableOnMcu}
-                                key={w.id}
-                                getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
-                                setWidgetProperty={(propertyName, newValue) =>
-                                    setWidgetProperty(w.id, propertyName, newValue)
-                                }
-                            />
-                        );
-                    } else if (w.widgetType === "SliderReadOnly") {
-                        return (
-                            <VariableSliderReadOnly
-                                connectedVariables={connectedVariables}
-                                getVariableOnMcu={getVariableOnMcu}
-                                key={w.id}
-                                getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
-                                setWidgetProperty={(propertyName, newValue) =>
-                                    setWidgetProperty(w.id, propertyName, newValue)
-                                }
-                            />
-                        );
-                    }
-                })}
-            </div>
+            {showConfig ? (
+                <>config</>
+            ) : (
+                <div>
+                    {variableWidgets.map((w) => {
+                        if (w.widgetType === "Set") {
+                            return (
+                                <VariableSet
+                                    connectedVariables={connectedVariables}
+                                    setVariableOnMcu={setVariableOnMcu}
+                                    key={w.id}
+                                    getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                                    setWidgetProperty={(propertyName, newValue) =>
+                                        setWidgetProperty(w.id, propertyName, newValue)
+                                    }
+                                />
+                            );
+                        } else if (w.widgetType === "Display") {
+                            return (
+                                <VariableDisplay
+                                    connectedVariables={connectedVariables}
+                                    getVariableOnMcu={getVariableOnMcu}
+                                    key={w.id}
+                                    getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                                    setWidgetProperty={(propertyName, newValue) =>
+                                        setWidgetProperty(w.id, propertyName, newValue)
+                                    }
+                                />
+                            );
+                        } else if (w.widgetType === "Cursor") {
+                            return (
+                                <VariableCursor
+                                    connectedVariables={connectedVariables}
+                                    setVariableOnMcu={setVariableOnMcu}
+                                    key={w.id}
+                                    getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                                    setWidgetProperty={(propertyName, newValue) =>
+                                        setWidgetProperty(w.id, propertyName, newValue)
+                                    }
+                                />
+                            );
+                        } else if (w.widgetType === "Slider") {
+                            return (
+                                <VariableSlider
+                                    connectedVariables={connectedVariables}
+                                    setVariableOnMcu={setVariableOnMcu}
+                                    getVariableOnMcu={getVariableOnMcu}
+                                    key={w.id}
+                                    getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                                    setWidgetProperty={(propertyName, newValue) =>
+                                        setWidgetProperty(w.id, propertyName, newValue)
+                                    }
+                                />
+                            );
+                        } else if (w.widgetType === "SliderReadOnly") {
+                            return (
+                                <VariableSliderReadOnly
+                                    connectedVariables={connectedVariables}
+                                    getVariableOnMcu={getVariableOnMcu}
+                                    key={w.id}
+                                    getWidgetProperty={(propertyName) => getWidgetProperty(w.id, propertyName)}
+                                    setWidgetProperty={(propertyName, newValue) =>
+                                        setWidgetProperty(w.id, propertyName, newValue)
+                                    }
+                                />
+                            );
+                        }
+                    })}
+                </div>
+            )}
         </WidgetContext.Provider>
     );
 }

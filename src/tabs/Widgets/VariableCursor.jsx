@@ -28,8 +28,8 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
     const yMax = getWidgetProperty("yMax");
     const canvasRange = { x: 300, y: 300 };
     // send data on change
-    const slowPos = useSlowChangeState(pos, 0.2);
-    const slowCursorDown = useSlowChangeState(cursorDown, 0.2);
+    const slowPos = useSlowChangeState(pos, 0.1);
+    const slowCursorDown = useSlowChangeState(cursorDown, 0.1);
 
     useEffect(() => {
         setVariableOnMcu(variableName, {

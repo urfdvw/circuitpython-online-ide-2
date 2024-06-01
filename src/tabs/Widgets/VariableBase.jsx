@@ -7,6 +7,8 @@ const style = {
     border: "solid 1px #ddd",
     background: "#f0f0f0",
     overflow: "hidden",
+    borderRadius: "8pt",
+    padding: "10pt",
 };
 
 const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setWidgetProperty, children }) => {
@@ -30,7 +32,7 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
                 setY(d.y);
             }}
             disableDragging={layoutIsLocked}
-            enableResizing={true}
+            enableResizing={false}
         >
             <Box
                 sx={{

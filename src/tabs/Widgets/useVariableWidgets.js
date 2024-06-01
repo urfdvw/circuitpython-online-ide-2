@@ -52,14 +52,14 @@ export default function useVariableWidgets() {
         //     rangeMin: 0,
         //     rangeMax: 15,
         // },
-        {
-            id: 6,
-            widgetType: "Color",
-            variableName: "cur_color",
-            description: "Color of the cursor",
-            x: 30,
-            y: 30,
-        },
+        // {
+        //     id: 6,
+        //     widgetType: "Color",
+        //     variableName: "cur_color",
+        //     description: "Color of the cursor",
+        //     x: 30,
+        //     y: 30,
+        // },
     ]);
 
     function getWidget(widgets, id) {

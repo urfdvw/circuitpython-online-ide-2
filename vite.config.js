@@ -10,9 +10,9 @@ export default build_config["single-file"]
               react(),
               viteSingleFile(),
               {
-                  name: "markdown-loader",
+                  name: "text-loader",
                   transform(code, id) {
-                      if (id.slice(-3) === ".md") {
+                      if (id.slice(-3).toLowerCase() === ".md" || id.slice(-3).toLowerCase() === ".py") {
                           // For .md files, get the raw content
                           return `export default ${JSON.stringify(code)};`;
                       }
@@ -28,9 +28,9 @@ export default build_config["single-file"]
           plugins: [
               react(),
               {
-                  name: "markdown-loader",
+                  name: "text-loader",
                   transform(code, id) {
-                      if (id.slice(-3) === ".md") {
+                      if (id.slice(-3).toLowerCase() === ".md" || id.slice(-3).toLowerCase() === ".py") {
                           // For .md files, get the raw content
                           return `export default ${JSON.stringify(code)};`;
                       }

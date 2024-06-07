@@ -10,6 +10,7 @@ import Navigation from "./tabs/Navigation";
 import RawPlotter from "./tabs/RawPlotter";
 import BackupDrive from "./tabs/BackupDrive";
 import Document from "./tabs/Document";
+import Widgets from "./tabs/Widgets";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
 //context
@@ -143,6 +144,12 @@ export default function IdeBody() {
             return (
                 <div className="tab_content">
                     <BackupDrive node={node} />
+                </div>
+            );
+        } else if (component === "widgets") {
+            return (
+                <div className="tab_content">
+                    <Widgets node={node} />
                 </div>
             );
         }

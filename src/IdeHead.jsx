@@ -147,19 +147,11 @@ export default function IdeHead() {
                         openTab("Backup", "backup_drive");
                     },
                 },
-                showBetaFeatures
-                    ? {
-                          text: "Widgets (beta)",
-                          handler: () => {
-                              openTab("Widgets", "widgets");
-                          },
-                      }
-                    : undefined,
                 showDevFeatures
                     ? {
-                          text: "Debug (dev)",
+                          text: "Widgets (dev)",
                           handler: () => {
-                              openTab("Debug", "placeholder");
+                              openTab("Widgets", "widgets");
                           },
                       }
                     : undefined,

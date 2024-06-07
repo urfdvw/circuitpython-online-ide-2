@@ -12,9 +12,10 @@ const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
         setWidgetProperty("set", value);
     };
     const variableName = getWidgetProperty("variableName");
+    const period = getWidgetProperty("period") === null ? 0.2 : getWidgetProperty("period");
 
     // const [value, setValue] = useState(-1);
-    const slowValue = useSlowChangeState(value, 0.2);
+    const slowValue = useSlowChangeState(value, period);
 
     useEffect(() => {
         setVariableOnMcu(variableName, value);

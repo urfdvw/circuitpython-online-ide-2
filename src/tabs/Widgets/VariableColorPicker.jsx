@@ -7,6 +7,7 @@ import VariableBase from "./VariableBase";
 
 const VariableColorPicker = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
     const variableName = getWidgetProperty("variableName");
+    const period = getWidgetProperty("period") === null ? 0.1 : getWidgetProperty("period");
 
     const [color, setColor] = useState({
         r: 16,
@@ -15,7 +16,7 @@ const VariableColorPicker = ({ connectedVariables, setVariableOnMcu, getWidgetPr
     });
 
     // send data on change
-    const slowColor = useSlowChangeState(color, 0.1);
+    const slowColor = useSlowChangeState(color, period);
 
     const handleSend = (color) => {
         setVariableOnMcu(variableName, [color.r, color.g, color.b]);

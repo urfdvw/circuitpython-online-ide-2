@@ -9,6 +9,7 @@ const style = {
     overflow: "hidden",
     borderRadius: "8pt",
     padding: "10pt",
+    touchAction: "none",
 };
 
 const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setWidgetProperty, children }) => {
@@ -62,7 +63,6 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
                             label: key,
                         };
                     })}
-                    // sx={{ width: "100" }}
                     renderInput={(params) => <TextField {...params} label="Variable" />}
                 />
                 <br />

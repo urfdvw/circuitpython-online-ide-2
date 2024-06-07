@@ -26,17 +26,21 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
     const xMax = getWidgetProperty("xMax");
     const yMin = getWidgetProperty("yMin");
     const yMax = getWidgetProperty("yMax");
-    const canvasRange = { x: 300, y: 300 };
+    const period = getWidgetProperty("period") === null ? 0.1 : getWidgetProperty("period");
+
+    const canvasRange = { x: 300, y: (300 / (xMax - xMin)) * (yMax - yMin) };
+
+    // const canvasRange = { x: 300, y: 300 };
     // send data on change
-    const slowPos = useSlowChangeState(pos, 0.1);
-    const slowCursorDown = useSlowChangeState(cursorDown, 0.1);
+    const slowPos = useSlowChangeState(pos, period);
+    const slowCursorDown = useSlowChangeState(cursorDown, period);
 
     useEffect(() => {
-        setVariableOnMcu(variableName, {
-            x: round((pos.x / canvasRange.x) * (xMax - xMin) + xMin),
-            y: round(((canvasRange.y - pos.y) / canvasRange.y) * (yMax - yMin) + yMin),
-            z: cursorDown ? 1 : 0,
-        });
+        setVariableOnMcu(variableName, [
+            round((pos.x / canvasRange.x) * (xMax - xMin) + xMin),
+            round(((canvasRange.y - pos.y) / canvasRange.y) * (yMax - yMin) + yMin),
+            cursorDown ? 1 : 0,
+        ]);
     }, [slowPos, slowCursorDown]);
 
     const handleMouseDown = (e) => {
@@ -90,6 +94,9 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
                 onMouseDown={handleMouseDown}
                 onMousemove={handleMouseMove}
                 onMouseup={handleMouseUp}
+                onTouchStart={handleMouseDown}
+                onTouchMove={handleMouseMove}
+                onTouchEnd={handleMouseUp}
             >
                 <Layer>
                     {lines.map((line, i) => (

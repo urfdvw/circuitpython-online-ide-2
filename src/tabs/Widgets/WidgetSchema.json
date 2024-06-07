@@ -94,6 +94,10 @@
                     "yMax": {
                         "type": "number",
                         "default": 10
+                    },
+                    "period": {
+                        "type": "number",
+                        "default": 0.15
                     }
                 }
             },
@@ -134,6 +138,10 @@
                     "set": {
                         "type": "number",
                         "default": 5
+                    },
+                    "period": {
+                        "type": "number",
+                        "default": 0.2
                     }
                 }
             },
@@ -190,6 +198,10 @@
                     "y": {
                         "type": "number",
                         "default": 30
+                    },
+                    "period": {
+                        "type": "number",
+                        "default": 0.1
                     }
                 }
             },

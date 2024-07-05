@@ -1,3 +1,6 @@
+import { serial as polyfill } from "web-serial-polyfill";
+import { isAndroid } from "react-device-detect";
+
 export default class SerialCommunication {
     constructor() {
         this.port = null;
@@ -12,13 +15,17 @@ export default class SerialCommunication {
         console.log("trying to open serial communication");
         if ("serial" in navigator) {
             try {
-                this.port = await navigator.serial.requestPort(portOptions);
+                if (isAndroid) {
+                    this.port = await polyfill.requestPort(portOptions);
+                } else {
+                    this.port = await navigator.serial.requestPort(portOptions);
+                }
             } catch (error) {
                 console.error("Error requesting serial port:", error);
                 return false;
             }
             try {
-                await this.port.open({ baudRate: 115200 });
+                await this.port.open({ baudRate: 115200 / 2 });
 
                 this.reader = this.port.readable.getReader();
                 this.writer = this.port.writable.getWriter();

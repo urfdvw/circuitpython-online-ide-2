@@ -7,10 +7,11 @@ import IdeBody from "./IdeBody";
 import IdeHead from "./IdeHead";
 import Typography from "@mui/material/Typography";
 // Device Support Warnings
-import { isMobile, isMacOs, isSafari, isFirefox, isIE } from "react-device-detect";
+import { isMobile, isAndroid, isMacOs, isSafari, isFirefox, isIE } from "react-device-detect";
 import ErrorIsMobile from "./infopages/ErrorIsMobile";
 import ErrorIsNotChrome from "./infopages/ErrorIsNotChrome";
 import WarningIsMac from "./infopages/WarningIsMac";
+import WarningIsAndroid from "./infopages/WarningIsAndroid";
 // Features
 import { useFileSystem, backupFolder } from "./react-local-file-system";
 import useSerial from "./serial/useSerial";
@@ -103,7 +104,11 @@ function App() {
     // error info
     let WarningModal = () => {};
     if (isMobile) {
-        WarningModal = ErrorIsMobile;
+        if (showDevFeatures && isAndroid) {
+            WarningModal = WarningIsAndroid;
+        } else {
+            WarningModal = ErrorIsMobile;
+        }
     } else if (isSafari || isFirefox || isIE) {
         WarningModal = ErrorIsNotChrome;
     } else if (isMacOs) {

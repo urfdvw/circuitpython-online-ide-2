@@ -1,0 +1,30 @@
+{
+    "name": "general",
+    "title": "通用设置",
+    "type": "object",
+    "properties": {
+        "language": {
+            "title": "语言",
+            "type": "string",
+            "enum": ["中文", "英文", "对照"],
+            "default": "中文"
+        },
+        "chinese": {
+            "title": "中文版本",
+            "type": "string",
+            "enum": ["简体", "繁体"],
+            "default": "简体"
+        },
+        "theme": {
+            "title": "主题",
+            "type": "string",
+            "enum": ["跟随系统", "白天", "夜间", "夜间投影"],
+            "default": "跟随系统"
+        },
+        "show_menu_bar": {
+            "title": "显示菜单栏",
+            "type": "boolean",
+            "default": true
+        }
+    }
+}

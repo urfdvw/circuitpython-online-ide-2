@@ -1,168 +1,97 @@
-// React
-import { useState, useEffect, useCallback } from "react";
-// Style
+import { useState, useEffect } from "react";
+// App
 import "./App.css";
-// Ide parts
-import IdeBody from "./IdeBody";
-import IdeHead from "./IdeHead";
-import Typography from "@mui/material/Typography";
-// Device Support Warnings
-import { isMobile, isMacOs, isSafari, isFirefox, isIE } from "react-device-detect";
-import ErrorIsMobile from "./infopages/ErrorIsMobile";
-import ErrorIsNotChrome from "./infopages/ErrorIsNotChrome";
-import WarningIsMac from "./infopages/WarningIsMac";
-// Features
-import { useFileSystem, backupFolder } from "./react-local-file-system";
-import useSerial from "./serial/useSerial";
-import DarkTheme from "./react-lazy-dark-theme";
-import { useConfig } from "./react-user-config";
-import schemas from "./schemas";
-// context
-import ideContext from "./ideContext";
+import AppContext from "./AppContext";
 // layout
 import * as FlexLayout from "flexlayout-react";
 import layout from "./layout/layout.json";
+import Factory from "./layout/Factory";
+import "flexlayout-react/style/light.css";
+// menu bar
+import AppMenu from "./appComponents/AppMenu";
+// config
+import { useConfig } from "react-user-config";
+import schemas from "./configs";
+// help
+import { useTabValueName } from "./utilComponents/TabedPages";
+import docs from "./docs";
+// hot keys
+import useLayoutHotKeys from "./hotKeys/useLayoutHotKeys";
+// theme
+import DarkTheme from "react-lazy-dark-theme";
+// channel
+import useChannel from "./utilHooks/useChannel";
+// device support
+import { isMobile } from "react-device-detect";
+import MobileSupportInfo from "./supportInfo/MobileSupportInfo";
 
 function App() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const channel = queryParams.get("channel"); // Retrieve the value of a specific query parameter
-    const showDevFeatures = channel === "dev";
-    const showBetaFeatures = channel === "dev" || channel === "beta"; // beta level feature shows in dev and beta channel
-
-    // main directory for folderView
-    const {
-        openDirectory,
-        directoryReady: rootFolderDirectoryReady,
-        statusText: rootFolderStatusText,
-        rootDirHandle,
-    } = useFileSystem();
-    // backup directory
-    const {
-        openDirectory: openBackupDirectory,
-        directoryReady: backupDirectoryReady,
-        statusText: backupStatusText,
-        rootDirHandle: backupDirectoryDirHandle,
-    } = useFileSystem();
-    const [lastBackupTime, setLastBackupTime] = useState(null);
-    // serial
-    const {
-        connectToSerialPort,
-        sendDataToSerialPort,
-        clearSerialOutput,
-        serialOutput,
-        fullSerialHistory,
-        serialReady,
-    } = useSerial();
-    // config
-    const { config, set_config, ready: configReady } = useConfig(schemas);
-    // flex layout
+    // testing state
+    const [testCount, setTestCount] = useState(0);
+    // layout
     const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
-    // confirm leave
+    // config
+    const appConfig = useConfig(schemas);
     useEffect(() => {
-        // https://stackoverflow.com/a/47477519/7037749
-        if (rootFolderDirectoryReady) {
-            window.onbeforeunload = function (e) {
-                var dialogText = "Are you sure to leave?"; // TODO: not shown up yet
-                e.returnValue = dialogText;
-                return dialogText;
-            };
-        }
-    }, [rootFolderDirectoryReady]);
-    // backup schedule
+        console.log("config", appConfig);
+    }, [appConfig]);
+    // help
+    const helpTabSelection = useTabValueName(docs);
     useEffect(() => {
-        if (!backupDirectoryReady) {
-            setLastBackupTime(null);
-        }
-    }, [backupDirectoryReady]);
-    const backup = useCallback(async () => {
-        if (await backupDirectoryDirHandle.isSameEntry(rootDirHandle)) {
-            console.log(backupDirectoryDirHandle.name);
-            console.log(rootDirHandle.name);
-            console.error("Cannot backup to the folder itself.");
-            confirm("Cannot backup to the folder itself.");
-            return;
-        }
-        if (!(backupDirectoryDirHandle && rootDirHandle)) {
-            return;
-        }
-        await backupFolder(rootDirHandle, backupDirectoryDirHandle, configReady && config.backup.clean);
-        const now = new Date().toLocaleTimeString();
-        setLastBackupTime("Last backup at: " + now);
-        console.log("Last backup at: " + now);
-    }, [backupDirectoryDirHandle, rootDirHandle, configReady && config.backup.clean]);
+        console.log("helpTabSelection", helpTabSelection);
+    }, [helpTabSelection]);
+    // hot keys
+    useLayoutHotKeys(flexModel);
+    // channel
+    const { showDevFeatures, showBetaFeatures } = useChannel();
     useEffect(() => {
-        const interval = setInterval(async () => {
-            if (!(configReady && config.backup.enable_schedule)) {
-                return;
-            }
-            backup();
-        }, 60000 * (configReady && config.backup.period));
-        return () => clearInterval(interval);
-    }, [backup, configReady && config.backup.enable_schedule, configReady && config.backup.period]);
+        console.log("[showDevFeatures, showBetaFeatures]", [showDevFeatures, showBetaFeatures]);
+    }, [showDevFeatures, showBetaFeatures]);
 
-    // error info
-    let WarningModal = () => {};
     if (isMobile) {
-        WarningModal = ErrorIsMobile;
-    } else if (isSafari || isFirefox || isIE) {
-        WarningModal = ErrorIsNotChrome;
-    } else if (isMacOs) {
-        WarningModal = WarningIsMac;
+        return <MobileSupportInfo />;
     }
 
-    // If config initialization not done, don't continue.
-    if (!configReady) {
+    if (!appConfig.ready) {
         return;
     }
 
     // theme config
-    var dark = null;
-    if (config.global.theme === "light") {
+    let dark = null;
+    let highContrast = false;
+    if (appConfig.config.general.theme === "白天") {
         dark = false;
-    } else if (config.global.theme === "dark") {
+    } else if (appConfig.config.general.theme === "夜间") {
         dark = true;
+    } else if (appConfig.config.general.theme === "夜间投影") {
+        dark = true;
+        highContrast = true;
     }
 
     return (
-        <ideContext.Provider
+        <AppContext.Provider
             value={{
-                showDevFeatures: showDevFeatures,
-                showBetaFeatures: showBetaFeatures,
+                testCount: testCount,
+                setTestCount: setTestCount,
                 flexModel: flexModel,
-                openDirectory: openDirectory,
-                rootFolderDirectoryReady: rootFolderDirectoryReady,
-                rootDirHandle: rootDirHandle,
-                rootFolderStatusText: rootFolderStatusText,
-                openBackupDirectory: openBackupDirectory,
-                backupDirectoryReady: backupDirectoryReady,
-                backupStatusText: backupStatusText,
-                backup: backup,
-                lastBackupTime: lastBackupTime,
-                connectToSerialPort: connectToSerialPort,
-                sendDataToSerialPort: sendDataToSerialPort,
-                clearSerialOutput: clearSerialOutput,
-                serialOutput: serialOutput,
-                fullSerialHistory: fullSerialHistory,
-                serialReady: serialReady,
-                schemas: schemas,
-                config: config,
-                set_config: set_config,
+                appConfig: appConfig,
+                helpTabSelection: helpTabSelection,
             }}
         >
-            <WarningModal />
-            <div className="ide">
-                <DarkTheme dark={dark} />
-                <div className="ide-header">
-                    <IdeHead />
+            <DarkTheme dark={dark} highContrast={highContrast} />
+            <div className="app">
+                {appConfig.config.general.show_menu_bar ? (
+                    <div className="app-header">
+                        <AppMenu />
+                    </div>
+                ) : (
+                    <></>
+                )}
+                <div className="app-body">
+                    <FlexLayout.Layout model={flexModel} factory={Factory} />
                 </div>
-                <div className="ide-body">
-                    <IdeBody />
-                </div>
-                {/* <Typography component="div" className="ide-tail" sx={{ paddingLeft: "5pt" }}>
-                    Tail Bar. Placeholder, in case it is used in the future.
-                </Typography> */}
             </div>
-        </ideContext.Provider>
+        </AppContext.Provider>
     );
 }
 

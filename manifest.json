@@ -3,25 +3,25 @@
     "description": "A browser-based IDE for CircuitPython supported microcontrollers. No installation needed. Handy and powerful.",
     "icons": [
         {
-            "src": "/bible-icon.svg",
+            "src": "/blinka.svg",
             "type": "image/svg+xml",
             "sizes": "800x800"
         },
         {
-            "src": "/bible-icon-192.png",
+            "src": "/blinka-192.png",
             "type": "image/png",
             "sizes": "192x192"
         },
         {
-            "src": "/bible-icon-512.png",
+            "src": "/blinka-512.png",
             "type": "image/png",
             "sizes": "512x512"
         }
     ],
     "start_url": ".",
-    "background_color": "#eb5534",
+    "background_color": "#ffffff",
     "display": "standalone",
     "scope": "/",
-    "theme_color": "#eb5534",
+    "theme_color": "#ffffff",
     "screenshots": []
 }

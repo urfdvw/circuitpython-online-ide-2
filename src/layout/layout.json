@@ -1,6 +1,6 @@
 {
     "global": {
-        "tabEnableClose": false,
+        "tabEnableClose": true,
         "tabEnableFloat": false,
         "tabEnableRename": false
     },
@@ -13,37 +13,10 @@
             "children": [
                 {
                     "type": "tab",
-                    "name": "快速投影",
-                    "altName": "(Q)快速投影",
-                    "helpText": "快速投影",
-                    "id": "quick_locate_tab",
-                    "component": "quick_locate",
-                    "enableClose": false
-                },
-                {
-                    "type": "tab",
-                    "name": "圣经目录",
-                    "altName": "(M)圣经目录",
-                    "helpText": "圣经目录",
-                    "id": "bible_menu_tab",
-                    "component": "placeholder",
-                    "enableClose": false
-                },
-                {
-                    "type": "tab",
-                    "name": "经文搜索",
-                    "altName": "(S)经文搜索",
-                    "helpText": "经文搜索",
-                    "id": "search_tab",
-                    "component": "placeholder",
-                    "enableClose": false
-                },
-                {
-                    "type": "tab",
-                    "name": "投影历史",
-                    "altName": "(H)投影历史",
-                    "helpText": "投影历史",
-                    "id": "history_tab",
+                    "name": "Folder View",
+                    "helpText": "Folder View",
+                    "altName": "(F)Folder View",
+                    "id": "folder_view_tab",
                     "component": "placeholder",
                     "enableClose": false
                 }
@@ -56,15 +29,8 @@
             "children": [
                 {
                     "type": "tab",
-                    "name": "设置",
+                    "name": "Settings",
                     "component": "config",
-                    "enableClose": false
-                },
-                {
-                    "type": "tab",
-                    "name": "帮助",
-                    "id": "help_tab",
-                    "component": "help",
                     "enableClose": false
                 }
             ]
@@ -76,11 +42,11 @@
             "children": [
                 {
                     "type": "tab",
-                    "name": "笔记",
-                    "altName": "(N)笔记",
-                    "helpText": "笔记",
-                    "id": "notes_tab",
-                    "component": "placeholder",
+                    "name": "Help",
+                    "helpText": "Help",
+                    "altName": "(H)Help",
+                    "id": "help_tab",
+                    "component": "help",
                     "enableClose": false
                 }
             ]
@@ -98,8 +64,9 @@
                 "children": [
                     {
                         "type": "tab",
-                        "name": "预览",
-                        "component": "placeholder"
+                        "name": "Navigation",
+                        "component": "placeholder",
+                        "enableClose": true
                     }
                 ]
             },
@@ -110,8 +77,8 @@
                 "children": [
                     {
                         "type": "tab",
-                        "name": "投影",
-                        "component": "projector",
+                        "name": "Serial Console",
+                        "component": "placeholder",
                         "enableClose": false
                     }
                 ]

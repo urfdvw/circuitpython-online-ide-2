@@ -1,30 +1,111 @@
 import MenuBar from "../utilComponents/MenuBar";
-import { grey, red } from "@mui/material/colors";
+import { grey, deepPurple, purple, blue, teal } from "@mui/material/colors";
 
 export default function AppMenu() {
-    const DARK_RED = red[900];
+    const DARK_PURPLE = deepPurple[500];
     const DARK_GREY = grey[900];
 
     const menuStructure = [
         {
-            label: "Bible Presenter",
-            color: DARK_RED,
+            label: "CircuitPython Online IDE",
+            color: DARK_PURPLE,
             options: [
                 {
                     text: "About",
                     handler: () => {
-                        console.log("App menu bar -> About");
+                        console.log("clicked on menu item `About`");
+                        // openTab("About", "about");
+                    },
+                },
+                {
+                    text: "Download IDE",
+                    handler: () => {
+                        console.log("clicked on menu item `Download IDE`");
+                        // window.open("https://github.com/urfdvw/circuitpython-online-ide-2", "_blank");
+                    },
+                },
+                {
+                    text: "GitHub Repo",
+                    handler: () => {
+                        console.log("clicked on menu item `GitHub Repo`");
+                        window.open("https://github.com/urfdvw/circuitpython-online-ide-2", "_blank");
+                    },
+                },
+                {
+                    text: "Feedback",
+                    handler: () => {
+                        console.log("clicked on menu item `Feedback`");
+                        window.open(
+                            "https://docs.google.com/forms/d/e/1FAIpQLSdupiJIRViFwPpuQC1hMp8gRvhxACLoAjgepm_-IRZumwK7Cg/viewform",
+                            "_blank"
+                        );
                     },
                 },
             ],
         },
         {
-            text: "Help",
+            label: "Connect",
             color: DARK_GREY,
-            handler: () => {
-                console.log("App menu bar -> Help");
-            },
+            options: [
+                {
+                    text: "CircuitPy Drive",
+                    handler: () => {
+                        console.log("clicked on menu item `CircuitPy Drive`");
+                        // openDirectory();
+                    },
+                },
+                {
+                    text: "Serial Port",
+                    handler: () => {
+                        console.log("clicked on menu item `Serial`");
+                        // connectToSerialPort();
+                    },
+                },
+                {
+                    text: "Backup Folder",
+                    handler: () => {
+                        console.log("clicked on menu item `Backup Folder`");
+                        // openBackupDirectory();
+                    },
+                },
+            ],
         },
-    ];
+        {
+            label: "Tools",
+            color: DARK_GREY,
+            options: [
+                {
+                    text: "Navigation",
+                    handler: () => {
+                        console.log("clicked on menu item `Navigation`");
+                        // openTab("Navigation", "navigation");
+                    },
+                },
+                {
+                    text: "Plot",
+                    handler: () => {
+                        console.log("clicked on menu item `Plot`");
+                        // openTab("Plot", "raw_plot");
+                    },
+                },
+                {
+                    text: "Backup",
+                    handler: () => {
+                        console.log("clicked on menu item `BackupD`");
+                        // openTab("Backup", "backup_drive");
+                    },
+                },
+                // showDevFeatures
+                //     ? {
+                //           text: "Widgets (dev)",
+                //           handler: () => {
+                //               console.log("clicked on menu item ``");
+                //               //   openTab("Widgets", "widgets");
+                //           },
+                //       }
+                //     : undefined,
+            ].filter((x) => x), // remove undefined
+        },
+    ].filter((x) => x); // remove undefined;
     return <MenuBar menuStructure={menuStructure} />;
 }

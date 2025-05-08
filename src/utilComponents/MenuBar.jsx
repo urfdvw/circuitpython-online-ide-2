@@ -6,7 +6,7 @@ export default function MenuBar({ menuStructure }) {
     /*
         const menuStructure = [
             {
-                label: "Bible Presenter",
+                label: "App title",
                 color: DARK_RED,
                 options: [
                     {

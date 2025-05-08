@@ -3,26 +3,10 @@ import { Actions } from "flexlayout-react";
 import { toggleSelectTabById } from "../layout/layoutUtils";
 
 export default function useLayoutHotKeys(flexModel) {
-    const hint_tab_ids = ["quick_locate_tab", "bible_menu_tab", "search_tab", "history_tab", "notes_tab"];
-    useHotkeys("alt+q", () => {
-        console.log("hotkey: show quick_locate_tab");
-        toggleSelectTabById(flexModel, "quick_locate_tab");
-    });
-    useHotkeys("alt+m", () => {
-        console.log("hotkey: show bible_menu_tab");
-        toggleSelectTabById(flexModel, "bible_menu_tab");
-    });
-    useHotkeys("alt+s", () => {
-        console.log("hotkey: show search_tab");
-        toggleSelectTabById(flexModel, "search_tab");
-    });
+    const hint_tab_ids = ["help_tab"];
     useHotkeys("alt+h", () => {
-        console.log("hotkey: show history_tab");
-        toggleSelectTabById(flexModel, "history_tab");
-    });
-    useHotkeys("alt+n", () => {
-        console.log("hotkey: show notes_tab");
-        toggleSelectTabById(flexModel, "notes_tab");
+        console.log("hotkey: show help_tab");
+        toggleSelectTabById(flexModel, "help_tab");
     });
     useHotkeys(
         "alt",

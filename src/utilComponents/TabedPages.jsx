@@ -48,7 +48,16 @@ export default function TabedPages({ pages, tabValue, setTabValue }) {
                     scrollButtons="auto"
                 >
                     {pages.map((page, index) => {
-                        return <Tab label={page.title} {...a11yProps(index)} key={"schema_tab_key_" + page.name} />;
+                        return (
+                            <Tab
+                                label={page.title}
+                                style={{
+                                    textTransform: "none",
+                                }}
+                                {...a11yProps(index)}
+                                key={"schema_tab_key_" + page.name}
+                            />
+                        );
                     })}
                 </Tabs>
             </Box>

@@ -1,0 +1,25 @@
+{
+    "name": "backup",
+    "title": "Editor",
+    "description": "Code editor tab settings.",
+    "type": "object",
+    "properties": {
+        "font": {
+            "title": "Text font size",
+            "type": "number",
+            "default": 12
+        },
+        "live_autocompletion": {
+            "title": "Enable live autocompletion",
+            "description": "When live is disabled, use [Ctrl-Space] for autocompletion.",
+            "type": "boolean",
+            "default": false
+        },
+        "newline_mode": {
+            "title": "Newline mode",
+            "type": "string",
+            "enum": ["auto", "unix", "windows"],
+            "default": "auto"
+        }
+    }
+}

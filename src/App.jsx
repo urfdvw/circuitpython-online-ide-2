@@ -80,13 +80,9 @@ function App() {
         >
             <DarkTheme dark={dark} highContrast={highContrast} />
             <div className="app">
-                {appConfig.config.general.show_menu_bar ? (
-                    <div className="app-header">
-                        <AppMenu />
-                    </div>
-                ) : (
-                    <></>
-                )}
+                <div className="app-header">
+                    <AppMenu />
+                </div>
                 <div className="app-body">
                     <FlexLayout.Layout model={flexModel} factory={Factory} />
                 </div>

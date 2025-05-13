@@ -37,8 +37,8 @@ function a11yProps(index) {
 
 export default function TabedPages({ pages, tabValue, setTabValue }) {
     return (
-        <Box sx={{ flexGrow: 1 }}>
-            <Box sx={{ borderBottom: 1, borderColor: "divider" }}>
+        <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
+            <Box sx={{ borderBottom: 1, borderColor: "divider", flexGrow: 0 }}>
                 <Tabs
                     value={tabValue}
                     onChange={(event, newValue) => {
@@ -52,13 +52,15 @@ export default function TabedPages({ pages, tabValue, setTabValue }) {
                     })}
                 </Tabs>
             </Box>
-            {pages.map((page, index) => {
-                return (
-                    <TabPanel value={tabValue} index={index} key={"schema_key_" + page.name}>
-                        {page.body}
-                    </TabPanel>
-                );
-            })}
+            <Box sx={{ flexGrow: 1, overflow: "auto" }}>
+                {pages.map((page, index) => {
+                    return (
+                        <TabPanel value={tabValue} index={index} key={"schema_key_" + page.name}>
+                            {page.body}
+                        </TabPanel>
+                    );
+                })}
+            </Box>
         </Box>
     );
 }

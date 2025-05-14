@@ -17,7 +17,7 @@
                     "helpText": "Folder View",
                     "altName": "(F)Folder View",
                     "id": "folder_view_tab",
-                    "component": "placeholder",
+                    "component": "folder_view",
                     "enableClose": false
                 }
             ]

@@ -24,6 +24,9 @@ import useChannel from "./utilHooks/useChannel";
 // device support
 import { isMobile } from "react-device-detect";
 import MobileSupportInfo from "./supportInfo/MobileSupportInfo";
+// file system
+
+import { useFileSystem } from "./utilComponents/react-local-file-system";
 
 function App() {
     // testing state
@@ -47,6 +50,14 @@ function App() {
     useEffect(() => {
         console.log("[showDevFeatures, showBetaFeatures]", [showDevFeatures, showBetaFeatures]);
     }, [showDevFeatures, showBetaFeatures]);
+    // file system
+    // main directory for folderView
+    const {
+        openDirectory,
+        directoryReady: rootFolderDirectoryReady,
+        statusText: rootFolderStatusText,
+        rootDirHandle,
+    } = useFileSystem();
 
     if (isMobile) {
         return <MobileSupportInfo />;
@@ -71,11 +82,15 @@ function App() {
     return (
         <AppContext.Provider
             value={{
-                testCount: testCount,
-                setTestCount: setTestCount,
-                flexModel: flexModel,
-                appConfig: appConfig,
-                helpTabSelection: helpTabSelection,
+                testCount,
+                setTestCount,
+                flexModel,
+                appConfig,
+                helpTabSelection,
+                openDirectory,
+                rootFolderDirectoryReady,
+                rootDirHandle,
+                rootFolderStatusText,
             }}
         >
             <DarkTheme dark={dark} highContrast={highContrast} />

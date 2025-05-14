@@ -2,6 +2,7 @@ import * as FlexLayout from "flexlayout-react";
 import Placeholder from "../appComponents/placeholder";
 import UserConfigs from "../appComponents/UserConfigs";
 import Help from "../appComponents/Help";
+import IdeFolderView from "../appComponents/IdeFolderView";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -23,6 +24,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <Help />
+            </div>
+        );
+    } else if (component === "folder_view") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <IdeFolderView node={node} />
             </div>
         );
     }

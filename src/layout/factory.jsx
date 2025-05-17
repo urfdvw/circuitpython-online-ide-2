@@ -1,8 +1,8 @@
 import * as FlexLayout from "flexlayout-react";
-import Placeholder from "../appComponents/placeholder";
-import UserConfigs from "../appComponents/UserConfigs";
-import Help from "../appComponents/Help";
-import IdeFolderView from "../appComponents/IdeFolderView";
+import Placeholder from "../components/placeholder";
+import UserConfigs from "../components/UserConfigs";
+import Help from "../components/Help";
+import IdeFolderView from "../components/IdeFolderView";
 
 const fullSize = { height: "100%", width: "100%" };
 

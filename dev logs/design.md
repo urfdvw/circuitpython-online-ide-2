@@ -1,7 +1,7 @@
 # 程序风格
 
 folders
-- appComponents: components linked with context and states
+- components: components linked with context and states
 - configs: configuration schemas
 - docs: markdown help documents
 - hotKeys: hooks for keyboard shortcuts
@@ -15,7 +15,7 @@ tabs里的责任分级
     - return 主体短
 - factory 仅决定是哪一种tab
     - return 短
-- appComponents里的component仅将通用component(如utilComponents)和state以及数据连接起来
+- components里的component仅将通用component(如utilComponents)和state以及数据连接起来
     - 短
 - utilComponents
     - 复杂逻辑都在这里

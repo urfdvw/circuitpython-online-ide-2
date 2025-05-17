@@ -32,6 +32,12 @@ const Factory = (node) => {
                 <IdeFolderView node={node} />
             </div>
         );
+    } else if (component === "editor") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <Placeholder node={node} />
+            </div>
+        );
     }
     return <FlexLayout.Layout model={model} factory={Factory} />;
 };

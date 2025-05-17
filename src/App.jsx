@@ -25,8 +25,8 @@ import useChannel from "./utilHooks/useChannel";
 import { isMobile } from "react-device-detect";
 import MobileSupportInfo from "./supportInfo/MobileSupportInfo";
 // file system
-
 import { useFileSystem } from "./utilComponents/react-local-file-system";
+import useEditorTabs from "./hooks/useEditorTabs";
 
 function App() {
     // testing state
@@ -58,7 +58,9 @@ function App() {
         statusText: rootFolderStatusText,
         rootDirHandle,
     } = useFileSystem();
+    const { onFileClick } = useEditorTabs(flexModel);
 
+    /**** main logic ****/
     if (isMobile) {
         return <MobileSupportInfo />;
     }
@@ -91,6 +93,7 @@ function App() {
                 rootFolderDirectoryReady,
                 rootDirHandle,
                 rootFolderStatusText,
+                onFileClick,
             }}
         >
             <DarkTheme dark={dark} highContrast={highContrast} />

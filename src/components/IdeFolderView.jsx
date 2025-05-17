@@ -4,8 +4,8 @@ import Button from "@mui/material/Button";
 //context
 import AppContext from "../AppContext";
 
-export default function IdeFolderView({ onFileClick, node }) {
-    const { openDirectory, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
+export default function IdeFolderView({ node }) {
+    const { openDirectory, rootFolderDirectoryReady, rootDirHandle, onFileClick } = useContext(AppContext);
     // Show FolderView component only when its ready
     return rootFolderDirectoryReady ? (
         <div style={{ height: "100%" }}>

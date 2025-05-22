@@ -2,7 +2,6 @@ import { Typography, Toolbar, Button } from "@mui/material";
 import Menu from "./Menu";
 
 export default function TabToolBar({ children, title = "", tools = null, hiddenTools = null }) {
-
     /*
         // const hiddenTools = [
         const tools = [
@@ -54,7 +53,7 @@ export default function TabToolBar({ children, title = "", tools = null, hiddenT
                     ) : (
                         <></>
                     )}
-                    {hiddenTools ? <Menu label="⋮" options={hiddenTools} /> : <></>}
+                    {hiddenTools ? <Menu label="≡" options={hiddenTools} /> : <></>}
                 </Toolbar>
             </div>
         </div>

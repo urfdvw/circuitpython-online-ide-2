@@ -1,7 +1,7 @@
 - **Editor** Tabs are opened by **Folder View**
 - To open **Editor** settings: Settings -> **Editor**
 
-## Code Editor <!-- Main Component -->
+## Code Editor
 The CircuitPython Online IDE uses [Ace](https://ace.c9.io/) as its code editor, providing a wide range of coding features.
 
 ### Keyboard Shortcuts
@@ -34,5 +34,5 @@ REPL Mode Specific:
 Quick Access:
 - **SAVE**: Save the file.
 
-Options in the Three Dots `⋮` menu:
+Options in the Three Dots `≡` menu:
 - **Pop Up**: Detach this tab into a standalone window, useful for multi-monitor setups.

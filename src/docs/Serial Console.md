@@ -18,7 +18,7 @@ Quick Access:
 - **CTRL-C**: Send a "ctrl-c" signal to the microcontroller.
 - **CTRL-D**: Send a "ctrl-d" signal to the microcontroller.
 
-Options in the Three Dots `⋮` menu:
+Options in the Three Dots `≡` menu:
 - **Clear**: Clear received serial data displayed in the console.
 - **Download Log**: Download all received data, including previously cleared data.
 

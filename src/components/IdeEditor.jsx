@@ -15,6 +15,7 @@ import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
 // Layout
 import PopUp from "../utilComponents/PopUp";
+import { selectTabById } from "../layout/layoutUtils";
 // file utils
 import { getFileText, writeFileText, isEntryHealthy, isfileSame } from "../utilComponents/react-local-file-system";
 // context
@@ -41,8 +42,8 @@ function generateRandomNumber(a) {
 }
 
 export default function IdeEditor({ node }) {
+    const { appConfig, fileLookUp, helpTabSelection, flexModel } = useContext(AppContext);
     const { sendCtrlC, sendCtrlD, sendCode } = useSerialCommands();
-    const { appConfig, fileLookUp } = useContext(AppContext);
     const config = appConfig.config;
     const fileHandle = fileLookUp[node.getConfig().fileKey];
     const aceEditorRef = useRef(null);
@@ -246,6 +247,14 @@ export default function IdeEditor({ node }) {
                 setPopped(true);
             },
         },
+        {
+            text: "Help",
+            handler: () => {
+                console.log("Editor -> Help");
+                selectTabById(flexModel, "help_tab");
+                helpTabSelection.setTabName("editor");
+            },
+        },
     ];
 
     return (
@@ -290,7 +299,7 @@ export default function IdeEditor({ node }) {
                                     Save
                                 </Button>
                             </Tooltip>
-                            <Menu label="⋮" options={hiddenMenuLabelOptions} />
+                            <Menu label="≡" options={hiddenMenuLabelOptions} />
                         </Toolbar>
                     </div>
                 </div>

@@ -1,5 +1,5 @@
 {
-    "name": "backup",
+    "name": "editor",
     "title": "Editor",
     "description": "Code editor tab settings.",
     "type": "object",

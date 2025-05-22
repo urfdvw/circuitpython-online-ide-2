@@ -1,3 +1,4 @@
+/* eslint-disable react/prop-types */
 import NewWindow from "react-new-window";
 
 export default function PopUp({ children, altChildren = <></>, popped, setPopped, title = "", parentStyle }) {

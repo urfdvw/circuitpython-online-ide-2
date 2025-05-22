@@ -48,5 +48,5 @@ export default function useEditorTabs(flexModel) {
             );
         }
     }
-    return { onFileClick };
+    return { onFileClick , fileLookUp};
 }

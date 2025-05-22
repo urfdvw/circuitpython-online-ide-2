@@ -3,6 +3,7 @@ import Placeholder from "../components/placeholder";
 import UserConfigs from "../components/UserConfigs";
 import Help from "../components/Help";
 import IdeFolderView from "../components/IdeFolderView";
+import IdeEditor from "../components/IdeEditor";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -35,7 +36,7 @@ const Factory = (node) => {
     } else if (component === "editor") {
         return (
             <div className="tab_content" style={fullSize}>
-                <Placeholder node={node} />
+                <IdeEditor node={node} />
             </div>
         );
     }

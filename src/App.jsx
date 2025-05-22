@@ -58,7 +58,7 @@ function App() {
         statusText: rootFolderStatusText,
         rootDirHandle,
     } = useFileSystem();
-    const { onFileClick } = useEditorTabs(flexModel);
+    const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
 
     /**** main logic ****/
     if (isMobile) {
@@ -94,6 +94,7 @@ function App() {
                 rootDirHandle,
                 rootFolderStatusText,
                 onFileClick,
+                fileLookUp,
             }}
         >
             <DarkTheme dark={dark} highContrast={highContrast} />

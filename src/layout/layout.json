@@ -65,7 +65,7 @@
                     {
                         "type": "tab",
                         "name": "Navigation",
-                        "component": "placeholder",
+                        "component": "navigation",
                         "enableClose": true
                     }
                 ]

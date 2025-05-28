@@ -4,6 +4,7 @@ import UserConfigs from "../components/UserConfigs";
 import Help from "../components/Help";
 import IdeFolderView from "../components/IdeFolderView";
 import IdeEditor from "../components/IdeEditor";
+import Navigation from "../components/Navigation";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -37,6 +38,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <IdeEditor node={node} />
+            </div>
+        );
+    } else if (component === "navigation") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <Navigation />
             </div>
         );
     }

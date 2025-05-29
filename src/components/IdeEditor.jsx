@@ -21,7 +21,7 @@ import { getFileText, writeFileText, isEntryHealthy, isfileSame } from "../utilC
 // context
 import AppContext from "../AppContext";
 // commands
-import useSerialCommands from "../hooks/useSerialCommands";
+import { useSerialCommands } from "../hooks/useSerial";
 // constant
 import { FILE_EDITED } from "../constants";
 // Flex layout

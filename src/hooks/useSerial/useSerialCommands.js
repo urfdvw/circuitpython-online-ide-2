@@ -1,7 +1,7 @@
 import { useContext, useState } from "react";
-import AppContext from "../AppContext";
-import * as constants from "../constants";
-import { removeCommonIndentation, sleep } from "../utilFunctions/serial";
+import AppContext from "../../AppContext";
+import * as constants from "../../constants";
+import { removeCommonIndentation, sleep } from "./utils";
 
 export default function useSerialCommands() {
     const { config, sendDataToSerialPort: send, serialOutput: output, serialReady: ready } = useContext(AppContext);

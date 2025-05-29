@@ -1,5 +1,5 @@
 {
-    "name": "backup",
+    "name": "plot",
     "title": "Plot",
     "description": "Plot tab settings.",
     "type": "object",

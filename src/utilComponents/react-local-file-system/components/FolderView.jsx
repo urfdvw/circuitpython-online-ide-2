@@ -50,7 +50,7 @@ function compareFolderContent(A, B) {
     return true;
 }
 
-export default function FolderView({ rootFolder, onFileClick, additionalButtons }) {
+export default function FolderView({ rootFolder, onFileClick, additionalElement }) {
     const [currentFolderHandle, setCurrentFolderHandle] = useState(rootFolder);
     const [entryOnDrag, setEntryOnDrag] = useState();
     const [path, setPath] = useState([rootFolder]);
@@ -218,7 +218,7 @@ export default function FolderView({ rootFolder, onFileClick, additionalButtons 
                             </Tooltip>
                         );
                     })}
-                    {additionalButtons}
+                    {additionalElement}
                 </Toolbar>
                 <Divider />
             </div>

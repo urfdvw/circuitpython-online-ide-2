@@ -1,5 +1,6 @@
 import MenuBar from "../utilComponents/MenuBar";
-import { grey, deepPurple, purple, blue, teal } from "@mui/material/colors";
+import { grey, deepPurple } from "@mui/material/colors";
+import CornerIcons from "./CornerIcons";
 
 export default function AppMenu() {
     const DARK_PURPLE = deepPurple[500];
@@ -107,5 +108,5 @@ export default function AppMenu() {
             ].filter((x) => x), // remove undefined
         },
     ].filter((x) => x); // remove undefined;
-    return <MenuBar menuStructure={menuStructure} />;
+    return <MenuBar menuStructure={menuStructure} additionalElement={<CornerIcons />} />;
 }

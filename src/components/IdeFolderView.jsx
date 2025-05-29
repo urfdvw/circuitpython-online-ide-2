@@ -31,7 +31,7 @@ export default function IdeFolderView({ node }) {
             <FolderView
                 rootFolder={rootDirHandle}
                 onFileClick={onFileClick}
-                additionalButtons={<MenuBar menuStructure={menuStructure} />}
+                additionalElement={<MenuBar menuStructure={menuStructure} />}
             />
         </div>
     ) : (

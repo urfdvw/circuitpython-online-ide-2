@@ -27,6 +27,8 @@ import MobileSupportInfo from "./supportInfo/MobileSupportInfo";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
 import useEditorTabs from "./hooks/useEditorTabs";
+// serial
+import { useSerial, useSerialCommands } from "./hooks/useSerial";
 
 function App() {
     // testing state
@@ -59,6 +61,21 @@ function App() {
         rootDirHandle,
     } = useFileSystem();
     const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
+    // serial
+
+    const {
+        connectToSerialPort,
+        sendDataToSerialPort,
+        clearSerialOutput,
+        serialOutput,
+        fullSerialHistory,
+        serialReady,
+    } = useSerial();
+    const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands(
+        sendDataToSerialPort,
+        serialOutput,
+        serialReady
+    );
 
     /**** main logic ****/
     if (isMobile) {
@@ -84,17 +101,32 @@ function App() {
     return (
         <AppContext.Provider
             value={{
+                // placeholder
                 testCount,
                 setTestCount,
+                // IDE general
                 flexModel,
                 appConfig,
+                // help
                 helpTabSelection,
+                // folder
                 openDirectory,
                 rootFolderDirectoryReady,
                 rootDirHandle,
                 rootFolderStatusText,
                 onFileClick,
                 fileLookUp,
+                // serial
+                connectToSerialPort,
+                sendDataToSerialPort,
+                clearSerialOutput,
+                serialOutput,
+                fullSerialHistory,
+                serialReady,
+                sendCtrlC,
+                sendCtrlD,
+                sendCode,
+                codeHistory,
             }}
         >
             <DarkTheme dark={dark} highContrast={highContrast} />

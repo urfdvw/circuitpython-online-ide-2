@@ -1,10 +1,8 @@
-import { useContext, useState } from "react";
-import AppContext from "../../AppContext";
+import { useState } from "react";
 import * as constants from "../../constants";
 import { removeCommonIndentation, sleep } from "./utils";
 
-export default function useSerialCommands() {
-    const { config, sendDataToSerialPort: send, serialOutput: output, serialReady: ready } = useContext(AppContext);
+export default function useSerialCommands(sendDataToSerialPort, serialOutput, serialReady) {
     const [codeHistory, setCodeHistory] = useState(['print("Hello CircuitPython!")']);
 
     function addCodeHistory(code) {
@@ -15,32 +13,32 @@ export default function useSerialCommands() {
     }
 
     async function sendCtrlC() {
-        if (!ready) {
+        if (!serialReady) {
             return;
         }
         console.log("sending Ctrl-C to serial port");
-        await send(constants.CTRL_C);
+        await sendDataToSerialPort(constants.CTRL_C);
     }
 
     async function sendCtrlD() {
-        if (!ready) {
+        if (!serialReady) {
             return;
         }
         console.log("sending Ctrl-D to serial port");
-        await send(constants.CTRL_D);
+        await sendDataToSerialPort(constants.CTRL_D);
     }
 
     async function sendSingleLineText(text) {
-        if (!ready) {
+        if (!serialReady) {
             return;
         }
         text = text.trim();
         console.log("sending text serial port: " + text);
-        await send(text + constants.LINE_END);
+        await sendDataToSerialPort(text + constants.LINE_END);
     }
 
     async function sendMultiLineCode(code) {
-        if (!ready) {
+        if (!serialReady) {
             return;
         }
         code = removeCommonIndentation(code);
@@ -56,15 +54,17 @@ export default function useSerialCommands() {
         await sendSingleLineText('exec("""' + code + '""")');
     }
 
-    async function sendCode(code) {
-        if (!ready) {
+    async function sendCode(code, force) {
+        if (!serialReady) {
             return;
         }
         addCodeHistory(code);
         code = code.split("\r").join("");
-        if (config.serial_console.force_exec && config.serial_console.send_mode === "code") {
+        if (force) {
+            // TODO: need clean up
+            // if (config.serial_console.force_exec && config.serial_console.send_mode === "code") {
             // if code running, break execution before send code
-            if (output.slice(-4, -1) !== ">>>") {
+            if (serialOutput.slice(-4, -1) !== ">>>") {
                 await sendCtrlC(); // break execution
                 await sleep(500);
                 await sendCtrlC(); // jump RELP if necessary

@@ -20,8 +20,6 @@ import { selectTabById } from "../layout/layoutUtils";
 import { getFileText, writeFileText, isEntryHealthy, isfileSame } from "../utilComponents/react-local-file-system";
 // context
 import AppContext from "../AppContext";
-// commands
-import { useSerialCommands } from "../hooks/useSerial";
 // constant
 import { FILE_EDITED } from "../constants";
 // Flex layout
@@ -42,8 +40,8 @@ function generateRandomNumber(a) {
 }
 
 export default function IdeEditor({ node }) {
-    const { appConfig, fileLookUp, helpTabSelection, flexModel } = useContext(AppContext);
-    const { sendCtrlC, sendCtrlD, sendCode } = useSerialCommands();
+    const { appConfig, fileLookUp, helpTabSelection, flexModel, sendCtrlC, sendCtrlD, sendCode } =
+        useContext(AppContext);
     const config = appConfig.config;
     const fileHandle = fileLookUp[node.getConfig().fileKey];
     const aceEditorRef = useRef(null);

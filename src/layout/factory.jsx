@@ -5,6 +5,7 @@ import Help from "../components/Help";
 import IdeFolderView from "../components/IdeFolderView";
 import IdeEditor from "../components/IdeEditor";
 import Navigation from "../components/Navigation";
+import RawConsole from "../components/RawConsole";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -44,6 +45,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <Navigation />
+            </div>
+        );
+    } else if (component === "serial_raw") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <RawConsole />
             </div>
         );
     }

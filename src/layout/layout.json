@@ -78,7 +78,7 @@
                     {
                         "type": "tab",
                         "name": "Serial Console",
-                        "component": "placeholder",
+                        "component": "serial_raw",
                         "enableClose": false
                     }
                 ]

@@ -89,13 +89,10 @@ function App() {
     // theme config
     let dark = null;
     let highContrast = false;
-    if (appConfig.config.general.theme === "白天") {
+    if (appConfig.config.general.theme === "light") {
         dark = false;
-    } else if (appConfig.config.general.theme === "夜间") {
+    } else if (appConfig.config.general.theme === "dark") {
         dark = true;
-    } else if (appConfig.config.general.theme === "夜间投影") {
-        dark = true;
-        highContrast = true;
     }
 
     return (

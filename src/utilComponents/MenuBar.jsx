@@ -59,7 +59,9 @@ export default function MenuBar({ menuStructure, additionalElement }) {
                     })}
                 </Stack>
             </Box>
-            <Box sx={{ flexGrow: 0, minWidth: "30px" }}>{additionalElement}</Box>
+            {additionalElement === undefined ? null : (
+                <Box sx={{ flexGrow: 0, minWidth: "30px" }}>{additionalElement}</Box>
+            )}
         </Box>
     );
 }

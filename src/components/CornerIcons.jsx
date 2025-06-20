@@ -20,7 +20,9 @@ export default function CornerIcons() {
         <Box sx={{ height: "100%", alignContent: "center" }}>
             {appConfig.config.general.show_time ? (
                 <Tooltip title={timeFull}>
-                    <Typography component={"span"}>&nbsp;{time}</Typography>
+                    <Typography component={"span"} sx={{ padding: "5px" }}>
+                        &nbsp;{time}
+                    </Typography>
                 </Tooltip>
             ) : (
                 <></>

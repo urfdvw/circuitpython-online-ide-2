@@ -64,6 +64,12 @@
                 "children": [
                     {
                         "type": "tab",
+                        "name": "Test",
+                        "component": "placeholder",
+                        "enableClose": true
+                    },
+                    {
+                        "type": "tab",
                         "name": "Navigation",
                         "component": "navigation",
                         "enableClose": true

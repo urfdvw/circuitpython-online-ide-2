@@ -65,7 +65,7 @@
                     {
                         "type": "tab",
                         "name": "Test",
-                        "component": "placeholder",
+                        "component": "doc_cam",
                         "enableClose": true
                     },
                     {

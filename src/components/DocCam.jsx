@@ -2,6 +2,7 @@ import WebcamViewer from "../utilComponents/WebcamViewer";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { useState, useEffect } from "react";
 import { NoTheme } from "react-lazy-dark-theme";
+import PopUp from "../utilComponents/PopUp";
 
 export default function DocCam() {
     const [rotation, setRotation] = useState(0);
@@ -9,6 +10,7 @@ export default function DocCam() {
     const [flipV, setFlipV] = useState(false);
     const [deviceIds, setDeviceIds] = useState([]);
     const [selectedId, setSelectedId] = useState();
+    const [popped, setPopped] = useState(false);
 
     useEffect(() => {
         console.log(deviceIds);
@@ -79,20 +81,28 @@ export default function DocCam() {
                         console.log("clicked on menu item `Help`");
                     },
                 },
+                {
+                    text: popped ? "Dock" : "Pop Up",
+                    handler: () => {
+                        setPopped((prev) => !prev);
+                    },
+                },
             ],
         },
     ];
     return (
-        <TabTemplate title="Document Camera" menuStructure={menuStructure}>
-            <NoTheme>
-                <WebcamViewer
-                    rotation={rotation}
-                    flipH={flipH}
-                    flipV={flipV}
-                    setDeviceIdList={setDeviceIds}
-                    selectedDeviceId={selectedId}
-                />
-            </NoTheme>
-        </TabTemplate>
+        <PopUp popped={popped} setPopped={setPopped} title="Document Camera" parentStyle={{ width: "100%" }}>
+            <TabTemplate title="Document Camera" menuStructure={menuStructure}>
+                <NoTheme>
+                    <WebcamViewer
+                        rotation={rotation}
+                        flipH={flipH}
+                        flipV={flipV}
+                        setDeviceIdList={setDeviceIds}
+                        selectedDeviceId={selectedId}
+                    />
+                </NoTheme>
+            </TabTemplate>
+        </PopUp>
     );
 }

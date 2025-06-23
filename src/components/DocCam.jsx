@@ -17,10 +17,10 @@ export default function DocCam() {
     const menuStructure = [
         {
             label: "Cameras",
-            options: deviceIds.map((id, index) => ({
-                text: "camera " + index,
+            options: deviceIds.map((device, index) => ({
+                text: device.label,
                 handler: () => {
-                    setSelectedId(id);
+                    setSelectedId(device.deviceId);
                 },
             })),
         },
@@ -83,8 +83,8 @@ export default function DocCam() {
         },
     ];
     return (
-        <NoTheme>
-            <TabTemplate title="Document Camera" menuStructure={menuStructure}>
+        <TabTemplate title="Document Camera" menuStructure={menuStructure}>
+            <NoTheme>
                 <WebcamViewer
                     rotation={rotation}
                     flipH={flipH}
@@ -92,7 +92,7 @@ export default function DocCam() {
                     setDeviceIdList={setDeviceIds}
                     selectedDeviceId={selectedId}
                 />
-            </TabTemplate>
-        </NoTheme>
+            </NoTheme>
+        </TabTemplate>
     );
 }

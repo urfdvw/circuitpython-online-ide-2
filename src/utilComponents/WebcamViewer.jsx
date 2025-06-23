@@ -17,24 +17,43 @@ const WebcamViewer = ({
     scaleX(${flipH ? -1 : 1})
     scaleY(${flipV ? -1 : 1})
   `;
-
-    // Handle webcam device list changes
     useEffect(() => {
+        let previousDevices = [];
+
         const updateDevices = async () => {
             try {
                 const devices = await navigator.mediaDevices.enumerateDevices();
-                const videoInputs = devices.filter((d) => d.kind === "videoinput");
-                setDeviceIdList(videoInputs.map((d) => d.deviceId));
+                const videoInputs = devices
+                    .filter((d) => d.kind === "videoinput")
+                    .map((d) => ({
+                        deviceId: d.deviceId,
+                        label: d.label || "Camera", // fallback for privacy-restricted labels
+                    }));
+
+                const changed =
+                    videoInputs.length !== previousDevices.length ||
+                    videoInputs.some(
+                        (dev, i) =>
+                            dev.deviceId !== previousDevices[i]?.deviceId || dev.label !== previousDevices[i]?.label
+                    );
+
+                if (changed) {
+                    previousDevices = videoInputs;
+                    setDeviceIdList(videoInputs);
+                }
             } catch (err) {
                 console.warn("Could not enumerate devices:", err);
             }
         };
 
         updateDevices();
+
         navigator.mediaDevices.addEventListener("devicechange", updateDevices);
+        const intervalId = setInterval(updateDevices, 2000);
 
         return () => {
             navigator.mediaDevices.removeEventListener("devicechange", updateDevices);
+            clearInterval(intervalId);
         };
     }, [setDeviceIdList]);
 

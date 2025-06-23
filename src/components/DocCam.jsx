@@ -1,6 +1,7 @@
 import WebcamViewer from "../utilComponents/WebcamViewer";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { useState, useEffect } from "react";
+import { NoTheme } from "react-lazy-dark-theme";
 
 export default function DocCam() {
     const [rotation, setRotation] = useState(0);
@@ -82,14 +83,16 @@ export default function DocCam() {
         },
     ];
     return (
-        <TabTemplate title="Document Camera" menuStructure={menuStructure}>
-            <WebcamViewer
-                rotation={rotation}
-                flipH={flipH}
-                flipV={flipV}
-                setDeviceIdList={setDeviceIds}
-                selectedDeviceId={selectedId}
-            />
-        </TabTemplate>
+        <NoTheme>
+            <TabTemplate title="Document Camera" menuStructure={menuStructure}>
+                <WebcamViewer
+                    rotation={rotation}
+                    flipH={flipH}
+                    flipV={flipV}
+                    setDeviceIdList={setDeviceIds}
+                    selectedDeviceId={selectedId}
+                />
+            </TabTemplate>
+        </NoTheme>
     );
 }

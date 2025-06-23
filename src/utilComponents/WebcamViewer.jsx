@@ -1,7 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
-import { NoTheme } from "react-lazy-dark-theme";
 
 const WebcamViewer = ({
     rotation = 0,
@@ -45,27 +44,25 @@ const WebcamViewer = ({
     }, [selectedDeviceId]);
 
     return (
-        <NoTheme>
-            <TransformWrapper wheel={{ step: 0.2 }} pinch={{ step: 5 }} doubleClick={{ disabled: true }}>
-                <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
-                    <Webcam
-                        ref={webcamRef}
-                        audio={false}
-                        screenshotFormat="image/jpeg"
-                        videoConstraints={{
-                            facingMode: "user",
-                            deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
-                        }}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            transform: transformStyle,
-                        }}
-                    />
-                </TransformComponent>
-            </TransformWrapper>
-        </NoTheme>
+        <TransformWrapper wheel={{ step: 0.2 }} pinch={{ step: 5 }} doubleClick={{ disabled: true }}>
+            <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
+                <Webcam
+                    ref={webcamRef}
+                    audio={false}
+                    screenshotFormat="image/jpeg"
+                    videoConstraints={{
+                        facingMode: "user",
+                        deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
+                    }}
+                    style={{
+                        width: "100%",
+                        height: "100%",
+                        objectFit: "cover",
+                        transform: transformStyle,
+                    }}
+                />
+            </TransformComponent>
+        </TransformWrapper>
     );
 };
 

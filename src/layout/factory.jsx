@@ -1,4 +1,3 @@
-import * as FlexLayout from "flexlayout-react";
 import Placeholder from "../components/placeholder";
 import UserConfigs from "../components/UserConfigs";
 import Help from "../components/Help";
@@ -61,7 +60,6 @@ const Factory = (node) => {
             </div>
         );
     }
-    return <FlexLayout.Layout model={model} factory={Factory} />;
 };
 
 export default Factory;

@@ -1,5 +1,6 @@
 import { Actions } from "flexlayout-react";
 import { FILE_EDITED } from "../constants";
+import * as FlexLayout from "flexlayout-react";
 
 export function selectTabById(model, tabNodeId) {
     const tabNode = model.getNodeById(tabNodeId);
@@ -47,3 +48,25 @@ export const findTabsetById = (model, tabsetId) => {
 
     return foundTabset;
 };
+
+export function openTab(model, name, component) {
+    const tabNode = findTabByName(model.getRoot(), name);
+    if (tabNode instanceof FlexLayout.TabNode) {
+        // Activate the found tab
+        selectTabById(model, tabNode.getId());
+    } else {
+        // Open a new tab
+        model.doAction(
+            FlexLayout.Actions.addNode(
+                {
+                    type: "tab",
+                    name: name,
+                    component: component,
+                },
+                model.getActiveTabset() ? model.getActiveTabset().getId() : model.getRoot().getChildren()[0].getId(),
+                FlexLayout.DockLocation.CENTER,
+                -1
+            )
+        );
+    }
+}

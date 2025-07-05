@@ -1,8 +1,12 @@
 import MenuBar from "../utilComponents/MenuBar";
 import { grey, deepPurple } from "@mui/material/colors";
 import CornerIcons from "./CornerIcons";
+import { openTab } from "../layout/layoutUtils";
+import AppContext from "../AppContext";
+import React, { useContext } from "react";
 
 export default function AppMenu() {
+    const { flexModel } = useContext(AppContext);
     const DARK_PURPLE = deepPurple[500];
     const DARK_GREY = grey[900];
 
@@ -94,6 +98,13 @@ export default function AppMenu() {
                     handler: () => {
                         console.log("clicked on menu item `BackupD`");
                         // openTab("Backup", "backup_drive");
+                    },
+                },
+                {
+                    text: "Camera",
+                    handler: () => {
+                        console.log("clicked on menu item `Camera`");
+                        openTab(flexModel, "Camera", "doc_cam");
                     },
                 },
                 // showDevFeatures

@@ -64,12 +64,6 @@
                 "children": [
                     {
                         "type": "tab",
-                        "name": "Test",
-                        "component": "doc_cam",
-                        "enableClose": true
-                    },
-                    {
-                        "type": "tab",
                         "name": "Navigation",
                         "component": "navigation",
                         "enableClose": true

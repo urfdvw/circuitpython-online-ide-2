@@ -18,7 +18,7 @@ export default function TabTemplate({ children, menuStructure = [], title = "" }
                 }}
             >
                 <Box sx={{ flexGrow: 1, overflowX: "auto", alignContent: "center" }}>
-                    <Typography variant="h6" sx={{ paddingLeft: "5px" }}>
+                    <Typography sx={{ paddingLeft: "5px" }}>
                         {title}
                     </Typography>
                 </Box>

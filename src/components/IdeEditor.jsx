@@ -28,6 +28,8 @@ import * as FlexLayout from "flexlayout-react";
 import Toolbar from "@mui/material/Toolbar";
 import Menu from "../utilComponents/Menu";
 import Button from "@mui/material/Button";
+// tab
+import TabTemplate from "../utilComponents/TabTemplate";
 
 function generateRandomNumber(a) {
     // Calculate the range between a and a/4
@@ -87,6 +89,7 @@ export default function IdeEditor({ node }) {
     if (fileHandle.name.toLowerCase().endsWith(".json")) {
         mode = "json";
     }
+
     function saveFile(text) {
         writeFileText(fileHandle, text);
         setFileEdited(false);
@@ -237,27 +240,40 @@ export default function IdeEditor({ node }) {
         });
     }
 
-    const hiddenMenuLabelOptions = [
+    const title =
+        "Editor: " + fileHandle.fullPath + (fileExists ? "" : " (deleted)") + (fileEdited ? " (unsaved changes)" : "");
+
+    const menuStructure = [
         {
-            text: "Pop Up",
+            text: "Save",
             handler: () => {
-                console.log("Pop Up");
-                setPopped(true);
+                saveFile(text);
             },
         },
         {
-            text: "Help",
-            handler: () => {
-                console.log("Editor -> Help");
-                selectTabById(flexModel, "help_tab");
-                helpTabSelection.setTabName("editor");
-            },
+            label: "≡",
+            options: [
+                {
+                    text: popped ? "Dock" : "Pop Up",
+                    handler: () => {
+                        setPopped((prev) => !prev);
+                    },
+                },
+                {
+                    text: "Help",
+                    handler: () => {
+                        console.log("Editor -> Help");
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("editor");
+                    },
+                },
+            ],
         },
     ];
 
     return (
         <PopUp popped={popped} setPopped={setPopped} title={fileHandle.name} parentStyle={{ height: height + "px" }}>
-            <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
+            {/* <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
                 <div
                     style={{
                         display: "flex",
@@ -302,31 +318,34 @@ export default function IdeEditor({ node }) {
                     </div>
                 </div>
                 <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-                    {/* Ensures B is scrollable if content overflows */}
-                    <AceEditor
-                        ref={aceEditorRef}
-                        mode={mode}
-                        useSoftTabs={true}
-                        wrapEnabled={true}
-                        tabSize={4}
-                        theme="tomorrow"
-                        value={text}
-                        height="100%"
-                        width="100%"
-                        onChange={(newValue) => {
-                            setText(newValue);
-                        }}
-                        fontSize={config.editor.font + "pt"}
-                        setOptions={{
-                            enableBasicAutocompletion: true,
-                            enableLiveAutocompletion: config.editor.live_autocompletion,
-                            enableSnippets: true,
-                            showLineNumbers: true,
-                            tabSize: 4,
-                        }}
-                    />
+
                 </div>
-            </div>
+            </div> 
+            */}
+            <TabTemplate title={title} menuStructure={menuStructure}>
+                <AceEditor
+                    ref={aceEditorRef}
+                    mode={mode}
+                    useSoftTabs={true}
+                    wrapEnabled={true}
+                    tabSize={4}
+                    theme="tomorrow"
+                    value={text}
+                    height="100%"
+                    width="100%"
+                    onChange={(newValue) => {
+                        setText(newValue);
+                    }}
+                    fontSize={config.editor.font + "pt"}
+                    setOptions={{
+                        enableBasicAutocompletion: true,
+                        enableLiveAutocompletion: config.editor.live_autocompletion,
+                        enableSnippets: true,
+                        showLineNumbers: true,
+                        tabSize: 4,
+                    }}
+                />
+            </TabTemplate>
         </PopUp>
     );
 }

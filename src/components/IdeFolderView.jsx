@@ -3,7 +3,6 @@ import FolderView from "../utilComponents/react-local-file-system";
 import Button from "@mui/material/Button";
 //context
 import AppContext from "../AppContext";
-import MenuBar from "../utilComponents/MenuBar";
 import { selectTabById } from "../layout/layoutUtils";
 
 export default function IdeFolderView({ node }) {
@@ -28,11 +27,7 @@ export default function IdeFolderView({ node }) {
 
     return rootFolderDirectoryReady ? (
         <div style={{ height: "100%" }}>
-            <FolderView
-                rootFolder={rootDirHandle}
-                onFileClick={onFileClick}
-                additionalElement={<MenuBar menuStructure={menuStructure} />}
-            />
+            <FolderView rootFolder={rootDirHandle} onFileClick={onFileClick} additionalElement={menuStructure} />
         </div>
     ) : (
         <>

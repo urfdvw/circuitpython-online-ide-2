@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import Tabtemplate from "../../Tabtemplate";
 
 import {
     Backdrop,
@@ -122,157 +123,132 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement 
         setIsLoading(false);
     }
 
-    const toolbarItems = [
+    const menuStructure = [
         {
-            name: "new_file",
-            title: "New file",
-            icon: NewFileIcon,
-            handler: async (event) => {
-                console.log("FolderView new file called", event);
-                const newName = await promptUniqueName(currentFolderHandle, "New file name:", "");
-                if (!newName) {
-                    return;
-                }
-                setIsLoading(true);
-                const newFileHandle = await addNewFile(currentFolderHandle, newName);
-                await showFolderView(currentFolderHandle);
-                setIsLoading(false);
-                newFileHandle.fullPath = (currentFolderHandle.fullPath || "") + "/" + newFileHandle.name;
-                onFileClick(newFileHandle);
-            },
+            label: "New",
+            options: [
+                {
+                    text: "File",
+                    handler: async (event) => {
+                        console.log("FolderView new file called", event);
+                        const newName = await promptUniqueName(currentFolderHandle, "New file name:", "");
+                        if (!newName) {
+                            return;
+                        }
+                        setIsLoading(true);
+                        const newFileHandle = await addNewFile(currentFolderHandle, newName);
+                        await showFolderView(currentFolderHandle);
+                        setIsLoading(false);
+                        newFileHandle.fullPath = (currentFolderHandle.fullPath || "") + "/" + newFileHandle.name;
+                        onFileClick(newFileHandle);
+                    },
+                },
+                {
+                    text: "Folder",
+                    handler: async (event) => {
+                        console.log("FolderView new folder called", event);
+                        const newName = await promptUniqueName(currentFolderHandle, "New folder name:", "");
+                        if (!newName) {
+                            return;
+                        }
+                        setIsLoading(true);
+                        await addNewFolder(currentFolderHandle, newName);
+                        await showFolderView(currentFolderHandle);
+                        setIsLoading(false);
+                    },
+                },
+            ],
         },
-        {
-            name: "new_folder",
-            title: "New folder",
-            icon: NewFolderIcon,
-            handler: async (event) => {
-                console.log("FolderView new folder called", event);
-                const newName = await promptUniqueName(currentFolderHandle, "New folder name:", "");
-                if (!newName) {
-                    return;
-                }
-                setIsLoading(true);
-                await addNewFolder(currentFolderHandle, newName);
-                await showFolderView(currentFolderHandle);
-                setIsLoading(false);
-            },
-        },
-        // {
-        //     name: "refresh",
-        //     title: "Refresh",
-        //     icon: RefreshIcon,
-        //     handler: async (event) => {
-        //         console.log("Toolbar refresh called", event);
-        //         setIsLoading(true);
-        //         await showFolderView(currentFolderHandle);
-        //         setIsLoading(false);
-        //     },
-        // },
+        ...additionalElement,
     ];
 
     return (
-        <div
-            style={{
-                height: "100%",
-                width: "100%",
-                maxHeight: "100%",
-                maxWidth: "100%",
-                display: "flex",
-                flexDirection: "column",
-            }}
-        >
+        <Tabtemplate title="Folder View" menuStructure={menuStructure}>
             <div
                 style={{
-                    flexGrow: 0,
+                    height: "100%",
+                    width: "100%",
+                    maxHeight: "100%",
+                    maxWidth: "100%",
+                    display: "flex",
+                    flexDirection: "column",
                 }}
             >
-                <CurFolderContext.Provider value={{ currentFolderHandle, onFileClick, showFolderView, setIsLoading }}>
-                    <DragContext.Provider value={{ setEntryOnDrag, handleDrop }}>
-                        <Breadcrumbs aria-label="breadcrumb">
-                            {path.map((entry) => (
-                                <PathEntry entryHandle={entry} key={"local_file_system_path_key_" + entry.name} />
-                            ))}
-                        </Breadcrumbs>
-                    </DragContext.Provider>
-                </CurFolderContext.Provider>
-                <Divider />
-                <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px" }}>
-                    <Typography component="div" noWrap={true} sx={{ flexGrow: 1, pl: 1, fontSize: "14px" }}>
-                        {getPathEntryLabel(path[path.length - 1].name)}
-                    </Typography>
-                    {toolbarItems.map((item) => {
-                        return (
-                            <Tooltip
-                                key={"local_file_system_toolbar_item_key_" + item.name}
-                                id={item.name}
-                                title={item.title}
-                            >
-                                <IconButton
-                                    edge="start"
-                                    size="small"
-                                    style={{ borderRadius: 0 }}
-                                    onClick={item.handler}
-                                >
-                                    <item.icon />
-                                </IconButton>
-                            </Tooltip>
-                        );
-                    })}
-                    {additionalElement}
-                </Toolbar>
-                <Divider />
-            </div>
-            <div
-                style={{
-                    flexGrow: 1,
-                    overflow: "auto",
-                }}
-            >
-                <CurFolderContext.Provider value={{ currentFolderHandle, onFileClick, showFolderView, setIsLoading }}>
-                    <DragContext.Provider value={{ setEntryOnDrag, handleDrop }}>
-                        <List>
-                            {content
-                                .sort((a, b) => {
-                                    if (a.isParent && !b.isParent) {
-                                        return -1;
-                                    }
-                                    if (!a.isParent && b.isParent) {
-                                        return 1;
-                                    }
-                                    if (isFolder(a) && !isFolder(b)) {
-                                        return -1;
-                                    }
-                                    if (!isFolder(a) && isFolder(b)) {
-                                        return 1;
-                                    }
-                                    if (a.name < b.name) {
-                                        return -1;
-                                    }
-                                    if (a.name > b.name) {
-                                        return 1;
-                                    }
-                                    return 0;
-                                })
-                                .filter((entry) => {
-                                    return !entry.name.startsWith(".");
-                                })
-                                .map((entry) => (
-                                    <ContentEntry entryHandle={entry} key={"file_system_content_key_" + entry.name} />
+                <div
+                    style={{
+                        flexGrow: 0,
+                    }}
+                >
+                    <CurFolderContext.Provider
+                        value={{ currentFolderHandle, onFileClick, showFolderView, setIsLoading }}
+                    >
+                        <DragContext.Provider value={{ setEntryOnDrag, handleDrop }}>
+                            <Breadcrumbs aria-label="breadcrumb">
+                                {path.map((entry) => (
+                                    <PathEntry entryHandle={entry} key={"local_file_system_path_key_" + entry.name} />
                                 ))}
-                        </List>
-                    </DragContext.Provider>
-                </CurFolderContext.Provider>
+                            </Breadcrumbs>
+                        </DragContext.Provider>
+                    </CurFolderContext.Provider>
+                    <Divider />
+                </div>
+                <div
+                    style={{
+                        flexGrow: 1,
+                        overflow: "auto",
+                    }}
+                >
+                    <CurFolderContext.Provider
+                        value={{ currentFolderHandle, onFileClick, showFolderView, setIsLoading }}
+                    >
+                        <DragContext.Provider value={{ setEntryOnDrag, handleDrop }}>
+                            <List>
+                                {content
+                                    .sort((a, b) => {
+                                        if (a.isParent && !b.isParent) {
+                                            return -1;
+                                        }
+                                        if (!a.isParent && b.isParent) {
+                                            return 1;
+                                        }
+                                        if (isFolder(a) && !isFolder(b)) {
+                                            return -1;
+                                        }
+                                        if (!isFolder(a) && isFolder(b)) {
+                                            return 1;
+                                        }
+                                        if (a.name < b.name) {
+                                            return -1;
+                                        }
+                                        if (a.name > b.name) {
+                                            return 1;
+                                        }
+                                        return 0;
+                                    })
+                                    .filter((entry) => {
+                                        return !entry.name.startsWith(".");
+                                    })
+                                    .map((entry) => (
+                                        <ContentEntry
+                                            entryHandle={entry}
+                                            key={"file_system_content_key_" + entry.name}
+                                        />
+                                    ))}
+                            </List>
+                        </DragContext.Provider>
+                    </CurFolderContext.Provider>
+                </div>
+                <div
+                    style={{
+                        flexGrow: 0,
+                    }}
+                >
+                    <Divider />
+                </div>
+                <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
+                    <CircularProgress color="inherit" />
+                </Backdrop>
             </div>
-            <div
-                style={{
-                    flexGrow: 0,
-                }}
-            >
-                <Divider />
-            </div>
-            <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
-                <CircularProgress color="inherit" />
-            </Backdrop>
-        </div>
+        </Tabtemplate>
     );
 }

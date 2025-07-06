@@ -6,10 +6,7 @@ import AppContext from "../AppContext";
 import * as constants from "../constants";
 // ---- Display ----
 // MUI
-import Typography from "@mui/material/Typography";
-import Tooltip from "@mui/material/Tooltip";
-import Button from "@mui/material/Button";
-import Toolbar from "@mui/material/Toolbar";
+import { Box, Button } from "@mui/material";
 // for scroll to the button
 import ScrollableFeed from "react-scrollable-feed"; // https://stackoverflow.com/a/52673227/7037749
 // ACE
@@ -17,14 +14,14 @@ import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import "ace-builds/src-min-noconflict/ext-searchbox";
-// toolbar
-import Menu from "../utilComponents/Menu";
 // ---- util ----
 // download log
 import { downloadAsFile } from "../utilComponents/react-local-file-system";
 // textProcessor
 import { textProcessor } from "../hooks/useSerial";
 const { matchesInBetween, removeInBetween } = textProcessor;
+// teb template
+import TabTemplate from "../utilComponents/TabTemplate";
 
 const RawSerialRead = () => {
     const { appConfig, serialOutput } = useContext(AppContext);
@@ -236,113 +233,99 @@ const RawConsole = () => {
         setCodeHistIndex(-1);
         setText("");
     }
-    const hiddenMenuLabelOptions = [
+
+    const menuStructure = [
         {
-            text: "Clear",
-            handler: () => {
-                console.log("Clear");
-                clearSerialOutput();
-            },
+            text: "Ctrl-C",
+            handler: sendCtrlC,
+            tooltip: "Send Ctrl-C to the microcontroller",
         },
         {
-            text: "Download Log",
-            handler: () => {
-                console.log("Download Log");
-                downloadAsFile("serial log.txt", fullSerialHistory + serialOutput);
-            },
+            text: "Ctrl-D",
+            handler: sendCtrlD,
+            tooltip: "Send Ctrl-D to the microcontroller",
+        },
+        {
+            label: "≡",
+            options: [
+                {
+                    text: "Connect to Serial Port",
+                    handler: connectToSerialPort,
+                },
+                {
+                    text: "Clear",
+                    handler: () => {
+                        console.log("Clear");
+                        clearSerialOutput();
+                    },
+                },
+                {
+                    text: "Download Log",
+                    handler: () => {
+                        console.log("Download Log");
+                        downloadAsFile("serial log.txt", fullSerialHistory + serialOutput);
+                    },
+                },
+            ],
         },
     ];
 
-    return serialReady ? (
-        <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    borderBottom: "2px solid rgb(239,239,239)",
-                    width: "100%",
-                }}
-            >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "left",
-                        flex: 1,
-                    }}
-                >
-                    <Typography component="p" sx={{ marginLeft: "10pt" }}>
-                        {serialTitle}
-                    </Typography>
-                </div>
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "left",
-                    }}
-                >
-                    <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
-                        <Tooltip title="Send Ctrl-C to the microcontroller" followCursor={true}>
-                            <Button onClick={sendCtrlC}>Ctrl-C</Button>
-                        </Tooltip>
-                        <Tooltip title="Send Ctrl-D to the microcontroller" followCursor={true}>
-                            <Button onClick={sendCtrlD}>Ctrl-D</Button>
-                        </Tooltip>
-                        <Menu label="⋮" options={hiddenMenuLabelOptions} />
-                    </Toolbar>
-                </div>
-            </div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-                {/* Ensures B is scrollable if content overflows */}
-                <ScrollableFeed
-                    style={{
-                        flexShrink: 0,
-                        display: "flex",
-                    }}
-                >
-                    <RawSerialRead />
-                </ScrollableFeed>
-            </div>
-            <div
-                style={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    borderTop: "2px solid rgb(239,239,239)",
-                }}
-            >
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "left",
-                        flex: 1,
-                    }}
-                >
-                    <RawSerialWrite
-                        text={text}
-                        setText={setText}
-                        consoleSendCommand={consoleSendCommand}
-                        codeHistIndex={codeHistIndex}
-                        setCodeHistIndex={setCodeHistIndex}
-                        sendCtrlC={sendCtrlC}
-                        sendCtrlD={sendCtrlD}
-                        codeHistory={codeHistory}
-                    />
-                </div>
-                <div
-                    style={{
-                        display: "flex",
-                        alignItems: "end",
-                        justifyContent: "right",
-                    }}
-                >
-                    <Button onClick={consoleSendCommand}>Send</Button>
-                </div>
-            </div>
-        </div>
-    ) : (
-        <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
+    return (
+        <TabTemplate title={serialReady ? serialTitle : "Not Connected"} menuStructure={menuStructure}>
+            {serialReady ? (
+                <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
+                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
+                        {/* Ensures B is scrollable if content overflows */}
+                        <ScrollableFeed
+                            sx={{
+                                flexShrink: 0,
+                                display: "flex",
+                            }}
+                        >
+                            <RawSerialRead />
+                        </ScrollableFeed>
+                    </Box>
+                    <Box
+                        sx={{
+                            display: "flex",
+                            justifyContent: "space-between",
+                            borderTop: "2px solid rgb(239,239,239)",
+                        }}
+                    >
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "left",
+                                flex: 1,
+                            }}
+                        >
+                            <RawSerialWrite
+                                text={text}
+                                setText={setText}
+                                consoleSendCommand={consoleSendCommand}
+                                codeHistIndex={codeHistIndex}
+                                setCodeHistIndex={setCodeHistIndex}
+                                sendCtrlC={sendCtrlC}
+                                sendCtrlD={sendCtrlD}
+                                codeHistory={codeHistory}
+                            />
+                        </Box>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "end",
+                                justifyContent: "right",
+                            }}
+                        >
+                            <Button onClick={consoleSendCommand}>Send</Button>
+                        </Box>
+                    </Box>
+                </Box>
+            ) : (
+                <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
+            )}
+        </TabTemplate>
     );
 };
 

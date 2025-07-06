@@ -249,6 +249,7 @@ export default function IdeEditor({ node }) {
             handler: () => {
                 saveFile(text);
             },
+            tooltip: "Save and Run",
         },
         {
             label: "≡",
@@ -273,55 +274,6 @@ export default function IdeEditor({ node }) {
 
     return (
         <PopUp popped={popped} setPopped={setPopped} title={fileHandle.name} parentStyle={{ height: height + "px" }}>
-            {/* <div style={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
-                <div
-                    style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        borderBottom: "2px solid rgb(239,239,239)",
-                        width: "100%",
-                    }}
-                >
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "left",
-                            flex: 1,
-                        }}
-                    >
-                        <Typography component="p" sx={{ marginLeft: "10pt" }}>
-                            Editor: {fileHandle.fullPath}
-                            {fileExists ? "" : " (deleted)"}
-                            {fileEdited ? " (unsaved changes)" : ""}
-                        </Typography>
-                    </div>
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "left",
-                        }}
-                    >
-                        <Toolbar variant="dense" disableGutters={true} sx={{ minHeight: "35px", maxHeight: "35px" }}>
-                            <Tooltip title="Save and Run" followCursor={true}>
-                                <Button
-                                    onClick={() => {
-                                        saveFile(text);
-                                    }}
-                                >
-                                    Save
-                                </Button>
-                            </Tooltip>
-                            <Menu label="≡" options={hiddenMenuLabelOptions} />
-                        </Toolbar>
-                    </div>
-                </div>
-                <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-
-                </div>
-            </div> 
-            */}
             <TabTemplate title={title} menuStructure={menuStructure}>
                 <AceEditor
                     ref={aceEditorRef}

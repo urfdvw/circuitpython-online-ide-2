@@ -14,6 +14,10 @@ export default function IdeFolderView({ node }) {
             label: "≡",
             options: [
                 {
+                    text: "Open CircuitPy Drive",
+                    handler: openDirectory,
+                },
+                {
                     text: "Help",
                     handler: () => {
                         console.log("Folder View -> Help");

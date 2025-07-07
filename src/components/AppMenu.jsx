@@ -1,12 +1,12 @@
 import MenuBar from "../utilComponents/MenuBar";
 import { grey, deepPurple } from "@mui/material/colors";
 import CornerIcons from "./CornerIcons";
-import { openTab } from "../layout/layoutUtils";
+import { openTab, selectTabById } from "../layout/layoutUtils";
 import AppContext from "../AppContext";
 import React, { useContext } from "react";
 
 export default function AppMenu() {
-    const { flexModel } = useContext(AppContext);
+    const { flexModel, helpTabSelection, openDirectory, connectToSerialPort } = useContext(AppContext);
     const DARK_PURPLE = deepPurple[500];
     const DARK_GREY = grey[900];
 
@@ -19,7 +19,8 @@ export default function AppMenu() {
                     text: "About",
                     handler: () => {
                         console.log("clicked on menu item `About`");
-                        // openTab("About", "about");
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("about");
                     },
                 },
                 {
@@ -56,21 +57,14 @@ export default function AppMenu() {
                     text: "CircuitPy Drive",
                     handler: () => {
                         console.log("clicked on menu item `CircuitPy Drive`");
-                        // openDirectory();
+                        openDirectory();
                     },
                 },
                 {
                     text: "Serial Port",
                     handler: () => {
                         console.log("clicked on menu item `Serial`");
-                        // connectToSerialPort();
-                    },
-                },
-                {
-                    text: "Backup Folder",
-                    handler: () => {
-                        console.log("clicked on menu item `Backup Folder`");
-                        // openBackupDirectory();
+                        connectToSerialPort();
                     },
                 },
             ],
@@ -79,13 +73,6 @@ export default function AppMenu() {
             label: "Tools",
             color: DARK_GREY,
             options: [
-                {
-                    text: "Navigation",
-                    handler: () => {
-                        console.log("clicked on menu item `Navigation`");
-                        // openTab("Navigation", "navigation");
-                    },
-                },
                 {
                     text: "Plot",
                     handler: () => {
@@ -105,6 +92,20 @@ export default function AppMenu() {
                     handler: () => {
                         console.log("clicked on menu item `Camera`");
                         openTab(flexModel, "Camera", "doc_cam");
+                    },
+                },
+                {
+                    text: "Widgets",
+                    handler: () => {
+                        console.log("clicked on menu item `Widgets`");
+                        //   openTab("Widgets", "widgets");
+                    },
+                },
+                {
+                    text: "Navigation",
+                    handler: () => {
+                        console.log("clicked on menu item `Navigation`");
+                        openTab(flexModel, "Navigation", "navigation");
                     },
                 },
                 // showDevFeatures

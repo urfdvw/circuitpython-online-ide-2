@@ -10,7 +10,7 @@ import "flexlayout-react/style/light.css";
 // menu bar
 import AppMenu from "./components/AppMenu";
 // config
-import { useConfig } from "react-user-config";
+import { useConfig } from "./utilComponents/react-user-config";
 import schemas from "./configs";
 // help
 import { useTabValueName } from "./utilComponents/TabedPages";

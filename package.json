@@ -30,7 +30,13 @@
     "react-user-config": "^0.0.4",
     "react-webcam": "^7.2.0",
     "react-zoom-pan-pinch": "^3.7.0",
-    "remark-gfm": "^4.0.0"
+    "remark-gfm": "^4.0.0",
+    "@rjsf/core": "^5.12.1",
+    "@rjsf/mui": "^5.12.1",
+    "@rjsf/utils": "^5.12.1",
+    "@rjsf/validator-ajv8": "^5.12.1",
+    "json-schema-defaults": "^0.4.0",
+    "tslib": "^2.6.2"
   },
   "devDependencies": {
     "@babel/core": "^7.26.7",

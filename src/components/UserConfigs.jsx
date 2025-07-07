@@ -1,5 +1,5 @@
 import { useContext } from "react";
-import { ConfigForms } from "react-user-config";
+import { ConfigForms } from "../utilComponents/react-user-config";
 import AppContext from "../AppContext";
 import schemas from "../configs";
 

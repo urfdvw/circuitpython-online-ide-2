@@ -270,62 +270,60 @@ const RawConsole = () => {
         },
     ];
 
-    return (
+    return serialReady ? (
         <TabTemplate title={serialReady ? serialTitle : "Not Connected"} menuStructure={menuStructure}>
-            {serialReady ? (
-                <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
-                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-                        {/* Ensures B is scrollable if content overflows */}
-                        <ScrollableFeed
-                            sx={{
-                                flexShrink: 0,
-                                display: "flex",
-                            }}
-                        >
-                            <RawSerialRead />
-                        </ScrollableFeed>
+            <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
+                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
+                    {/* Ensures B is scrollable if content overflows */}
+                    <ScrollableFeed
+                        sx={{
+                            flexShrink: 0,
+                            display: "flex",
+                        }}
+                    >
+                        <RawSerialRead />
+                    </ScrollableFeed>
+                </Box>
+                <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        borderTop: "2px solid rgb(239,239,239)",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "left",
+                            flex: 1,
+                        }}
+                    >
+                        <RawSerialWrite
+                            text={text}
+                            setText={setText}
+                            consoleSendCommand={consoleSendCommand}
+                            codeHistIndex={codeHistIndex}
+                            setCodeHistIndex={setCodeHistIndex}
+                            sendCtrlC={sendCtrlC}
+                            sendCtrlD={sendCtrlD}
+                            codeHistory={codeHistory}
+                        />
                     </Box>
                     <Box
                         sx={{
                             display: "flex",
-                            justifyContent: "space-between",
-                            borderTop: "2px solid rgb(239,239,239)",
+                            alignItems: "end",
+                            justifyContent: "right",
                         }}
                     >
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "left",
-                                flex: 1,
-                            }}
-                        >
-                            <RawSerialWrite
-                                text={text}
-                                setText={setText}
-                                consoleSendCommand={consoleSendCommand}
-                                codeHistIndex={codeHistIndex}
-                                setCodeHistIndex={setCodeHistIndex}
-                                sendCtrlC={sendCtrlC}
-                                sendCtrlD={sendCtrlD}
-                                codeHistory={codeHistory}
-                            />
-                        </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "end",
-                                justifyContent: "right",
-                            }}
-                        >
-                            <Button onClick={consoleSendCommand}>Send</Button>
-                        </Box>
+                        <Button onClick={consoleSendCommand}>Send</Button>
                     </Box>
                 </Box>
-            ) : (
-                <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
-            )}
+            </Box>
         </TabTemplate>
+    ) : (
+        <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
     );
 };
 

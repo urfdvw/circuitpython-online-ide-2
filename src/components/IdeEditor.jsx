@@ -42,7 +42,7 @@ function generateRandomNumber(a) {
 }
 
 export default function IdeEditor({ node }) {
-    const { appConfig, fileLookUp, helpTabSelection, flexModel, sendCtrlC, sendCtrlD, sendCode } =
+    const { appConfig, fileLookUp, helpTabSelection, configTabSelection, flexModel, sendCtrlC, sendCtrlD, sendCode } =
         useContext(AppContext);
     const config = appConfig.config;
     const fileHandle = fileLookUp[node.getConfig().fileKey];
@@ -266,6 +266,14 @@ export default function IdeEditor({ node }) {
                         console.log("Editor -> Help");
                         selectTabById(flexModel, "help_tab");
                         helpTabSelection.setTabName("editor");
+                    },
+                },
+                {
+                    text: "Settings",
+                    handler: () => {
+                        console.log("Editor -> Settings");
+                        selectTabById(flexModel, "settings_tab");
+                        configTabSelection.setTabName("editor");
                     },
                 },
             ],

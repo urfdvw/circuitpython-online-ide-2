@@ -4,6 +4,14 @@ import AppContext from "../AppContext";
 import schemas from "../configs";
 
 export default function UserConfigs() {
-    const { appConfig } = useContext(AppContext);
-    return <ConfigForms schemas={schemas} config={appConfig.config} setConfig={appConfig.setConfig} />;
+    const { appConfig, configTabSelection } = useContext(AppContext);
+    return (
+        <ConfigForms
+            schemas={schemas}
+            config={appConfig.config}
+            setConfig={appConfig.setConfig}
+            tabValue={configTabSelection.tabValue}
+            setTabValue={configTabSelection.setTabValue}
+        />
+    );
 }

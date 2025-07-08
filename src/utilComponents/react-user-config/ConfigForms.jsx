@@ -37,8 +37,7 @@ function SchemaForm({ initFormData, schema, onSubmit }) {
     );
 }
 
-export default function ConfigForms({ schemas, config, setConfig }) {
-    const [tabValue, setTabValue] = React.useState(0);
+export default function ConfigForms({ schemas, config, setConfig, tabValue, setTabValue }) {
     return (
         <TabedPages
             tabValue={tabValue}

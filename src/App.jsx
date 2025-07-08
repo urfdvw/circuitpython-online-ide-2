@@ -36,6 +36,7 @@ function App() {
     // layout
     const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
     // config
+    const configTabSelection = useTabValueName(schemas);
     const appConfig = useConfig(schemas);
     useEffect(() => {
         console.log("config", appConfig);
@@ -103,7 +104,9 @@ function App() {
                 setTestCount,
                 // IDE general
                 flexModel,
+                // config
                 appConfig,
+                configTabSelection,
                 // help
                 helpTabSelection,
                 // folder

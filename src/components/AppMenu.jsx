@@ -119,6 +119,15 @@ export default function AppMenu() {
                 //     : undefined,
             ].filter((x) => x), // remove undefined
         },
+        {
+            text: "Help",
+            color: DARK_GREY,
+            handler: () => {
+                console.log("clicked on menu item `Help`");
+                selectTabById(flexModel, "help_tab");
+                helpTabSelection.setTabName("quick_start");
+            },
+        },
     ].filter((x) => x); // remove undefined;
     return <MenuBar menuStructure={menuStructure} additionalElement={<CornerIcons />} />;
 }

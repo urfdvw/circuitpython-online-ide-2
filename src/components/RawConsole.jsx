@@ -22,6 +22,8 @@ import { textProcessor } from "../hooks/useSerial";
 const { matchesInBetween, removeInBetween } = textProcessor;
 // teb template
 import TabTemplate from "../utilComponents/TabTemplate";
+//
+import { selectTabById } from "../layout/layoutUtils";
 
 const RawSerialRead = () => {
     const { appConfig, serialOutput } = useContext(AppContext);
@@ -216,6 +218,9 @@ const RawConsole = () => {
         sendCtrlD,
         sendCode,
         codeHistory,
+        configTabSelection,
+        helpTabSelection,
+        flexModel,
     } = useContext(AppContext);
     const [serialTitle, setSerialTitle] = useState("");
     const [text, setText] = useState("");
@@ -264,6 +269,22 @@ const RawConsole = () => {
                     handler: () => {
                         console.log("Download Log");
                         downloadAsFile("serial log.txt", fullSerialHistory + serialOutput);
+                    },
+                },
+                {
+                    text: "Settings",
+                    handler: () => {
+                        console.log("Editor -> Settings");
+                        selectTabById(flexModel, "settings_tab");
+                        configTabSelection.setTabName("serial_console");
+                    },
+                },
+                {
+                    text: "Help",
+                    handler: () => {
+                        console.log("Editor -> Help");
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("serial_console");
                     },
                 },
             ],

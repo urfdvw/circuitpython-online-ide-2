@@ -3,7 +3,8 @@ import AppContext from "../AppContext";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { Typography, Box, Button } from "@mui/material";
 
-import { backupFolder } from "../utilComponents/react-local-file-system";
+
+import { backupFolder, compareFolders } from "../utilComponents/react-local-file-system";
 
 export default function Backup() {
     const {
@@ -22,6 +23,15 @@ export default function Backup() {
             setLastBackupTime(null);
         }
     }, [backupFolderDirectoryReady]);
+
+    useEffect(() => {
+        if (!(backupDirHandle && rootDirHandle)) {
+            return;
+        }
+        const diff = compareFolders(
+            rootDirHandle, backupDirHandle)
+        console.log('---------------', diff)
+    }, rootDirHandle, backupDirHandle)
 
     const backup = useCallback(async () => {
         if (await backupDirHandle.isSameEntry(rootDirHandle)) {

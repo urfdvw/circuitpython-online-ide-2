@@ -180,6 +180,58 @@ export async function checkEntryExists(parentHandle, entryName) {
     return (await checkFileExists(parentHandle, entryName)) || (await checkFolderExists(parentHandle, entryName));
 }
 
+export async function compareFolders(sourceFolderHandle, targetFolderHandle, skipHidden = true) {
+    const output = {
+        newFiles: [],
+        removedFiles: [],
+        editedFiles: [],
+    };
+
+    async function walkFolder(folderHandle, basePath = "") {
+        const files = {};
+        for await (const entry of await getFolderContent(folderHandle)) {
+            if (skipHidden && entry.name.startsWith(".")) continue;
+            const fullPath = basePath + "/" + entry.name;
+            if (isFolder(entry)) {
+                const subFiles = await walkFolder(entry, fullPath);
+                Object.assign(files, subFiles);
+            } else {
+                try {
+                    const content = await getFileText(entry);
+                    files[fullPath] = content;
+                } catch {
+                    // skip unreadable files
+                }
+            }
+        }
+        return files;
+    }
+
+    const sourceFiles = await walkFolder(sourceFolderHandle);
+    const targetFiles = await walkFolder(targetFolderHandle);
+
+    const allPaths = new Set([...Object.keys(sourceFiles), ...Object.keys(targetFiles)]);
+
+    for (const path of allPaths) {
+        const sourceText = sourceFiles[path];
+        const targetText = targetFiles[path];
+
+        if (sourceText === undefined) {
+            output.newFiles.push({ path, text: targetText });
+        } else if (targetText === undefined) {
+            output.removedFiles.push({ path, text: sourceText });
+        } else if (sourceText !== targetText) {
+            output.editedFiles.push({
+                path,
+                sourceFileText: sourceText,
+                targetFileText: targetText,
+            });
+        }
+    }
+
+    return output;
+}
+
 // Create -------------------------------------
 
 export async function addNewFolder(parentHandle, newFolderName) {

@@ -3,8 +3,8 @@ import { promises as fs } from "fs";
 import path from "path";
 
 // Define the path for the markdown file you want to read
-const HomePath = path.join(process.cwd(), "./src/docs", "home.md");
-const AboutPath = path.join(process.cwd(), "./src/docs", "about.md");
+const HomePath = path.join(process.cwd(), "./src/docs", "Home.md");
+const AboutPath = path.join(process.cwd(), "./src/docs", "About.md");
 
 // Define the path for the markdown file you want to generate
 const outputMarkdownPath = path.join(process.cwd(), ".", "README.md");

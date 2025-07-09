@@ -62,8 +62,14 @@ function App() {
         rootDirHandle,
     } = useFileSystem();
     const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
+    // backup folder
+    const {
+        openDirectory: openBackupDirectory,
+        directoryReady: backupFolderDirectoryReady,
+        statusText: backupFolderStatusText,
+        rootDirHandle: backupDirHandle,
+    } = useFileSystem();
     // serial
-
     const {
         connectToSerialPort,
         sendDataToSerialPort,
@@ -116,6 +122,11 @@ function App() {
                 rootFolderStatusText,
                 onFileClick,
                 fileLookUp,
+                // backup folder
+                openBackupDirectory,
+                backupFolderDirectoryReady,
+                backupFolderStatusText,
+                backupDirHandle,
                 // serial
                 connectToSerialPort,
                 sendDataToSerialPort,

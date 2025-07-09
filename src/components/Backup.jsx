@@ -1,9 +1,13 @@
 import TabTemplate from "../utilComponents/TabTemplate";
 import AppContext from "../AppContext";
-import { useContext } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
+import { Typography, Box, Button } from "@mui/material";
+
+import { backupFolder } from "../utilComponents/react-local-file-system";
 
 export default function Backup() {
     const {
+        appConfig,
         openBackupDirectory,
         backupFolderDirectoryReady,
         backupFolderStatusText,
@@ -12,6 +16,30 @@ export default function Backup() {
         rootFolderDirectoryReady,
         rootDirHandle,
     } = useContext(AppContext);
+    const [lastBackupTime, setLastBackupTime] = useState(null);
+    useEffect(() => {
+        if (!backupFolderDirectoryReady) {
+            setLastBackupTime(null);
+        }
+    }, [backupFolderDirectoryReady]);
+
+    const backup = useCallback(async () => {
+        if (await backupDirHandle.isSameEntry(rootDirHandle)) {
+            console.log(backupDirHandle.name);
+            console.log(rootDirHandle.name);
+            console.error("Cannot backup to the folder itself.");
+            confirm("Cannot backup to the folder itself.");
+            return;
+        }
+        if (!(backupDirHandle && rootDirHandle)) {
+            return;
+        }
+        await backupFolder(rootDirHandle, backupDirHandle, appConfig.ready && appConfig.config.backup.clean);
+        const now = new Date().toLocaleTimeString();
+        setLastBackupTime(now);
+        console.log("Last backup at: " + now);
+    }, [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean]);
+
     const menuStructure = [
         {
             label: "Open",
@@ -26,6 +54,30 @@ export default function Backup() {
                 },
             ],
         },
+        {
+            text: "Backup",
+            handler: backup,
+        },
     ].filter((x) => x);
-    return <TabTemplate title="Backup" menuStructure={menuStructure}></TabTemplate>;
+    return (
+        <TabTemplate title="Backup" menuStructure={menuStructure}>
+            <Box sx={{ width: "100%", height: "100%", padding: "10px" }}>
+                <Typography gutterBottom>
+                    Source Folder:{" "}
+                    <Button onClick={openDirectory}>
+                        {rootFolderDirectoryReady ? rootDirHandle.name : "Open Source Folder"}
+                    </Button>
+                    {rootFolderDirectoryReady ? "✅" : ""}
+                </Typography>
+                <Typography gutterBottom>
+                    Target Folder:{" "}
+                    <Button onClick={openBackupDirectory}>
+                        {backupFolderDirectoryReady ? backupDirHandle.name : "Open Target Folder"}
+                    </Button>
+                    {backupFolderDirectoryReady ? "✅" : ""}
+                </Typography>
+                <Typography gutterBottom>Last Backup : {lastBackupTime ? lastBackupTime : "No backup yet"}</Typography>
+            </Box>
+        </TabTemplate>
+    );
 }

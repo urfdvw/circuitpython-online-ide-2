@@ -6,6 +6,7 @@ import IdeEditor from "../components/IdeEditor";
 import Navigation from "../components/Navigation";
 import RawConsole from "../components/RawConsole";
 import DocCam from "../components/DocCam";
+import Backup from "../components/Backup";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -57,6 +58,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <DocCam />
+            </div>
+        );
+    } else if (component === "backup") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <Backup />
             </div>
         );
     }

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import Tabtemplate from "../../Tabtemplate";
+import TabTemplate from "../../TabTemplate";
 
 import {
     Backdrop,
@@ -163,7 +163,7 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement 
     ];
 
     return (
-        <Tabtemplate title="Folder View" menuStructure={menuStructure}>
+        <TabTemplate title="Folder View" menuStructure={menuStructure}>
             <div
                 style={{
                     height: "100%",
@@ -249,6 +249,6 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement 
                     <CircularProgress color="inherit" />
                 </Backdrop>
             </div>
-        </Tabtemplate>
+        </TabTemplate>
     );
 }

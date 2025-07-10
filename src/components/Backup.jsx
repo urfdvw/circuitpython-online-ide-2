@@ -95,45 +95,59 @@ export default function Backup() {
                     {backupFolderDirectoryReady ? "✅" : ""}
                 </Typography>
                 <Typography gutterBottom>Last Backup : {lastBackupTime ? lastBackupTime : "No backup yet"}</Typography>
-                <hr></hr>
-                <Typography variant="h6">New Files</Typography>
-                {codeDiff ? [
-                    codeDiff.newFiles.map(file => <Box>
-                        <Typography>
-                            {file.path}
-                            <TextDiffViewer
-                                oldText=''
-                                newText={file.text}
-                            />
-                        </Typography>
-                    </Box>)
-                ] : null}
-                <hr></hr>
-                <Typography variant="h6">Removed Files</Typography>
-                {codeDiff ? [
-                    codeDiff.removedFiles.map(file => <Box>
-                        <Typography>
-                            {file.path}
-                            <TextDiffViewer
-                                oldText={file.text}
-                                newText=''
-                            />
-                        </Typography>
-                    </Box>)
-                ] : null}
-                <hr></hr>
-                <Typography variant="h6">Edited Files</Typography>
-                {codeDiff ? [
-                    codeDiff.editedFiles.map(file => <Box>
-                        <Typography>
-                            {file.path}
-                            <TextDiffViewer
-                                oldText={file.sourceFileText}
-                                newText={file.targetFileText}
-                            />
-                        </Typography>
-                    </Box>)
-                ] : null}
+                {
+                    codeDiff ? <>
+                        {codeDiff.newFiles ? <>
+                            <hr></hr>
+                            <Typography variant="h6">New Files</Typography>
+                            {[
+                                codeDiff.newFiles.map(file => <Box>
+                                    <Typography>
+                                        {file.path}
+                                        <TextDiffViewer
+                                            oldText=''
+                                            newText={file.text}
+                                        />
+                                    </Typography>
+                                </Box>)
+                            ]}
+                        </> : null
+                        }
+                        {codeDiff.removedFiles ? <>
+                            <hr></hr>
+                            <Typography variant="h6">Removed Files</Typography>
+                            {[
+                                codeDiff.removedFiles.map(file => <Box>
+                                    <Typography>
+                                        {file.path}
+                                        <TextDiffViewer
+                                            oldText={file.text}
+                                            newText=''
+                                        />
+                                    </Typography>
+                                </Box>)
+                            ]}
+                        </> : null
+                        }
+                        {
+                            codeDiff.editedFiles ? <>
+                                <hr></hr>
+                                <Typography variant="h6">Edited Files</Typography>
+                                {[
+                                    codeDiff.editedFiles.map(file => <Box>
+                                        <Typography>
+                                            {file.path}
+                                            <TextDiffViewer
+                                                oldText={file.sourceFileText}
+                                                newText={file.targetFileText}
+                                            />
+                                        </Typography>
+                                    </Box>)
+                                ]}
+                            </> : null
+                        }
+                    </> : null
+                }
             </Box>
         </TabTemplate>
     );

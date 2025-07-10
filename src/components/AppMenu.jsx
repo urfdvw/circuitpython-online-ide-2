@@ -83,8 +83,8 @@ export default function AppMenu() {
                 {
                     text: "Backup",
                     handler: () => {
-                        console.log("clicked on menu item `BackupD`");
-                        // openTab("Backup", "backup_drive");
+                        console.log("clicked on menu item `Backup`");
+                        openTab(flexModel, "Backup", "backup");
                     },
                 },
                 {

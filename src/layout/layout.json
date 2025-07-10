@@ -68,12 +68,6 @@
                         "name": "Navigation",
                         "component": "navigation",
                         "enableClose": true
-                    },
-                    {
-                        "type": "tab",
-                        "name": "Backup",
-                        "component": "backup",
-                        "enableClose": true
                     }
                 ]
             },

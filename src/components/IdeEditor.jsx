@@ -10,9 +10,6 @@ import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-tomorrow";
-// MUI
-import Tooltip from "@mui/material/Tooltip";
-import Typography from "@mui/material/Typography";
 // Layout
 import PopUp from "../utilComponents/PopUp";
 import { selectTabById } from "../layout/layoutUtils";
@@ -24,10 +21,6 @@ import AppContext from "../AppContext";
 import { FILE_EDITED } from "../constants";
 // Flex layout
 import * as FlexLayout from "flexlayout-react";
-// toolbar
-import Toolbar from "@mui/material/Toolbar";
-import Menu from "../utilComponents/Menu";
-import Button from "@mui/material/Button";
 // tab
 import TabTemplate from "../utilComponents/TabTemplate";
 

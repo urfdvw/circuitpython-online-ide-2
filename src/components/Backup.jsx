@@ -3,12 +3,14 @@ import AppContext from "../AppContext";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { Typography, Box, Button } from "@mui/material";
 import TextDiffViewer from "../utilComponents/TextDiffViewer"
+import { selectTabById } from "../layout/layoutUtils";
 
 
 import { backupFolder, compareFolders } from "../utilComponents/react-local-file-system";
 
 export default function Backup() {
     const {
+        flexModel,
         appConfig,
         openBackupDirectory,
         backupFolderDirectoryReady,
@@ -17,6 +19,8 @@ export default function Backup() {
         openDirectory,
         rootFolderDirectoryReady,
         rootDirHandle,
+        helpTabSelection, 
+        configTabSelection,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
     const [codeDiff, setCodeDiff] = useState(null);
@@ -75,6 +79,27 @@ export default function Backup() {
             text: codeDiff ? "Refresh Diff" : "View Diff",
             handler: refresh,
         },
+        {
+            label: "≡",
+            options: [
+                {
+                    text: "Settings",
+                    handler: () => {
+                        console.log("Editor -> Settings");
+                        selectTabById(flexModel, "settings_tab");
+                        configTabSelection.setTabName("backup");
+                    },
+                },
+                {
+                    text: "Help",
+                    handler: () => {
+                        console.log("Editor -> Help");
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("backup");
+                    },
+                },
+            ],
+        }
     ].filter((x) => x);
 
     return (

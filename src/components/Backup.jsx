@@ -2,6 +2,7 @@ import TabTemplate from "../utilComponents/TabTemplate";
 import AppContext from "../AppContext";
 import { useContext, useEffect, useState, useCallback } from "react";
 import { Typography, Box, Button } from "@mui/material";
+import TextDiffViewer from "../utilComponents/TextDiffViewer"
 
 
 import { backupFolder, compareFolders } from "../utilComponents/react-local-file-system";
@@ -18,20 +19,22 @@ export default function Backup() {
         rootDirHandle,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
+    const [codeDiff, setCodeDiff] = useState(null);
     useEffect(() => {
         if (!backupFolderDirectoryReady) {
             setLastBackupTime(null);
         }
     }, [backupFolderDirectoryReady]);
 
-    useEffect(() => {
+    const refresh = useCallback(async () => {
+
         if (!(backupDirHandle && rootDirHandle)) {
             return;
         }
-        const diff = compareFolders(
+        const diff = await compareFolders(
             rootDirHandle, backupDirHandle)
-        console.log('---------------', diff)
-    }, rootDirHandle, backupDirHandle)
+        setCodeDiff(diff)
+    })
 
     const backup = useCallback(async () => {
         if (await backupDirHandle.isSameEntry(rootDirHandle)) {
@@ -68,10 +71,15 @@ export default function Backup() {
             text: "Backup",
             handler: backup,
         },
+        {
+            text: codeDiff ? "Refresh Diff" : "View Diff",
+            handler: refresh,
+        },
     ].filter((x) => x);
+
     return (
         <TabTemplate title="Backup" menuStructure={menuStructure}>
-            <Box sx={{ width: "100%", height: "100%", padding: "10px" }}>
+            <Box sx={{ width: "100%", height: "100%", padding: "0px", margin: "0px" }}>
                 <Typography gutterBottom>
                     Source Folder:{" "}
                     <Button onClick={openDirectory}>
@@ -87,6 +95,45 @@ export default function Backup() {
                     {backupFolderDirectoryReady ? "✅" : ""}
                 </Typography>
                 <Typography gutterBottom>Last Backup : {lastBackupTime ? lastBackupTime : "No backup yet"}</Typography>
+                <hr></hr>
+                <Typography variant="h6">New Files</Typography>
+                {codeDiff ? [
+                    codeDiff.newFiles.map(file => <Box>
+                        <Typography>
+                            {file.path}
+                            <TextDiffViewer
+                                oldText=''
+                                newText={file.text}
+                            />
+                        </Typography>
+                    </Box>)
+                ] : null}
+                <hr></hr>
+                <Typography variant="h6">Removed Files</Typography>
+                {codeDiff ? [
+                    codeDiff.removedFiles.map(file => <Box>
+                        <Typography>
+                            {file.path}
+                            <TextDiffViewer
+                                oldText={file.text}
+                                newText=''
+                            />
+                        </Typography>
+                    </Box>)
+                ] : null}
+                <hr></hr>
+                <Typography variant="h6">Edited Files</Typography>
+                {codeDiff ? [
+                    codeDiff.editedFiles.map(file => <Box>
+                        <Typography>
+                            {file.path}
+                            <TextDiffViewer
+                                oldText={file.sourceFileText}
+                                newText={file.targetFileText}
+                            />
+                        </Typography>
+                    </Box>)
+                ] : null}
             </Box>
         </TabTemplate>
     );

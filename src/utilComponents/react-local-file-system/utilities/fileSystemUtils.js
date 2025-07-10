@@ -217,9 +217,9 @@ export async function compareFolders(sourceFolderHandle, targetFolderHandle, ski
         const targetText = targetFiles[path];
 
         if (sourceText === undefined) {
-            output.newFiles.push({ path, text: targetText });
+            output.removedFiles.push({ path, text: targetText });
         } else if (targetText === undefined) {
-            output.removedFiles.push({ path, text: sourceText });
+            output.newFiles.push({ path, text: sourceText });
         } else if (sourceText !== targetText) {
             output.editedFiles.push({
                 path,

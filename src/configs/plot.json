@@ -4,6 +4,11 @@
     "description": "Plot tab settings.",
     "type": "object",
     "properties": {
+        "show_legend":{
+            "title": "Show legend",
+            "type": "boolean",
+            "default": true
+        },
         "x_axis": {
             "title": "Use first column as x-axis",
             "description": "When selected, the first data column will be used for the x-axis. Otherwise, all columns of the data are considered parallel y-axes, and the x-axis on the figure will be the index.",

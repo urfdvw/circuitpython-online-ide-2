@@ -10,27 +10,27 @@ import * as constants from "../constants";
 
 import TabTemplate from "../utilComponents/TabTemplate";
 import { selectTabById } from "../layout/layoutUtils";
+import { Typography } from "@mui/material";
 
 function text_to_data(input) {
     return input
-        .split("\n") // split into lines
+        .split("\n")
         .map((line) => line.trim())
-        .filter((line) => /^-?\d+(\.\d+)?(\s+-?\d+(\.\d+)?)*$/.test(line)) // only lines with numbers separated by spaces
-        .map((line) => line.split(/\s+/).map(Number)); // convert to array of numbers
-}
-
-function plot_lines_find_end(lines) {
-    var start = 1; // first line is title
-    var end = lines.length - 1;
-    while (start + 1 < end) {
-        var mid = parseInt((start + end) / 2);
-        if (isNaN(parseFloat(lines[mid][0]))) {
-            end = mid;
-        } else {
-            start = mid;
-        }
-    }
-    return start;
+        .filter(
+            (line) =>
+                /^-?\d+(\.\d+)?(\s+-?\d+(\.\d+)?)*$/.test(line) || // space-separated numbers
+                /^\((-?\d+(\.\d+)?\s*,\s*)*-?\d+(\.\d+)?\)$/.test(line) // comma-separated in parentheses
+        )
+        .map((line) => {
+            if (line.startsWith("(") && line.endsWith(")")) {
+                return line
+                    .slice(1, -1) // remove parentheses
+                    .split(",")
+                    .map((s) => Number(s.trim()));
+            } else {
+                return line.split(/\s+/).map(Number);
+            }
+        });
 }
 
 function transpose(array) {
@@ -46,17 +46,25 @@ export default function RawPlotter({ node }) {
 
     var data = [];
     var xLabel = "index";
+    var showlegend = config.plot.show_legend;
 
     const output = removeInBetween(serialOutput, constants.CV_JSON_START, constants.CV_JSON_END);
 
     try {
-        var plot_raw_list = output.split("startplot:").slice(1);
-        var plot_raw_text = plot_raw_list.at(-1);
+        const last_active_block = output.split("soft reboot").at(-1);
+        // console.log("RawPlotter", "Last active block:", last_active_block);
+        const last_plot_text = last_active_block.split("startplot:").at(-1);
+        console.log("RawPlotter", "Last plot data:", last_plot_text);
 
-        var plot_labels = plot_raw_text.split("\n").at(0).trim().split(" ");
+        var plot_labels = last_plot_text.split("\n").at(0).trim().split(" ");
+        console.log("Plot labels:", plot_labels);
 
-        var plot_raw_lines = text_to_data(plot_raw_text);
-        var plot_data_lines = plot_raw_lines.slice(1, plot_lines_find_end(plot_raw_lines) + 1);
+        var plot_data_lines = text_to_data(last_plot_text);
+
+        if (plot_labels.length === 0 || plot_labels[0] === "") {
+            showlegend = false;
+        }
+        console.log("Plot labels:", plot_labels);
 
         if (config.plot.truncate) {
             plot_data_lines = plot_data_lines.slice(-config.plot.history_len);
@@ -65,7 +73,7 @@ export default function RawPlotter({ node }) {
 
         if (config.plot.x_axis & (plot_labels.length > 1)) {
             xLabel = plot_labels[0];
-            for (var i = 1; i < plot_labels.length; i++) {
+            for (var i = 1; i < plot_data.length; i++) {
                 var curve = {};
                 curve["x"] = plot_data[0];
                 curve["y"] = plot_data[i];
@@ -74,7 +82,7 @@ export default function RawPlotter({ node }) {
                 data.push(curve);
             }
         } else {
-            for (var i = 0; i < plot_labels.length; i++) {
+            for (var i = 0; i < plot_data.length; i++) {
                 var curve = {};
                 curve["x"] = i;
                 curve["y"] = plot_data[i];
@@ -84,7 +92,7 @@ export default function RawPlotter({ node }) {
             }
         }
         var layout = {
-            showlegend: true,
+            showlegend: showlegend,
             xaxis: {
                 title: xLabel,
             },
@@ -108,7 +116,6 @@ export default function RawPlotter({ node }) {
         }
     } catch (e) {
         console.error("Exception thrown", e.stack);
-        return <></>;
     }
 
     const menuStructure = [
@@ -137,7 +144,11 @@ export default function RawPlotter({ node }) {
 
     return (
         <TabTemplate title="Plot" menuStructure={menuStructure}>
-            <Plot data={data} layout={layout} />
+            {serialOutput && plot_data_lines.length > 0 ? (
+                <Plot data={data} layout={layout} />
+            ) : (
+                <Typography style={{ padding: "20px" }}>No data to plot</Typography>
+            )}
         </TabTemplate>
     );
 }

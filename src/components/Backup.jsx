@@ -19,7 +19,7 @@ export default function Backup() {
         openDirectory,
         rootFolderDirectoryReady,
         rootDirHandle,
-        helpTabSelection, 
+        helpTabSelection,
         configTabSelection,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
@@ -40,7 +40,7 @@ export default function Backup() {
         setCodeDiff(diff)
     })
 
-    const backup = useCallback(async () => {
+    const backup = useCallback(async (toPC) => {
         if (await backupDirHandle.isSameEntry(rootDirHandle)) {
             console.log(backupDirHandle.name);
             console.log(rootDirHandle.name);
@@ -51,7 +51,11 @@ export default function Backup() {
         if (!(backupDirHandle && rootDirHandle)) {
             return;
         }
-        await backupFolder(rootDirHandle, backupDirHandle, appConfig.ready && appConfig.config.backup.clean);
+        if (toPC) {
+            await backupFolder(rootDirHandle, backupDirHandle, appConfig.ready && appConfig.config.backup.clean);
+        } else {
+            await backupFolder(backupDirHandle, rootDirHandle, appConfig.ready && appConfig.config.backup.clean);
+        }
         const now = new Date().toLocaleTimeString();
         setLastBackupTime(now);
         console.log("Last backup at: " + now);
@@ -72,8 +76,34 @@ export default function Backup() {
             ],
         },
         {
-            text: "Backup",
-            handler: backup,
+            label: "Sync",
+            options: [
+
+                {
+                    text: "Backup to Computer",
+                    handler: () => {
+                        const isConfirmed = window.confirm('Backup to Computer?');
+                        if (isConfirmed) {
+                            backup(true)
+                            console.log('Action was confirmed and executed.');
+                        } else {
+                            console.log('Action was cancelled by the user.');
+                        }
+                    },
+                },
+                {
+                    text: "Recover from Computer",
+                    handler: () => {
+                        const isConfirmed = window.confirm('Recover from Computer?');
+                        if (isConfirmed) {
+                            backup(false)
+                            console.log('Action was confirmed and executed.');
+                        } else {
+                            console.log('Action was cancelled by the user.');
+                        }
+                    },
+                },
+            ]
         },
         {
             text: codeDiff ? "Refresh Diff" : "View Diff",
@@ -106,14 +136,14 @@ export default function Backup() {
         <TabTemplate title="Backup" menuStructure={menuStructure}>
             <Box sx={{ width: "100%", height: "100%", padding: "0px", margin: "0px" }}>
                 <Typography gutterBottom>
-                    Source Folder:{" "}
+                    Microcontroller Folder:{" "}
                     <Button onClick={openDirectory}>
                         {rootFolderDirectoryReady ? rootDirHandle.name : "Open Source Folder"}
                     </Button>
                     {rootFolderDirectoryReady ? "✅" : ""}
                 </Typography>
                 <Typography gutterBottom>
-                    Target Folder:{" "}
+                    Computer Folder:{" "}
                     <Button onClick={openBackupDirectory}>
                         {backupFolderDirectoryReady ? backupDirHandle.name : "Open Target Folder"}
                     </Button>
@@ -124,7 +154,7 @@ export default function Backup() {
                     codeDiff ? <>
                         {codeDiff.newFiles ? <>
                             <hr></hr>
-                            <Typography variant="h6">New Files</Typography>
+                            <Typography variant="h6">Files only on microcontroller</Typography>
                             {[
                                 codeDiff.newFiles.map(file => <Box>
                                     <Typography>
@@ -140,7 +170,7 @@ export default function Backup() {
                         }
                         {codeDiff.removedFiles ? <>
                             <hr></hr>
-                            <Typography variant="h6">Removed Files</Typography>
+                            <Typography variant="h6">Files only on compouter</Typography>
                             {[
                                 codeDiff.removedFiles.map(file => <Box>
                                     <Typography>

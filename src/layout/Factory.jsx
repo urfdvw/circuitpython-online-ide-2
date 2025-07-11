@@ -7,6 +7,7 @@ import Navigation from "../components/Navigation";
 import RawConsole from "../components/RawConsole";
 import DocCam from "../components/DocCam";
 import Backup from "../components/Backup";
+import RawPlotter from "../components/RawPlotter";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -64,6 +65,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <Backup />
+            </div>
+        );
+    } else if (component === "plot") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <RawPlotter node={node} />
             </div>
         );
     }

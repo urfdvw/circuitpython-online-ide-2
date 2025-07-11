@@ -77,7 +77,7 @@ export default function AppMenu() {
                     text: "Plot",
                     handler: () => {
                         console.log("clicked on menu item `Plot`");
-                        // openTab("Plot", "raw_plot");
+                        openTab(flexModel, "Plot", "plot");
                     },
                 },
                 {

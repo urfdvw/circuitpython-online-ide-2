@@ -8,6 +8,9 @@ import AppContext from "../AppContext";
 import { removeInBetween } from "../hooks/useSerial/textProcessor";
 import * as constants from "../constants";
 
+import TabTemplate from "../utilComponents/TabTemplate";
+import { selectTabById } from "../layout/layoutUtils";
+
 function text_to_data(text) {
     var lines = text.split("\n");
     for (var i = 0; i < lines.length; i++) {
@@ -35,7 +38,7 @@ function transpose(array) {
 }
 
 export default function RawPlotter({ node }) {
-    const { appConfig, serialOutput } = useContext(AppContext);
+    const { appConfig, flexModel, serialOutput, configTabSelection, helpTabSelection } = useContext(AppContext);
     console.log("RawPlotter serialOutput", serialOutput);
     const config = appConfig.config;
 
@@ -84,8 +87,16 @@ export default function RawPlotter({ node }) {
             xaxis: {
                 title: xLabel,
             },
-            height: height - 10,
+            height: height - 50,
             width: width - 10,
+            padding: "0px",
+
+            margin: {
+                l: 30, // left
+                r: 10, // right
+                t: 20, // top
+                b: 20, // bottom
+            },
         };
 
         if (config.plot.enable_axis_limits) {
@@ -99,6 +110,33 @@ export default function RawPlotter({ node }) {
         return <></>;
     }
 
-    console.log("plot data", data);
-    return <Plot data={data} layout={layout} />;
+    const menuStructure = [
+        {
+            label: "≡",
+            options: [
+                {
+                    text: "Settings",
+                    handler: () => {
+                        console.log("Editor -> Settings");
+                        selectTabById(flexModel, "settings_tab");
+                        configTabSelection.setTabName("plot");
+                    },
+                },
+                {
+                    text: "Help",
+                    handler: () => {
+                        console.log("Editor -> Help");
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("plot");
+                    },
+                },
+            ],
+        },
+    ];
+
+    return (
+        <TabTemplate title="Plot" menuStructure={menuStructure}>
+            <Plot data={data} layout={layout} />
+        </TabTemplate>
+    );
 }

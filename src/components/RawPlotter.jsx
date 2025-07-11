@@ -11,12 +11,12 @@ import * as constants from "../constants";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { selectTabById } from "../layout/layoutUtils";
 
-function text_to_data(text) {
-    var lines = text.split("\n");
-    for (var i = 0; i < lines.length; i++) {
-        lines[i] = lines[i].trim().split(" ");
-    }
-    return lines;
+function text_to_data(input) {
+    return input
+        .split("\n") // split into lines
+        .map((line) => line.trim())
+        .filter((line) => /^-?\d+(\.\d+)?(\s+-?\d+(\.\d+)?)*$/.test(line)) // only lines with numbers separated by spaces
+        .map((line) => line.split(/\s+/).map(Number)); // convert to array of numbers
 }
 
 function plot_lines_find_end(lines) {
@@ -39,7 +39,6 @@ function transpose(array) {
 
 export default function RawPlotter({ node }) {
     const { appConfig, flexModel, serialOutput, configTabSelection, helpTabSelection } = useContext(AppContext);
-    console.log("RawPlotter serialOutput", serialOutput);
     const config = appConfig.config;
 
     const height = node.getRect().height;
@@ -53,8 +52,10 @@ export default function RawPlotter({ node }) {
     try {
         var plot_raw_list = output.split("startplot:").slice(1);
         var plot_raw_text = plot_raw_list.at(-1);
+
+        var plot_labels = plot_raw_text.split("\n").at(0).trim().split(" ");
+
         var plot_raw_lines = text_to_data(plot_raw_text);
-        var plot_labels = plot_raw_lines[0];
         var plot_data_lines = plot_raw_lines.slice(1, plot_lines_find_end(plot_raw_lines) + 1);
 
         if (config.plot.truncate) {

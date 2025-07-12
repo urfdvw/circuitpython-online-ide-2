@@ -1,10 +1,14 @@
 import WebcamViewer from "../utilComponents/WebcamViewer";
 import TabTemplate from "../utilComponents/TabTemplate";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { NoTheme } from "react-lazy-dark-theme";
 import PopUp from "../utilComponents/PopUp";
+import { selectTabById } from "../layout/layoutUtils";
+import AppContext from "../AppContext";
 
 export default function DocCam() {
+    const { flexModel, helpTabSelection } = useContext(AppContext);
+
     const [rotation, setRotation] = useState(0);
     const [flipH, setFlipH] = useState(false);
     const [flipV, setFlipV] = useState(false);
@@ -79,6 +83,8 @@ export default function DocCam() {
                     text: "Help",
                     handler: () => {
                         console.log("clicked on menu item `Help`");
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("camera");
                     },
                 },
                 {
@@ -91,8 +97,8 @@ export default function DocCam() {
         },
     ];
     return (
-        <PopUp popped={popped} setPopped={setPopped} title="Document Camera" parentStyle={{ width: "100%" }}>
-            <TabTemplate title="Document Camera" menuStructure={menuStructure}>
+        <PopUp popped={popped} setPopped={setPopped} title="Camera" parentStyle={{ width: "100%" }}>
+            <TabTemplate title="Camera" menuStructure={menuStructure}>
                 <NoTheme>
                     <WebcamViewer
                         rotation={rotation}

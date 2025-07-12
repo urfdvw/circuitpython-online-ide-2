@@ -7,6 +7,7 @@ import serial_console from "./Serial Console.md";
 import settings from "./Settings.md";
 import plot from "./Plot.md";
 import backup from "./Backup.md";
+import camera from "./Camera.md";
 import use_without_internet from "./Use without Internet.md";
 import about from "./About.md";
 import feedback_and_code_contribution from "./Feedback and Code Contribution.md";
@@ -54,6 +55,11 @@ const docs = [
         name: "backup",
         title: "Backup",
         body: backup,
+    },
+    {
+        name: "camera",
+        title: "Camera",
+        body: camera,
     },
     {
         name: "use_without_internet",

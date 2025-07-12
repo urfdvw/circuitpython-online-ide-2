@@ -1,4 +1,4 @@
-***To use the IDE, please visit https://urfdvw.github.io/circuitpython-online-ide-2. No installation is needed.***
+***To use the IDE, please visit https://urfdvw.github.io/circuitpython-online-ide-2 on a computer. No installation is needed.***
 
 The **CircuitPython Online IDE** is a browser-based IDE (integrated development environment) compatible with Chrome or Chromium-based browsers on any computer, including **Chromebooks**. 
 It is primarily designed for educational environments and DIY enthusiasts.

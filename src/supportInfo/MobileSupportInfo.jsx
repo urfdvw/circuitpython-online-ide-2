@@ -1,6 +1,7 @@
-import mobile from "./mobile_support_info.md";
 import MarkdownExtended from "../utilComponents/MarkdownExtended";
+import Home from "../docs/Home.md";
+import About from "../docs/About.md";
 
 export default function MobileSupportInfo() {
-    return <MarkdownExtended>{mobile}</MarkdownExtended>;
+    return <MarkdownExtended>{[Home, About].join("\n\n")}</MarkdownExtended>;
 }

@@ -13,7 +13,7 @@
         "show_time": {
             "title": "Show time in menu bar",
             "type": "boolean",
-            "default": false
+            "default": true
         }
     }
 }

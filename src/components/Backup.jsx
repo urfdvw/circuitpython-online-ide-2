@@ -49,31 +49,45 @@ export default function Backup() {
             if (!(backupDirHandle && rootDirHandle)) {
                 return;
             }
+            const now = new Date().toLocaleTimeString();
             if (toPC) {
                 await backupFolder(rootDirHandle, backupDirHandle, appConfig.ready && appConfig.config.backup.clean);
+                setLastBackupTime(now);
+                console.log("Last backup at: " + now);
             } else {
                 await backupFolder(backupDirHandle, rootDirHandle, appConfig.ready && appConfig.config.backup.clean);
             }
-            const now = new Date().toLocaleTimeString();
-            setLastBackupTime(now);
-            console.log("Last backup at: " + now);
         },
         [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean]
     );
+
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            if (!(appConfig.ready && appConfig.config.backup.enable_schedule)) {
+                return;
+            }
+            backup(true);
+        }, 60000 * (appConfig.ready && appConfig.config.backup.period));
+        return () => clearInterval(interval);
+    }, [backup, appConfig.ready, appConfig.config.backup.enable_schedule, appConfig.config.backup.period]);
 
     const menuStructure = [
         {
             label: "Open",
             options: [
                 {
-                    text: "Source Folder",
+                    text: "Microcontroller Folder",
                     handler: openDirectory,
                 },
                 {
-                    text: "Target Folder",
+                    text: "Computer Folder",
                     handler: openBackupDirectory,
                 },
             ],
+        },
+        {
+            text: codeDiff ? "Refresh Diff" : "View Diff",
+            handler: refresh,
         },
         {
             label: "Sync",
@@ -105,10 +119,6 @@ export default function Backup() {
                     },
                 },
             ],
-        },
-        {
-            text: codeDiff ? "Refresh Diff" : "View Diff",
-            handler: refresh,
         },
         {
             label: "≡",

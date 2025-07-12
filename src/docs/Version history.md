@@ -1,7 +1,16 @@
+## Version 2.0.0 Beta.3
+Released on July ***, 2025
+
+Significant updates from version 2.0.0 Beta.2 include:
+- major rewrite all code
+- help and settings shortcuts in tabs
+- plot compatible with mu
+- refreshed backup tool
+
 ## Version 2.0.0 Beta.2
 Released on June 7th, 2024
 
-Significant updates from version 2.0.0 Beta include:
+Significant updates from version 2.0.0 Beta.1 include:
 - added channel control: `dev` and `beta`
 - added Widget Tab in the tools in menu bar
 
@@ -14,7 +23,7 @@ Significant updates from version 2.0.0 Beta include:
 ## Version 2.0.0 Beta
 Released on April 21st, 2024.
 
-Significant updates from version 1.0 Beta include:
+Significant updates from version 1.0 Alpha include:
 - Bug fixes
 - Backup Folder feature
 - Improved UX

@@ -6,7 +6,7 @@
 > Q: Why is there a huge delay, like 10 seconds, between when I click on 'save and run' and when the script actually runs on MacOS?
 - A: This is neither a CircuitPython issue nor an IDE issue. This is a known issue for MacOS 14.4 (see [here](https://github.com/adafruit/circuitpython/issues/8918) for more reference). Currently, there is no solution to this issue yet.
 
-> Q: Why can't I use the IDE with the link `circuitpy.online`?
+> Q: Why can't I use the IDE with the link `circuitpy.dev`?
 - A: Please use the longer link https://urfdvw.github.io/circuitpython-online-ide-2 instead.
 Some firewall systems might block this short link.
 However, the short link is only used to redirect to the long link.

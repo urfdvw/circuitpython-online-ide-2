@@ -21,8 +21,12 @@ For both files and folders:
 - Remove
 
 ### Toolbar Items
-- Add a new file
-- Add a new folder
+- New
+    - File: Add a new file
+    - Folder: Add a new folder
+- `≡`
+    - Open CircuitPy Drive: Open another folder
+    - Help: Open Folder View Help
 
 ### Drag and Drop
 - Drag and drop files or folders onto another folder to move them.

@@ -1,11 +1,4 @@
-- The **Serial Console** tab is open on startup.
-    - Drag the label to move the tab to other tab sets or borders.
-- To open **Serial Console** settings: Settings -> Serial Console
-- To connect to the serial port, please follow "Step 2" in the **Navigation** Tab.
-- To connect to the serial port directly: Menu -> Connect -> Serial Port
-
 ## Toolbar
-The toolbar is located at the top of the Serial Console tab.
 
 ### Serial Title
 The Serial Title indicates the status of CircuitPython:
@@ -14,13 +7,14 @@ The Serial Title indicates the status of CircuitPython:
 
 ### Buttons
 
-Quick Access:
 - **CTRL-C**: Send a "ctrl-c" signal to the microcontroller.
 - **CTRL-D**: Send a "ctrl-d" signal to the microcontroller.
 
-Options in the Three Dots `≡` menu:
-- **Clear**: Clear received serial data displayed in the console.
-- **Download Log**: Download all received data, including previously cleared data.
+- Options in the Three Dots `≡` menu:
+    - **Clear**: Clear received serial data displayed in the console.
+    - **Download Log**: Download all received data, including previously cleared data.
+    - **Help**: Open Serial Console Help
+    - **Settings**: Open Serial Console Settings
 
 ## Received Data
 The central section displays data received from the microcontroller via the serial port. Currently, interaction with this section is not possible. It will automatically scroll to display new lines of data if you are at the bottom.
@@ -44,5 +38,5 @@ Note:
 
 ## How to Use
 
-- For guidance on using the REPL (Read-Evaluate-Print Loop) in the Serial Console, refer to [[Quick Start|Quick Start#REPL]].
+- For guidance on using the REPL (Read-Evaluate-Print Loop) in the Serial Console, refer to Quick Start -> REPL.
 - If you need to send raw data to the microcontroller running serial communication code (e.g., using `input()`), it is recommended to switch the "Send mode" setting to "text" in the **Settings** tab.

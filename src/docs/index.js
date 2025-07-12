@@ -66,24 +66,24 @@ const docs = [
         body: feedback_and_code_contribution,
     },
     {
-        name: "version_history",
-        title: "Version history",
-        body: version_history,
-    },
-    {
         name: "troubleshooting",
         title: "Troubleshooting",
         body: troubleshooting,
     },
     {
-        name: "related_projects",
-        title: "Related projects",
-        body: related_projects,
-    },
-    {
         name: "about",
         title: "About",
         body: about,
+    },
+    {
+        name: "version_history",
+        title: "Version history",
+        body: version_history,
+    },
+    {
+        name: "related_projects",
+        title: "Related projects",
+        body: related_projects,
     },
 ];
 export default docs;

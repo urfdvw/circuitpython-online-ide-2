@@ -14,11 +14,11 @@ This IDE includes essential tools and useful features for CircuitPython microcon
 
 ## CircuitPython Online IDE
 
-Version: 2.0.0 Beta.2
+Version: 2.0.0 Beta.3
 
 [CircuitPython](https://circuitpython.org/) is a version of Python that runs on microcontrollers and single-board computers. Its development is sponsored by [Adafruit](https://www.adafruit.com/).
 
-The **CircuitPython Online IDE** is a community open-source project published on GitHub Pages under the GPL 3 license. It is developed and maintained by [River Wang](https://github.com/urfdvw).
+The **CircuitPython Online IDE** is an open-source project published on GitHub Pages under the GPL 3 license. It is developed and maintained by [River Wang](https://github.com/urfdvw).
 
 ## Contact Me
 

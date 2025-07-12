@@ -1,6 +1,3 @@
-- **Editor** Tabs are opened by **Folder View**
-- To open **Editor** settings: Settings -> **Editor**
-
 ## Code Editor
 The CircuitPython Online IDE uses [Ace](https://ace.c9.io/) as its code editor, providing a wide range of coding features.
 
@@ -30,9 +27,8 @@ REPL Mode Specific:
 - **(deleted)** indicator: Appears when the opened file is no longer accessible, possibly due to deletion, relocation, or renaming. This can also occur if the working directory is missing, such as when the microcontroller is accidentally unplugged from the USB port.
 
 ### Buttons
-
-Quick Access:
-- **SAVE**: Save the file.
-
-Options in the Three Dots `≡` menu:
-- **Pop Up**: Detach this tab into a standalone window, useful for multi-monitor setups.
+- **SAVE**: Save the file, which will trigger auto run in CircuitPython by default.
+- `≡`
+    - **Pop Up**: Detach this tab into a standalone window, useful for multi-monitor setups.
+    - **Help**: Open Editor Help
+    - **Settings**: Open Editor Settings

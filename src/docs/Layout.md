@@ -18,18 +18,17 @@ In the menu bar, options are located on the left, while indicators are on the ri
 ### Indicators
 - CircuitPy drive connection indicator
 - Serial port connection indicator
-- Backup folder connection indicator
-    - This is only visible when a connection is established.
 - Time
     - This can be toggled shown or hidden in the "Global" settings.
 
 ## Tab Management
-- Upon startup, four tabs are automatically opened:
+- Upon startup, some tabs are automatically opened:
     - A folder view tab in the left border.
-    - A settings tab in the right border.
+    - A settings tab in the right border, collapsed.
+    - A help tab in the bottom border, collapsed.
     - Navigation and serial console tabs in the center.
 - Additional tabs can be added from the menu bar or through the folder view.
-- Tabs are closable via the "x" on their label, except for certain system tabs including the folder view, settings, and serial console, which cannot be closed.
+- Tabs are closable via the "x" on their label, except for certain system tabs including the folder view, settings, help and serial console, which cannot be closed.
 - Maximizing a tab set to fill the center area is done by clicking the square icon at the top right corner of a tab set; clicking again reverses the maximization.
 - Tabs can be repositioned by dragging:
     - To move a tab, drag its label to another spot within its tab set, to another tab set, or to a border.

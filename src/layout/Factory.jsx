@@ -45,7 +45,7 @@ const Factory = (node) => {
         );
     } else if (component === "navigation") {
         return (
-            <div className="tab_content" style={fullSize}>
+            <div className="tab_content">
                 <Navigation />
             </div>
         );

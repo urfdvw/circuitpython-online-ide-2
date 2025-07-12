@@ -1,13 +1,13 @@
 import React from "react";
 import { diffLines } from "diff";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 // Replace special characters with visible symbols
 const formatWhitespace = (text) =>
     text
-        .replace(/ /g, "⎵")          // visible space
-        .replace(/\t/g, "→\t")       // visible tab indicator
-        .replace(/\n/g, "⏎\n");      // visible newline marker
+        .replace(/ /g, "⎵") // visible space
+        .replace(/\t/g, "→\t") // visible tab indicator
+        .replace(/\n/g, "⏎\n"); // visible newline marker
 
 const styles = {
     added: {
@@ -35,23 +35,21 @@ const TextDiffViewer = ({ oldText, newText }) => {
         >
             {diff.map((part, index) => {
                 const { added, removed, value } = part;
-                const style =
-                    added ? styles.added :
-                        removed ? styles.removed :
-                            styles.unchanged;
+                const style = added ? styles.added : removed ? styles.removed : styles.unchanged;
 
                 return (
-                    <Box
+                    <Typography
                         key={index}
-                        component="span"
+                        component="pre"
                         sx={{
                             display: "block",
                             padding: "0.2rem",
+                            fontFamily: "Monospace",
                             ...style,
                         }}
                     >
                         {formatWhitespace(value)}
-                    </Box>
+                    </Typography>
                 );
             })}
         </Box>

@@ -27,7 +27,7 @@ export default function AppMenu() {
                     text: "Download IDE",
                     handler: () => {
                         console.log("clicked on menu item `Download IDE`");
-                        // window.open("https://github.com/urfdvw/circuitpython-online-ide-2", "_blank");
+                        window.open("https://github.com/urfdvw/circuitpython-online-ide-2/releases/latest", "_blank");
                     },
                 },
                 {
@@ -94,13 +94,13 @@ export default function AppMenu() {
                         openTab(flexModel, "Camera", "doc_cam");
                     },
                 },
-                {
-                    text: "Widgets",
-                    handler: () => {
-                        console.log("clicked on menu item `Widgets`");
-                        //   openTab("Widgets", "widgets");
-                    },
-                },
+                // {
+                //     text: "Widgets",
+                //     handler: () => {
+                //         console.log("clicked on menu item `Widgets`");
+                //         //   openTab("Widgets", "widgets");
+                //     },
+                // },
                 {
                     text: "Navigation",
                     handler: () => {

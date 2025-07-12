@@ -13,7 +13,6 @@ export default function Backup() {
         appConfig,
         openBackupDirectory,
         backupFolderDirectoryReady,
-        backupFolderStatusText,
         backupDirHandle,
         openDirectory,
         rootFolderDirectoryReady,
@@ -22,6 +21,8 @@ export default function Backup() {
         configTabSelection,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
+    const [lastRecoverTime, setLastRecoverTime] = useState(null);
+    const [lastRefreshTime, setLastRefreshTime] = useState(null);
     const [codeDiff, setCodeDiff] = useState(null);
     useEffect(() => {
         if (!backupFolderDirectoryReady) {
@@ -35,7 +36,11 @@ export default function Backup() {
         }
         const diff = await compareFolders(rootDirHandle, backupDirHandle);
         setCodeDiff(diff);
-    });
+
+        const now = new Date().toLocaleTimeString();
+        setLastRefreshTime(now);
+        console.log("Last refresh at: " + now);
+    }, [backupDirHandle, rootDirHandle]);
 
     const backup = useCallback(
         async (toPC) => {
@@ -56,6 +61,8 @@ export default function Backup() {
                 console.log("Last backup at: " + now);
             } else {
                 await backupFolder(backupDirHandle, rootDirHandle, appConfig.ready && appConfig.config.backup.clean);
+                setLastRecoverTime(now);
+                console.log("Last recover at: " + now);
             }
         },
         [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean]
@@ -63,13 +70,33 @@ export default function Backup() {
 
     useEffect(() => {
         const interval = setInterval(async () => {
-            if (!(appConfig.ready && appConfig.config.backup.enable_schedule)) {
+            if (!(appConfig.ready && appConfig.config.backup.enable_backup_schedule)) {
                 return;
             }
             backup(true);
-        }, 60000 * (appConfig.ready && appConfig.config.backup.period));
+        }, 60000 * (appConfig.ready && appConfig.config.backup.backup_period));
         return () => clearInterval(interval);
-    }, [backup, appConfig.ready, appConfig.config.backup.enable_schedule, appConfig.config.backup.period]);
+    }, [
+        backup,
+        appConfig.ready,
+        appConfig.config.backup.enable_backup_schedule,
+        appConfig.config.backup.backup_period,
+    ]);
+
+    useEffect(() => {
+        const interval = setInterval(async () => {
+            if (!(appConfig.ready && appConfig.config.backup.enable_refresh_schedule)) {
+                return;
+            }
+            refresh();
+        }, 60000 * (appConfig.ready && appConfig.config.backup.refresh_period));
+        return () => clearInterval(interval);
+    }, [
+        refresh,
+        appConfig.ready,
+        appConfig.config.backup.enable_refresh_schedule,
+        appConfig.config.backup.refresh_period,
+    ]);
 
     const menuStructure = [
         {
@@ -160,55 +187,52 @@ export default function Backup() {
                     </Button>
                     {backupFolderDirectoryReady ? "✅" : ""}
                 </Typography>
-                <Typography gutterBottom>Last Backup : {lastBackupTime ? lastBackupTime : "No backup yet"}</Typography>
+
+                {lastBackupTime || lastRecoverTime || lastRefreshTime ? <hr /> : null}
+                {lastBackupTime ? <Typography gutterBottom>Last Backup : {lastBackupTime}</Typography> : null}
+                {lastRecoverTime ? <Typography gutterBottom>Last Recover : {lastRecoverTime}</Typography> : null}
+                {lastRefreshTime ? <Typography gutterBottom>Last Refresh : {lastRefreshTime}</Typography> : null}
+
                 {codeDiff ? (
                     <>
-                        {codeDiff.newFiles ? (
+                        <hr />
+                        {codeDiff.newFiles.length > 0 ? (
                             <>
-                                <hr></hr>
                                 <Typography variant="h6">Files only on microcontroller</Typography>
                                 {[
                                     codeDiff.newFiles.map((file) => (
-                                        <Box>
-                                            <Typography>
-                                                {file.path}
-                                                <TextDiffViewer oldText="" newText={file.text} />
-                                            </Typography>
+                                        <Box key={file.path}>
+                                            <Typography variant="div">{file.path}</Typography>
+                                            <TextDiffViewer oldText="" newText={file.text} />
                                         </Box>
                                     )),
                                 ]}
                             </>
                         ) : null}
-                        {codeDiff.removedFiles ? (
+                        {codeDiff.removedFiles.length > 0 ? (
                             <>
-                                <hr></hr>
                                 <Typography variant="h6">Files only on compouter</Typography>
                                 {[
                                     codeDiff.removedFiles.map((file) => (
-                                        <Box>
-                                            <Typography>
-                                                {file.path}
-                                                <TextDiffViewer oldText={file.text} newText="" />
-                                            </Typography>
+                                        <Box key={file.path}>
+                                            <Typography>{file.path}</Typography>
+                                            <TextDiffViewer oldText={file.text} newText="" />
                                         </Box>
                                     )),
                                 ]}
                             </>
                         ) : null}
-                        {codeDiff.editedFiles ? (
+                        {codeDiff.editedFiles.length > 0 ? (
                             <>
-                                <hr></hr>
                                 <Typography variant="h6">Edited Files</Typography>
                                 {[
                                     codeDiff.editedFiles.map((file) => (
-                                        <Box>
-                                            <Typography>
-                                                {file.path}
-                                                <TextDiffViewer
-                                                    oldText={file.sourceFileText}
-                                                    newText={file.targetFileText}
-                                                />
-                                            </Typography>
+                                        <Box key={file.path}>
+                                            <Typography>{file.path}</Typography>
+                                            <TextDiffViewer
+                                                oldText={file.sourceFileText}
+                                                newText={file.targetFileText}
+                                            />
                                         </Box>
                                     )),
                                 ]}

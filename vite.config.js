@@ -17,6 +17,13 @@ export default defineConfig({
             },
         },
     ],
+    optimizeDeps: {
+        include: [
+            '@emotion/react',
+            '@emotion/styled',
+            '@mui/material/Tooltip' // or other MUI components
+        ],
+    },
     build: {
         outDir: "./docs",
     },

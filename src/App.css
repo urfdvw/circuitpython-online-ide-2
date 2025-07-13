@@ -1,4 +1,4 @@
-.ide {
+.app {
     background-color: red;
     gap: 0px;
     margin: 0;
@@ -7,19 +7,18 @@
     width: 100vw;
     display: flex;
     flex-direction: column;
-}
-
-.ide-header {
-    background-color: lightgray;
-    flex-grow: 0;
-}
-
-.ide-body {
-    background-color: lightgray;
     flex-grow: 1;
 }
 
-.ide-tail {
-    background-color: lightgray;
+.app-header {
+    background-color: rgb(230, 230, 230);
     flex-grow: 0;
+    display: flex;
+    align-items: center;
+}
+
+.app-body {
+    background-color: lightgray;
+    flex-grow: 1;
+    position: relative;
 }

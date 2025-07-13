@@ -1,0 +1,56 @@
+{
+    "name": "plot",
+    "title": "Plot",
+    "description": "Plot tab settings.",
+    "type": "object",
+    "properties": {
+        "show_legend":{
+            "title": "Show legend",
+            "type": "boolean",
+            "default": true
+        },
+        "x_axis": {
+            "title": "Use first column as x-axis",
+            "description": "When selected, the first data column will be used for the x-axis. Otherwise, all columns of the data are considered parallel y-axes, and the x-axis on the figure will be the index.",
+            "type": "boolean",
+            "default": false
+        },
+        "truncate": {
+            "title": "Truncate history points",
+            "description": "When selected, will only keep up to a certain number of data points. Otherwise, will keep all history.",
+            "type": "boolean",
+            "default": false
+        },
+        "history_len": {
+            "title": "Maximum number of history points to keep",
+            "type": "number",
+            "default": 100
+        },
+        "enable_axis_limits": {
+            "title": "Limit plotting to a defined range",
+            "description": "When selected, plotting will be confined to the specified range. If not selected, the range will adjust based on the plot's data.",
+            "type": "boolean",
+            "default": false
+        },
+        "x_min": {
+            "title": "Lower bound of x-axis",
+            "type": "number",
+            "default": -5
+        },
+        "x_max": {
+            "title": "Upper bound of x-axis",
+            "type": "number",
+            "default": 5
+        },
+        "y_min": {
+            "title": "Lower bound of y-axis",
+            "type": "number",
+            "default": -5
+        },
+        "y_max": {
+            "title": "Upper bound of y-axis",
+            "type": "number",
+            "default": 5
+        }
+    }
+}

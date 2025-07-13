@@ -1,0 +1,19 @@
+{
+    "name": "general",
+    "title": "General",
+    "type": "object",
+    "properties": {
+        "theme": {
+            "title": "Global theme",
+            "description": "Choose 'system' to follow OS theme settings",
+            "type": "string",
+            "enum": ["system", "dark", "light"],
+            "default": "system"
+        },
+        "show_time": {
+            "title": "Show time in menu bar",
+            "type": "boolean",
+            "default": true
+        }
+    }
+}

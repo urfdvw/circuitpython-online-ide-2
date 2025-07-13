@@ -1,6 +1,6 @@
 # CircuitPython Online IDE 2
 
-***To use the IDE, please visit https://urfdvw.github.io/circuitpython-online-ide-2. No installation is needed.***
+***To use the IDE, please visit https://urfdvw.github.io/circuitpython-online-ide-2 on a computer. No installation is needed.***
 
 The **CircuitPython Online IDE** is a browser-based IDE (integrated development environment) compatible with Chrome or Chromium-based browsers on any computer, including **Chromebooks**. 
 It is primarily designed for educational environments and DIY enthusiasts.
@@ -14,13 +14,11 @@ This IDE includes essential tools and useful features for CircuitPython microcon
 - Project backup
 
 
-## Quick Start
-
-***For More help documents, please visit our [Wiki page](https://github.com/urfdvw/circuitpython-online-ide-2/wiki/).***
+# Quick Start
 
 [![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)
 
-### Set up
+## Set up
 - Connect your CircuitPython-supported microcontroller board to your computer via a USB cable.
 - **Open the [CircuitPython Online IDE](https://urfdvw.github.io/circuitpython-online-ide-2/) in a supported browser (Chrome, Edge, etc.).**
     - In the middle of the IDE, you will see a tab called "Navigation". Follow the steps listed there.
@@ -35,7 +33,7 @@ This IDE includes essential tools and useful features for CircuitPython microcon
 - You have now finished the setup process, and you can safely close the "Navigation" tab.
     - You can reopen the Navigation tab by going to Menu bar -> Tools -> Navigation.
 
-### Edit and run script
+## Edit and run script
 Once you finish the setup above, the default mode is 'Script mode', which runs the code saved in the microcontroller. To switch back to 'Script mode' from 'REPL' mode (where you see `>>>`, which will be discussed in the next section), click on the `CTRL-D` button in the "Serial Console" tab.
 
 - In "Folder View" (the left panel), click on the file you want to edit.
@@ -49,7 +47,7 @@ Once you finish the setup above, the default mode is 'Script mode', which runs t
 - Once you are done with the project, make sure you have saved everything and close the Online IDE safely.
     - Your saved code will run on the microcontroller once it is connected to a power source like a phone charger or battery.
 
-### REPL
+## REPL
 
 REPL (Read-Evaluate-Print Loop) is a coding mode where you can interact with the microcontroller in real-time. In this mode, you send one or multiple lines of code instead of a whole script to the microcontroller. This piece of code is run immediately after the microcontroller receives it, and the result is displayed after it finishes. The microcontroller will be on halt until you send the next piece of code. While scripts are used as deliverables, REPL mode is often used for quick testing and debugging.
 
@@ -63,15 +61,13 @@ REPL (Read-Evaluate-Print Loop) is a coding mode where you can interact with the
 
 ## About
 
-### CircuitPython Online IDE
-
-Version: 2.0.0 Beta.2
+Version: 2.0.0 Beta.3
 
 [CircuitPython](https://circuitpython.org/) is a version of Python that runs on microcontrollers and single-board computers. Its development is sponsored by [Adafruit](https://www.adafruit.com/).
 
-The **CircuitPython Online IDE** is a community open-source project published on GitHub Pages under the GPL 3 license. It is developed and maintained by [River Wang](https://github.com/urfdvw).
+The **CircuitPython Online IDE** is an open-source project published on GitHub Pages under the GPL 3 license. It is developed and maintained by [River Wang](https://github.com/urfdvw).
 
-### Contact Me
+## Contact Me
 
 For IDE feedback, please check [Feedback and Code Contribution](https://github.com/urfdvw/circuitpython-online-ide-2/wiki/Feedback-and-Code-Contribution). For other communications, please send an email to `urfdvw@gmail.com`. For the latest updates on the IDE and my DIY projects, please follow me on:
 

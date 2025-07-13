@@ -1,34 +1,59 @@
-// React
-import { useState, useEffect, useCallback } from "react";
-// Style
+import { useState, useEffect } from "react";
+// App
 import "./App.css";
-// Ide parts
-import IdeBody from "./IdeBody";
-import IdeHead from "./IdeHead";
-import Typography from "@mui/material/Typography";
-// Device Support Warnings
-import { isMobile, isMacOs, isSafari, isFirefox, isIE } from "react-device-detect";
-import ErrorIsMobile from "./infopages/ErrorIsMobile";
-import ErrorIsNotChrome from "./infopages/ErrorIsNotChrome";
-import WarningIsMac from "./infopages/WarningIsMac";
-// Features
-import { useFileSystem, backupFolder } from "./react-local-file-system";
-import useSerial from "./serial/useSerial";
-import DarkTheme from "./react-lazy-dark-theme";
-import { useConfig } from "./react-user-config";
-import schemas from "./schemas";
-// context
-import ideContext from "./ideContext";
+import AppContext from "./AppContext";
 // layout
 import * as FlexLayout from "flexlayout-react";
 import layout from "./layout/layout.json";
+import Factory from "./layout/Factory";
+import "flexlayout-react/style/light.css";
+// menu bar
+import AppMenu from "./components/AppMenu";
+// config
+import { useConfig } from "./utilComponents/react-user-config";
+import schemas from "./configs";
+// help
+import { useTabValueName } from "./utilComponents/TabedPages";
+import docs from "./docs";
+// hot keys
+import useLayoutHotKeys from "./hotKeys/useLayoutHotKeys";
+// theme
+import DarkTheme from "react-lazy-dark-theme";
+// channel
+import useChannel from "./utilHooks/useChannel";
+// device support
+import { isMobile } from "react-device-detect";
+import MobileSupportInfo from "./supportInfo/MobileSupportInfo";
+// file system
+import { useFileSystem } from "./utilComponents/react-local-file-system";
+import useEditorTabs from "./hooks/useEditorTabs";
+// serial
+import { useSerial, useSerialCommands } from "./hooks/useSerial";
 
 function App() {
-    const queryParams = new URLSearchParams(window.location.search);
-    const channel = queryParams.get("channel"); // Retrieve the value of a specific query parameter
-    const showDevFeatures = channel === "dev";
-    const showBetaFeatures = channel === "dev" || channel === "beta"; // beta level feature shows in dev and beta channel
-
+    // testing state
+    const [testCount, setTestCount] = useState(0);
+    // layout
+    const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
+    // config
+    const configTabSelection = useTabValueName(schemas);
+    const appConfig = useConfig(schemas);
+    useEffect(() => {
+        console.log("config", appConfig);
+    }, [appConfig]);
+    // help
+    const helpTabSelection = useTabValueName(docs);
+    useEffect(() => {
+        console.log("helpTabSelection", helpTabSelection);
+    }, [helpTabSelection]);
+    // hot keys
+    useLayoutHotKeys(flexModel);
+    // channel
+    const { showDevFeatures, showBetaFeatures } = useChannel();
+    useEffect(() => {
+        console.log("[showDevFeatures, showBetaFeatures]", [showDevFeatures, showBetaFeatures]);
+    }, [showDevFeatures, showBetaFeatures]);
+    // file system
     // main directory for folderView
     const {
         openDirectory,
@@ -36,14 +61,14 @@ function App() {
         statusText: rootFolderStatusText,
         rootDirHandle,
     } = useFileSystem();
-    // backup directory
+    const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
+    // backup folder
     const {
         openDirectory: openBackupDirectory,
-        directoryReady: backupDirectoryReady,
-        statusText: backupStatusText,
-        rootDirHandle: backupDirectoryDirHandle,
+        directoryReady: backupFolderDirectoryReady,
+        statusText: backupFolderStatusText,
+        rootDirHandle: backupDirHandle,
     } = useFileSystem();
-    const [lastBackupTime, setLastBackupTime] = useState(null);
     // serial
     const {
         connectToSerialPort,
@@ -53,116 +78,78 @@ function App() {
         fullSerialHistory,
         serialReady,
     } = useSerial();
-    // config
-    const { config, set_config, ready: configReady } = useConfig(schemas);
-    // flex layout
-    const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
-    // confirm leave
-    useEffect(() => {
-        // https://stackoverflow.com/a/47477519/7037749
-        if (rootFolderDirectoryReady) {
-            window.onbeforeunload = function (e) {
-                var dialogText = "Are you sure to leave?"; // TODO: not shown up yet
-                e.returnValue = dialogText;
-                return dialogText;
-            };
-        }
-    }, [rootFolderDirectoryReady]);
-    // backup schedule
-    useEffect(() => {
-        if (!backupDirectoryReady) {
-            setLastBackupTime(null);
-        }
-    }, [backupDirectoryReady]);
-    const backup = useCallback(async () => {
-        if (await backupDirectoryDirHandle.isSameEntry(rootDirHandle)) {
-            console.log(backupDirectoryDirHandle.name);
-            console.log(rootDirHandle.name);
-            console.error("Cannot backup to the folder itself.");
-            confirm("Cannot backup to the folder itself.");
-            return;
-        }
-        if (!(backupDirectoryDirHandle && rootDirHandle)) {
-            return;
-        }
-        await backupFolder(rootDirHandle, backupDirectoryDirHandle, configReady && config.backup.clean);
-        const now = new Date().toLocaleTimeString();
-        setLastBackupTime("Last backup at: " + now);
-        console.log("Last backup at: " + now);
-    }, [backupDirectoryDirHandle, rootDirHandle, configReady && config.backup.clean]);
-    useEffect(() => {
-        const interval = setInterval(async () => {
-            if (!(configReady && config.backup.enable_schedule)) {
-                return;
-            }
-            backup();
-        }, 60000 * (configReady && config.backup.period));
-        return () => clearInterval(interval);
-    }, [backup, configReady && config.backup.enable_schedule, configReady && config.backup.period]);
+    const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands(
+        sendDataToSerialPort,
+        serialOutput,
+        serialReady
+    );
 
-    // error info
-    let WarningModal = () => {};
+    /**** main logic ****/
     if (isMobile) {
-        WarningModal = ErrorIsMobile;
-    } else if (isSafari || isFirefox || isIE) {
-        WarningModal = ErrorIsNotChrome;
-    } else if (isMacOs) {
-        WarningModal = WarningIsMac;
+        return <MobileSupportInfo />;
     }
 
-    // If config initialization not done, don't continue.
-    if (!configReady) {
+    if (!appConfig.ready) {
         return;
     }
 
     // theme config
-    var dark = null;
-    if (config.global.theme === "light") {
+    let dark = null;
+    let highContrast = false;
+    if (appConfig.config.general.theme === "light") {
         dark = false;
-    } else if (config.global.theme === "dark") {
+    } else if (appConfig.config.general.theme === "dark") {
         dark = true;
     }
 
     return (
-        <ideContext.Provider
+        <AppContext.Provider
             value={{
-                showDevFeatures: showDevFeatures,
-                showBetaFeatures: showBetaFeatures,
-                flexModel: flexModel,
-                openDirectory: openDirectory,
-                rootFolderDirectoryReady: rootFolderDirectoryReady,
-                rootDirHandle: rootDirHandle,
-                rootFolderStatusText: rootFolderStatusText,
-                openBackupDirectory: openBackupDirectory,
-                backupDirectoryReady: backupDirectoryReady,
-                backupStatusText: backupStatusText,
-                backup: backup,
-                lastBackupTime: lastBackupTime,
-                connectToSerialPort: connectToSerialPort,
-                sendDataToSerialPort: sendDataToSerialPort,
-                clearSerialOutput: clearSerialOutput,
-                serialOutput: serialOutput,
-                fullSerialHistory: fullSerialHistory,
-                serialReady: serialReady,
-                schemas: schemas,
-                config: config,
-                set_config: set_config,
+                // placeholder
+                testCount,
+                setTestCount,
+                // IDE general
+                flexModel,
+                // config
+                appConfig,
+                configTabSelection,
+                // help
+                helpTabSelection,
+                // folder
+                openDirectory,
+                rootFolderDirectoryReady,
+                rootDirHandle,
+                rootFolderStatusText,
+                onFileClick,
+                fileLookUp,
+                // backup folder
+                openBackupDirectory,
+                backupFolderDirectoryReady,
+                backupFolderStatusText,
+                backupDirHandle,
+                // serial
+                connectToSerialPort,
+                sendDataToSerialPort,
+                clearSerialOutput,
+                serialOutput,
+                fullSerialHistory,
+                serialReady,
+                sendCtrlC,
+                sendCtrlD,
+                sendCode,
+                codeHistory,
             }}
         >
-            <WarningModal />
-            <div className="ide">
-                <DarkTheme dark={dark} />
-                <div className="ide-header">
-                    <IdeHead />
+            <DarkTheme dark={dark} highContrast={highContrast} />
+            <div className="app">
+                <div className="app-header">
+                    <AppMenu />
                 </div>
-                <div className="ide-body">
-                    <IdeBody />
+                <div className="app-body">
+                    <FlexLayout.Layout model={flexModel} factory={Factory} />
                 </div>
-                {/* <Typography component="div" className="ide-tail" sx={{ paddingLeft: "5pt" }}>
-                    Tail Bar. Placeholder, in case it is used in the future.
-                </Typography> */}
             </div>
-        </ideContext.Provider>
+        </AppContext.Provider>
     );
 }
 

@@ -3,9 +3,9 @@ import { promises as fs } from "fs";
 import path from "path";
 
 // Define the path for the markdown file you want to read
-const IntroPath = path.join(process.cwd(), "./src/documents/wiki", "Home.md");
-const QuickStartPath = path.join(process.cwd(), "./src/documents/wiki", "Quick start.md");
-const AboutPath = path.join(process.cwd(), "./src/documents/wiki", "About.md");
+const HomePath = path.join(process.cwd(), "./src/docs", "Home.md");
+const AboutPath = path.join(process.cwd(), "./src/docs", "About.md");
+const QuickStartPath = path.join(process.cwd(), "./src/docs", "Quick Start.md");
 
 // Define the path for the markdown file you want to generate
 const outputMarkdownPath = path.join(process.cwd(), ".", "README.md");
@@ -14,24 +14,23 @@ const outputMarkdownPath = path.join(process.cwd(), ".", "README.md");
 async function generateMarkdown() {
     try {
         // Read content from the existing markdown file
-        const IntroContent = await fs.readFile(IntroPath, "utf8");
+        const title = "# CircuitPython Online IDE 2";
+        const quickStartTitle = "# Quick Start";
+        const video =
+            "[![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)";
+        const HomeContent = await fs.readFile(HomePath, "utf8");
         const QuickStartContent = await fs.readFile(QuickStartPath, "utf8");
         const AboutContent = await fs.readFile(AboutPath, "utf8");
 
         // Combine the existing content with the new content
         const combinedContent = [
-            "# CircuitPython Online IDE 2",
-            IntroContent,
-            "# Quick Start",
-            "***For More help documents, please visit our [Wiki page](https://github.com/urfdvw/circuitpython-online-ide-2/wiki/).***",
-            "[![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)",
+            title,
+            HomeContent,
+            quickStartTitle,
+            video,
             QuickStartContent,
-            "# About",
-            AboutContent,
-        ]
-            .join("\n\n")
-            .split("\n#")
-            .join("\n##");
+            AboutContent.replace("## CircuitPython Online IDE", "## About"),
+        ].join("\n\n");
 
         // Write the combined content to a new markdown file
         await fs.writeFile(outputMarkdownPath, combinedContent);

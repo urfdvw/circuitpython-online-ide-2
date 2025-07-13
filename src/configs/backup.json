@@ -1,0 +1,36 @@
+{
+    "name": "backup",
+    "title": "Backup",
+    "description": "Backup folder settings.",
+    "type": "object",
+    "properties": {
+        "enable_backup_schedule": {
+            "title": "Periodic automatic backup",
+            "description": "Check this item to enable periodic backup. This may consume significant system resources.",
+            "type": "boolean",
+            "default": false
+        },
+        "backup_period": {
+            "title": "Backup period length (minutes)",
+            "type": "number",
+            "default": 5
+        },
+        "enable_refresh_schedule": {
+            "title": "Periodic automatic refresh",
+            "description": "Check this item to enable periodic refresh difference view. This may consume significant system resources.",
+            "type": "boolean",
+            "default": true
+        },
+        "refresh_period": {
+            "title": "Refresh period length (minutes)",
+            "type": "number",
+            "default": 1
+        },
+        "clean": {
+            "title": "Clean folder before each backup",
+            "description": "When selected, all contents within the backup folder will be deleted prior to backup. If not selected, the backup process will only overwrite files with matching names.",
+            "type": "boolean",
+            "default": true
+        }
+    }
+}

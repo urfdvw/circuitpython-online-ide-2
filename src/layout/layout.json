@@ -14,6 +14,9 @@
                 {
                     "type": "tab",
                     "name": "Folder View",
+                    "helpText": "Folder View",
+                    "altName": "(F)Folder View",
+                    "id": "folder_view_tab",
                     "component": "folder_view",
                     "enableClose": false
                 }
@@ -27,7 +30,8 @@
                 {
                     "type": "tab",
                     "name": "Settings",
-                    "component": "settings",
+                    "id": "settings_tab",
+                    "component": "config",
                     "enableClose": false
                 }
             ]
@@ -36,7 +40,17 @@
             "type": "border",
             "location": "bottom",
             "size": 300,
-            "children": []
+            "children": [
+                {
+                    "type": "tab",
+                    "name": "Help",
+                    "helpText": "Help",
+                    "altName": "(H)Help",
+                    "id": "help_tab",
+                    "component": "help",
+                    "enableClose": false
+                }
+            ]
         }
     ],
     "layout": {

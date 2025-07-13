@@ -6,7 +6,11 @@ import AppContext from "../AppContext";
 import * as constants from "../constants";
 // ---- Display ----
 // MUI
-import { Box, Button } from "@mui/material";
+import { Box, Button, IconButton, Typography, Tooltip } from "@mui/material";
+import { grey } from "@mui/material/colors";
+import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
+
+const DARK_GREY = grey[300];
 // for scroll to the button
 import ScrollableFeed from "react-scrollable-feed"; // https://stackoverflow.com/a/52673227/7037749
 // ACE
@@ -22,6 +26,7 @@ import { textProcessor } from "../hooks/useSerial";
 const { matchesInBetween, removeInBetween } = textProcessor;
 // teb template
 import TabTemplate from "../utilComponents/TabTemplate";
+import MenuBar from "../utilComponents/MenuBar";
 //
 import { selectTabById } from "../layout/layoutUtils";
 
@@ -221,10 +226,12 @@ const RawConsole = () => {
         configTabSelection,
         helpTabSelection,
         flexModel,
+        appConfig,
     } = useContext(AppContext);
     const [serialTitle, setSerialTitle] = useState("");
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
+    const [modeHint, setModeHint] = useState(false);
 
     useEffect(() => {
         setSerialTitle(matchesInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END).at(-1));
@@ -291,6 +298,55 @@ const RawConsole = () => {
         },
     ];
 
+    const send_mode =
+        appConfig.config.serial_console.send_mode === "text"
+            ? "Text mode: newline not allowed"
+            : appConfig.config.serial_console.enter_to_send
+            ? "Code mode: Enter to send, Shift-Enter for newline"
+            : "Code mode: Shift-Enter to send, Enter for newline";
+
+    const sendTooltip = text.split("\n").length > 1 ? "Send as code snippet" : "Send";
+
+    const sendMenuStructure = [
+        {
+            label: "Mode",
+            options: [
+                {
+                    text: "code mode: better for python RELP",
+                    handler: () => {
+                        appConfig.setConfigField("serial_console", "send_mode", "code");
+                    },
+                },
+                {
+                    text: "text mode: better for input() interactions",
+                    handler: () => {
+                        appConfig.setConfigField("serial_console", "send_mode", "text");
+                        setText((prevText) => prevText.split("\n").join(" ")); // remove newlines
+                    },
+                },
+            ],
+        },
+        appConfig.config.serial_console.send_mode === "code"
+            ? {
+                  label: "Shortcuts",
+                  options: [
+                      {
+                          text: "Enter to send, Shift-Enter for newline",
+                          handler: () => {
+                              appConfig.setConfigField("serial_console", "enter_to_send", true);
+                          },
+                      },
+                      {
+                          text: "Shift-Enter to send, Enter for newline",
+                          handler: () => {
+                              appConfig.setConfigField("serial_console", "enter_to_send", false);
+                          },
+                      },
+                  ],
+              }
+            : null,
+    ].filter((item) => item !== null);
+
     return serialReady ? (
         <TabTemplate title={serialReady ? serialTitle : "Not Connected"} menuStructure={menuStructure}>
             <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
@@ -338,9 +394,48 @@ const RawConsole = () => {
                             justifyContent: "right",
                         }}
                     >
-                        <Button onClick={consoleSendCommand}>Send</Button>
+                        <Tooltip title={sendTooltip} placement="top">
+                            <Button onClick={consoleSendCommand}>Send</Button>
+                        </Tooltip>
+                        <Tooltip title={"change send mode"} placement="top">
+                            <IconButton>
+                                {modeHint ? (
+                                    <ArrowDropDown
+                                        onClick={() => {
+                                            setModeHint(false);
+                                        }}
+                                    />
+                                ) : (
+                                    <ArrowDropUp
+                                        onClick={() => {
+                                            setModeHint(true);
+                                        }}
+                                    />
+                                )}
+                            </IconButton>
+                        </Tooltip>
                     </Box>
                 </Box>
+                {modeHint && (
+                    <Box
+                        sx={{
+                            flexGrow: 0,
+                            display: "flex",
+                            flexDirection: "row",
+                            width: "100%",
+                            borderTop: `1px solid ${DARK_GREY}`,
+                            margin: "0px",
+                            padding: "0px",
+                        }}
+                    >
+                        <Box sx={{ flexGrow: 1, overflowX: "auto", alignContent: "center" }}>
+                            <Typography sx={{ paddingLeft: "5px" }}>{send_mode}</Typography>
+                        </Box>
+                        <Box sx={{ flexGrow: 0 }}>
+                            <MenuBar menuStructure={sendMenuStructure} />
+                        </Box>
+                    </Box>
+                )}
             </Box>
         </TabTemplate>
     ) : (

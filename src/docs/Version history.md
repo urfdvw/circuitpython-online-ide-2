@@ -1,5 +1,5 @@
 ## Version 2.0.0 Beta.3
-Released on July ***, 2025
+Released on July 12th, 2025
 
 Significant updates from version 2.0.0 Beta.2 include:
 - major rewrite all code

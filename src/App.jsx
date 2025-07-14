@@ -77,6 +77,7 @@ function App() {
         serialOutput,
         fullSerialHistory,
         serialReady,
+        serial,
     } = useSerial();
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands(
         sendDataToSerialPort,
@@ -134,10 +135,12 @@ function App() {
                 serialOutput,
                 fullSerialHistory,
                 serialReady,
+                serial,
                 sendCtrlC,
                 sendCtrlD,
                 sendCode,
                 codeHistory,
+
             }}
         >
             <DarkTheme dark={dark} highContrast={highContrast} />

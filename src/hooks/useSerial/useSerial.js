@@ -95,6 +95,7 @@ const useSerial = () => {
         serialOutput,
         fullSerialHistory,
         serialReady,
+        serial,
     };
 };
 

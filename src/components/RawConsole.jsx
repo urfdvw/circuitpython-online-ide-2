@@ -29,6 +29,8 @@ import TabTemplate from "../utilComponents/TabTemplate";
 import MenuBar from "../utilComponents/MenuBar";
 //
 import { selectTabById } from "../layout/layoutUtils";
+// Xterm
+import XtermConsole from "./XtermConsole";
 
 const RawSerialRead = () => {
     const { appConfig, serialOutput } = useContext(AppContext);
@@ -349,94 +351,98 @@ const RawConsole = () => {
 
     return serialReady ? (
         <TabTemplate title={serialReady ? serialTitle : "Not Connected"} menuStructure={menuStructure}>
-            <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
-                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-                    {/* Ensures B is scrollable if content overflows */}
-                    <ScrollableFeed
-                        sx={{
-                            flexShrink: 0,
-                            display: "flex",
-                        }}
-                    >
-                        <RawSerialRead />
-                    </ScrollableFeed>
-                </Box>
-                <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        borderTop: "2px solid rgb(239,239,239)",
-                    }}
-                >
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            justifyContent: "left",
-                            flex: 1,
-                        }}
-                    >
-                        <RawSerialWrite
-                            text={text}
-                            setText={setText}
-                            consoleSendCommand={consoleSendCommand}
-                            codeHistIndex={codeHistIndex}
-                            setCodeHistIndex={setCodeHistIndex}
-                            sendCtrlC={sendCtrlC}
-                            sendCtrlD={sendCtrlD}
-                            codeHistory={codeHistory}
-                        />
+            {appConfig.config.serial_console.use_xterm ? (
+                <XtermConsole />
+            ) : (
+                <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
+                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
+                        {/* Ensures B is scrollable if content overflows */}
+                        <ScrollableFeed
+                            sx={{
+                                flexShrink: 0,
+                                display: "flex",
+                            }}
+                        >
+                            <RawSerialRead />
+                        </ScrollableFeed>
                     </Box>
                     <Box
                         sx={{
                             display: "flex",
-                            alignItems: "end",
-                            justifyContent: "right",
+                            justifyContent: "space-between",
+                            borderTop: "2px solid rgb(239,239,239)",
                         }}
                     >
-                        <Tooltip title={sendTooltip} placement="top">
-                            <Button onClick={consoleSendCommand}>Send</Button>
-                        </Tooltip>
-                        <Tooltip title={"change send mode"} placement="top">
-                            <IconButton>
-                                {modeHint ? (
-                                    <ArrowDropDown
-                                        onClick={() => {
-                                            setModeHint(false);
-                                        }}
-                                    />
-                                ) : (
-                                    <ArrowDropUp
-                                        onClick={() => {
-                                            setModeHint(true);
-                                        }}
-                                    />
-                                )}
-                            </IconButton>
-                        </Tooltip>
-                    </Box>
-                </Box>
-                {modeHint && (
-                    <Box
-                        sx={{
-                            flexGrow: 0,
-                            display: "flex",
-                            flexDirection: "row",
-                            width: "100%",
-                            borderTop: `1px solid ${DARK_GREY}`,
-                            margin: "0px",
-                            padding: "0px",
-                        }}
-                    >
-                        <Box sx={{ flexGrow: 1, overflowX: "auto", alignContent: "center" }}>
-                            <Typography sx={{ paddingLeft: "5px" }}>{send_mode}</Typography>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "left",
+                                flex: 1,
+                            }}
+                        >
+                            <RawSerialWrite
+                                text={text}
+                                setText={setText}
+                                consoleSendCommand={consoleSendCommand}
+                                codeHistIndex={codeHistIndex}
+                                setCodeHistIndex={setCodeHistIndex}
+                                sendCtrlC={sendCtrlC}
+                                sendCtrlD={sendCtrlD}
+                                codeHistory={codeHistory}
+                            />
                         </Box>
-                        <Box sx={{ flexGrow: 0 }}>
-                            <MenuBar menuStructure={sendMenuStructure} />
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "end",
+                                justifyContent: "right",
+                            }}
+                        >
+                            <Tooltip title={sendTooltip} placement="top">
+                                <Button onClick={consoleSendCommand}>Send</Button>
+                            </Tooltip>
+                            <Tooltip title={"change send mode"} placement="top">
+                                <IconButton>
+                                    {modeHint ? (
+                                        <ArrowDropDown
+                                            onClick={() => {
+                                                setModeHint(false);
+                                            }}
+                                        />
+                                    ) : (
+                                        <ArrowDropUp
+                                            onClick={() => {
+                                                setModeHint(true);
+                                            }}
+                                        />
+                                    )}
+                                </IconButton>
+                            </Tooltip>
                         </Box>
                     </Box>
-                )}
-            </Box>
+                    {modeHint && (
+                        <Box
+                            sx={{
+                                flexGrow: 0,
+                                display: "flex",
+                                flexDirection: "row",
+                                width: "100%",
+                                borderTop: `1px solid ${DARK_GREY}`,
+                                margin: "0px",
+                                padding: "0px",
+                            }}
+                        >
+                            <Box sx={{ flexGrow: 1, overflowX: "auto", alignContent: "center" }}>
+                                <Typography sx={{ paddingLeft: "5px" }}>{send_mode}</Typography>
+                            </Box>
+                            <Box sx={{ flexGrow: 0 }}>
+                                <MenuBar menuStructure={sendMenuStructure} />
+                            </Box>
+                        </Box>
+                    )}
+                </Box>
+            )}
         </TabTemplate>
     ) : (
         <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>

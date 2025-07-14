@@ -20,6 +20,8 @@
     "@rjsf/mui": "^5.12.1",
     "@rjsf/utils": "^5.12.1",
     "@rjsf/validator-ajv8": "^5.12.1",
+    "ace-linters": "^1.7.0",
+    "ace-python-ruff-linter": "^1.1.0",
     "diff": "^8.0.2",
     "flexlayout-react": "^0.8.1",
     "gh-pages": "^6.3.0",

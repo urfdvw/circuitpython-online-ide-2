@@ -27,7 +27,7 @@ import * as FlexLayout from "flexlayout-react";
 // tab
 import TabTemplate from "../utilComponents/TabTemplate";
 
-let aceLinterWorker =  new Worker(new URL('/ace-linter-worker.js', import.meta.url), { type: 'module' })
+const aceLinterWorker =  new Worker(new URL('/ace-linter-worker.js', import.meta.url), { type: 'module' })
 
 aceLinterWorker.onerror = (error) => {
     console.error("Ace Linter Worker error:", error);

@@ -24,6 +24,9 @@ export default defineConfig({
             '@mui/material/Tooltip' // or other MUI components
         ],
     },
+    worker: {
+        format: 'es',
+    },
     build: {
         outDir: "./docs",
     },

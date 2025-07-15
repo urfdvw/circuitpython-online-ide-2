@@ -1,6 +1,7 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { viteSingleFile } from "vite-plugin-singlefile";
+import mkcert from 'vite-plugin-mkcert';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -16,6 +17,7 @@ export default defineConfig({
                 }
             },
         },
+        mkcert(),
     ],
     optimizeDeps: {
         include: [
@@ -26,5 +28,9 @@ export default defineConfig({
     },
     build: {
         outDir: "./docs",
+    },
+    server: {
+        https: true,
+        host: true, // or specify a hostname like 'localhost'
     },
 });

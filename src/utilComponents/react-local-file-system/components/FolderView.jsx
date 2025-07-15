@@ -6,18 +6,10 @@ import {
     Breadcrumbs,
     CircularProgress,
     Divider,
-    IconButton,
     List,
-    Toolbar,
-    Tooltip,
-    Typography,
 } from "@mui/material";
 
-import {
-    CreateNewFolderOutlined as NewFolderIcon,
-    NoteAddOutlined as NewFileIcon,
-    RefreshOutlined as RefreshIcon,
-} from "@mui/icons-material";
+
 import CurFolderContext from "../contexts/CurFolderContext";
 import DragContext from "../contexts/DragContext";
 import ContentEntry from "./ContentEntry";

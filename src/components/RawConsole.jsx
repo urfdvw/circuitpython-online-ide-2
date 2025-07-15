@@ -8,7 +8,8 @@ import * as constants from "../constants";
 // MUI
 import { Box, Button, IconButton, Typography, Tooltip } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
+import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown"
+import ArrowDropUpIcon  from "@mui/icons-material/ArrowDropUp";
 
 const DARK_GREY = grey[300];
 // for scroll to the button
@@ -400,13 +401,13 @@ const RawConsole = () => {
                         <Tooltip title={"change send mode"} placement="top">
                             <IconButton>
                                 {modeHint ? (
-                                    <ArrowDropDown
+                                    <ArrowDropDownIcon
                                         onClick={() => {
                                             setModeHint(false);
                                         }}
                                     />
                                 ) : (
-                                    <ArrowDropUp
+                                    <ArrowDropUpIcon
                                         onClick={() => {
                                             setModeHint(true);
                                         }}

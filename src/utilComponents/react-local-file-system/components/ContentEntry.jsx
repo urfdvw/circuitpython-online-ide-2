@@ -2,11 +2,10 @@ import { useContext } from "react";
 
 import { ListItem, ListItemButton, ListItemIcon, ListItemText } from "@mui/material";
 
-import {
-    DescriptionOutlined as FileIcon,
-    FolderOutlined as FolderIcon,
-    KeyboardReturnOutlined as ReturnIcon,
-} from "@mui/icons-material";
+import DescriptionOutlinedIcon from "@mui/icons-material/DescriptionOutlined"; //  FileIcon
+import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined"; // FolderIcon;
+import KeyboardReturnOutlineIcon from "@mui/icons-material/KeyboardReturnOutlined"; //ReturnIcon;
+
 import CurFolderContext from "../contexts/CurFolderContext";
 import DragContext from "../contexts/DragContext";
 import ApplyContextMenu from "./ApplyContextMenu";
@@ -24,11 +23,11 @@ export default function ContentEntry({ entryHandle }) {
     const iconSize = 20;
 
     const iconSx = { width: `${iconSize}px`, height: `${iconSize}px` };
-    let icon = <FileIcon sx={iconSx} />;
+    let icon = <DescriptionOutlinedIcon sx={iconSx} />;
     if (entryHandle.isParent) {
-        icon = <ReturnIcon sx={iconSx} />;
+        icon = <KeyboardReturnOutlineIcon sx={iconSx} />;
     } else if (isFolder(entryHandle)) {
-        icon = <FolderIcon sx={iconSx} />;
+        icon = <FolderOutlinedIcon sx={iconSx} />;
     }
     // handler
     const items = [

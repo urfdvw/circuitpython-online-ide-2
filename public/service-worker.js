@@ -1,8 +1,7 @@
-const CACHE_NAME = "CircuitPython-Online-IDE-cache";
-const OFFLINE_URL = "/index.html";
+const CACHE_NAME = "CircuitPython-Online-IDE-cache.20250715.001";
 
 // List all URLs you want to cache
-const urlsToCache = ["/", "/index.html"];
+const urlsToCache = ["index.html", "service-worker.js", "blinka-192.png", "blinka-512.png", "blinka.svg"];
 
 // Install event: Cache the static files
 self.addEventListener("install", (event) => {

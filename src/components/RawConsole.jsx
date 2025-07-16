@@ -32,6 +32,8 @@ import { selectTabById } from "../layout/layoutUtils";
 // Xterm
 import XtermConsole from "./XtermConsole";
 
+import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab"
+
 const RawSerialRead = () => {
     const { appConfig, serialOutput } = useContext(AppContext);
     const config = appConfig.config;
@@ -304,8 +306,8 @@ const RawConsole = () => {
         appConfig.config.serial_console.send_mode === "text"
             ? "Text mode: newline not allowed"
             : appConfig.config.serial_console.enter_to_send
-            ? "Code mode: Enter to send, Shift-Enter for newline"
-            : "Code mode: Shift-Enter to send, Enter for newline";
+                ? "Code mode: Enter to send, Shift-Enter for newline"
+                : "Code mode: Shift-Enter to send, Enter for newline";
 
     const sendTooltip = text.split("\n").length > 1 ? "Send as code snippet" : "Send";
 
@@ -330,22 +332,22 @@ const RawConsole = () => {
         },
         appConfig.config.serial_console.send_mode === "code"
             ? {
-                  label: "Shortcuts",
-                  options: [
-                      {
-                          text: "Enter to send, Shift-Enter for newline",
-                          handler: () => {
-                              appConfig.setConfigField("serial_console", "enter_to_send", true);
-                          },
-                      },
-                      {
-                          text: "Shift-Enter to send, Enter for newline",
-                          handler: () => {
-                              appConfig.setConfigField("serial_console", "enter_to_send", false);
-                          },
-                      },
-                  ],
-              }
+                label: "Shortcuts",
+                options: [
+                    {
+                        text: "Enter to send, Shift-Enter for newline",
+                        handler: () => {
+                            appConfig.setConfigField("serial_console", "enter_to_send", true);
+                        },
+                    },
+                    {
+                        text: "Shift-Enter to send, Enter for newline",
+                        handler: () => {
+                            appConfig.setConfigField("serial_console", "enter_to_send", false);
+                        },
+                    },
+                ],
+            }
             : null,
     ].filter((item) => item !== null);
 
@@ -422,24 +424,26 @@ const RawConsole = () => {
                         </Box>
                     </Box>
                     {modeHint && (
-                        <Box
-                            sx={{
-                                flexGrow: 0,
-                                display: "flex",
-                                flexDirection: "row",
-                                width: "100%",
-                                borderTop: `1px solid ${DARK_GREY}`,
-                                margin: "0px",
-                                padding: "0px",
-                            }}
-                        >
-                            <Box sx={{ flexGrow: 1, overflowX: "auto", alignContent: "center" }}>
-                                <Typography sx={{ paddingLeft: "5px" }}>{send_mode}</Typography>
+                        <SiblingWithBottomRightTab label="py" tooltip="Open Code Snippet Area" onClick={() => { console.log('hey there') }}>
+                            <Box
+                                sx={{
+                                    flexGrow: 0,
+                                    display: "flex",
+                                    flexDirection: "row",
+                                    width: "100%",
+                                    borderTop: `1px solid ${DARK_GREY}`,
+                                    margin: "0px",
+                                    padding: "0px",
+                                }}
+                            >
+                                <Box sx={{ flexGrow: 1, overflowX: "auto", alignContent: "center" }}>
+                                    <Typography sx={{ paddingLeft: "5px" }}>{send_mode}</Typography>
+                                </Box>
+                                <Box sx={{ flexGrow: 0 }}>
+                                    <MenuBar menuStructure={sendMenuStructure} />
+                                </Box>
                             </Box>
-                            <Box sx={{ flexGrow: 0 }}>
-                                <MenuBar menuStructure={sendMenuStructure} />
-                            </Box>
-                        </Box>
+                        </SiblingWithBottomRightTab>
                     )}
                 </Box>
             )}

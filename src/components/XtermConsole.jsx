@@ -4,7 +4,7 @@ import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import AppContext from "../AppContext";
 
-const XtermConsole = () => {
+const XtermConsole = ({setSerialTitle}) => {
     const { appConfig, sendDataToSerialPort, serial } = useContext(AppContext);
 
     const terminalOptions = {
@@ -38,6 +38,10 @@ const XtermConsole = () => {
         terminal.current.onData((data) => {
             sendDataToSerialPort(data);
             console.log("sent", data);
+        });
+        terminal.current.onTitleChange((title) => {
+            console.log(title);
+            setSerialTitle(title);
         });
         serial.registerReaderCallback("terminal", (data) => {
             terminal.current.write(data);

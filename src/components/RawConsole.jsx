@@ -31,7 +31,7 @@ import { selectTabById } from "../layout/layoutUtils";
 // Xterm
 import XtermConsole from "./XtermConsole";
 
-import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab"
+import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
 
 const RawSerialRead = () => {
     const { appConfig, serialOutput } = useContext(AppContext);
@@ -223,10 +223,6 @@ const RawConsole = () => {
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
     const [showCodeArea, setShowCodeArea] = useState(false);
 
-    useEffect(() => {
-        setSerialTitle(matchesInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END).at(-1));
-    }, [serialOutput]);
-
     function consoleSendCommand() {
         if (text.trim().length === 0) {
             return;
@@ -295,60 +291,73 @@ const RawConsole = () => {
             <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
                 <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
                     {/* Ensures B is scrollable if content overflows */}
-                    <SiblingWithBottomRightTab label="Py" tooltip={(showCodeArea ? "Hide" : "Show") + " Code Snippet Area"} onClick={() => {
-                        appConfig.setConfigField("serial_console", "show_snippet_editor", !appConfig.config.serial_console.show_snippet_editor);
-                    }}>
+                    <SiblingWithBottomRightTab
+                        label="Py"
+                        tooltip={
+                            (appConfig.config.serial_console.show_snippet_editor ? "Hide" : "Show") +
+                            " Code Snippet Area"
+                        }
+                        onClick={() => {
+                            appConfig.setConfigField(
+                                "serial_console",
+                                "show_snippet_editor",
+                                !appConfig.config.serial_console.show_snippet_editor
+                            );
+                        }}
+                    >
                         <ScrollableFeed
                             sx={{
                                 flexShrink: 0,
                                 display: "flex",
-                                height: "100%"
+                                height: "100%",
                             }}
                         >
-                            <XtermConsole />
+                            <XtermConsole setSerialTitle={setSerialTitle} />
                         </ScrollableFeed>
                     </SiblingWithBottomRightTab>
                 </Box>
-                {appConfig.config.serial_console.show_snippet_editor ? <Box
-                    sx={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        borderTop: "2px solid rgb(239,239,239)",
-                    }}
-                >
+                {appConfig.config.serial_console.show_snippet_editor ? (
                     <Box
                         sx={{
                             display: "flex",
-                            alignItems: "center",
-                            justifyContent: "left",
-                            flex: 1,
+                            justifyContent: "space-between",
+                            borderTop: "2px solid rgb(239,239,239)",
                         }}
                     >
-                        <RawSerialWrite
-                            text={text}
-                            setText={setText}
-                            consoleSendCommand={consoleSendCommand}
-                            codeHistIndex={codeHistIndex}
-                            setCodeHistIndex={setCodeHistIndex}
-                            sendCtrlC={sendCtrlC}
-                            sendCtrlD={sendCtrlD}
-                            codeHistory={codeHistory}
-                        />
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "left",
+                                flex: 1,
+                            }}
+                        >
+                            <RawSerialWrite
+                                text={text}
+                                setText={setText}
+                                consoleSendCommand={consoleSendCommand}
+                                codeHistIndex={codeHistIndex}
+                                setCodeHistIndex={setCodeHistIndex}
+                                sendCtrlC={sendCtrlC}
+                                sendCtrlD={sendCtrlD}
+                                codeHistory={codeHistory}
+                            />
+                        </Box>
+                        <Box
+                            sx={{
+                                display: "flex",
+                                alignItems: "end",
+                                justifyContent: "right",
+                            }}
+                        >
+                            <Tooltip title={sendTooltip} placement="top">
+                                <Button onClick={consoleSendCommand}>Send</Button>
+                            </Tooltip>
+                        </Box>
                     </Box>
-                    <Box
-                        sx={{
-                            display: "flex",
-                            alignItems: "end",
-                            justifyContent: "right",
-                        }}
-                    >
-                        <Tooltip title={sendTooltip} placement="top">
-                            <Button onClick={consoleSendCommand}>Send</Button>
-                        </Tooltip>
-                    </Box>
-                </Box> : null}
+                ) : null}
             </Box>
-        </TabTemplate >
+        </TabTemplate>
     ) : (
         <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
     );

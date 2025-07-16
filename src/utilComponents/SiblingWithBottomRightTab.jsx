@@ -3,7 +3,9 @@ import { Box, Button, Tooltip } from "@mui/material";
 
 const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick = null }) => {
     return (
-        <Box position="relative" display="inline-block">
+        <Box position="relative" display="inline-block" sx={{
+            height: "100%"
+        }}>
             {/* Main sibling component */}
             {children}
 
@@ -15,21 +17,14 @@ const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick
                     right: 0,
                 }}
             >
-                <Tooltip title={tooltip}>
+                <Tooltip title={tooltip} placement="top">
                     <Button
                         onClick={onClick}
                         variant="contained"
-                        color="primary"
+                        // color="primary"
                         size="small"
                         sx={{
-                            opacity: 0.4,
-                            transition: "opacity 0.3s ease",
-                            "&:hover": {
-                                opacity: 1,
-                            },
-                            "&:focus": {
-                                opacity: 1,
-                            },
+                            opacity: 0.5,
                             borderTopLeftRadius: 12,
                             borderBottomRightRadius: 0,
                             borderTopRightRadius: 0,

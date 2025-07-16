@@ -6,9 +6,8 @@ import AppContext from "../AppContext";
 import * as constants from "../constants";
 // ---- Display ----
 // MUI
-import { Box, Button, IconButton, Typography, Tooltip } from "@mui/material";
+import { Box, Button, Tooltip } from "@mui/material";
 import { grey } from "@mui/material/colors";
-import { ArrowDropDown, ArrowDropUp } from "@mui/icons-material";
 
 const DARK_GREY = grey[300];
 // for scroll to the button
@@ -170,36 +169,23 @@ const RawSerialWrite = ({
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
-        if (config.serial_console.send_mode === "code") {
-            aceEditorRef.current.editor.commands.addCommand({
-                name: "send",
-                bindKey: config.serial_console.enter_to_send ? "Enter" : "Shift-Enter",
-                exec: consoleSendCommand,
-            });
-            aceEditorRef.current.editor.commands.addCommand({
-                name: "newline",
-                bindKey: config.serial_console.enter_to_send ? "Shift-Enter" : "Enter",
-                exec: addNewline,
-            });
-        } else {
-            aceEditorRef.current.editor.commands.addCommand({
-                name: "send",
-                bindKey: "Enter",
-                exec: consoleSendCommand,
-            });
-            aceEditorRef.current.editor.commands.addCommand({
-                name: "newline", // no newline allowed
-                bindKey: "Shift-Enter",
-                exec: consoleSendCommand,
-            });
-        }
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "send",
+            bindKey: config.serial_console.enter_to_send ? "Enter" : "Shift-Enter",
+            exec: consoleSendCommand,
+        });
+        aceEditorRef.current.editor.commands.addCommand({
+            name: "newline",
+            bindKey: config.serial_console.enter_to_send ? "Shift-Enter" : "Enter",
+            exec: addNewline,
+        });
     }
 
     return (
         <>
             <AceEditor
                 ref={aceEditorRef}
-                mode={config.serial_console.send_mode === "code" ? "python" : "text"}
+                mode={"python"}
                 useSoftTabs={true}
                 wrapEnabled={true}
                 tabSize={4}
@@ -235,7 +221,7 @@ const RawConsole = () => {
     const [serialTitle, setSerialTitle] = useState("");
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
-    const [modeHint, setModeHint] = useState(false);
+    const [showCodeArea, setShowCodeArea] = useState(false);
 
     useEffect(() => {
         setSerialTitle(matchesInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END).at(-1));
@@ -302,152 +288,67 @@ const RawConsole = () => {
         },
     ];
 
-    const send_mode =
-        appConfig.config.serial_console.send_mode === "text"
-            ? "Text mode: newline not allowed"
-            : appConfig.config.serial_console.enter_to_send
-                ? "Code mode: Enter to send, Shift-Enter for newline"
-                : "Code mode: Shift-Enter to send, Enter for newline";
-
     const sendTooltip = text.split("\n").length > 1 ? "Send as code snippet" : "Send";
-
-    const sendMenuStructure = [
-        {
-            label: "Mode",
-            options: [
-                {
-                    text: "code mode: better for python RELP",
-                    handler: () => {
-                        appConfig.setConfigField("serial_console", "send_mode", "code");
-                    },
-                },
-                {
-                    text: "text mode: better for input() interactions",
-                    handler: () => {
-                        appConfig.setConfigField("serial_console", "send_mode", "text");
-                        setText((prevText) => prevText.split("\n").join(" ")); // remove newlines
-                    },
-                },
-            ],
-        },
-        appConfig.config.serial_console.send_mode === "code"
-            ? {
-                label: "Shortcuts",
-                options: [
-                    {
-                        text: "Enter to send, Shift-Enter for newline",
-                        handler: () => {
-                            appConfig.setConfigField("serial_console", "enter_to_send", true);
-                        },
-                    },
-                    {
-                        text: "Shift-Enter to send, Enter for newline",
-                        handler: () => {
-                            appConfig.setConfigField("serial_console", "enter_to_send", false);
-                        },
-                    },
-                ],
-            }
-            : null,
-    ].filter((item) => item !== null);
 
     return serialReady ? (
         <TabTemplate title={serialReady ? serialTitle : "Not Connected"} menuStructure={menuStructure}>
-            {appConfig.config.serial_console.use_xterm ? (
-                <XtermConsole />
-            ) : (
-                <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
-                    <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
-                        {/* Ensures B is scrollable if content overflows */}
+            <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
+                <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
+                    {/* Ensures B is scrollable if content overflows */}
+                    <SiblingWithBottomRightTab label="Py" tooltip={(showCodeArea ? "Hide" : "Show") + " Code Snippet Area"} onClick={() => {
+                        appConfig.setConfigField("serial_console", "show_snippet_editor", !appConfig.config.serial_console.show_snippet_editor);
+                    }}>
                         <ScrollableFeed
                             sx={{
                                 flexShrink: 0,
                                 display: "flex",
+                                height: "100%"
                             }}
                         >
-                            <RawSerialRead />
+                            <XtermConsole />
                         </ScrollableFeed>
+                    </SiblingWithBottomRightTab>
+                </Box>
+                {appConfig.config.serial_console.show_snippet_editor ? <Box
+                    sx={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        borderTop: "2px solid rgb(239,239,239)",
+                    }}
+                >
+                    <Box
+                        sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "left",
+                            flex: 1,
+                        }}
+                    >
+                        <RawSerialWrite
+                            text={text}
+                            setText={setText}
+                            consoleSendCommand={consoleSendCommand}
+                            codeHistIndex={codeHistIndex}
+                            setCodeHistIndex={setCodeHistIndex}
+                            sendCtrlC={sendCtrlC}
+                            sendCtrlD={sendCtrlD}
+                            codeHistory={codeHistory}
+                        />
                     </Box>
                     <Box
                         sx={{
                             display: "flex",
-                            justifyContent: "space-between",
-                            borderTop: "2px solid rgb(239,239,239)",
+                            alignItems: "end",
+                            justifyContent: "right",
                         }}
                     >
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "center",
-                                justifyContent: "left",
-                                flex: 1,
-                            }}
-                        >
-                            <RawSerialWrite
-                                text={text}
-                                setText={setText}
-                                consoleSendCommand={consoleSendCommand}
-                                codeHistIndex={codeHistIndex}
-                                setCodeHistIndex={setCodeHistIndex}
-                                sendCtrlC={sendCtrlC}
-                                sendCtrlD={sendCtrlD}
-                                codeHistory={codeHistory}
-                            />
-                        </Box>
-                        <Box
-                            sx={{
-                                display: "flex",
-                                alignItems: "end",
-                                justifyContent: "right",
-                            }}
-                        >
-                            <Tooltip title={sendTooltip} placement="top">
-                                <Button onClick={consoleSendCommand}>Send</Button>
-                            </Tooltip>
-                            <Tooltip title={"change send mode"} placement="top">
-                                <IconButton>
-                                    {modeHint ? (
-                                        <ArrowDropDown
-                                            onClick={() => {
-                                                setModeHint(false);
-                                            }}
-                                        />
-                                    ) : (
-                                        <ArrowDropUp
-                                            onClick={() => {
-                                                setModeHint(true);
-                                            }}
-                                        />
-                                    )}
-                                </IconButton>
-                            </Tooltip>
-                        </Box>
+                        <Tooltip title={sendTooltip} placement="top">
+                            <Button onClick={consoleSendCommand}>Send</Button>
+                        </Tooltip>
                     </Box>
-                    {modeHint && (
-                        <SiblingWithBottomRightTab label="py" tooltip="Open Code Snippet Area" onClick={() => { console.log('hey there') }}>
-                            <Box
-                                sx={{
-                                    flexGrow: 0,
-                                    display: "flex",
-                                    flexDirection: "row",
-                                    width: "100%",
-                                    borderTop: `1px solid ${DARK_GREY}`,
-                                    margin: "0px",
-                                    padding: "0px",
-                                }}
-                            >
-                                <Box sx={{ flexGrow: 1, overflowX: "auto", alignContent: "center" }}>
-                                    <Typography sx={{ paddingLeft: "5px" }}>{send_mode}</Typography>
-                                </Box>
-                                <Box sx={{ flexGrow: 0 }}>
-                                    <MenuBar menuStructure={sendMenuStructure} />
-                                </Box>
-                            </Box>
-                        </SiblingWithBottomRightTab>
-                    )}
-                </Box>
-            )}
-        </TabTemplate>
+                </Box> : null}
+            </Box>
+        </TabTemplate >
     ) : (
         <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
     );

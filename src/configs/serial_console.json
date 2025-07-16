@@ -9,18 +9,11 @@
             "type": "number",
             "default": 12
         },
-        "use_xterm":{
-            "title": "Use Xterm.js",
-            "description": "When selected, the Xterm.js library will be used for the serial console.",
+        "show_snippet_editor": {
+            "title": "Show code snippet editor",
+            "description": "This is better for sending multiple lines of code to Python RELP",
             "type": "boolean",
             "default": false
-        },
-        "send_mode": {
-            "title": "Send mode",
-            "description": "Code mode is for sending Python code in the REPL. Text mode is for communicating with the microcontroller when your Python code contains the print() function.",
-            "type": "string",
-            "enum": ["code", "text"],
-            "default": "code"
         },
         "enter_to_send": {
             "title": "Enter to send, Shift-Enter to make newline",

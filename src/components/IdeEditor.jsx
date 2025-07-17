@@ -242,9 +242,12 @@ export default function IdeEditor({ node }) {
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
-        // Register the linter web worker with the ACE editor
-        const languageProvider = LanguageProvider.create(aceLinterWorker);
-        languageProvider.registerEditor(aceEditorRef.current.editor);
+
+        if (config.editor.linter) {
+            // Register the linter web worker with the ACE editor
+            const languageProvider = LanguageProvider.create(aceLinterWorker);
+            languageProvider.registerEditor(aceEditorRef.current.editor);
+        }
     }
 
     const title =

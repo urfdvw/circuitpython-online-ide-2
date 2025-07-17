@@ -1,7 +1,7 @@
 // react
-import { useContext } from "react";
+import { useContext, lazy, Suspense } from "react";
 // plotly
-import Plot from "react-plotly.js";
+const Plot = lazy(() => import("react-plotly.js"));
 // context
 import AppContext from "../AppContext";
 
@@ -146,7 +146,9 @@ export default function RawPlotter({ node }) {
     return (
         <TabTemplate title="Plot" menuStructure={menuStructure}>
             {serialOutput && plot_data_lines.length > 0 ? (
-                <Plot data={data} layout={layout} />
+                <Suspense fallback={<div>Loading...</div>}>
+                    <Plot data={data} layout={layout} />
+                </Suspense>
             ) : (
                 <Typography style={{ padding: "20px" }}>No data to plot</Typography>
             )}

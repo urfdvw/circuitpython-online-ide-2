@@ -23,7 +23,7 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
 
     const terminal = useRef(new Terminal(terminalOptions));
     const terminalRef = useRef(null);
-    const fitAddon = useRef(new FitAddon());
+    const fitAddon = new FitAddon();
     console.log(terminal.current);
 
     useEffect(() => {
@@ -33,19 +33,20 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
         }
         if (!terminal.current.element) {
             terminal.current.open(terminalRef.current);
+
+            // fit
+            terminal.current.loadAddon(fitAddon);
+            fitAddon.fit();
+            // data stream
+            terminal.current.onData((data) => {
+                sendDataToSerialPort(data);
+                console.log("sent", data);
+            });
+            terminal.current.onTitleChange((title) => {
+                console.log(title);
+                setSerialTitle(title);
+            });
         }
-        // fit
-        terminal.current.loadAddon(fitAddon.current);
-        fitAddon.current.fit();
-        // data stream
-        terminal.current.onData((data) => {
-            sendDataToSerialPort(data);
-            console.log("sent", data);
-        });
-        terminal.current.onTitleChange((title) => {
-            console.log(title);
-            setSerialTitle(title);
-        });
         serial.registerReaderCallback("terminal", (data) => {
             terminal.current.write(data);
         });
@@ -56,13 +57,13 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             return;
         }
         terminal.current.options.fontSize = appConfig.config.serial_console.font + 3;
-        fitAddon.current.fit();
+        fitAddon.fit();
     }, [appConfig.config.serial_console.font]);
 
     useEffect(() => {
         setInterval(() => {
             if (terminal.current) {
-                fitAddon.current.fit();
+                fitAddon.fit();
             }
         }, 1000); // Adjust the interval as needed
     }, []);

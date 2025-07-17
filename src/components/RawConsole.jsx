@@ -204,7 +204,7 @@ const RawConsole = () => {
     const [serialTitle, setSerialTitle] = useState("");
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
-    const [showCodeArea, setShowCodeArea] = useState(false);
+    const [clearTrigger, setClearTrigger] = useState(0);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
@@ -236,8 +236,7 @@ const RawConsole = () => {
                 {
                     text: "Clear",
                     handler: () => {
-                        console.log("Clear");
-                        clearSerialOutput();
+                        setClearTrigger((prev) => prev + 1);
                     },
                 },
                 {
@@ -286,7 +285,7 @@ const RawConsole = () => {
                             );
                         }}
                     >
-                        <XtermConsole setSerialTitle={setSerialTitle} />
+                        <XtermConsole setSerialTitle={setSerialTitle} clearTrigger={clearTrigger} />
                     </SiblingWithBottomRightTab>
                 </Box>
                 {appConfig.config.serial_console.show_snippet_editor ? (

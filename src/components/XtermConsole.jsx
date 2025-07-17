@@ -11,7 +11,7 @@ const invert_css = {
     msFilter: "invert(100%) hue-rotate(180deg)",
 };
 
-const XtermConsole = ({ setSerialTitle }) => {
+const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
     const { appConfig, sendDataToSerialPort, serial } = useContext(AppContext);
 
     const terminalOptions = {
@@ -66,6 +66,11 @@ const XtermConsole = ({ setSerialTitle }) => {
             }
         }, 1000); // Adjust the interval as needed
     }, []);
+
+    useEffect(() => {
+        terminal.current.clear();
+        console.log("Clear terminal", clearTrigger);
+    }, [clearTrigger]);
 
     return (
         <div

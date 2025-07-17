@@ -34,9 +34,6 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
         if (!terminal.current.element) {
             terminal.current.open(terminalRef.current);
 
-            // fit
-            terminal.current.loadAddon(fitAddon);
-            fitAddon.fit();
             // data stream
             terminal.current.onData((data) => {
                 sendDataToSerialPort(data);
@@ -46,6 +43,17 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
                 console.log(title);
                 setSerialTitle(title);
             });
+            // auto fit
+            terminal.current.loadAddon(fitAddon);
+            fitAddon.fit();
+            const observer = new ResizeObserver(entries => {
+                for (let entry of entries) {
+                    const { width, height } = entry.contentRect;
+                    console.log('Size changed:', width, height);
+                    fitAddon.fit();
+                }
+            });
+            observer.observe(terminal.current.element.parentElement);
         }
         serial.registerReaderCallback("terminal", (data) => {
             terminal.current.write(data);
@@ -59,14 +67,6 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
         terminal.current.options.fontSize = appConfig.config.serial_console.font + 3;
         fitAddon.fit();
     }, [appConfig.config.serial_console.font]);
-
-    useEffect(() => {
-        setInterval(() => {
-            if (terminal.current) {
-                fitAddon.fit();
-            }
-        }, 1000); // Adjust the interval as needed
-    }, []);
 
     useEffect(() => {
         terminal.current.clear();

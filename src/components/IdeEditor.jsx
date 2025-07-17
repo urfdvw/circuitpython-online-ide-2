@@ -10,6 +10,9 @@ import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-tomorrow";
+import 'ace-builds/src-noconflict/snippets/python';
+import {LanguageProvider} from "ace-linters/build/ace-linters";
+
 // Layout
 import PopUp from "../utilComponents/PopUp";
 import { selectTabById } from "../layout/layoutUtils";
@@ -23,6 +26,12 @@ import { FILE_EDITED } from "../constants";
 import * as FlexLayout from "flexlayout-react";
 // tab
 import TabTemplate from "../utilComponents/TabTemplate";
+
+let aceLinterWorker =  new Worker(new URL('/ace-linter-worker.js', import.meta.url), { type: 'module' })
+
+aceLinterWorker.onerror = (error) => {
+    console.error("Ace Linter Worker error:", error);
+}
 
 function generateRandomNumber(a) {
     // Calculate the range between a and a/4
@@ -44,6 +53,7 @@ export default function IdeEditor({ node }) {
     const [fileEdited, setFileEdited] = useState(false);
     const [popped, setPopped] = useState(false);
     const [fileExists, setFileExists] = useState(true);
+
     // scheduled state checking
     useEffect(() => {
         const interval = setInterval(async () => {
@@ -75,6 +85,7 @@ export default function IdeEditor({ node }) {
     var mode = "text";
     if (fileHandle.name.toLowerCase().endsWith(".py")) {
         mode = "python";
+
     }
     if (fileHandle.name.toLowerCase().endsWith(".md")) {
         mode = "markdown";
@@ -231,6 +242,9 @@ export default function IdeEditor({ node }) {
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
+        // Register the linter web worker with the ACE editor
+        const languageProvider = LanguageProvider.create(aceLinterWorker);
+        languageProvider.registerEditor(aceEditorRef.current.editor);
     }
 
     const title =

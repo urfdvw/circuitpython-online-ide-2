@@ -4,7 +4,14 @@ import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import AppContext from "../AppContext";
 
-const XtermConsole = ({setSerialTitle}) => {
+const invert_css = {
+    WebkitFilter: "invert(100%) hue-rotate(180deg)",
+    MozFilter: "invert(100%) hue-rotate(180deg)",
+    OFilter: "invert(100%) hue-rotate(180deg)",
+    msFilter: "invert(100%) hue-rotate(180deg)",
+};
+
+const XtermConsole = ({ setSerialTitle }) => {
     const { appConfig, sendDataToSerialPort, serial } = useContext(AppContext);
 
     const terminalOptions = {
@@ -12,10 +19,6 @@ const XtermConsole = ({setSerialTitle}) => {
         fontFamily: "monospace",
         cursorBlink: true,
         fontSize: appConfig.config.serial_console.font + 3,
-        theme: {
-            background: "#ffffff",
-            foreground: "#000000",
-        },
     };
 
     const terminal = useRef(new Terminal(terminalOptions));
@@ -70,10 +73,11 @@ const XtermConsole = ({setSerialTitle}) => {
             style={{
                 width: "100%",
                 height: "100%",
-                backgroundColor: "#ffffff",
                 overflowY: "hidden",
+                scrollbarColor: "#777 #000",
+                ...invert_css,
             }}
-        ></div>
+        />
     );
 };
 

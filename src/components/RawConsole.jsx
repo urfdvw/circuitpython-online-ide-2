@@ -33,23 +33,6 @@ import XtermConsole from "./XtermConsole";
 
 import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
 
-const RawSerialRead = () => {
-    const { appConfig, serialOutput } = useContext(AppContext);
-    const config = appConfig.config;
-    let read_text = removeInBetween(serialOutput, constants.TITLE_START, constants.TITLE_END);
-
-    // temp fix of the ANSI parsing
-    // TODO: https://github.com/urfdvw/circuitpython-online-ide-2/issues/45
-    read_text = read_text.split("\x1B[2K\x1B[0G").join("\n");
-
-    if (config.serial_console.hide_cv) {
-        read_text = removeInBetween(read_text, constants.CV_JSON_START, constants.CV_JSON_END);
-    }
-    // keep 1k lines to save GPU
-    read_text = read_text.split("\n").slice(-1000).join("\n");
-    return <pre style={{ whiteSpace: "pre-wrap", fontSize: config.serial_console.font + "pt" }}>{read_text}</pre>;
-};
-
 const RawSerialWrite = ({
     text,
     setText,
@@ -284,8 +267,6 @@ const RawConsole = () => {
         },
     ];
 
-    const sendTooltip = text.split("\n").length > 1 ? "Send as code snippet" : "Send";
-
     return serialReady ? (
         <TabTemplate title={serialReady ? serialTitle : "Not Connected"} menuStructure={menuStructure}>
             <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
@@ -305,15 +286,7 @@ const RawConsole = () => {
                             );
                         }}
                     >
-                        <ScrollableFeed
-                            sx={{
-                                flexShrink: 0,
-                                display: "flex",
-                                height: "100%",
-                            }}
-                        >
-                            <XtermConsole setSerialTitle={setSerialTitle} />
-                        </ScrollableFeed>
+                        <XtermConsole setSerialTitle={setSerialTitle} />
                     </SiblingWithBottomRightTab>
                 </Box>
                 {appConfig.config.serial_console.show_snippet_editor ? (
@@ -350,9 +323,7 @@ const RawConsole = () => {
                                 justifyContent: "right",
                             }}
                         >
-                            <Tooltip title={sendTooltip} placement="top">
-                                <Button onClick={consoleSendCommand}>Send</Button>
-                            </Tooltip>
+                            <Button onClick={consoleSendCommand}>Send</Button>
                         </Box>
                     </Box>
                 ) : null}

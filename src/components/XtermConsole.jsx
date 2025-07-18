@@ -29,6 +29,7 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
     useEffect(() => {
         /* terminal init */
         if (!terminalRef.current) {
+            console.error("Error initializing terminal")
             return;
         }
         if (!terminal.current.element) {
@@ -54,10 +55,11 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
                 }
             });
             observer.observe(terminal.current.element.parentElement);
+            // serial call back
+            serial.registerReaderCallback("terminal", (data) => {
+                terminal.current.write(data);
+            });
         }
-        serial.registerReaderCallback("terminal", (data) => {
-            terminal.current.write(data);
-        });
     }, []);
 
     useEffect(() => {

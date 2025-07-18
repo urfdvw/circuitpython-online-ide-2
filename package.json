@@ -38,7 +38,9 @@
     "react-webcam": "^7.2.0",
     "react-zoom-pan-pinch": "^3.7.0",
     "remark-gfm": "^4.0.0",
-    "tslib": "^2.6.2"
+    "tslib": "^2.6.2",
+    "xterm": "^5.3.0",
+    "xterm-addon-fit": "^0.8.0"
   },
   "devDependencies": {
     "@babel/core": "^7.26.7",

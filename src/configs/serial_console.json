@@ -9,15 +9,14 @@
             "type": "number",
             "default": 12
         },
-        "send_mode": {
-            "title": "Send mode",
-            "description": "Code mode is for sending Python code in the REPL. Text mode is for communicating with the microcontroller when your Python code contains the print() function.",
-            "type": "string",
-            "enum": ["code", "text"],
-            "default": "code"
+        "show_snippet_editor": {
+            "title": "Show code snippet editor",
+            "description": "This is better for sending multiple lines of code to Python RELP",
+            "type": "boolean",
+            "default": false
         },
         "enter_to_send": {
-            "title": "Enter to send, Shift-Enter to make newline",
+            "title": "In code snippet editor, Enter to send, Shift-Enter to make newline",
             "description": "When not selected, the shortcuts will be reversed. This setting is applicable exclusively in code mode. In text mode, however, both shortcuts function to send text.",
             "type": "boolean",
             "default": false
@@ -25,12 +24,6 @@
         "force_exec": {
             "title": "Enforce execution of sent code",
             "description": "When selected, this option ensures code executes instantly upon submission, interrupting any active processes. This configuration is applicable exclusively in code mode.",
-            "type": "boolean",
-            "default": true
-        },
-        "hide_cv": {
-            "title": "Hide <CV> communication",
-            "description": "When deselected, raw communication data for connected variable widgets will be displayed.",
             "type": "boolean",
             "default": true
         }

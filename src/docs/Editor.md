@@ -28,7 +28,7 @@ REPL Mode Specific:
 
 - Path: The full path of the file. This is useful when multiple files have the same name in the working directory.
 - **(unsaved changes)** indicator: Appears when the file content differs from the text in the Code Editor. Usually happens during editing or due to file changes outside the IDE.
-  - The star icon, ✨, in the tab title serves the same purpose.
+  - The star icon, ⚝, in the tab title serves the same purpose.
 - **(deleted)** indicator: Appears when the opened file is no longer accessible, possibly due to deletion, relocation, or renaming. This can also occur if the working directory is missing, such as when the microcontroller is accidentally unplugged from the USB port.
 
 ### Buttons

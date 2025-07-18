@@ -38,14 +38,14 @@ function App() {
     // config
     const configTabSelection = useTabValueName(schemas);
     const appConfig = useConfig(schemas);
-    useEffect(() => {
-        console.log("config", appConfig);
-    }, [appConfig]);
+    // useEffect(() => {
+    //     console.log("config", appConfig);
+    // }, [appConfig]); // debug
     // help
     const helpTabSelection = useTabValueName(docs);
-    useEffect(() => {
-        console.log("helpTabSelection", helpTabSelection);
-    }, [helpTabSelection]);
+    // useEffect(() => {
+    //     console.log("helpTabSelection", helpTabSelection);
+    // }, [helpTabSelection]); // debug
     // hot keys
     useLayoutHotKeys(flexModel);
     // channel

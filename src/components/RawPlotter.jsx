@@ -54,17 +54,18 @@ export default function RawPlotter({ node }) {
             const last_active_block = output.split("soft reboot").at(-1);
             // console.log("RawPlotter", "Last active block:", last_active_block);
             const last_plot_text = last_active_block.split("startplot:").at(-1);
-            console.log("RawPlotter", "Last plot data:", last_plot_text);
+            // console.log("RawPlotter", "Last plot data:", last_plot_text);
 
             var plot_labels = last_plot_text.split("\n").at(0).trim().split(" ");
-            console.log("Plot labels:", plot_labels);
+            // console.log("Plot labels:", plot_labels);
 
             var plot_data_lines = text_to_data(last_plot_text);
 
             if (plot_labels.length === 0 || plot_labels[0] === "") {
                 showlegend = false;
+                plot_labels = plot_data_lines[0].map((_, index) => `Curve ${index + 1}`);
             }
-            console.log("Plot labels:", plot_labels);
+            // console.log("Plot labels:", plot_labels);
 
             if (config.plot.truncate) {
                 plot_data_lines = plot_data_lines.slice(-config.plot.history_len);

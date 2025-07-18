@@ -19,7 +19,7 @@ The Serial Title indicates the status of CircuitPython:
   - **Settings**: Open Serial Console Settings.
   - **Help**: Open Serial Console Help.
 
-## How to Use
+## How to Use The Serial Console
 
 The Serial Console allows you to send and receive character input with your running program,
 or interact with the Python REPL (Read-Evaluate-Print Loop) for testing and debugging.
@@ -33,23 +33,11 @@ Select text in the console and use the mouse right click menu to copy data into 
 Since CircuitPython reserves the Control key for special purposes,  Ctrl-C cannot be used to copy into the clipboard.
 See Keyboard Shortcuts below for details.
 
-### Keyboard Shortcuts
-
-*MacOS shortcuts in parentheses.*
-
-- [Ctrl-Shift-C] ([Ctrl-C]): Sends a "Ctrl-C" (BRK, Break execution) signal.
-- [Ctrl-Shift-D] ([Ctrl-D]): Sends a "Ctrl-D" (EOF, Restart Execution) signal.
-- [Up] (when the cursor is at the first line in the editor): Recalls earlier command history.
-- [Down] (when the cursor is at the last line in the editor): Recalls later command history.
-
-Note:
-For additional help and options, refer to the **Serial Console** settings in the **Settings** tab.
-
 ### REPL
 
 For guidance on using the REPL, refer to Quick Start -> REPL.
 
-### Code Snippets
+## How to Use The Code Snippet Editor
 
 The IDE has a mini-editor in the Serial Console to allow you to compose a multi-line code snippet and send it to be executed all at once in the REPL.
 
@@ -63,3 +51,21 @@ Use Ctrl-C to stop the current execution and make sure you see the triple caret 
 To view the snippet editor, select the "Py" button in the bottom right corner of the Serial Console.
 You will see a line editor open. By default, pressing Enter will allow you to add another line of code.
 Pressing Shift-Enter (or the "SEND" button) will send the entire snippet to the microcontroller surrounded by a call to `exec()`.
+
+## Keyboard Shortcuts
+*MacOS shortcuts in parentheses if different.*
+
+**Serial Console Shortcuts**
+- [Ctrl-C]: Sends a "Ctrl-C" (BRK, Break execution) signal.
+- [Ctrl-D]: Sends a "Ctrl-D" (EOF, Restart Execution) signal.
+- [Up]: Recalls earlier command history.
+- [Down]: Recalls later command history.
+
+**Code Snippet Editor Shortcuts**
+- [Ctrl-Shift-C] ([Ctrl-C]): Sends a "Ctrl-C" (BRK, Break execution) signal.
+- [Ctrl-Shift-D] ([Ctrl-D]): Sends a "Ctrl-D" (EOF, Restart Execution) signal.
+- [Up] (when the cursor is at the first line in the editor): Recalls earlier command history.
+- [Down] (when the cursor is at the last line in the editor): Recalls later command history.
+
+Note:
+For additional help and options, refer to the **Serial Console** settings in the **Settings** tab.

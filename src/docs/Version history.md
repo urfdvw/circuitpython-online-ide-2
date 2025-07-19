@@ -1,3 +1,11 @@
+## Version 2.1.0
+Released on July 18th, 2025
+
+Significant updates from version 2.0.0 Beta.3 include:
+- Serial Console rewrote with Xterm
+- Progressive Web App
+- Performance improvement and bug fixes
+
 ## Version 2.0.0 Beta.3
 Released on July 12th, 2025
 

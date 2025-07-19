@@ -61,7 +61,7 @@ REPL (Read-Evaluate-Print Loop) is a coding mode where you can interact with the
 
 ## About
 
-Version: 2.0.0 Beta.3
+Version: 2.1.0
 
 [CircuitPython](https://circuitpython.org/) is a version of Python that runs on microcontrollers and single-board computers. Its development is sponsored by [Adafruit](https://www.adafruit.com/).
 

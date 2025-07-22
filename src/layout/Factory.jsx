@@ -8,6 +8,7 @@ import RawConsole from "../components/RawConsole";
 import DocCam from "../components/DocCam";
 import Backup from "../components/Backup";
 import RawPlotter from "../components/RawPlotter";
+import LibManagement from "../components/LibManagement";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -71,6 +72,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <RawPlotter node={node} />
+            </div>
+        );
+    } else if (component === "lib_management") {
+        return (
+            <div className="tab_content">
+                <LibManagement />
             </div>
         );
     }

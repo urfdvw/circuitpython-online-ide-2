@@ -65,6 +65,12 @@
                 "children": [
                     {
                         "type": "tab",
+                        "name": "Library Management",
+                        "component": "lib_management",
+                        "enableClose": true
+                    },
+                    {
+                        "type": "tab",
                         "name": "Navigation",
                         "component": "navigation",
                         "enableClose": true

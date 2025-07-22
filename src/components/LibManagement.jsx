@@ -2,6 +2,7 @@ import TabTemplate from "../utilComponents/TabTemplate";
 import { useContext } from "react";
 import { AppContext } from "../AppContext";
 import { getFromPath, checkFileExists } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+import { collectPythonTopLevelImports } from "../utilFunctions/fileSysUtils"
 
 const LIB_PATH = ".lib"; // move to const
 
@@ -28,6 +29,8 @@ export default function LibManagement() {
                 }
                 const installedLibs = await getInstalledLibs(rootDirHandle);
                 console.log(installedLibs);
+                const scannedLibs = await collectPythonTopLevelImports(rootDirHandle)
+                console.log(scannedLibs)
             },
         },
     ];

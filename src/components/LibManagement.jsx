@@ -4,6 +4,7 @@ import { AppContext } from "../AppContext";
 import { getFromPath, checkFileExists } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import { collectPythonTopLevelImports } from "../utilFunctions/fileSysUtils"
 
+import { useZipStorage } from '../utilHooks/useZipStorage';
 const LIB_PATH = ".lib"; // move to const
 
 async function getInstalledLibs(rootDirHandle) {
@@ -18,6 +19,7 @@ async function getInstalledLibs(rootDirHandle) {
 
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
+    const { openZipFile, getItem } = useZipStorage();
     const menuStructure = [
         {
             text: "Upgrade all libs",
@@ -33,6 +35,23 @@ export default function LibManagement() {
                 console.log(scannedLibs)
             },
         },
+        {
+            label: "zip test",
+            options: [
+                {
+                    text: "upload",
+                    handler: openZipFile
+                },
+                {
+                    text: "read",
+                    handler: async ()=>{
+                        const handle = await getItem('cource dir/touchbar.py');
+                        const file = await handle.getFile();
+                        console.log([file])
+                    }
+                }
+            ]
+        }
     ];
 
     return <TabTemplate menuStructure={menuStructure} title="Library Management"></TabTemplate>;

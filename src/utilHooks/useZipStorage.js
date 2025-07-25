@@ -32,17 +32,36 @@ export function useZipStorage() {
                     const zip = await JSZip.loadAsync(arrayBuffer);
                     const db = await initDB();
 
-                    const fileEntries = Object.keys(zip.files).map(async (path) => {
+                    // Step 1: Find common root folder (if all files share a prefix)
+                    const allPaths = Object.keys(zip.files);
+                    let commonPrefix = null;
+
+                    if (allPaths.length > 0) {
+                        const firstPathParts = allPaths[0].split('/');
+                        const candidateRoot = firstPathParts[0];
+
+                        const allShareRoot = allPaths.every(p => p.startsWith(candidateRoot + '/'));
+                        if (allShareRoot) {
+                            commonPrefix = candidateRoot + '/';
+                        }
+                    }
+
+                    // Step 2: Normalize entries
+                    const fileEntries = allPaths.map(async (path) => {
                         const zipEntry = zip.files[path];
+                        const normalizedPath = commonPrefix ? path.slice(commonPrefix.length) : path;
+
+                        if (!normalizedPath) return null; // Skip root folder itself
+
                         if (zipEntry.dir) {
-                            return { path, type: 'folder' };
+                            return { path: normalizedPath, type: 'folder' };
                         } else {
                             const content = await zipEntry.async('uint8array');
-                            return { path, type: 'file', content };
+                            return { path: normalizedPath, type: 'file', content };
                         }
                     });
 
-                    const entries = await Promise.all(fileEntries);
+                    const entries = (await Promise.all(fileEntries)).filter(Boolean);
 
                     const tx = db.transaction(STORE_NAME, 'readwrite');
                     const store = tx.objectStore(STORE_NAME);
@@ -64,7 +83,6 @@ export function useZipStorage() {
             input.click();
         });
     }, []);
-
 
     const getItem = useCallback(async (relativePath) => {
         const db = await initDB();

@@ -20,6 +20,11 @@
             "type": "string",
             "enum": ["auto", "unix", "windows"],
             "default": "auto"
+        },
+        "linter": {
+            "title": "Enable Linter",
+            "type": "boolean",
+            "default": false
         }
     }
 }

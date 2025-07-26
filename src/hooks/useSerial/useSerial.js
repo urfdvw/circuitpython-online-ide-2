@@ -12,8 +12,15 @@ const useSerial = () => {
 
     useEffect(() => {
         // check if browser compatible
+        // Note: this check will fail in other cases too:
+        //   - URL must be secure or localhost
+        //   - Must run after the DOM has been loaded
+        //   - Must be in the main thread.
         if (!navigator.serial) {
-            console.error("Web Serial API not supported");
+            const isMainThread = typeof window !== "undefined" && typeof document !== "undefined";
+            const isLoading = document.readyState === "loading";
+            const isSecure = window.location.protocol === "https:";
+            console.error(`Web Serial API not supported: isSecure: ${isSecure}, isMainThread: ${isMainThread}, isLoading: ${isLoading}`);
         }
 
         // setup callback to get full history

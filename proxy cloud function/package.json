@@ -1,0 +1,13 @@
+{
+    "name": "cors-proxy",
+    "type": "module",
+    "engines": {
+        "node": ">=18"
+    },
+    "dependencies": {
+        "@google-cloud/functions-framework": "^3.0.0"
+    },
+    "scripts": {
+        "start": "functions-framework --target=corsProxy"
+    }
+}

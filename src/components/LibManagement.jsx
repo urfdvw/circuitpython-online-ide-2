@@ -19,7 +19,7 @@ async function getInstalledLibs(rootDirHandle) {
 
 async function fetchBundleContent() {
     const targetUrl =
-        "https://github.com/adafruit/Adafruit_CircuitPython_Bundle/releases/download/20250729/adafruit-circuitpython-bundle-20250729.json";
+        "https://github.com/adafruit/CircuitPython_Community_Bundle/releases/download/20250720/circuitpython-community-bundle-20250720.json";
 
     // 已部署的 Cloud Run 代理端点
     const PROXY_ENDPOINT = "https://cpy-lib-proxy-663297601284.us-central1.run.app";
@@ -30,9 +30,9 @@ async function fetchBundleContent() {
     if (!resp.ok) {
         throw new Error(`Failed to fetch bundle: ${resp.status} ${resp.statusText}`);
     }
-
-    const bundle = JSON.parse(await resp.text());
-    console.log(bundle);
+    const text = await resp.text();
+    console.log(text);
+    const bundle = JSON.parse(text);
 
     return bundle;
 }

@@ -17,10 +17,7 @@ async function getInstalledLibs(rootDirHandle) {
     return text;
 }
 
-async function fetchBundleContent() {
-    const targetUrl =
-        "https://github.com/adafruit/CircuitPython_Community_Bundle/releases/download/20250720/circuitpython-community-bundle-20250720.json";
-
+async function fetchWithProxy(targetUrl) {
     // 已部署的 Cloud Run 代理端点
     const PROXY_ENDPOINT = "https://cpy-lib-proxy-663297601284.us-central1.run.app";
 
@@ -28,11 +25,59 @@ async function fetchBundleContent() {
     const resp = await fetch(`${PROXY_ENDPOINT}?url=${encodeURIComponent(targetUrl)}`);
 
     if (!resp.ok) {
-        throw new Error(`Failed to fetch bundle: ${resp.status} ${resp.statusText}`);
+        throw new Error(`Failed to fetch: ${resp.status} ${resp.statusText}`);
     }
+
+    return resp;
+}
+
+function isCircuitPythonBundleFilename(str) {
+    const pattern = /^(adafruit-circuitpython-bundle|circuitpython-community-bundle)-\d{8}\.json$/;
+    return pattern.test(str);
+}
+
+function resolveDependencies(data, targetName) {
+    const visited = new Set();
+    const result = new Set();
+    const externalDeps = new Set();
+
+    function dfs(name) {
+        if (!data[name] || visited.has(name)) return;
+        visited.add(name);
+        result.add(name);
+
+        const deps = data[name].dependencies || [];
+        const externals = data[name].external_dependencies || [];
+
+        for (const dep of deps) {
+            dfs(dep);
+        }
+
+        for (const ext of externals) {
+            externalDeps.add(ext);
+        }
+    }
+
+    dfs(targetName);
+
+    return {
+        internalNames: Array.from(result),
+        externalDependencies: Array.from(externalDeps),
+    };
+}
+
+async function fetchBundleContent(repo) {
+    const response = await fetch(`https://api.github.com/repos/adafruit/${repo}/releases/latest`);
+    const data = await response.json();
+
+    const targetUrl = data.assets.filter((x) => isCircuitPythonBundleFilename(x.name)).at(0).browser_download_url;
+    console.log(targetUrl);
+
+    const resp = await fetchWithProxy(targetUrl);
     const text = await resp.text();
     console.log(text);
     const bundle = JSON.parse(text);
+    console.log(resolveDependencies(bundle, "adafruit_74hc595"));
 
     return bundle;
 }
@@ -41,7 +86,8 @@ export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
     const { openZipFile, getItem } = useZipStorage();
     useEffect(() => {
-        fetchBundleContent();
+        fetchBundleContent("Adafruit_CircuitPython_Bundle");
+        fetchBundleContent("CircuitPython_Community_Bundle");
     }, []);
 
     const menuStructure = [

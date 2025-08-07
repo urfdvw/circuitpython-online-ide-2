@@ -48,3 +48,20 @@ display
     - installation: green -> yellow -> not installed
     - name
     - bundle: Adafruit -> Community
+
+
+data flow
+- const repo names
+- repo names -> asset links
+    - json
+    - zip
+        - int version number
+- store into local storage
+    - json combined
+    - for each version
+        - zip combined
+- read
+    - given a name
+    - if it is a top level file, return an emulated file handle
+    - if it is a top level folder, return an emulated file handle
+    - then use copy folder util to copy to real directory

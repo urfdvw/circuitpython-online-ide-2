@@ -5,16 +5,10 @@ import { getFromPath, checkFileExists } from "../utilComponents/react-local-file
 import { collectPythonTopLevelImports } from "../utilFunctions/fileSysUtils";
 
 import { useZipStorage } from "../utilHooks/useZipStorage";
-const LIB_PATH = ".lib"; // move to const
+const bundleRepos = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
 
 async function getInstalledLibs(rootDirHandle) {
-    const libFileExists = await checkFileExists(rootDirHandle, LIB_PATH);
-    if (!libFileExists) {
-        return "no such file";
-        // need better corner case handle in a higher level
-    }
-    const text = await getFromPath(rootDirHandle, LIB_PATH);
-    return text;
+    // todo: use circup like mpy content scan
 }
 
 async function fetchWithProxy(targetUrl) {
@@ -66,31 +60,47 @@ function resolveDependencies(data, targetName) {
     };
 }
 
-async function fetchBundleContent(repo) {
+async function fetchBundleAssets(repo) {
     const response = await fetch(`https://api.github.com/repos/adafruit/${repo}/releases/latest`);
     const data = await response.json();
 
-    const targetUrl = data.assets.filter((x) => isCircuitPythonBundleFilename(x.name)).at(0).browser_download_url;
-    console.log(targetUrl);
+    return data.assets
+}
 
+async function fetchBundleContent(assets) {
+
+    const targetUrl = assets.filter((x) => isCircuitPythonBundleFilename(x.name)).at(0).browser_download_url;
+    console.log(targetUrl);
     const resp = await fetchWithProxy(targetUrl);
     const text = await resp.text();
-    console.log(text);
+    // console.log(text);
     const bundle = JSON.parse(text);
-    console.log(resolveDependencies(bundle, "adafruit_74hc595"));
-
     return bundle;
 }
 
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
     const { openZipFile, getItem } = useZipStorage();
-    useEffect(() => {
-        fetchBundleContent("Adafruit_CircuitPython_Bundle");
-        fetchBundleContent("CircuitPython_Community_Bundle");
-    }, []);
 
     const menuStructure = [
+        {
+            text: "Test fetch bundle",
+            handler: async () => {
+                const bundleList = await Promise.all(
+                    bundleRepos.map(async (repo) => {
+                        const assets = await fetchBundleAssets(repo);  // was using bundleRepos[0] incorrectly
+                        const bundle = await fetchBundleContent(assets);
+                        return bundle;
+                    })
+                );
+
+                console.log(bundleList)
+                const combinedBundle = Object.assign({}, ...bundleList)
+                console.log(combinedBundle)
+                console.log(resolveDependencies(combinedBundle, "adafruit_74hc595"));
+
+            }
+        },
         {
             text: "Upgrade all libs",
             handler: async () => {

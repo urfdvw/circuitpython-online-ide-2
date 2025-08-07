@@ -32,32 +32,19 @@ function isCircuitPythonBundleFilename(str) {
 
 function resolveDependencies(data, targetName) {
     const visited = new Set();
-    const result = new Set();
-    const externalDeps = new Set();
 
     function dfs(name) {
         if (!data[name] || visited.has(name)) return;
         visited.add(name);
-        result.add(name);
-
         const deps = data[name].dependencies || [];
         const externals = data[name].external_dependencies || [];
-
-        for (const dep of deps) {
+        for (const dep of [...deps, ...externals]) {
             dfs(dep);
-        }
-
-        for (const ext of externals) {
-            externalDeps.add(ext);
         }
     }
 
     dfs(targetName);
-
-    return {
-        internalNames: Array.from(result),
-        externalDependencies: Array.from(externalDeps),
-    };
+    return Array.from(visited)
 }
 
 async function fetchBundleAssets(repo) {
@@ -78,6 +65,10 @@ async function fetchBundleContent(assets) {
     return bundle;
 }
 
+function getBundleTimeStamp(assets) {
+    return assets.at(0).updated_at
+}
+
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
     const { openZipFile, getItem } = useZipStorage();
@@ -86,18 +77,25 @@ export default function LibManagement() {
         {
             text: "Test fetch bundle",
             handler: async () => {
-                const bundleList = await Promise.all(
+                const bundleAssets = await Promise.all(
                     bundleRepos.map(async (repo) => {
                         const assets = await fetchBundleAssets(repo);  // was using bundleRepos[0] incorrectly
+                        console.log(assets)
+                        return assets;
+                    })
+                );
+                const bundleList = await Promise.all(
+                    bundleAssets.map(async (assets) => {
                         const bundle = await fetchBundleContent(assets);
                         return bundle;
                     })
                 );
 
-                console.log(bundleList)
                 const combinedBundle = Object.assign({}, ...bundleList)
-                console.log(combinedBundle)
                 console.log(resolveDependencies(combinedBundle, "adafruit_74hc595"));
+
+                const bundleTimeStamps = bundleAssets.map(assets => getBundleTimeStamp(assets))
+                console.log(bundleTimeStamps)
 
             }
         },

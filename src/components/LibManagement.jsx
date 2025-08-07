@@ -26,7 +26,7 @@ async function fetchWithProxy(targetUrl) {
 }
 
 function isCircuitPythonBundleFilename(str) {
-    const pattern = /^(adafruit-circuitpython-bundle|circuitpython-community-bundle)-\d{8}\.json$/;
+    const pattern = /^.+-\d{8}\.json$/;
     return pattern.test(str);
 }
 
@@ -69,6 +69,23 @@ function getBundleTimeStamp(assets) {
     return assets.at(0).updated_at
 }
 
+function extractBundleUrls(assets) {
+    const result = [];
+
+    for (const asset of assets) {
+        const name = asset.name;
+        const match = name.match(/^.+-(\d+)\.x-mpy-.*\.zip$/);
+        if (match) {
+            const version = parseInt(match[1], 10);
+            const url = asset.browser_download_url;
+            result.push({ version, url });
+        }
+    }
+
+    return result;
+}
+
+
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
     const { openZipFile, getItem } = useZipStorage();
@@ -97,6 +114,8 @@ export default function LibManagement() {
                 const bundleTimeStamps = bundleAssets.map(assets => getBundleTimeStamp(assets))
                 console.log(bundleTimeStamps)
 
+                const bundleZipUrls = bundleAssets.map(assets => extractBundleUrls(assets))
+                console.log(bundleZipUrls)
             }
         },
         {

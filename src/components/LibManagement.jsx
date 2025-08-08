@@ -44,18 +44,17 @@ function resolveDependencies(data, targetName) {
     }
 
     dfs(targetName);
-    return Array.from(visited)
+    return Array.from(visited);
 }
 
 async function fetchBundleAssets(repo) {
     const response = await fetch(`https://api.github.com/repos/adafruit/${repo}/releases/latest`);
     const data = await response.json();
 
-    return data.assets
+    return data.assets;
 }
 
 async function fetchBundleContent(assets) {
-
     const targetUrl = assets.filter((x) => isCircuitPythonBundleFilename(x.name)).at(0).browser_download_url;
     console.log(targetUrl);
     const resp = await fetchWithProxy(targetUrl);
@@ -66,7 +65,7 @@ async function fetchBundleContent(assets) {
 }
 
 function getBundleTimeStamp(assets) {
-    return assets.at(0).updated_at
+    return assets.at(0).updated_at;
 }
 
 function extractBundleUrls(assets) {
@@ -85,10 +84,9 @@ function extractBundleUrls(assets) {
     return result;
 }
 
-
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
-    const { openZipFile, getItem } = useZipStorage();
+    const { downloadZip, getEntry, removeDb, downloading, fileReady, contents } = useZipStorage();
 
     const menuStructure = [
         {
@@ -96,8 +94,8 @@ export default function LibManagement() {
             handler: async () => {
                 const bundleAssets = await Promise.all(
                     bundleRepos.map(async (repo) => {
-                        const assets = await fetchBundleAssets(repo);  // was using bundleRepos[0] incorrectly
-                        console.log(assets)
+                        const assets = await fetchBundleAssets(repo); // was using bundleRepos[0] incorrectly
+                        console.log(assets);
                         return assets;
                     })
                 );
@@ -108,15 +106,17 @@ export default function LibManagement() {
                     })
                 );
 
-                const combinedBundle = Object.assign({}, ...bundleList)
+                const combinedBundle = Object.assign({}, ...bundleList);
                 console.log(resolveDependencies(combinedBundle, "adafruit_74hc595"));
 
-                const bundleTimeStamps = bundleAssets.map(assets => getBundleTimeStamp(assets))
-                console.log(bundleTimeStamps)
+                const bundleTimeStamps = bundleAssets.map((assets) => getBundleTimeStamp(assets));
+                console.log(bundleTimeStamps);
 
-                const bundleZipUrls = bundleAssets.map(assets => extractBundleUrls(assets))
-                console.log(bundleZipUrls)
-            }
+                const bundleZipUrls = bundleAssets.map((assets) => extractBundleUrls(assets));
+                console.log(bundleZipUrls);
+
+                downloadZip(bundleZipUrls[0][0].url);
+            },
         },
         {
             text: "Upgrade all libs",
@@ -136,20 +136,24 @@ export default function LibManagement() {
             label: "zip test",
             options: [
                 {
-                    text: "upload",
-                    handler: openZipFile,
-                },
-                {
                     text: "read",
                     handler: async () => {
-                        const handle = await getItem("cource dir/touchbar.py");
+                        const handle = await getEntry("VERSIONS.txt");
                         const file = await handle.getFile();
-                        console.log([file]);
+                        const text = await file.text();
+                        console.log([text]);
                     },
                 },
+                { text: "remove db", handler: removeDb },
             ],
         },
     ];
 
-    return <TabTemplate menuStructure={menuStructure} title="Library Management"></TabTemplate>;
+    return (
+        <TabTemplate menuStructure={menuStructure} title="Library Management">
+            {downloading ? "downloading" : "not downloading"}
+            <br />
+            {fileReady ? contents.toString() : "no files"}
+        </TabTemplate>
+    );
 }

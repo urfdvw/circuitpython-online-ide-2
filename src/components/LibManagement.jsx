@@ -86,7 +86,7 @@ function extractBundleUrls(assets) {
 
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
-    const { downloadZip, getEntry, removeDb, downloading, fileReady, contents } = useZipStorage();
+    const { downloadZip, uploadZipFromLocal, getEntry, removeDb, downloading, fileReady, contents } = useZipStorage();
 
     const menuStructure = [
         {
@@ -135,6 +135,10 @@ export default function LibManagement() {
         {
             label: "zip test",
             options: [
+                {
+                    text: "upload zip",
+                    handler: uploadZipFromLocal,
+                },
                 {
                     text: "read",
                     handler: async () => {

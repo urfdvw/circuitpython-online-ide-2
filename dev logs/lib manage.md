@@ -65,3 +65,24 @@ data flow
     - if it is a top level file, return an emulated file handle
     - if it is a top level folder, return an emulated file handle
     - then use copy folder util to copy to real directory
+
+work flow
+
+- prepare request
+    - get cpy version of the MCU
+        - error stop if cpy version cannot be get
+    - get asset lists from git api
+        - error stop if cpy version not in assets list
+            - prompt to upload bundle
+        - error stop if cannot get asset lists
+            - prompt to upload bundle
+    - get bundle versions from the asset lists
+- prepare files
+    - if lib zip in local storage
+        - get cached bundle version
+        - if upgradable
+            - prompt asking if user want to upgrade
+    - else
+        - download bundle zip and json
+    - error stop if cannot download bundle zip and json
+        - prompt to upload bundle

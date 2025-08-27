@@ -8,8 +8,15 @@ import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
 const bundleRepos = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
 
+import { parseCircuitPythonInfo } from "../utilFunctions/dataProcessing"
+
 async function getInstalledLibs(rootDirHandle) {
     // todo: use circup like mpy content scan
+}
+
+async function getBoardInfo(rootDirHandle) {
+    const boot_out_txt = await getFromPath(rootDirHandle, 'boot_out.txt');
+    return parseCircuitPythonInfo(boot_out_txt)
 }
 
 async function fetchWithProxy(targetUrl) {
@@ -98,6 +105,13 @@ export default function LibManagement() {
     } = useTextStorage('testText')
 
     const menuStructure = [
+        {
+            text: "test prepare",
+            handler: async () => {
+                const board_info = await getBoardInfo(rootDirHandle)
+                console.log(board_info)
+            }
+        },
         {
             text: "Test fetch bundle",
             handler: async () => {

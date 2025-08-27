@@ -5,6 +5,7 @@ import { getFromPath, checkFileExists } from "../utilComponents/react-local-file
 import { collectPythonTopLevelImports } from "../utilFunctions/fileSysUtils";
 
 import { useZipStorage } from "../utilHooks/useZipStorage";
+import { useTextStorage } from "../utilHooks/useTextStorage";
 const bundleRepos = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
 
 async function getInstalledLibs(rootDirHandle) {
@@ -86,7 +87,15 @@ function extractBundleUrls(assets) {
 
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
-    const { downloadZip, uploadZipFromLocal, getEntry, removeDb, downloading, fileReady, contents } = useZipStorage();
+    const { downloadZip, uploadZipFromLocal, getEntry, removeDb, downloading: zipDownloading, fileReady, contents } = useZipStorage('testDb');
+    const {
+        downloadText,
+        uploadTextFile,
+        getText,
+        downloading: textDownloading,
+        textReady,
+        clear,
+    } = useTextStorage('testText')
 
     const menuStructure = [
         {
@@ -112,10 +121,16 @@ export default function LibManagement() {
                 const bundleTimeStamps = bundleAssets.map((assets) => getBundleTimeStamp(assets));
                 console.log(bundleTimeStamps);
 
-                const bundleZipUrls = bundleAssets.map((assets) => extractBundleUrls(assets));
-                console.log(bundleZipUrls);
+                // const bundleZipUrls = bundleAssets.map((assets) => extractBundleUrls(assets));
+                // console.log(bundleZipUrls);
 
-                downloadZip(bundleZipUrls[0][0].url);
+                // await downloadZip(bundleZipUrls[0][0].url);
+
+                const jsonUrl = bundleAssets[0].filter((x) => isCircuitPythonBundleFilename(x.name)).at(0).browser_download_url;
+
+                console.log(jsonUrl);
+                await downloadText(jsonUrl)
+                console.log("end")
             },
         },
         {
@@ -155,7 +170,11 @@ export default function LibManagement() {
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
-            {downloading ? "downloading" : "not downloading"}
+            {textDownloading ? "text downloading" : "text not downloading"}
+            <br />
+            {textReady ? getText() : "no text"}
+            <hr />
+            {zipDownloading ? "zip downloading" : "zip not downloading"}
             <br />
             {fileReady ? contents.toString() : "no files"}
         </TabTemplate>

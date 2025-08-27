@@ -57,19 +57,19 @@ export function useTextStorage(textName) {
             setDownloading(true);
             try {
                 const res = await fetchWithProxy(url);
-                const ct = res.headers.get("content-type") || "";
-                if (!isTextContentType(ct)) {
-                    return { ok: false, reason: "not-text" };
-                }
+                // console.log(res)
                 const text = await res.text();
                 const enc = new TextEncoder();
                 const bytes = enc.encode(text);
                 if (isProbablyBinary(bytes)) {
+                    console.error('fetch failed: isProbablyBinary')
                     return { ok: false, reason: "not-text" };
                 }
                 setStoredText(text);
+                console.log('fetch finished')
                 return { ok: true };
             } catch (e) {
+                console.error('fetch failed')
                 return { ok: false, error: e?.message || "fetch-failed" };
             } finally {
                 setDownloading(false);
@@ -143,9 +143,14 @@ export function useTextStorage(textName) {
         return () => window.removeEventListener("storage", onStorage);
     }, [storageKey]);
 
+    function getText() {
+        return localStorage.getItem(storageKey)
+    }
+
     return {
         downloadText,
         uploadTextFile,
+        getText,
         downloading,
         textReady,
         clear,

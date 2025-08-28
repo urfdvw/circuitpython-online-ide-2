@@ -91,19 +91,13 @@ export default function LibManagement() {
         downloadZipFromWeb,
         uploadZipFromLocal,
         getEntryFromCache,
-        clearCache,
+        clearZipCache,
         preparingZip,
         zipReady,
         zipContents,
     } = useZipStorage("testDb");
-    const {
-        downloadText,
-        uploadTextFile,
-        getText,
-        downloading: textDownloading,
-        textReady,
-        clear,
-    } = useTextStorage("testText");
+    const { downloadTextFromWeb, uploadTextFromLocal, getText, clearTextCache, preparingText, textReady } =
+        useTextStorage("testText");
 
     useEffect(() => {
         console.log(boardInfo);
@@ -170,7 +164,7 @@ export default function LibManagement() {
                             .at(0).browser_download_url;
 
                         console.log(jsonUrl);
-                        await downloadText(jsonUrl);
+                        await downloadTextFromWeb(jsonUrl);
                         console.log("end");
                     },
                 },
@@ -187,7 +181,19 @@ export default function LibManagement() {
                         console.log([text]);
                     },
                 },
-                { text: "test zip: clearCache", handler: clearCache },
+                { text: "test zip: clearZipCache", handler: clearZipCache },
+                {
+                    text: "test text: uploadTextFromLocal",
+                    handler: uploadTextFromLocal,
+                },
+                {
+                    text: "test text: getText",
+                    handler: () => {
+                        const text = getText();
+                        console.log([text]);
+                    },
+                },
+                { text: "test text: clearTextCache", handler: clearTextCache },
                 {
                     text: "test prepare",
                     handler: async () => {
@@ -215,7 +221,7 @@ export default function LibManagement() {
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
-            {textDownloading ? "text downloading" : "text not downloading"}
+            {preparingText ? "text downloading" : "text not downloading"}
             <br />
             {textReady ? getText() : "no text"}
             <hr />

@@ -12,7 +12,7 @@ async function fetchWithProxy(targetUrl) {
 
 export function useTextStorage(textName) {
     const storageKey = useMemo(() => String(textName), [textName]);
-    const [downloading, setDownloading] = useState(false);
+    const [preparingText, setPreparingText] = useState(false);
     const [textReady, setTextReady] = useState(typeof window !== "undefined" && !!localStorage.getItem(storageKey));
 
     const isTextContentType = (ct = "") => {
@@ -47,14 +47,14 @@ export function useTextStorage(textName) {
         [storageKey]
     );
 
-    const clear = useCallback(() => {
+    const clearTextCache = useCallback(() => {
         localStorage.removeItem(storageKey);
         setTextReady(false);
     }, [storageKey]);
 
-    const downloadText = useCallback(
+    const downloadTextFromWeb = useCallback(
         async (url) => {
-            setDownloading(true);
+            setPreparingText(true);
             try {
                 const res = await fetchWithProxy(url);
                 // console.log(res)
@@ -72,13 +72,13 @@ export function useTextStorage(textName) {
                 console.error('fetch failed')
                 return { ok: false, error: e?.message || "fetch-failed" };
             } finally {
-                setDownloading(false);
+                setPreparingText(false);
             }
         },
         [setStoredText]
     );
 
-    const uploadTextFile = useCallback(() => {
+    const uploadTextFromLocal = useCallback(() => {
         return new Promise((resolve) => {
             const input = document.createElement("input");
             input.type = "file";
@@ -96,7 +96,7 @@ export function useTextStorage(textName) {
                     cleanup();
                     return resolve({ ok: false, reason: "no-file" });
                 }
-                setDownloading(true);
+                setPreparingText(true);
                 try {
                     if (
                         file.type &&
@@ -124,7 +124,7 @@ export function useTextStorage(textName) {
                 } catch (e) {
                     return resolve({ ok: false, error: e?.message || "read-failed" });
                 } finally {
-                    setDownloading(false);
+                    setPreparingText(false);
                     cleanup();
                 }
             };
@@ -148,11 +148,11 @@ export function useTextStorage(textName) {
     }
 
     return {
-        downloadText,
-        uploadTextFile,
+        downloadTextFromWeb,
+        uploadTextFromLocal,
         getText,
-        downloading,
+        clearTextCache,
+        preparingText,
         textReady,
-        clear,
     };
 }

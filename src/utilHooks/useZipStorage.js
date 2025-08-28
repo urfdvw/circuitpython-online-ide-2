@@ -401,8 +401,8 @@ export function useZipStorage(dbName) {
         [ensureDB]
     );
 
-    // ---------- public: clearCache ----------
-    const clearCache = useCallback(async () => {
+    // ---------- public: clearZipCache ----------
+    const clearZipCache = useCallback(async () => {
         try {
             dbRef.current?.close?.();
         } catch {}
@@ -416,7 +416,7 @@ export function useZipStorage(dbName) {
         downloadZipFromWeb,
         uploadZipFromLocal,
         getEntryFromCache,
-        clearCache,
+        clearZipCache,
         preparingZip,
         zipReady,
         zipContents,

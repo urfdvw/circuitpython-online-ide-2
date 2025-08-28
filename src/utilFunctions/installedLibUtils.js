@@ -44,15 +44,16 @@ export async function extractLibFileMetadata(handle) {
 
         const versionBytes = new TextEncoder().encode("__version__");
 
+        // Please check https://github.com/adafruit/circup/blob/main/circup/shared.py#L140
         if (magicPair === "M\u0003") {
             loc = indexOfBytes(buf, versionBytes) - 1;
-            compatibility = [null, "7.0.0-alpha.1"];
+            compatibility = { min: null, max: "7.0.0-alpha.1" };
         } else if (magicPair === "C\u0005") {
             loc = indexOfBytes(buf, versionBytes) - 2;
-            compatibility = ["7.0.0-alpha.1", "8.99.99"];
+            compatibility = { min: "7.0.0-alpha.1", max: "8.99.99" };
         } else if (magicPair === "C\u0006") {
             findByRegexpMatch = true;
-            compatibility = ["9.0.0-alpha.1", null];
+            compatibility = { min: "9.0.0-alpha.1", max: null };
         }
 
         if (findByRegexpMatch) {

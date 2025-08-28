@@ -8,15 +8,8 @@ import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
 const bundleRepos = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
 
-import { parseCircuitPythonInfo } from "../utilFunctions/dataProcessing"
-
 async function getInstalledLibs(rootDirHandle) {
     // todo: use circup like mpy content scan
-}
-
-async function getBoardInfo(rootDirHandle) {
-    const boot_out_txt = await getFromPath(rootDirHandle, 'boot_out.txt');
-    return parseCircuitPythonInfo(boot_out_txt)
 }
 
 async function fetchWithProxy(targetUrl) {
@@ -93,8 +86,16 @@ function extractBundleUrls(assets) {
 }
 
 export default function LibManagement() {
-    const { appConfig, rootFolderDirectoryReady, rootDirHandle } = useContext(AppContext);
-    const { downloadZip, uploadZipFromLocal, getEntry, removeDb, downloading: zipDownloading, fileReady, contents } = useZipStorage('testDb');
+    const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
+    const {
+        downloadZip,
+        uploadZipFromLocal,
+        getEntry,
+        removeDb,
+        downloading: zipDownloading,
+        fileReady,
+        contents,
+    } = useZipStorage("testDb");
     const {
         downloadText,
         uploadTextFile,
@@ -102,15 +103,18 @@ export default function LibManagement() {
         downloading: textDownloading,
         textReady,
         clear,
-    } = useTextStorage('testText')
+    } = useTextStorage("testText");
+
+    useEffect(() => {
+        console.log(boardInfo);
+    }, [boardInfo]);
 
     const menuStructure = [
         {
             text: "test prepare",
             handler: async () => {
-                const board_info = await getBoardInfo(rootDirHandle)
-                console.log(board_info)
-            }
+                console.log(boardInfo);
+            },
         },
         {
             text: "Test fetch bundle",
@@ -140,11 +144,13 @@ export default function LibManagement() {
 
                 // await downloadZip(bundleZipUrls[0][0].url);
 
-                const jsonUrl = bundleAssets[0].filter((x) => isCircuitPythonBundleFilename(x.name)).at(0).browser_download_url;
+                const jsonUrl = bundleAssets[0]
+                    .filter((x) => isCircuitPythonBundleFilename(x.name))
+                    .at(0).browser_download_url;
 
                 console.log(jsonUrl);
-                await downloadText(jsonUrl)
-                console.log("end")
+                await downloadText(jsonUrl);
+                console.log("end");
             },
         },
         {

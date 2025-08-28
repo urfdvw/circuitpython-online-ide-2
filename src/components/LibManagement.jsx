@@ -126,47 +126,49 @@ export default function LibManagement() {
         },
     ];
 
+    async function downloadAll() {
+        for (let i = 0; i < bundles.length; i++) {
+            try {
+                bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
+            } catch {
+                confirm("Cannot reach online resources!");
+                return;
+            }
+
+            // download zips
+            const zipUrls = extractBundleUrls(bundles[i].assets);
+            let indexHigh;
+            let indexLow;
+            if (zipUrls[0].version > zipUrls[1].version) {
+                indexHigh = 0;
+                indexLow = 1;
+            } else {
+                indexHigh = 1;
+                indexLow = 0;
+            }
+            bundles[i].cpyVersion.high = zipUrls[indexHigh].version;
+            bundles[i].cpyVersion.low = zipUrls[indexLow].version;
+
+            await bundles[i].zipHigh.downloadZipFromWeb(zipUrls[indexHigh].url);
+            console.log("finish downloading higher version of " + bundles[i].repo);
+            await bundles[i].zipLow.downloadZipFromWeb(zipUrls[indexLow].url);
+            console.log("finish downloading lower version of " + bundles[i].repo);
+
+            // download json
+            const jsonUrl = bundles[i].assets.filter((x) => isBundleJsonFileName(x.name)).at(0).browser_download_url;
+            await bundles[i].json.downloadTextFromWeb(jsonUrl);
+            console.log("finish downloading json file of " + bundles[i].repo);
+        }
+        console.log(bundles);
+    }
+
     const menuStructure = [
         {
             text: "now testing",
             handler: async () => {
                 /* ---- prepare ---- */
                 console.log(boardInfo);
-                for (let i = 0; i < bundles.length; i++) {
-                    try {
-                        bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
-                    } catch {
-                        confirm("Cannot reach online resources!");
-                        return
-                    }
-
-                    // download zips
-                    const zipUrls = extractBundleUrls(bundles[i].assets);
-                    let indexHigh;
-                    let indexLow;
-                    if (zipUrls[0].version > zipUrls[1].version) {
-                        indexHigh = 0;
-                        indexLow = 1;
-                    } else {
-                        indexHigh = 1;
-                        indexLow = 0;
-                    }
-                    bundles[i].cpyVersion.high = zipUrls[indexHigh].version;
-                    bundles[i].cpyVersion.low = zipUrls[indexLow].version;
-
-                    await bundles[i].zipHigh.downloadZipFromWeb(zipUrls[indexHigh].url);
-                    console.log("finish downloading higher version of " + bundles[i].repo);
-                    await bundles[i].zipLow.downloadZipFromWeb(zipUrls[indexLow].url);
-                    console.log("finish downloading lower version of " + bundles[i].repo);
-
-                    // download json
-                    const jsonUrl = bundles[i].assets
-                        .filter((x) => isBundleJsonFileName(x.name))
-                        .at(0).browser_download_url;
-                    await bundles[i].json.downloadTextFromWeb(jsonUrl);
-                    console.log("finish downloading json file of " + bundles[i].repo);
-                }
-                console.log(bundles);
+                await downloadAll();
                 console.log("done");
             },
         },

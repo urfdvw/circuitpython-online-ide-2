@@ -27,7 +27,7 @@ async function fetchWithProxy(targetUrl) {
     return resp;
 }
 
-function isCircuitPythonBundleFilename(str) {
+function isBundleJsonFileName(str) {
     const pattern = /^.+-\d{8}\.json$/;
     return pattern.test(str);
 }
@@ -57,8 +57,8 @@ async function fetchBundleAssets(repo) {
 }
 
 async function fetchBundleJsonContent(assets) {
-    const targetUrl = assets.filter((x) => isCircuitPythonBundleFilename(x.name)).at(0).browser_download_url;
-    console.log(targetUrl);
+    const targetUrl = assets.filter((x) => isBundleJsonFileName(x.name)).at(0).browser_download_url;
+    // console.log(targetUrl);
     const resp = await fetchWithProxy(targetUrl);
     const text = await resp.text();
     // console.log(text);
@@ -100,23 +100,74 @@ export default function LibManagement() {
     const { downloadTextFromWeb, uploadTextFromLocal, getText, clearTextCache, preparingText, textReady } =
         useTextStorage("testText");
 
-    useEffect(() => {
-        console.log(boardInfo);
-    }, [boardInfo]);
+    const bundles = [
+        // assumption is that Adafruit will only maintain 2 cpy versions of bundle, will break if that is not the case.
+        {
+            repo: "Adafruit_CircuitPython_Bundle",
+            zipLow: useZipStorage("zipLowAdafruit"),
+            zipHigh: useZipStorage("zipHighAdafruit"),
+            json: useTextStorage("jsonAdafruit"),
+            assets: null,
+            cpyVersion: {
+                high: null,
+                low: null,
+            },
+        },
+        {
+            repo: "CircuitPython_Community_Bundle",
+            zipLow: useZipStorage("zipLowCommunity"),
+            zipHigh: useZipStorage("zipHighCommunity"),
+            json: useTextStorage("jsonCommunity"),
+            assets: null,
+            cpyVersion: {
+                high: null,
+                low: null,
+            },
+        },
+    ];
 
     const menuStructure = [
         {
             text: "now testing",
             handler: async () => {
-                const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, "lib");
+                /* ---- prepare ---- */
+                console.log(boardInfo);
+                for (let i = 0; i < bundles.length; i++) {
+                    try {
+                        bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
+                    } catch {
+                        confirm("Cannot reach online resources!");
+                        return
+                    }
 
-                const folderLib = await getEntryFromCache("lib/adafruit_espatcontrol");
-                console.log(folderLib);
-                copyEntry(folderLib, dirHandle, folderLib.name);
+                    // download zips
+                    const zipUrls = extractBundleUrls(bundles[i].assets);
+                    let indexHigh;
+                    let indexLow;
+                    if (zipUrls[0].version > zipUrls[1].version) {
+                        indexHigh = 0;
+                        indexLow = 1;
+                    } else {
+                        indexHigh = 1;
+                        indexLow = 0;
+                    }
+                    bundles[i].cpyVersion.high = zipUrls[indexHigh].version;
+                    bundles[i].cpyVersion.low = zipUrls[indexLow].version;
 
-                const fileLib = await getEntryFromCache("lib/adafruit_usb_host_mouse.mpy");
-                console.log(fileLib);
-                copyEntry(fileLib, dirHandle, fileLib.name);
+                    await bundles[i].zipHigh.downloadZipFromWeb(zipUrls[indexHigh].url);
+                    console.log("finish downloading higher version of " + bundles[i].repo);
+                    await bundles[i].zipLow.downloadZipFromWeb(zipUrls[indexLow].url);
+                    console.log("finish downloading lower version of " + bundles[i].repo);
+
+                    // download json
+                    const jsonUrl = bundles[i].assets
+                        .filter((x) => isBundleJsonFileName(x.name))
+                        .at(0).browser_download_url;
+                    await bundles[i].json.downloadTextFromWeb(jsonUrl);
+                    console.log("finish downloading json file of " + bundles[i].repo);
+                }
+                console.log(bundles);
+                console.log("done");
             },
         },
         {
@@ -124,9 +175,7 @@ export default function LibManagement() {
             options: [
                 {
                     text: "test getInstalledLibVersions",
-                    handler: async () => {
-                        
-                    },
+                    handler: async () => {},
                 },
                 {
                     text: "test collectPythonTopLevelImports",
@@ -166,7 +215,7 @@ export default function LibManagement() {
                         await downloadZipFromWeb(bundleZipUrls[0][0].url);
 
                         const jsonUrl = bundleAssets[0]
-                            .filter((x) => isCircuitPythonBundleFilename(x.name))
+                            .filter((x) => isBundleJsonFileName(x.name))
                             .at(0).browser_download_url;
 
                         console.log(jsonUrl);

@@ -12,24 +12,11 @@ async function fetchWithProxy(targetUrl) {
     return resp;
 }
 
-/**
- * useZipStorage (read-only)
- * @param {string} dbName
- * @returns {{
- *   downloadZip: (zipUrl: string) => Promise<boolean>,
- *   uploadZipFromLocal: () => Promise<boolean>,
- *   getEntry: (path?: string) => Promise<object>,
- *   removeDb: () => Promise<void>,
- *   downloading: boolean,
- *   fileReady: boolean,
- *   contents: string[],
- * }}
- */
 export function useZipStorage(dbName) {
     const dbRef = useRef(null);
-    const [downloading, setDownloading] = useState(false);
-    const [fileReady, setFileReady] = useState(false);
-    const [contents, setContents] = useState([]);
+    const [preparingZip, setPreparingZip] = useState(false);
+    const [zipReady, setFileReady] = useState(false);
+    const [zipContents, setZipContents] = useState([]);
 
     // ---------- utils ----------
     const normalizePath = (p) => {
@@ -146,7 +133,7 @@ export function useZipStorage(dbName) {
             if (!existing) {
                 if (!cancelled) {
                     setFileReady(false);
-                    setContents([]);
+                    setZipContents([]);
                 }
                 return;
             }
@@ -154,13 +141,13 @@ export function useZipStorage(dbName) {
                 existing.close();
                 if (!cancelled) {
                     setFileReady(false);
-                    setContents([]);
+                    setZipContents([]);
                 }
                 return;
             }
             const keys = await existing.getAllKeys("entries");
             if (!cancelled) {
-                setContents(keys);
+                setZipContents(keys);
                 setFileReady(keys.length > 0);
                 dbRef.current = existing;
             } else {
@@ -230,7 +217,7 @@ export function useZipStorage(dbName) {
 
             // refresh listing
             const allKeys = await db.getAllKeys("entries");
-            setContents(allKeys);
+            setZipContents(allKeys);
             setFileReady(allKeys.length > 0);
             return true;
         },
@@ -238,12 +225,12 @@ export function useZipStorage(dbName) {
     );
 
     // ---------- public: download from proxy ----------
-    const downloadZip = useCallback(
+    const downloadZipFromWeb = useCallback(
         async (zipUrl) => {
             if (!zipUrl) throw new Error("zipUrl is required.");
-            setDownloading(true);
+            setPreparingZip(true);
             setFileReady(false);
-            setContents([]);
+            setZipContents([]);
 
             try {
                 const res = await fetchWithProxy(zipUrl);
@@ -251,7 +238,7 @@ export function useZipStorage(dbName) {
                 const ok = await processZipBuffer(buf);
                 return ok;
             } finally {
-                setDownloading(false);
+                setPreparingZip(false);
             }
         },
         [processZipBuffer]
@@ -262,9 +249,9 @@ export function useZipStorage(dbName) {
         // Try the modern File System Access API first (nice UX in Chromium)
         if (window.showOpenFilePicker) {
             try {
-                setDownloading(true);
+                setPreparingZip(true);
                 setFileReady(false);
-                setContents([]);
+                setZipContents([]);
                 const [handle] = await window.showOpenFilePicker({
                     types: [{ description: "ZIP archives", accept: { "application/zip": [".zip"] } }],
                     excludeAcceptAllOption: false,
@@ -272,7 +259,7 @@ export function useZipStorage(dbName) {
                 });
                 if (!handle) {
                     // user cancelled
-                    setDownloading(false);
+                    setPreparingZip(false);
                     return false;
                 }
                 const file = await handle.getFile();
@@ -282,10 +269,10 @@ export function useZipStorage(dbName) {
             } catch (err) {
                 // If user cancelled, err.name can be "AbortError"
                 if (err && (err.name === "AbortError" || err.code === 20)) {
-                    setDownloading(false);
+                    setPreparingZip(false);
                     return false;
                 }
-                setDownloading(false);
+                setPreparingZip(false);
                 throw err;
             }
         }
@@ -305,9 +292,9 @@ export function useZipStorage(dbName) {
                     resolve(false); // user cancelled
                     return;
                 }
-                setDownloading(true);
+                setPreparingZip(true);
                 setFileReady(false);
-                setContents([]);
+                setZipContents([]);
                 try {
                     const buf = await file.arrayBuffer();
                     const ok = await processZipBuffer(buf);
@@ -315,7 +302,7 @@ export function useZipStorage(dbName) {
                 } catch (e) {
                     reject(e);
                 } finally {
-                    setDownloading(false);
+                    setPreparingZip(false);
                 }
             };
 
@@ -395,8 +382,8 @@ export function useZipStorage(dbName) {
         };
     };
 
-    // ---------- public: getEntry ----------
-    const getEntry = useCallback(
+    // ---------- public: getEntryFromCache ----------
+    const getEntryFromCache = useCallback(
         async (inputPath) => {
             const db = await ensureDB();
             const p = normalizePath(inputPath || "");
@@ -414,24 +401,24 @@ export function useZipStorage(dbName) {
         [ensureDB]
     );
 
-    // ---------- public: removeDb ----------
-    const removeDb = useCallback(async () => {
+    // ---------- public: clearCache ----------
+    const clearCache = useCallback(async () => {
         try {
             dbRef.current?.close?.();
         } catch {}
         dbRef.current = null;
         await deleteDB(dbName);
-        setContents([]);
+        setZipContents([]);
         setFileReady(false);
     }, [dbName]);
 
     return {
-        downloadZip,
+        downloadZipFromWeb,
         uploadZipFromLocal,
-        getEntry,
-        removeDb,
-        downloading,
-        fileReady,
-        contents,
+        getEntryFromCache,
+        clearCache,
+        preparingZip,
+        zipReady,
+        zipContents,
     };
 }

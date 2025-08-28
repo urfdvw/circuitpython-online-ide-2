@@ -1,3 +1,56 @@
+/* ---- collectPythonTopLevelImports ---- */
+
+export async function collectPythonTopLevelImports(rootHandle) {
+    const importSet = new Set();
+    const validExtensions = [".py", ".PY", ".python", ".PYTHON"];
+
+    async function traverseDirectory(dirHandle) {
+        for await (const [name, handle] of dirHandle.entries()) {
+            // skip hidden files/folders
+            if (name.startsWith(".")) continue;
+
+            if (handle.kind === "file" && validExtensions.some((ext) => name.endsWith(ext))) {
+                try {
+                    const file = await handle.getFile();
+                    const text = await file.text();
+                    extractImports(text, importSet);
+                } catch (e) {
+                    console.warn("Skipping file due to error:", name, e);
+                }
+            } else if (handle.kind === "directory") {
+                try {
+                    await traverseDirectory(handle);
+                } catch (e) {
+                    console.warn("Skipping directory due to error:", name, e);
+                }
+            }
+        }
+    }
+
+    function extractImports(fileContent, set) {
+        for (const raw of fileContent.split("\n")) {
+            const line = raw.trim();
+            if (line.startsWith("import ")) {
+                line.replace(/^import\s+/, "")
+                    .split(",")
+                    .map((p) => p.split(" as ")[0].split(".")[0].trim())
+                    .forEach((lib) => lib && set.add(lib));
+            } else if (line.startsWith("from ")) {
+                const m = line.match(/^from\s+([a-zA-Z_][\w\.]*)\s+import/);
+                if (m) {
+                    const top = m[1].split(".")[0];
+                    if (top) set.add(top);
+                }
+            }
+        }
+    }
+
+    await traverseDirectory(rootHandle);
+    return [...importSet];
+}
+
+/* ---- extractLibFileMetadata ---- */
+
 const BAD_FILE_FORMAT = "BAD_FILE_FORMAT";
 
 export async function extractLibFileMetadata(handle) {
@@ -6,7 +59,7 @@ export async function extractLibFileMetadata(handle) {
     }
 
     const name = handle.name;
-    console.log(name);
+    // console.log(name);
 
     const file = await handle.getFile();
     const result = {};
@@ -92,7 +145,6 @@ export async function extractLibFileMetadata(handle) {
     throw new Error("Unsupported file type: " + name);
 }
 
-/* ---------- helpers ---------- */
 function normalizeKey(key) {
     // turn "__version__" -> "version"
     return key.replace(/^__/, "").replace(/__$/, "");
@@ -128,7 +180,7 @@ function parseVersion(versionStr) {
     };
 }
 
-/* ---- getLibVersions ----*/
+/* ---- getInstalledLibVersions ----*/
 
 /**
  * Treat only numbers as a valid version; anything else = failure.
@@ -210,7 +262,7 @@ async function findVersionInTree(dirHandle) {
  * @param {FileSystemDirectoryHandle} rootHandle
  * @returns {Promise<Array<{name: string, version: {major:number, minor:number, patch:number}}>>}
  */
-export async function getLibVersions(rootHandle) {
+export async function getInstalledLibVersions(rootHandle) {
     if (!rootHandle || rootHandle.kind !== "directory") {
         throw new Error("A directory handle is required");
     }

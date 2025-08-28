@@ -6,17 +6,11 @@ import {
     checkFileExists,
     path2Handles,
 } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
-import { collectPythonTopLevelImports } from "../utilFunctions/fileSysUtils";
-
 import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
-import { extractLibFileMetadata, getLibVersions } from "../utilFunctions/installedLibUtils";
+import { collectPythonTopLevelImports, getInstalledLibVersions } from "../utilFunctions/installedLibUtils";
 
 const BUNDLE_REPOS = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
-
-async function getInstalledLibs(rootDirHandle) {
-    // todo: use circup like mpy content scan
-}
 
 async function fetchWithProxy(targetUrl) {
     // 已部署的 Cloud Run 代理端点
@@ -61,7 +55,7 @@ async function fetchBundleAssets(repo) {
     return data.assets;
 }
 
-async function fetchBundleContent(assets) {
+async function fetchBundleJsonContent(assets) {
     const targetUrl = assets.filter((x) => isCircuitPythonBundleFilename(x.name)).at(0).browser_download_url;
     console.log(targetUrl);
     const resp = await fetchWithProxy(targetUrl);
@@ -94,13 +88,13 @@ function extractBundleUrls(assets) {
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
     const {
-        downloadZip,
+        downloadZipFromWeb,
         uploadZipFromLocal,
-        getEntry,
-        removeDb,
-        downloading: zipDownloading,
-        fileReady,
-        contents,
+        getEntryFromCache,
+        clearCache,
+        preparingZip,
+        zipReady,
+        zipContents,
     } = useZipStorage("testDb");
     const {
         downloadText,
@@ -118,26 +112,31 @@ export default function LibManagement() {
     const menuStructure = [
         {
             text: "now testing",
-            handler: async () => {
-                const path = "lib";
-                console.log(path);
-                const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
-                console.log(dirHandle);
-                const libMetas = await getLibVersions(dirHandle);
-                console.log(libMetas);
-            },
+            handler: async () => {},
         },
         {
             label: "tests",
             options: [
                 {
-                    text: "test prepare",
+                    text: "test getInstalledLibVersions",
                     handler: async () => {
-                        console.log(boardInfo);
+                        const path = "lib";
+                        console.log(path);
+                        const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
+                        console.log(dirHandle);
+                        const libMetas = await getInstalledLibVersions(dirHandle);
+                        console.log(libMetas);
                     },
                 },
                 {
-                    text: "Test fetch bundle",
+                    text: "test collectPythonTopLevelImports",
+                    handler: async () => {
+                        const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
+                        console.log(scannedLibs);
+                    },
+                },
+                {
+                    text: "test download files",
                     handler: async () => {
                         const bundleAssets = await Promise.all(
                             BUNDLE_REPOS.map(async (repo) => {
@@ -146,9 +145,11 @@ export default function LibManagement() {
                                 return assets;
                             })
                         );
+                        console.log(bundleAssets);
+
                         const bundleList = await Promise.all(
                             bundleAssets.map(async (assets) => {
-                                const bundle = await fetchBundleContent(assets);
+                                const bundle = await fetchBundleJsonContent(assets);
                                 return bundle;
                             })
                         );
@@ -159,10 +160,10 @@ export default function LibManagement() {
                         const bundleTimeStamps = bundleAssets.map((assets) => getBundleTimeStamp(assets));
                         console.log(bundleTimeStamps);
 
-                        // const bundleZipUrls = bundleAssets.map((assets) => extractBundleUrls(assets));
-                        // console.log(bundleZipUrls);
+                        const bundleZipUrls = bundleAssets.map((assets) => extractBundleUrls(assets));
+                        console.log(bundleZipUrls);
 
-                        // await downloadZip(bundleZipUrls[0][0].url);
+                        await downloadZipFromWeb(bundleZipUrls[0][0].url);
 
                         const jsonUrl = bundleAssets[0]
                             .filter((x) => isCircuitPythonBundleFilename(x.name))
@@ -174,33 +175,40 @@ export default function LibManagement() {
                     },
                 },
                 {
-                    text: "Upgrade all libs",
-                    handler: async () => {
-                        console.log("Upgrade all libraries clicked");
-                        if (!rootFolderDirectoryReady) {
-                            console.log("no root dir yet");
-                            return;
-                        }
-                        const installedLibs = await getInstalledLibs(rootDirHandle);
-                        console.log(installedLibs);
-                        const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
-                        console.log(scannedLibs);
-                    },
-                },
-                {
-                    text: "upload zip",
+                    text: "test zip: uploadZipFromLocal",
                     handler: uploadZipFromLocal,
                 },
                 {
-                    text: "read",
+                    text: "test zip: getEntryFromCache",
                     handler: async () => {
-                        const handle = await getEntry("VERSIONS.txt");
+                        const handle = await getEntryFromCache("VERSIONS.txt");
                         const file = await handle.getFile();
                         const text = await file.text();
                         console.log([text]);
                     },
                 },
-                { text: "remove db", handler: removeDb },
+                { text: "test zip: clearCache", handler: clearCache },
+                {
+                    text: "test prepare",
+                    handler: async () => {
+                        console.log(boardInfo);
+                        const bundleAssets = await Promise.all(
+                            BUNDLE_REPOS.map(async (repo) => {
+                                const assets = await fetchBundleAssets(repo); // was using bundleRepos[0] incorrectly
+                                console.log(assets);
+                                return assets;
+                            })
+                        );
+                        console.log(bundleAssets);
+                        const bundleList = await Promise.all(
+                            bundleAssets.map(async (assets) => {
+                                const bundle = await fetchBundleJsonContent(assets);
+                                return bundle;
+                            })
+                        );
+                        console.log(bundleList);
+                    },
+                },
             ],
         },
     ];
@@ -211,9 +219,9 @@ export default function LibManagement() {
             <br />
             {textReady ? getText() : "no text"}
             <hr />
-            {zipDownloading ? "zip downloading" : "zip not downloading"}
+            {preparingZip ? "zip downloading" : "zip not downloading"}
             <br />
-            {fileReady ? contents.toString() : "no files"}
+            {zipReady ? zipContents.toString() : "no files"}
         </TabTemplate>
     );
 }

@@ -127,3 +127,126 @@ function parseVersion(versionStr) {
         patch: Number(m[3]),
     };
 }
+
+/* ---- getLibVersions ----*/
+
+/**
+ * Treat only numbers as a valid version; anything else = failure.
+ */
+function isValidVersion(v) {
+    return (
+        !!v &&
+        typeof v === "object" &&
+        Number.isInteger(v.major) &&
+        Number.isInteger(v.minor) &&
+        Number.isInteger(v.patch)
+    );
+}
+
+/**
+ * Case-insensitive .py / .mpy check.
+ */
+function isPyOrMpy(name) {
+    const lower = name.toLowerCase();
+    return lower.endsWith(".py") || lower.endsWith(".mpy");
+}
+
+/**
+ * Depth-first: find the first file in dir (or its subdirs) that yields a valid version.
+ * Returns the version object, or null if none found.
+ * @param {FileSystemDirectoryHandle} dirHandle
+ * @returns {Promise<{major:number,minor:number,patch:number} | null>}
+ */
+async function findVersionInTree(dirHandle) {
+    // Gather entries and sort: files first, then directories; both lexicographically
+    const entries = [];
+    for await (const [name, handle] of dirHandle.entries()) {
+        entries.push([name, handle]);
+    }
+    entries.sort(([aName, aH], [bName, bH]) => {
+        if (aH.kind !== bH.kind) return aH.kind === "file" ? -1 : 1;
+        return aName.localeCompare(bName);
+    });
+
+    // Try files in this directory first
+    for (const [name, handle] of entries) {
+        if (handle.kind === "file" && isPyOrMpy(name)) {
+            try {
+                const meta = await extractLibFileMetadata(handle);
+                if (isValidVersion(meta?.version)) return meta.version;
+            } catch (e) {
+                // treat any error as failure and continue
+                console.log("extractLibFileMetadata error (ignored):", name, e);
+            }
+        }
+    }
+
+    // Then recurse into subdirectories
+    for (const [name, handle] of entries) {
+        if (handle.kind === "directory") {
+            try {
+                const v = await findVersionInTree(handle);
+                if (v) return v;
+            } catch (e) {
+                console.log("findVersionInTree error (ignored):", name, e);
+            }
+        }
+    }
+
+    return null;
+}
+
+/**
+ * Main: given folder handle A, return successful lib versions only.
+ * Each direct child of A is a lib:
+ *  - If child is a .py/.mpy file → parse its version.
+ *  - If child is a directory → DFS to find first parseable .py/.mpy inside it.
+ *
+ * Returns:
+ *   [{ name: file_or_folder_name, version: {major, minor, patch} }, ...]
+ *
+ * Children that fail to produce a valid version are omitted.
+ *
+ * @param {FileSystemDirectoryHandle} rootHandle
+ * @returns {Promise<Array<{name: string, version: {major:number, minor:number, patch:number}}>>}
+ */
+export async function getLibVersions(rootHandle) {
+    if (!rootHandle || rootHandle.kind !== "directory") {
+        throw new Error("A directory handle is required");
+    }
+
+    // Collect direct children (libs) in deterministic order
+    const children = [];
+    for await (const [name, handle] of rootHandle.entries()) {
+        children.push([name, handle]);
+    }
+    children.sort(([a], [b]) => a.localeCompare(b));
+
+    const results = [];
+
+    for (const [name, handle] of children) {
+        if (handle.kind === "file") {
+            if (!isPyOrMpy(name)) continue; // ignore non .py/.mpy files as libs
+            try {
+                const meta = await extractLibFileMetadata(handle);
+                if (isValidVersion(meta?.version)) {
+                    results.push({ name, version: meta.version });
+                }
+            } catch (e) {
+                console.log("extractLibFileMetadata error (ignored):", name, e);
+            }
+        } else if (handle.kind === "directory") {
+            try {
+                const v = await findVersionInTree(handle);
+                if (v) {
+                    results.push({ name, version: v });
+                }
+            } catch (e) {
+                console.log("findVersionInTree error (ignored):", name, e);
+            }
+        }
+        // anything else is ignored
+    }
+
+    return results;
+}

@@ -10,7 +10,7 @@ import { collectPythonTopLevelImports } from "../utilFunctions/fileSysUtils";
 
 import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
-import { extractLibFileMetadata } from "../utilFunctions/installedLibUtils";
+import { extractLibFileMetadata, getLibVersions } from "../utilFunctions/installedLibUtils";
 
 const BUNDLE_REPOS = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
 
@@ -119,11 +119,12 @@ export default function LibManagement() {
         {
             text: "now testing",
             handler: async () => {
-                const path = "lib/adafruit_hid/__init__.mpy";
+                const path = "lib";
+                console.log(path);
                 const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
-                console.log(fileHandle);
-                const libMeta = await extractLibFileMetadata(fileHandle);
-                console.log(libMeta);
+                console.log(dirHandle);
+                const libMetas = await getLibVersions(dirHandle);
+                console.log(libMetas);
             },
         },
         {

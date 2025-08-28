@@ -153,6 +153,8 @@ export default function LibManagement() {
                         continue;
                     }
                 }
+            } else {
+                console.log("no time stamp found");
             }
 
             // download zips

@@ -1,12 +1,18 @@
 import TabTemplate from "../utilComponents/TabTemplate";
 import { useContext, useEffect } from "react";
 import { AppContext } from "../AppContext";
-import { getFromPath, checkFileExists } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+import {
+    getFromPath,
+    checkFileExists,
+    path2Handles,
+} from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import { collectPythonTopLevelImports } from "../utilFunctions/fileSysUtils";
 
 import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
-const bundleRepos = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
+import { extractLibFileMetadata } from "../utilFunctions/installedLibUtils";
+
+const BUNDLE_REPOS = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
 
 async function getInstalledLibs(rootDirHandle) {
     // todo: use circup like mpy content scan
@@ -111,65 +117,75 @@ export default function LibManagement() {
 
     const menuStructure = [
         {
-            text: "test prepare",
+            text: "now testing",
             handler: async () => {
-                console.log(boardInfo);
+                const path = "lib/adafruit_hid/__init__.mpy";
+                const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
+                console.log(fileHandle);
+                const libMeta = await extractLibFileMetadata(fileHandle);
+                console.log(libMeta);
             },
         },
         {
-            text: "Test fetch bundle",
-            handler: async () => {
-                const bundleAssets = await Promise.all(
-                    bundleRepos.map(async (repo) => {
-                        const assets = await fetchBundleAssets(repo); // was using bundleRepos[0] incorrectly
-                        console.log(assets);
-                        return assets;
-                    })
-                );
-                const bundleList = await Promise.all(
-                    bundleAssets.map(async (assets) => {
-                        const bundle = await fetchBundleContent(assets);
-                        return bundle;
-                    })
-                );
-
-                const combinedBundle = Object.assign({}, ...bundleList);
-                console.log(resolveDependencies(combinedBundle, "adafruit_74hc595"));
-
-                const bundleTimeStamps = bundleAssets.map((assets) => getBundleTimeStamp(assets));
-                console.log(bundleTimeStamps);
-
-                // const bundleZipUrls = bundleAssets.map((assets) => extractBundleUrls(assets));
-                // console.log(bundleZipUrls);
-
-                // await downloadZip(bundleZipUrls[0][0].url);
-
-                const jsonUrl = bundleAssets[0]
-                    .filter((x) => isCircuitPythonBundleFilename(x.name))
-                    .at(0).browser_download_url;
-
-                console.log(jsonUrl);
-                await downloadText(jsonUrl);
-                console.log("end");
-            },
-        },
-        {
-            text: "Upgrade all libs",
-            handler: async () => {
-                console.log("Upgrade all libraries clicked");
-                if (!rootFolderDirectoryReady) {
-                    console.log("no root dir yet");
-                    return;
-                }
-                const installedLibs = await getInstalledLibs(rootDirHandle);
-                console.log(installedLibs);
-                const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
-                console.log(scannedLibs);
-            },
-        },
-        {
-            label: "zip test",
+            label: "tests",
             options: [
+                {
+                    text: "test prepare",
+                    handler: async () => {
+                        console.log(boardInfo);
+                    },
+                },
+                {
+                    text: "Test fetch bundle",
+                    handler: async () => {
+                        const bundleAssets = await Promise.all(
+                            BUNDLE_REPOS.map(async (repo) => {
+                                const assets = await fetchBundleAssets(repo); // was using bundleRepos[0] incorrectly
+                                console.log(assets);
+                                return assets;
+                            })
+                        );
+                        const bundleList = await Promise.all(
+                            bundleAssets.map(async (assets) => {
+                                const bundle = await fetchBundleContent(assets);
+                                return bundle;
+                            })
+                        );
+
+                        const combinedBundle = Object.assign({}, ...bundleList);
+                        console.log(resolveDependencies(combinedBundle, "adafruit_74hc595"));
+
+                        const bundleTimeStamps = bundleAssets.map((assets) => getBundleTimeStamp(assets));
+                        console.log(bundleTimeStamps);
+
+                        // const bundleZipUrls = bundleAssets.map((assets) => extractBundleUrls(assets));
+                        // console.log(bundleZipUrls);
+
+                        // await downloadZip(bundleZipUrls[0][0].url);
+
+                        const jsonUrl = bundleAssets[0]
+                            .filter((x) => isCircuitPythonBundleFilename(x.name))
+                            .at(0).browser_download_url;
+
+                        console.log(jsonUrl);
+                        await downloadText(jsonUrl);
+                        console.log("end");
+                    },
+                },
+                {
+                    text: "Upgrade all libs",
+                    handler: async () => {
+                        console.log("Upgrade all libraries clicked");
+                        if (!rootFolderDirectoryReady) {
+                            console.log("no root dir yet");
+                            return;
+                        }
+                        const installedLibs = await getInstalledLibs(rootDirHandle);
+                        console.log(installedLibs);
+                        const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
+                        console.log(scannedLibs);
+                    },
+                },
                 {
                     text: "upload zip",
                     handler: uploadZipFromLocal,

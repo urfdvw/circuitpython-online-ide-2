@@ -5,6 +5,7 @@ import {
     getFromPath,
     checkFileExists,
     path2Handles,
+    copyEntry,
 } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
@@ -106,7 +107,17 @@ export default function LibManagement() {
     const menuStructure = [
         {
             text: "now testing",
-            handler: async () => {},
+            handler: async () => {
+                const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, "lib");
+
+                const folderLib = await getEntryFromCache("lib/adafruit_espatcontrol");
+                console.log(folderLib);
+                copyEntry(folderLib, dirHandle, folderLib.name);
+
+                const fileLib = await getEntryFromCache("lib/adafruit_usb_host_mouse.mpy");
+                console.log(fileLib);
+                copyEntry(fileLib, dirHandle, fileLib.name);
+            },
         },
         {
             label: "tests",
@@ -114,12 +125,7 @@ export default function LibManagement() {
                 {
                     text: "test getInstalledLibVersions",
                     handler: async () => {
-                        const path = "lib";
-                        console.log(path);
-                        const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
-                        console.log(dirHandle);
-                        const libMetas = await getInstalledLibVersions(dirHandle);
-                        console.log(libMetas);
+                        
                     },
                 },
                 {
@@ -183,6 +189,20 @@ export default function LibManagement() {
                 },
                 { text: "test zip: clearZipCache", handler: clearZipCache },
                 {
+                    text: "test zip: copy file from cache to MCU",
+                    handler: async () => {
+                        const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, "lib");
+
+                        const folderLib = await getEntryFromCache("lib/adafruit_espatcontrol");
+                        console.log(folderLib);
+                        copyEntry(folderLib, dirHandle, folderLib.name);
+
+                        const fileLib = await getEntryFromCache("lib/adafruit_usb_host_mouse.mpy");
+                        console.log(fileLib);
+                        copyEntry(fileLib, dirHandle, fileLib.name);
+                    },
+                },
+                {
                     text: "test text: uploadTextFromLocal",
                     handler: uploadTextFromLocal,
                 },
@@ -227,7 +247,7 @@ export default function LibManagement() {
             <hr />
             {preparingZip ? "zip downloading" : "zip not downloading"}
             <br />
-            {zipReady ? zipContents.toString() : "no files"}
+            {zipReady ? zipContents.join("\n") : "no files"}
         </TabTemplate>
     );
 }

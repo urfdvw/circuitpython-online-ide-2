@@ -312,7 +312,24 @@ export function useZipStorage(dbName) {
         });
     }, [processZipBuffer]);
 
-    // ---------- readonly handles ----------
+    // ================== READONLY FILE-SYSTEM MIMIC ==================
+
+    // helpers for directory lookups (readonly)
+    const childPathJoin = (base, name) => (base ? `${base}/${name}` : name);
+
+    const statPath = async (db, pathNorm) => {
+        // returns: { type: 'file'|'directory', rec?: entry } or null
+        const direct = await db.get("entries", pathNorm);
+        if (direct) return { type: direct.type, rec: direct };
+        // check if there are any descendants -> treat as directory
+        const keys = await db.getAllKeys("entries");
+        if (keys.some((k) => k.startsWith(pathNorm + "/"))) {
+            return { type: "directory" };
+        }
+        return null;
+    };
+
+    // --- readonly file handle with write guard ---
     const makeFileHandle = (entry) => {
         const name = entry.path.split("/").pop() || "";
         return {
@@ -337,6 +354,10 @@ export function useZipStorage(dbName) {
             },
             stream() {
                 return entry.blob.stream();
+            },
+            async createWritable() {
+                // Explicitly forbid writes on the mimic
+                throw new DOMException("Read-only handle: createWritable() not allowed", "NotAllowedError");
             },
         };
     };
@@ -375,9 +396,38 @@ export function useZipStorage(dbName) {
             kind: "directory",
             name,
             path: pathNorm,
+
+            // FS Access API: async iterator of [name, handle]
             async *entries() {
                 const children = await listDirectChildren(db, pathNorm);
                 for (const pair of children) yield pair; // [name, handle]
+            },
+
+            // FS Access API: async iterator of handles only
+            async *values() {
+                const children = await listDirectChildren(db, pathNorm);
+                for (const [, handle] of children) yield handle; // handle
+            },
+
+            // FS Access API: getDirectoryHandle(name, {create})
+            async getDirectoryHandle(childName, opts = {}) {
+                const childPath = childPathJoin(pathNorm, String(childName || "").trim());
+                const st = await statPath(db, childPath);
+                // readonly semantics: ignore opts.create, never create
+                if (!st) throw new DOMException(`NotFoundError: ${childPath}`, "NotFoundError");
+                if (st.type !== "directory")
+                    throw new DOMException(`TypeMismatchError: ${childPath} is a file`, "TypeMismatchError");
+                return makeDirectoryHandle(db, childPath);
+            },
+
+            // FS Access API: getFileHandle(name, {create})
+            async getFileHandle(childName, opts = {}) {
+                const childPath = childPathJoin(pathNorm, String(childName || "").trim());
+                const st = await statPath(db, childPath);
+                if (!st) throw new DOMException(`NotFoundError: ${childPath}`, "NotFoundError");
+                if (st.type !== "file")
+                    throw new DOMException(`TypeMismatchError: ${childPath} is a directory`, "TypeMismatchError");
+                return makeFileHandle(st.rec);
             },
         };
     };

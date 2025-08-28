@@ -62,14 +62,14 @@ export function useTextStorage(textName) {
                 const enc = new TextEncoder();
                 const bytes = enc.encode(text);
                 if (isProbablyBinary(bytes)) {
-                    console.error('fetch failed: isProbablyBinary')
+                    console.error("fetch failed: isProbablyBinary");
                     return { ok: false, reason: "not-text" };
                 }
                 setStoredText(text);
-                console.log('fetch finished')
+                console.log("fetch finished");
                 return { ok: true };
             } catch (e) {
-                console.error('fetch failed')
+                console.error("fetch failed");
                 return { ok: false, error: e?.message || "fetch-failed" };
             } finally {
                 setPreparingText(false);
@@ -144,13 +144,18 @@ export function useTextStorage(textName) {
     }, [storageKey]);
 
     function getText() {
-        return localStorage.getItem(storageKey)
+        return localStorage.getItem(storageKey);
+    }
+
+    function setText(text) {
+        localStorage.setItem(storageKey, text);
     }
 
     return {
         downloadTextFromWeb,
         uploadTextFromLocal,
         getText,
+        setText,
         clearTextCache,
         preparingText,
         textReady,

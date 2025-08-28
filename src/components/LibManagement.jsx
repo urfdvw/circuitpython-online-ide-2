@@ -108,6 +108,7 @@ export default function LibManagement() {
             zipHigh: useZipStorage("zipHighAdafruit"),
             json: useTextStorage("jsonAdafruit"),
             assets: null,
+            updateDateTime: useTextStorage("updateDateTimeAdafruit"),
             cpyVersion: {
                 high: null,
                 low: null,
@@ -119,6 +120,7 @@ export default function LibManagement() {
             zipHigh: useZipStorage("zipHighCommunity"),
             json: useTextStorage("jsonCommunity"),
             assets: null,
+            updateDateTime: useTextStorage("updateDateTimeCommunity"),
             cpyVersion: {
                 high: null,
                 low: null,
@@ -135,6 +137,24 @@ export default function LibManagement() {
                 return;
             }
 
+            if (bundles[i].updateDateTime.getText()) {
+                const timeStampOnline = getBundleTimeStamp(bundles[i].assets);
+                // console.log(timeStampOnline);
+                const timeStampCache = bundles[i].updateDateTime.getText();
+                // console.log(timeStampCache);
+                if (timeStampOnline === timeStampCache) {
+                    console.log(`bundle  ${bundles[i].repo} up to date`);
+                    continue;
+                } else {
+                    if (confirm(`New version of ${bundles[i].repo} found, you want to upgrade?`)) {
+                        console.log("User clicked OK");
+                    } else {
+                        console.log("User clicked Cancel");
+                        continue;
+                    }
+                }
+            }
+
             // download zips
             const zipUrls = extractBundleUrls(bundles[i].assets);
             let indexHigh;
@@ -149,16 +169,24 @@ export default function LibManagement() {
             bundles[i].cpyVersion.high = zipUrls[indexHigh].version;
             bundles[i].cpyVersion.low = zipUrls[indexLow].version;
 
+            console.log("start downloading higher CPY version of " + bundles[i].repo);
             await bundles[i].zipHigh.downloadZipFromWeb(zipUrls[indexHigh].url);
-            console.log("finish downloading higher version of " + bundles[i].repo);
+            console.log("finish downloading higher CPY version of " + bundles[i].repo);
+
+            console.log("start downloading lower CPY version of " + bundles[i].repo);
             await bundles[i].zipLow.downloadZipFromWeb(zipUrls[indexLow].url);
-            console.log("finish downloading lower version of " + bundles[i].repo);
+            console.log("finish downloading lower CPY version of " + bundles[i].repo);
 
             // download json
             const jsonUrl = bundles[i].assets.filter((x) => isBundleJsonFileName(x.name)).at(0).browser_download_url;
+            console.log("start downloading json file of " + bundles[i].repo);
             await bundles[i].json.downloadTextFromWeb(jsonUrl);
             console.log("finish downloading json file of " + bundles[i].repo);
+
+            // record time stamp
+            bundles[i].updateDateTime.setText(getBundleTimeStamp(bundles[i].assets));
         }
+
         console.log(bundles);
     }
 

@@ -101,30 +101,28 @@ export default function LibManagement() {
         useTextStorage("testText");
 
     const bundles = [
-        // assumption is that Adafruit will only maintain 2 cpy versions of bundle, will break if that is not the case.
         {
             repo: "Adafruit_CircuitPython_Bundle",
-            zipLow: useZipStorage("zipLowAdafruit"),
-            zipHigh: useZipStorage("zipHighAdafruit"),
             json: useTextStorage("jsonAdafruit"),
-            assets: null,
-            updateDateTime: useTextStorage("updateDateTimeAdafruit"),
-            cpyVersion: {
-                high: null,
-                low: null,
+            zips: {
+                // Tech debt: should be more scale able, but not urgent.
+                9: useZipStorage("zipAdafruit9"),
+                10: useZipStorage("zipAdafruit10"),
+                11: useZipStorage("zipAdafruit11"),
             },
+            updateDateTime: useTextStorage("updateDateTimeAdafruit"),
+            assets: null,
         },
         {
             repo: "CircuitPython_Community_Bundle",
-            zipLow: useZipStorage("zipLowCommunity"),
-            zipHigh: useZipStorage("zipHighCommunity"),
+            zips: {
+                9: useZipStorage("zipCommunity9"),
+                10: useZipStorage("zipCommunity10"),
+                11: useZipStorage("zipCommunity11"),
+            },
             json: useTextStorage("jsonCommunity"),
             assets: null,
             updateDateTime: useTextStorage("updateDateTimeCommunity"),
-            cpyVersion: {
-                high: null,
-                low: null,
-            },
         },
     ];
 
@@ -159,25 +157,11 @@ export default function LibManagement() {
 
             // download zips
             const zipUrls = extractBundleUrls(bundles[i].assets);
-            let indexHigh;
-            let indexLow;
-            if (zipUrls[0].version > zipUrls[1].version) {
-                indexHigh = 0;
-                indexLow = 1;
-            } else {
-                indexHigh = 1;
-                indexLow = 0;
+            for (let j = 0; j < zipUrls.length; j++) {
+                console.log(`start downloading CPY ${zipUrls[j].version} version of ${bundles[i].repo}`);
+                await bundles[i].zips[zipUrls[j].version].downloadZipFromWeb(zipUrls[j].url);
+                console.log(`end downloading CPY ${zipUrls[j].version} version of ${bundles[i].repo}`);
             }
-            bundles[i].cpyVersion.high = zipUrls[indexHigh].version;
-            bundles[i].cpyVersion.low = zipUrls[indexLow].version;
-
-            console.log("start downloading higher CPY version of " + bundles[i].repo);
-            await bundles[i].zipHigh.downloadZipFromWeb(zipUrls[indexHigh].url);
-            console.log("finish downloading higher CPY version of " + bundles[i].repo);
-
-            console.log("start downloading lower CPY version of " + bundles[i].repo);
-            await bundles[i].zipLow.downloadZipFromWeb(zipUrls[indexLow].url);
-            console.log("finish downloading lower CPY version of " + bundles[i].repo);
 
             // download json
             const jsonUrl = bundles[i].assets.filter((x) => isBundleJsonFileName(x.name)).at(0).browser_download_url;
@@ -188,7 +172,15 @@ export default function LibManagement() {
             // record time stamp
             bundles[i].updateDateTime.setText(getBundleTimeStamp(bundles[i].assets));
         }
-
+        console.log(
+            bundles.map((bundle) => {
+                const out = [];
+                for (var key in bundle.zips) {
+                    out.push([key, bundle.zips[key].zipContents]);
+                }
+                return out;
+            })
+        );
         console.log(bundles);
     }
 

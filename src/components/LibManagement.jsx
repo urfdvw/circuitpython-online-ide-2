@@ -9,7 +9,14 @@ import {
 } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
-import { collectPythonTopLevelImports, getInstalledLibVersions } from "../utilFunctions/installedLibUtils";
+import {
+    collectPythonTopLevelImports,
+    getInstalledLibVersions,
+    resolveDependenciesFromJsonStrings,
+    filterNamesInJsons,
+    compareVersions,
+    versionToString,
+} from "../utilFunctions/installedLibUtils";
 
 const BUNDLE_REPOS = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
 
@@ -30,23 +37,6 @@ async function fetchWithProxy(targetUrl) {
 function isBundleJsonFileName(str) {
     const pattern = /^.+-\d{8}\.json$/;
     return pattern.test(str);
-}
-
-function resolveDependencies(data, targetName) {
-    const visited = new Set();
-
-    function dfs(name) {
-        if (!data[name] || visited.has(name)) return;
-        visited.add(name);
-        const deps = data[name].dependencies || [];
-        const externals = data[name].external_dependencies || [];
-        for (const dep of [...deps, ...externals]) {
-            dfs(dep);
-        }
-    }
-
-    dfs(targetName);
-    return Array.from(visited);
 }
 
 async function fetchBundleAssets(repo) {
@@ -184,13 +174,82 @@ export default function LibManagement() {
         console.log(bundles);
     }
 
+    async function installLib(name, zip) {
+        const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, "lib");
+        try {
+            const folderLib = await zip.getEntryFromCache(`lib/${name}`);
+            console.log(folderLib);
+            copyEntry(folderLib, dirHandle, folderLib.name);
+            console.log(`installed folder lib: ${name}`);
+        } catch {
+            const fileLib = await zip.getEntryFromCache(`lib/${name}.mpy`);
+            console.log(fileLib);
+            copyEntry(fileLib, dirHandle, fileLib.name);
+            console.log(`installed file lib: ${name}`);
+        }
+    }
+
     const menuStructure = [
         {
             text: "now testing",
             handler: async () => {
-                /* ---- prepare ---- */
+                /* ---- prepare bundles ---- */
                 console.log(boardInfo);
                 await downloadAll();
+                console.log("---- Libs are ready in cache ----");
+                /* ---- prepare mcu ---- */
+                const libFodlerPath = "lib/";
+                const { dirHandle: libFolderHandle, fileHandle } = await path2Handles(rootDirHandle, libFodlerPath);
+                console.log(libFolderHandle);
+                const installedLibs = await getInstalledLibVersions(libFolderHandle);
+                console.log(installedLibs);
+                console.log("---- Got installed lib names and version ----");
+                const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
+                console.log(scannedLibs);
+                console.log("---- Got required lib names ----");
+                /* ---- dependencies ---- */
+                const bundleZipsOfBoardVersion = bundles.map((bundle) => {
+                    return bundle.zips[boardInfo.cpy_version.major];
+                });
+                console.log(bundleZipsOfBoardVersion);
+                const bundleJsons = bundles.map((bundle) => bundle.json.getText());
+                console.log(bundleJsons);
+                const dependenciesOfScanned = resolveDependenciesFromJsonStrings(bundleJsons, scannedLibs);
+                console.log(dependenciesOfScanned);
+                console.log("---- Got required lib + dependency names and versions  ----");
+                /* ---- install ---- */
+                for (const bundle of bundles) {
+                    console.log(bundle.repo);
+                    const needFromBundle = filterNamesInJsons([bundle.json.getText()], dependenciesOfScanned);
+                    console.log("need", needFromBundle);
+                    console.log("installed", installedLibs);
+
+                    for (const lib of needFromBundle) {
+                        const installedLib = installedLibs.filter(
+                            (installedLib) => installedLib.name.split(".")[0] === lib.name
+                        );
+                        if (installedLib.length > 0) {
+                            if (compareVersions(installedLib[0].version, lib.version) === 0) {
+                                console.log(
+                                    `version of ${lib.name} is the same in bundle and MCU: ${versionToString(
+                                        lib.version
+                                    )}`
+                                );
+                            } else {
+                                console.log(
+                                    `version of ${lib.name} is different in bundle and MCU. bundle: ${versionToString(
+                                        lib.version
+                                    )}, MCU: ${versionToString(installedLib[0].version)}`
+                                );
+                                installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
+                            }
+                        } else {
+                            console.log(`${lib.name} is not installed yet`);
+                            installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
+                        }
+                    }
+                }
+
                 console.log("done");
             },
         },
@@ -228,7 +287,7 @@ export default function LibManagement() {
                         );
 
                         const combinedBundle = Object.assign({}, ...bundleList);
-                        console.log(resolveDependencies(combinedBundle, "adafruit_74hc595"));
+                        // console.log(resolveDependencies(combinedBundle, "adafruit_74hc595"));
 
                         const bundleTimeStamps = bundleAssets.map((assets) => getBundleTimeStamp(assets));
                         console.log(bundleTimeStamps);

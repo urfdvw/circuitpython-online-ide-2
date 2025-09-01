@@ -302,3 +302,123 @@ export async function getInstalledLibVersions(rootHandle) {
 
     return results;
 }
+
+export function resolveDependenciesFromJsonStrings(dataJsonList, targetNames) {
+    // 1) Merge all parsed JSON objects into a single map
+    const merged = {};
+    for (const s of dataJsonList || []) {
+        if (typeof s !== "string") continue;
+        try {
+            const obj = JSON.parse(s);
+            if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+                for (const k of Object.keys(obj)) {
+                    // later entries override earlier ones key-by-key
+                    merged[k] = { ...(merged[k] || {}), ...obj[k] };
+                }
+            }
+        } catch {
+            // ignore invalid JSON strings
+        }
+    }
+
+    // 2) DFS over dependencies (internal + external)
+    const visited = new Set();
+    const roots = Array.isArray(targetNames) ? targetNames.slice() : [String(targetNames || "")];
+
+    function dfs(name) {
+        if (visited.has(name)) return;
+        visited.add(name);
+
+        const node = merged[name];
+        if (!node) return;
+
+        const deps = Array.isArray(node.dependencies) ? node.dependencies : [];
+        const externals = Array.isArray(node.external_dependencies) ? node.external_dependencies : [];
+
+        for (const dep of [...deps, ...externals]) {
+            dfs(dep);
+        }
+    }
+
+    for (const root of roots) {
+        if (typeof root === "string" && root) dfs(root);
+    }
+
+    // 3) return everything, including roots
+    return Array.from(visited);
+}
+
+export function filterNamesInJsons(dataJsonList, names) {
+    const merged = {};
+
+    // Merge all JSON objects (later wins)
+    for (const s of dataJsonList || []) {
+        if (typeof s !== "string") continue;
+        try {
+            const obj = JSON.parse(s);
+            if (obj && typeof obj === "object" && !Array.isArray(obj)) {
+                for (const k of Object.keys(obj)) {
+                    merged[k] = { ...(merged[k] || {}), ...obj[k] };
+                }
+            }
+        } catch {
+            // ignore invalid JSON
+        }
+    }
+
+    function parseVersion(v) {
+        // Accept both string "1.2.3" and object {major, minor, patch}
+        if (v && typeof v === "object") {
+            const { major = null, minor = null, patch = null } = v;
+            return {
+                major: Number.isFinite(+major) ? +major : null,
+                minor: Number.isFinite(+minor) ? +minor : null,
+                patch: Number.isFinite(+patch) ? +patch : null,
+            };
+        }
+        if (typeof v === "string") {
+            // match v1.2.3, 1.2.3, 1.2, 1
+            const m = v.trim().match(/^v?\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?/i);
+            if (m) {
+                return {
+                    major: parseInt(m[1], 10),
+                    minor: m[2] !== undefined ? parseInt(m[2], 10) : 0,
+                    patch: m[3] !== undefined ? parseInt(m[3], 10) : 0,
+                };
+            }
+        }
+        // Unparseable or missing
+        return { major: null, minor: null, patch: null };
+    }
+
+    const results = [];
+    for (const n of names || []) {
+        if (n in merged) {
+            results.push({
+                name: n,
+                version: parseVersion(merged[n]?.version),
+            });
+        }
+    }
+    return results;
+}
+
+export function compareVersions(a, b) {
+    const toNums = (v) => [v?.major ?? 0, v?.minor ?? 0, v?.patch ?? 0];
+
+    const [aMaj, aMin, aPat] = toNums(a);
+    const [bMaj, bMin, bPat] = toNums(b);
+
+    if (aMaj !== bMaj) return aMaj < bMaj ? -1 : 1;
+    if (aMin !== bMin) return aMin < bMin ? -1 : 1;
+    if (aPat !== bPat) return aPat < bPat ? -1 : 1;
+    return 0;
+}
+
+export function versionToString(v) {
+    if (!v || typeof v !== "object") return "";
+    const major = v.major ?? 0;
+    const minor = v.minor ?? 0;
+    const patch = v.patch ?? 0;
+    return `${major}.${minor}.${patch}`;
+}

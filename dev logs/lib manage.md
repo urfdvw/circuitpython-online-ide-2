@@ -66,23 +66,36 @@ data flow
     - if it is a top level folder, return an emulated file handle
     - then use copy folder util to copy to real directory
 
-work flow
-
-- prepare request
-    - get cpy version of the MCU
-        - error stop if cpy version cannot be get
+work flow and exceptions
+- on load, unconditional: get resource
     - get asset lists from git api
-        - error stop if cpy version not in assets list
-            - prompt to upload bundle
-        - error stop if cannot get asset lists
-            - prompt to upload bundle
-    - get bundle versions from the asset lists
-- prepare files
-    - if lib zip in local storage
-        - get cached bundle version
-        - if upgradable
-            - prompt asking if user want to upgrade
-    - else
-        - download bundle zip and json
-    - error stop if cannot download bundle zip and json
-        - prompt to upload bundle
+        - if get failed
+    - check if resources are cached and up to date
+        - check time stamp
+            - if not exist
+                - continue
+            - if not the same as assets
+                - dialog
+                    - continue if confirm
+            - if same as assets
+                - stop get resource process
+    - get JSON and zips
+        - if get failed
+            - dialog: proxy error, upload bundle manually
+            - stop get resource process
+- unconditional: get mcu info
+    - get cpy version of the MCU
+        - if cpy version not in bundle list
+            - error, cpy version not supported
+    - get installed libs
+    - if cannot get MCU status
+        - dialog not supported
+        - stop get resource process
+        - block all features
+- on button clicked
+    - check if cpy version has data in bundle
+        - dialog manual upload
+    - get imported libs / selected ; libs
+    - get list of libs to be installed: imports + dependencies
+    - check
+        - time stamp exist (which means the resource is downloaded)

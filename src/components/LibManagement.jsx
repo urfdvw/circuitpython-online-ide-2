@@ -12,6 +12,9 @@ import {
     compareVersions,
     versionToString,
 } from "../utilFunctions/installedLibUtils";
+
+import { Backdrop, CircularProgress, Typography } from "@mui/material";
+
 /* ---- util function ---- */
 
 function isBundleJsonFileName(str) {
@@ -51,41 +54,13 @@ function extractBundleUrls(assets) {
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
     const [installedLibs, setInstalledLibs] = useState(null);
-
-    const bundles = [
-        {
-            repo: "Adafruit_CircuitPython_Bundle",
-            json: useTextStorage("jsonAdafruit"),
-            zips: {
-                // Tech debt: should be more scale able, but not urgent.
-                9: useZipStorage("zipAdafruit9"),
-                10: useZipStorage("zipAdafruit10"),
-                11: useZipStorage("zipAdafruit11"),
-            },
-            updateDateTime: useTextStorage("updateDateTimeAdafruit"),
-            assets: null,
-        },
-        {
-            repo: "CircuitPython_Community_Bundle",
-            zips: {
-                9: useZipStorage("zipCommunity9"),
-                10: useZipStorage("zipCommunity10"),
-                11: useZipStorage("zipCommunity11"),
-            },
-            json: useTextStorage("jsonCommunity"),
-            assets: null,
-            updateDateTime: useTextStorage("updateDateTimeCommunity"),
-        },
-    ];
+    const [loadingInfo, setLoadingInfo] = useState("");
+    // const [refreshStep, setRefreshStep] = useState(1); // refresh on start
+    const [refreshStep, setRefreshStep] = useState(0);
 
     async function prepareBundle() {
         for (let i = 0; i < bundles.length; i++) {
-            try {
-                bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
-            } catch {
-                confirm("Cannot reach online resources!");
-                return;
-            }
+            bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
 
             if (bundles[i].updateDateTime.getText()) {
                 const timeStampOnline = getBundleTimeStamp(bundles[i].assets);
@@ -124,18 +99,7 @@ export default function LibManagement() {
             // record time stamp
             bundles[i].updateDateTime.setText(getBundleTimeStamp(bundles[i].assets));
         }
-        console.log(
-            bundles.map((bundle) => {
-                const out = [];
-                for (var key in bundle.zips) {
-                    out.push([key, bundle.zips[key].zipContents]);
-                }
-                return out;
-            })
-        );
-        console.log(bundles);
     }
-
     async function prepareMcu() {
         if (!boardInfo.cpy_version.major) {
             confirm("Cannot get board CircuitPython version from boot_out.txt!");
@@ -149,6 +113,98 @@ export default function LibManagement() {
         console.log("---- Got installed lib names and version ----");
         setInstalledLibs(installedLibs);
     }
+
+    async function refresh() {
+        if (refreshStep === 1) {
+            setLoadingInfo("Downloading bundles from Github");
+            setRefreshStep(2);
+        } else if (refreshStep === 2) {
+            try {
+                console.log(`start ${loadingInfo}`);
+                await prepareBundle();
+                console.log(`done ${loadingInfo}`);
+                setLoadingInfo("Analyzing microcontroller files");
+                setRefreshStep(3);
+            } catch {
+                confirm("Failed to download bundles. Please connect to Internet and refresh again.");
+                setLoadingInfo("");
+                setRefreshStep(0);
+            }
+        } else if (refreshStep === 3) {
+            try {
+                console.log(`start ${loadingInfo}`);
+                await prepareMcu();
+                console.log(`done ${loadingInfo}`);
+                setLoadingInfo("");
+                setRefreshStep(0);
+            } catch {
+                confirm(
+                    "Failed to read files from microcontroller. Please connect to microcontroller folder and refresh again."
+                );
+                setLoadingInfo("");
+                setRefreshStep(0);
+            }
+        }
+    }
+
+    useEffect(() => {
+        refresh();
+    }, [refreshStep]);
+
+    const bundles = [
+        {
+            repo: "Adafruit_CircuitPython_Bundle",
+            json: useTextStorage("jsonAdafruit"),
+            zips: {
+                // Tech debt: should be more scale able, but not urgent.
+                9: useZipStorage("zipAdafruit9"),
+                10: useZipStorage("zipAdafruit10"),
+                11: useZipStorage("zipAdafruit11"),
+            },
+            updateDateTime: useTextStorage("updateDateTimeAdafruit"),
+            assets: null,
+        },
+        {
+            repo: "CircuitPython_Community_Bundle",
+            zips: {
+                9: useZipStorage("zipCommunity9"),
+                10: useZipStorage("zipCommunity10"),
+                11: useZipStorage("zipCommunity11"),
+            },
+            json: useTextStorage("jsonCommunity"),
+            assets: null,
+            updateDateTime: useTextStorage("updateDateTimeCommunity"),
+        },
+    ];
+
+    useEffect(() => {
+        console.log(
+            bundles.map((bundle) => {
+                const out = [];
+                for (var key in bundle.zips) {
+                    out.push([key, bundle.zips[key].zipContents]);
+                }
+                return out;
+            })
+        );
+    }, [bundles]);
+    const [ready, setReady] = useState(false);
+
+    useEffect(() => {
+        if (!boardInfo) {
+            setReady(false);
+            return;
+        }
+        if (!(boardInfo.cpy_version.major in bundles[0].zips)) {
+            setReady(false);
+            return;
+        }
+        if (!bundles[0].zips[boardInfo.cpy_version.major].zipReady) {
+            setReady(false);
+            return;
+        }
+        setReady(true);
+    }, [bundles, boardInfo]);
 
     async function installLib(name, zip) {
         name = name.split(".")[0]; // to remove extension if there
@@ -221,12 +277,10 @@ export default function LibManagement() {
             label: "tests",
             options: [
                 {
-                    text: "test prepareBundle",
-                    handler: prepareBundle,
-                },
-                {
-                    text: "test prepareMcu",
-                    handler: prepareMcu,
+                    text: "test refresh",
+                    handler: () => {
+                        setRefreshStep(1);
+                    },
                 },
                 {
                     text: "test autoInstall",
@@ -236,5 +290,13 @@ export default function LibManagement() {
         },
     ];
 
-    return <TabTemplate menuStructure={menuStructure} title="Library Management"></TabTemplate>;
+    return (
+        <TabTemplate menuStructure={menuStructure} title="Library Management">
+            <Backdrop sx={{ position: "relative", height: "100%", color: "#fff" }} open={loadingInfo.length > 0}>
+                <CircularProgress color="inherit" />
+                <Typography>{loadingInfo}</Typography>
+            </Backdrop>
+            {ready ? "ready" : "not ready"}
+        </TabTemplate>
+    );
 }

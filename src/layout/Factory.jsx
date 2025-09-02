@@ -76,7 +76,7 @@ const Factory = (node) => {
         );
     } else if (component === "lib_management") {
         return (
-            <div className="tab_content">
+            <div className="tab_content" style={fullSize}>
                 <LibManagement />
             </div>
         );

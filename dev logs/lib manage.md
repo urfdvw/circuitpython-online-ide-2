@@ -49,6 +49,17 @@ display
     - name
     - bundle: Adafruit -> Community
 
+menu
+- refresh
+    - actually, auto refresh at the start, then refresh on demand
+- auto
+- hamburger
+    - help
+    - config
+
+config
+- clear unused libs in auto mode, boolean
+
 
 data flow
 - const repo names

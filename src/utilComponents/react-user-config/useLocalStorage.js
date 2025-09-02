@@ -4,7 +4,6 @@ import { isDefined } from "./utils";
 
 function getLocalStorageObjects() {
     `Convert localStorage into an object.
-    
     skip not json values`;
     const result = Object.keys(localStorage).reduce((obj, k) => {
         try {
@@ -15,7 +14,6 @@ function getLocalStorageObjects() {
         return obj;
     }, {});
 
-    console.log(result);
     return result;
 }
 

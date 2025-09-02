@@ -1,12 +1,7 @@
 import TabTemplate from "../utilComponents/TabTemplate";
-import { useContext, useEffect } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "../AppContext";
-import {
-    getFromPath,
-    checkFileExists,
-    path2Handles,
-    copyEntry,
-} from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+import { path2Handles, copyEntry } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
 import {
@@ -17,22 +12,7 @@ import {
     compareVersions,
     versionToString,
 } from "../utilFunctions/installedLibUtils";
-
-const BUNDLE_REPOS = ["Adafruit_CircuitPython_Bundle", "CircuitPython_Community_Bundle"];
-
-async function fetchWithProxy(targetUrl) {
-    // 已部署的 Cloud Run 代理端点
-    const PROXY_ENDPOINT = "https://cpy-lib-proxy-663297601284.us-central1.run.app";
-
-    // 发起请求（代理会加上 Access-Control-Allow-Origin 头，消除 CORS）
-    const resp = await fetch(`${PROXY_ENDPOINT}?url=${encodeURIComponent(targetUrl)}`);
-
-    if (!resp.ok) {
-        throw new Error(`Failed to fetch: ${resp.status} ${resp.statusText}`);
-    }
-
-    return resp;
-}
+/* ---- util function ---- */
 
 function isBundleJsonFileName(str) {
     const pattern = /^.+-\d{8}\.json$/;
@@ -44,16 +24,6 @@ async function fetchBundleAssets(repo) {
     const data = await response.json();
 
     return data.assets;
-}
-
-async function fetchBundleJsonContent(assets) {
-    const targetUrl = assets.filter((x) => isBundleJsonFileName(x.name)).at(0).browser_download_url;
-    // console.log(targetUrl);
-    const resp = await fetchWithProxy(targetUrl);
-    const text = await resp.text();
-    // console.log(text);
-    const bundle = JSON.parse(text);
-    return bundle;
 }
 
 function getBundleTimeStamp(assets) {
@@ -76,19 +46,11 @@ function extractBundleUrls(assets) {
     return result;
 }
 
+/* ---- components ---- */
+
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
-    const {
-        downloadZipFromWeb,
-        uploadZipFromLocal,
-        getEntryFromCache,
-        clearZipCache,
-        preparingZip,
-        zipReady,
-        zipContents,
-    } = useZipStorage("testDb");
-    const { downloadTextFromWeb, uploadTextFromLocal, getText, clearTextCache, preparingText, textReady } =
-        useTextStorage("testText");
+    const [installedLibs, setInstalledLibs] = useState(null);
 
     const bundles = [
         {
@@ -116,7 +78,7 @@ export default function LibManagement() {
         },
     ];
 
-    async function downloadAll() {
+    async function prepareBundle() {
         for (let i = 0; i < bundles.length; i++) {
             try {
                 bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
@@ -135,14 +97,14 @@ export default function LibManagement() {
                     continue;
                 } else {
                     if (confirm(`New version of ${bundles[i].repo} found, you want to upgrade?`)) {
-                        console.log("User clicked OK");
+                        console.log("start downloading bundle to cache");
                     } else {
-                        console.log("User clicked Cancel");
+                        console.log("canceled download. Using cached bundle");
                         continue;
                     }
                 }
             } else {
-                console.log("no time stamp found");
+                console.log("no time stamp found, start downloading bundle to cache");
             }
 
             // download zips
@@ -174,212 +136,105 @@ export default function LibManagement() {
         console.log(bundles);
     }
 
+    async function prepareMcu() {
+        if (!boardInfo.cpy_version.major) {
+            confirm("Cannot get board CircuitPython version from boot_out.txt!");
+            return;
+        }
+        const libFodlerPath = "lib/";
+        const { dirHandle: libFolderHandle, fileHandle } = await path2Handles(rootDirHandle, libFodlerPath);
+        console.log(libFolderHandle);
+        const installedLibs = await getInstalledLibVersions(libFolderHandle);
+        console.log(installedLibs);
+        console.log("---- Got installed lib names and version ----");
+        setInstalledLibs(installedLibs);
+    }
+
     async function installLib(name, zip) {
+        name = name.split(".")[0]; // to remove extension if there
         const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, "lib");
         try {
             const folderLib = await zip.getEntryFromCache(`lib/${name}`);
-            console.log(folderLib);
+            // console.log(folderLib);
             copyEntry(folderLib, dirHandle, folderLib.name);
             console.log(`installed folder lib: ${name}`);
         } catch {
             const fileLib = await zip.getEntryFromCache(`lib/${name}.mpy`);
-            console.log(fileLib);
+            // console.log(fileLib);
             copyEntry(fileLib, dirHandle, fileLib.name);
             console.log(`installed file lib: ${name}`);
         }
     }
 
-    const menuStructure = [
-        {
-            text: "now testing",
-            handler: async () => {
-                /* ---- prepare bundles ---- */
-                console.log(boardInfo);
-                await downloadAll();
-                console.log("---- Libs are ready in cache ----");
-                /* ---- prepare mcu ---- */
-                const libFodlerPath = "lib/";
-                const { dirHandle: libFolderHandle, fileHandle } = await path2Handles(rootDirHandle, libFodlerPath);
-                console.log(libFolderHandle);
-                const installedLibs = await getInstalledLibVersions(libFolderHandle);
-                console.log(installedLibs);
-                console.log("---- Got installed lib names and version ----");
-                const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
-                console.log(scannedLibs);
-                console.log("---- Got required lib names ----");
-                /* ---- dependencies ---- */
-                const bundleZipsOfBoardVersion = bundles.map((bundle) => {
-                    return bundle.zips[boardInfo.cpy_version.major];
-                });
-                console.log(bundleZipsOfBoardVersion);
-                const bundleJsons = bundles.map((bundle) => bundle.json.getText());
-                console.log(bundleJsons);
-                const dependenciesOfScanned = resolveDependenciesFromJsonStrings(bundleJsons, scannedLibs);
-                console.log(dependenciesOfScanned);
-                console.log("---- Got required lib + dependency names and versions  ----");
-                /* ---- install ---- */
-                for (const bundle of bundles) {
-                    console.log(bundle.repo);
-                    const needFromBundle = filterNamesInJsons([bundle.json.getText()], dependenciesOfScanned);
-                    console.log("need", needFromBundle);
-                    console.log("installed", installedLibs);
+    async function batchInstallLib(pendingLibs) {
+        /* ---- dependencies ---- */
+        const bundleZipsOfBoardVersion = bundles.map((bundle) => {
+            return bundle.zips[boardInfo.cpy_version.major];
+        });
+        console.log(bundleZipsOfBoardVersion);
+        const bundleJsons = bundles.map((bundle) => bundle.json.getText());
+        console.log(bundleJsons);
+        const libsWithDependencies = resolveDependenciesFromJsonStrings(bundleJsons, pendingLibs);
+        console.log(libsWithDependencies);
+        console.log("---- Got required lib + dependency names and versions  ----");
+        /* ---- install ---- */
+        for (const bundle of bundles) {
+            console.log(bundle.repo);
+            const needFromBundle = filterNamesInJsons([bundle.json.getText()], libsWithDependencies);
+            console.log("need", needFromBundle);
+            console.log("installed", installedLibs);
 
-                    for (const lib of needFromBundle) {
-                        const installedLib = installedLibs.filter(
-                            (installedLib) => installedLib.name.split(".")[0] === lib.name
+            for (const lib of needFromBundle) {
+                const installedLib = installedLibs.filter(
+                    (installedLib) => installedLib.name.split(".")[0] === lib.name
+                );
+                if (installedLib.length > 0) {
+                    if (compareVersions(installedLib[0].version, lib.version) === 0) {
+                        console.log(
+                            `version of ${lib.name} is the same in bundle and MCU: ${versionToString(lib.version)}`
                         );
-                        if (installedLib.length > 0) {
-                            if (compareVersions(installedLib[0].version, lib.version) === 0) {
-                                console.log(
-                                    `version of ${lib.name} is the same in bundle and MCU: ${versionToString(
-                                        lib.version
-                                    )}`
-                                );
-                            } else {
-                                console.log(
-                                    `version of ${lib.name} is different in bundle and MCU. bundle: ${versionToString(
-                                        lib.version
-                                    )}, MCU: ${versionToString(installedLib[0].version)}`
-                                );
-                                installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
-                            }
-                        } else {
-                            console.log(`${lib.name} is not installed yet`);
-                            installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
-                        }
+                    } else {
+                        console.log(
+                            `version of ${lib.name} is different in bundle and MCU. bundle: ${versionToString(
+                                lib.version
+                            )}, MCU: ${versionToString(installedLib[0].version)}`
+                        );
+                        installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
                     }
+                } else {
+                    console.log(`${lib.name} is not installed yet`);
+                    installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
                 }
+            }
+        }
+    }
 
-                console.log("done");
-            },
-        },
+    async function autoInstall() {
+        const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
+        console.log(scannedLibs);
+        console.log("---- Got required lib names ----");
+        batchInstallLib(scannedLibs);
+    }
+
+    const menuStructure = [
         {
             label: "tests",
             options: [
                 {
-                    text: "test getInstalledLibVersions",
-                    handler: async () => {},
+                    text: "test prepareBundle",
+                    handler: prepareBundle,
                 },
                 {
-                    text: "test collectPythonTopLevelImports",
-                    handler: async () => {
-                        const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
-                        console.log(scannedLibs);
-                    },
+                    text: "test prepareMcu",
+                    handler: prepareMcu,
                 },
                 {
-                    text: "test download files",
-                    handler: async () => {
-                        const bundleAssets = await Promise.all(
-                            BUNDLE_REPOS.map(async (repo) => {
-                                const assets = await fetchBundleAssets(repo); // was using bundleRepos[0] incorrectly
-                                console.log(assets);
-                                return assets;
-                            })
-                        );
-                        console.log(bundleAssets);
-
-                        const bundleList = await Promise.all(
-                            bundleAssets.map(async (assets) => {
-                                const bundle = await fetchBundleJsonContent(assets);
-                                return bundle;
-                            })
-                        );
-
-                        const combinedBundle = Object.assign({}, ...bundleList);
-                        // console.log(resolveDependencies(combinedBundle, "adafruit_74hc595"));
-
-                        const bundleTimeStamps = bundleAssets.map((assets) => getBundleTimeStamp(assets));
-                        console.log(bundleTimeStamps);
-
-                        const bundleZipUrls = bundleAssets.map((assets) => extractBundleUrls(assets));
-                        console.log(bundleZipUrls);
-
-                        await downloadZipFromWeb(bundleZipUrls[0][0].url);
-
-                        const jsonUrl = bundleAssets[0]
-                            .filter((x) => isBundleJsonFileName(x.name))
-                            .at(0).browser_download_url;
-
-                        console.log(jsonUrl);
-                        await downloadTextFromWeb(jsonUrl);
-                        console.log("end");
-                    },
-                },
-                {
-                    text: "test zip: uploadZipFromLocal",
-                    handler: uploadZipFromLocal,
-                },
-                {
-                    text: "test zip: getEntryFromCache",
-                    handler: async () => {
-                        const handle = await getEntryFromCache("VERSIONS.txt");
-                        const file = await handle.getFile();
-                        const text = await file.text();
-                        console.log([text]);
-                    },
-                },
-                { text: "test zip: clearZipCache", handler: clearZipCache },
-                {
-                    text: "test zip: copy file from cache to MCU",
-                    handler: async () => {
-                        const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, "lib");
-
-                        const folderLib = await getEntryFromCache("lib/adafruit_espatcontrol");
-                        console.log(folderLib);
-                        copyEntry(folderLib, dirHandle, folderLib.name);
-
-                        const fileLib = await getEntryFromCache("lib/adafruit_usb_host_mouse.mpy");
-                        console.log(fileLib);
-                        copyEntry(fileLib, dirHandle, fileLib.name);
-                    },
-                },
-                {
-                    text: "test text: uploadTextFromLocal",
-                    handler: uploadTextFromLocal,
-                },
-                {
-                    text: "test text: getText",
-                    handler: () => {
-                        const text = getText();
-                        console.log([text]);
-                    },
-                },
-                { text: "test text: clearTextCache", handler: clearTextCache },
-                {
-                    text: "test prepare",
-                    handler: async () => {
-                        console.log(boardInfo);
-                        const bundleAssets = await Promise.all(
-                            BUNDLE_REPOS.map(async (repo) => {
-                                const assets = await fetchBundleAssets(repo); // was using bundleRepos[0] incorrectly
-                                console.log(assets);
-                                return assets;
-                            })
-                        );
-                        console.log(bundleAssets);
-                        const bundleList = await Promise.all(
-                            bundleAssets.map(async (assets) => {
-                                const bundle = await fetchBundleJsonContent(assets);
-                                return bundle;
-                            })
-                        );
-                        console.log(bundleList);
-                    },
+                    text: "test autoInstall",
+                    handler: autoInstall,
                 },
             ],
         },
     ];
 
-    return (
-        <TabTemplate menuStructure={menuStructure} title="Library Management">
-            {preparingText ? "text downloading" : "text not downloading"}
-            <br />
-            {textReady ? getText() : "no text"}
-            <hr />
-            {preparingZip ? "zip downloading" : "zip not downloading"}
-            <br />
-            {zipReady ? zipContents.join("\n") : "no files"}
-        </TabTemplate>
-    );
+    return <TabTemplate menuStructure={menuStructure} title="Library Management"></TabTemplate>;
 }

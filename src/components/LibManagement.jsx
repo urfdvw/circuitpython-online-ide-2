@@ -1,5 +1,5 @@
 import TabTemplate from "../utilComponents/TabTemplate";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useMemo } from "react";
 import { AppContext } from "../AppContext";
 import { path2Handles, copyEntry } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import { useZipStorage } from "../utilHooks/useZipStorage";
@@ -52,7 +52,7 @@ function extractBundleUrls(assets) {
 /* ---- components ---- */
 
 export default function LibManagement() {
-    const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
+    const { appConfig, rootDirHandle, boardInfo } = useContext(AppContext);
     const [installedLibs, setInstalledLibs] = useState(null);
     const [loadingInfo, setLoadingInfo] = useState("");
     // const [refreshStep, setRefreshStep] = useState(1); // refresh on start
@@ -151,31 +151,56 @@ export default function LibManagement() {
         refresh();
     }, [refreshStep]);
 
-    const bundles = [
-        {
-            repo: "Adafruit_CircuitPython_Bundle",
-            json: useTextStorage("jsonAdafruit"),
-            zips: {
-                // Tech debt: should be more scale able, but not urgent.
-                9: useZipStorage("zipAdafruit9"),
-                10: useZipStorage("zipAdafruit10"),
-                11: useZipStorage("zipAdafruit11"),
+    const jsonAdafruit = useTextStorage("jsonAdafruit");
+    const updateDateTimeAdafruit = useTextStorage("updateDateTimeAdafruit");
+    const zipAdafruit9 = useZipStorage("zipAdafruit9");
+    const zipAdafruit10 = useZipStorage("zipAdafruit10");
+    const zipAdafruit11 = useZipStorage("zipAdafruit11");
+
+    const jsonCommunity = useTextStorage("jsonCommunity");
+    const updateDateTimeCommunity = useTextStorage("updateDateTimeCommunity");
+    const zipCommunity9 = useZipStorage("zipCommunity9");
+    const zipCommunity10 = useZipStorage("zipCommunity10");
+    const zipCommunity11 = useZipStorage("zipCommunity11");
+
+    const bundles = useMemo(
+        () => [
+            {
+                repo: "Adafruit_CircuitPython_Bundle",
+                json: jsonAdafruit,
+                zips: {
+                    9: zipAdafruit9,
+                    10: zipAdafruit10,
+                    11: zipAdafruit11,
+                },
+                updateDateTime: updateDateTimeAdafruit,
+                assets: null,
             },
-            updateDateTime: useTextStorage("updateDateTimeAdafruit"),
-            assets: null,
-        },
-        {
-            repo: "CircuitPython_Community_Bundle",
-            zips: {
-                9: useZipStorage("zipCommunity9"),
-                10: useZipStorage("zipCommunity10"),
-                11: useZipStorage("zipCommunity11"),
+            {
+                repo: "CircuitPython_Community_Bundle",
+                json: jsonCommunity,
+                zips: {
+                    9: zipCommunity9,
+                    10: zipCommunity10,
+                    11: zipCommunity11,
+                },
+                updateDateTime: updateDateTimeCommunity,
+                assets: null,
             },
-            json: useTextStorage("jsonCommunity"),
-            assets: null,
-            updateDateTime: useTextStorage("updateDateTimeCommunity"),
-        },
-    ];
+        ],
+        [
+            jsonAdafruit,
+            updateDateTimeAdafruit,
+            zipAdafruit9,
+            zipAdafruit10,
+            zipAdafruit11,
+            jsonCommunity,
+            updateDateTimeCommunity,
+            zipCommunity9,
+            zipCommunity10,
+            zipCommunity11,
+        ]
+    );
 
     useEffect(() => {
         console.log(
@@ -292,10 +317,12 @@ export default function LibManagement() {
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
-            <Backdrop sx={{ position: "relative", height: "100%", color: "#fff" }} open={loadingInfo.length > 0}>
-                <CircularProgress color="inherit" />
-                <Typography>{loadingInfo}</Typography>
-            </Backdrop>
+            {loadingInfo.length > 0 && (
+                <Backdrop sx={{ position: "relative", height: "100%", color: "#fff" }} open={true}>
+                    <CircularProgress color="inherit" />
+                    <Typography>{loadingInfo}</Typography>
+                </Backdrop>
+            )}
             {ready ? "ready" : "not ready"}
         </TabTemplate>
     );

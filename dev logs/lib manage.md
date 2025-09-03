@@ -110,3 +110,55 @@ work flow and exceptions
     - get list of libs to be installed: imports + dependencies
     - check
         - time stamp exist (which means the resource is downloaded)
+
+prompt for lib card
+
+```
+write a jsx component with mui with template
+
+function LibCard({ lib, installedLib }) {}
+
+where lib is an object like
+
+{
+    "dependencies": [
+        "adafruit_bus_device",
+        "adafruit_register"
+    ],
+    "external_dependencies": [],
+    "package": false,
+    "path": "lib/adafruit_24lc32",
+    "pypi_name": "adafruit-circuitpython-24lc32",
+    "repo": "https://github.com/adafruit/adafruit_circuitpython_24lc32",
+    "version": "1.2.3"
+}
+
+installedLib is an object like
+
+{
+    "name": "adafruit_ina219",
+    "version": {
+        "major": 3,
+        "minor": 4,
+        "patch": 29
+    }
+}
+
+please also make use of function 
+
+export function parseVersion(versionStr) {
+    const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(versionStr.trim());
+    if (!m) {
+        return { major: null, minor: null, patch: null, raw: versionStr };
+    }
+    return {
+        major: Number(m[1]),
+        minor: Number(m[2]),
+        patch: Number(m[3]),
+    };
+}
+
+
+the object should display the info as
+TODO
+```

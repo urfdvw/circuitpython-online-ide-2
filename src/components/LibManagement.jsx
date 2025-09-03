@@ -51,6 +51,8 @@ function extractBundleUrls(assets) {
 
 /* ---- components ---- */
 
+function LibCard({ lib, installedLib }) {}
+
 export default function LibManagement() {
     const { appConfig, rootDirHandle, boardInfo } = useContext(AppContext);
     const [installedLibs, setInstalledLibs] = useState(null);
@@ -254,7 +256,7 @@ export default function LibManagement() {
         });
         console.log(bundleZipsOfBoardVersion);
         const bundleJsons = bundles.map((bundle) => bundle.json.getText());
-        console.log(bundleJsons);
+        console.log(bundleJsons.map((b) => JSON.parse(b)));
         const libsWithDependencies = resolveDependenciesFromJsonStrings(bundleJsons, pendingLibs);
         console.log(libsWithDependencies);
         console.log("---- Got required lib + dependency names and versions  ----");

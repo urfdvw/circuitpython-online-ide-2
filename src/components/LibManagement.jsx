@@ -1,7 +1,11 @@
 import TabTemplate from "../utilComponents/TabTemplate";
 import { useContext, useEffect, useState, useMemo } from "react";
 import { AppContext } from "../AppContext";
-import { path2Handles, copyEntry } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+import {
+    path2Handles,
+    copyEntry,
+    removeEntry,
+} from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import { useZipStorage } from "../utilHooks/useZipStorage";
 import { useTextStorage } from "../utilHooks/useTextStorage";
 import {
@@ -58,8 +62,8 @@ export default function LibManagement() {
     const { appConfig, rootDirHandle, boardInfo } = useContext(AppContext);
     const [installedLibs, setInstalledLibs] = useState(null);
     const [loadingInfo, setLoadingInfo] = useState("");
-    const [refreshStep, setRefreshStep] = useState(1); // refresh on start
-    // const [refreshStep, setRefreshStep] = useState(0);
+    // const [refreshStep, setRefreshStep] = useState(1); // refresh on start
+    const [refreshStep, setRefreshStep] = useState(0);
 
     async function prepareBundle() {
         for (let i = 0; i < bundles.length; i++) {
@@ -234,6 +238,36 @@ export default function LibManagement() {
         setReady(true);
     }, [bundles, boardInfo]);
 
+    async function uninstallLib(name) {
+        name = name.split(".")[0]; // to remove extension if there
+        const { dirHandle: libDirHandle, fileHandle } = await path2Handles(rootDirHandle, `lib`);
+
+        // as if it is a folder, if not there, will still success
+        try {
+            const { dirHandle: folderLib, fileHandle } = await path2Handles(rootDirHandle, `lib/${name}`);
+            console.log(folderLib);
+            removeEntry(libDirHandle, folderLib);
+        } catch {
+            console.log(`failed uninstalled folder lib: ${name}`);
+        }
+
+        // as if it is a file, if not there, will still success
+        try {
+            const { dirHandle, fileHandle: fileLib } = await path2Handles(rootDirHandle, `lib/${name}.mpy`);
+            console.log(fileLib);
+            removeEntry(libDirHandle, fileLib);
+        } catch {
+            console.log(`failed uninstalled file lib: ${name}`);
+        }
+    }
+
+    async function batchUninstallLib(pendingLibs) {
+        console.log(pendingLibs);
+        for (const lib of pendingLibs) {
+            await uninstallLib(lib.name);
+        }
+    }
+
     async function installLib(name, zip) {
         name = name.split(".")[0]; // to remove extension if there
         const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, "lib");
@@ -311,8 +345,14 @@ export default function LibManagement() {
                     },
                 },
                 {
-                    text: "test autoInstall",
+                    text: "test autoInstall (refresh first)",
                     handler: autoInstall,
+                },
+                {
+                    text: "test clean up (refresh first)",
+                    handler: () => {
+                        batchUninstallLib(installedLibs);
+                    },
                 },
             ],
         },

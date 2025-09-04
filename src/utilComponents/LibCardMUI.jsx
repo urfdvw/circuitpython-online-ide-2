@@ -1,5 +1,6 @@
-import { Card, CardContent, CardActions, Stack, Box, Typography, Tooltip, Button, useTheme } from "@mui/material";
+import { Card, CardContent, CardActions, Stack, Box, Typography, Tooltip, Button, useTheme, IconButton } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import GitHubIcon from '@mui/icons-material/GitHub';
 import { compareVersions, versionToString, parseVersion } from "../utilFunctions/installedLibUtils";
 
 export default function LibCardMUI({
@@ -37,13 +38,14 @@ export default function LibCardMUI({
                 {/* Left: check icon */}
                 <Box sx={{ width: 28, display: "flex", justifyContent: "center" }}>
                     {hasInstalled ? (
-                        <CheckCircleIcon
-                            fontSize="small"
-                            sx={{
-                                color: sameVersion ? theme.palette.success.main : theme.palette.warning.main,
-                            }}
-                            aria-label={sameVersion ? "Installed and up to date" : "Installed but outdated"}
-                        />
+                        <Tooltip title={sameVersion ? "Installed and up to date" : "Installed but outdated"}>
+                            <CheckCircleIcon
+                                fontSize="small"
+                                sx={{
+                                    color: sameVersion ? theme.palette.success.main : theme.palette.warning.main,
+                                }}
+                                aria-label={sameVersion ? "Installed and up to date" : "Installed but outdated"}
+                            /></ Tooltip>
                     ) : null}
                 </Box>
 
@@ -56,8 +58,15 @@ export default function LibCardMUI({
                     }}
                 >
                     <Stack spacing={0.5} alignItems="left" textAlign="left">
-                        <Typography variant="subtitle1" fontWeight={700}>
+                        <Typography variant="subtitle1" fontWeight={700} >
                             {libDisplayName}
+                            <Tooltip title="Check Lib Source Code">
+                                <IconButton onClick={() => {
+                                    window.open(libObj.repo, "_blank");
+                                }}>
+                                    <GitHubIcon fontSize="small" />
+                                </IconButton>
+                            </Tooltip>
                         </Typography>
 
                         <Typography
@@ -87,7 +96,7 @@ export default function LibCardMUI({
                                 variant="outlined"
                                 color="inherit"
                                 size="small"
-                                onClick={() => uninstallHandler?.(libObj, repoName)}
+                                onClick={() => uninstallHandler?.()}
                             >
                                 Uninstall
                             </Button>
@@ -98,7 +107,7 @@ export default function LibCardMUI({
                                 variant="contained"
                                 color="primary"
                                 size="small"
-                                onClick={() => installHandler?.(libObj, repoName)}
+                                onClick={() => installHandler?.()}
                             >
                                 Upgrade
                             </Button>
@@ -106,7 +115,7 @@ export default function LibCardMUI({
                                 variant="outlined"
                                 color="inherit"
                                 size="small"
-                                onClick={() => uninstallHandler?.(libObj, repoName)}
+                                onClick={() => uninstallHandler?.()}
                             >
                                 Uninstall
                             </Button>
@@ -117,7 +126,7 @@ export default function LibCardMUI({
                                 variant="contained"
                                 color="primary"
                                 size="small"
-                                onClick={() => installHandler?.(libObj, repoName)}
+                                onClick={() => installHandler?.()}
                             >
                                 Install
                             </Button>

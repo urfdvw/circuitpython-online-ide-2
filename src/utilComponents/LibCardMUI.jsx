@@ -1,6 +1,17 @@
-import { Card, CardContent, CardActions, Stack, Box, Typography, Tooltip, Button, useTheme, IconButton } from "@mui/material";
+import {
+    Card,
+    CardContent,
+    CardActions,
+    Stack,
+    Box,
+    Typography,
+    Tooltip,
+    Button,
+    useTheme,
+    IconButton,
+} from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
-import GitHubIcon from '@mui/icons-material/GitHub';
+import GitHubIcon from "@mui/icons-material/GitHub";
 import { compareVersions, versionToString, parseVersion } from "../utilFunctions/installedLibUtils";
 
 export default function LibCardMUI({
@@ -45,7 +56,8 @@ export default function LibCardMUI({
                                     color: sameVersion ? theme.palette.success.main : theme.palette.warning.main,
                                 }}
                                 aria-label={sameVersion ? "Installed and up to date" : "Installed but outdated"}
-                            /></ Tooltip>
+                            />
+                        </Tooltip>
                     ) : null}
                 </Box>
 
@@ -58,12 +70,14 @@ export default function LibCardMUI({
                     }}
                 >
                     <Stack spacing={0.5} alignItems="left" textAlign="left">
-                        <Typography variant="subtitle1" fontWeight={700} >
+                        <Typography variant="subtitle1" fontWeight={700}>
                             {libDisplayName}
                             <Tooltip title="Check Lib Source Code">
-                                <IconButton onClick={() => {
-                                    window.open(libObj.repo, "_blank");
-                                }}>
+                                <IconButton
+                                    onClick={() => {
+                                        window.open(libObj.repo, "_blank");
+                                    }}
+                                >
                                     <GitHubIcon fontSize="small" />
                                 </IconButton>
                             </Tooltip>
@@ -73,7 +87,17 @@ export default function LibCardMUI({
                             variant="body2"
                             sx={{ color: theme.palette.grey[700], display: "flex", alignItems: "left" }}
                         >
-                            <Box component="span">{versionLine}</Box>
+                            <Tooltip
+                                title={
+                                    sameVersion
+                                        ? "versions match"
+                                        : outdated
+                                        ? "installed version → bundle version"
+                                        : "bundle version"
+                                }
+                            >
+                                <Box component="span">{versionLine}</Box>
+                            </Tooltip>
                             {abbr && (
                                 <Tooltip title={repoName}>
                                     <Box
@@ -103,12 +127,7 @@ export default function LibCardMUI({
                         </Stack>
                     ) : outdated ? (
                         <Stack direction="column" spacing={1}>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                size="small"
-                                onClick={() => installHandler?.()}
-                            >
+                            <Button variant="contained" color="primary" size="small" onClick={() => installHandler?.()}>
                                 Upgrade
                             </Button>
                             <Button
@@ -122,12 +141,7 @@ export default function LibCardMUI({
                         </Stack>
                     ) : (
                         <Stack direction="column" spacing={1}>
-                            <Button
-                                variant="contained"
-                                color="primary"
-                                size="small"
-                                onClick={() => installHandler?.()}
-                            >
+                            <Button variant="contained" color="primary" size="small" onClick={() => installHandler?.()}>
                                 Install
                             </Button>
                         </Stack>

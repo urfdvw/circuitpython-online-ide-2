@@ -56,8 +56,6 @@ function extractBundleUrls(assets) {
 
 /* ---- components ---- */
 
-function LibCard({ lib, installedLib }) {}
-
 export default function LibManagement() {
     const { appConfig, rootDirHandle, boardInfo } = useContext(AppContext);
     const [installedLibs, setInstalledLibs] = useState(null);

@@ -12,6 +12,7 @@ import {
     compareVersions,
     versionToString,
 } from "../utilFunctions/installedLibUtils";
+import LibCardMUI from "../utilComponents/LibCardMUI";
 
 import { Backdrop, CircularProgress, Typography } from "@mui/material";
 
@@ -57,8 +58,8 @@ export default function LibManagement() {
     const { appConfig, rootDirHandle, boardInfo } = useContext(AppContext);
     const [installedLibs, setInstalledLibs] = useState(null);
     const [loadingInfo, setLoadingInfo] = useState("");
-    // const [refreshStep, setRefreshStep] = useState(1); // refresh on start
-    const [refreshStep, setRefreshStep] = useState(0);
+    const [refreshStep, setRefreshStep] = useState(1); // refresh on start
+    // const [refreshStep, setRefreshStep] = useState(0);
 
     async function prepareBundle() {
         for (let i = 0; i < bundles.length; i++) {
@@ -326,6 +327,23 @@ export default function LibManagement() {
                 </Backdrop>
             )}
             {ready ? "ready" : "not ready"}
+            <LibCardMUI
+                libObj={{
+                    dependencies: ["adafruit_bus_device", "adafruit_register"],
+                    external_dependencies: [],
+                    package: false,
+                    path: "lib/adafruit_24lc32",
+                    pypi_name: "adafruit-circuitpython-24lc32",
+                    repo: "https://github.com/adafruit/adafruit_circuitpython_24lc32",
+                    version: "1.2.3",
+                }}
+                repoName="Adafruit_CircuitPython_Bundle"
+                abbr="Adafruit"
+                libDisplayName="adafruit_24lc32"
+                installedVersion={{ major: 1, minor: 2, patch: 2 }}
+                installHandler={() => {}}
+                uninstallHandler={() => {}}
+            />
         </TabTemplate>
     );
 }

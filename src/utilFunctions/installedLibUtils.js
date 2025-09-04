@@ -168,7 +168,7 @@ function findSemverNullTerminated(buf, td) {
     return m ? m[1] : null;
 }
 
-function parseVersion(versionStr) {
+export function parseVersion(versionStr) {
     const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(versionStr.trim());
     if (!m) {
         return { major: null, minor: null, patch: null, raw: versionStr };

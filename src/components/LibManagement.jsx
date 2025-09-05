@@ -408,23 +408,21 @@ export default function LibManagement() {
                 </Backdrop>
             )}
             {ready ? "ready" : "not ready"}
-            <LibCardMUI
-                libObj={{
-                    dependencies: ["adafruit_bus_device", "adafruit_register"],
-                    external_dependencies: [],
-                    package: false,
-                    path: "lib/adafruit_24lc32",
-                    pypi_name: "adafruit-circuitpython-24lc32",
-                    repo: "https://github.com/adafruit/adafruit_circuitpython_24lc32",
-                    version: "1.2.3",
-                }}
-                repoName="Adafruit_CircuitPython_Bundle"
-                abbr="Adafruit"
-                libDisplayName="adafruit_24lc32"
-                installedVersion={{ major: 1, minor: 2, patch: 2 }}
-                installHandler={() => {}}
-                uninstallHandler={() => {}}
-            />
+            {getCard()
+                .slice(10)
+                .map((card) => {
+                    return (
+                        <LibCardMUI
+                            libObj={card.libObj}
+                            repoName={card.repoName}
+                            abbr={card.abbr}
+                            libDisplayName={card.libDisplayName}
+                            installedVersion={card.installedVersion}
+                            installHandler={card.installHandler}
+                            uninstallHandler={card.uninstallHandler}
+                        />
+                    );
+                })}
         </TabTemplate>
     );
 }

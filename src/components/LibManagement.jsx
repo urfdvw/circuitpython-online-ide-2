@@ -172,6 +172,7 @@ export default function LibManagement() {
         () => [
             {
                 repo: "Adafruit_CircuitPython_Bundle",
+                abbr: "Adafruit",
                 json: jsonAdafruit,
                 zips: {
                     9: zipAdafruit9,
@@ -183,6 +184,7 @@ export default function LibManagement() {
             },
             {
                 repo: "CircuitPython_Community_Bundle",
+                abbr: "Community",
                 json: jsonCommunity,
                 zips: {
                     9: zipCommunity9,
@@ -332,6 +334,40 @@ export default function LibManagement() {
         batchInstallLib(scannedLibs);
     }
 
+    function getCard() {
+        const cards = [];
+        if (!ready) {
+            return cards;
+        } else {
+            for (const bundle of bundles) {
+                const bundleObj = JSON.parse(bundle.json.getText());
+                for (const bundleLibName in bundleObj) {
+                    let installedVersion = null;
+                    const installedBundleLib = installedLibs.filter(
+                        (lib) => lib.name.split(".")[0] === bundleLibName.split(".")[0]
+                    );
+                    if (installedBundleLib.length > 0) {
+                        installedVersion = installedBundleLib[0].version;
+                    }
+                    cards.push({
+                        repoName: bundle.repo,
+                        abbr: bundle.abbr,
+                        libObj: bundleObj[bundleLibName],
+                        libDisplayName: bundleLibName,
+                        installHandler: () => {
+                            batchInstallLib([bundleLibName]);
+                        },
+                        uninstallHandler: () => {
+                            uninstallLib(bundleLibName);
+                        },
+                        installedVersion: installedVersion,
+                    });
+                }
+            }
+        }
+        return cards;
+    }
+
     const menuStructure = [
         {
             label: "tests",
@@ -350,6 +386,13 @@ export default function LibManagement() {
                     text: "test clean up (refresh first)",
                     handler: () => {
                         batchUninstallLib(installedLibs);
+                    },
+                },
+                {
+                    text: "test get card",
+                    handler: () => {
+                        const card = getCard();
+                        console.log(card);
                     },
                 },
             ],

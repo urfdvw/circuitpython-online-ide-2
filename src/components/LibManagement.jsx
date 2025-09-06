@@ -62,6 +62,7 @@ export default function LibManagement() {
     const [loadingInfo, setLoadingInfo] = useState("");
     // const [refreshStep, setRefreshStep] = useState(1); // refresh on start
     const [refreshStep, setRefreshStep] = useState(0);
+    const [libCards, setLibCards] = useState([]);
 
     async function prepareBundle() {
         for (let i = 0; i < bundles.length; i++) {
@@ -392,6 +393,7 @@ export default function LibManagement() {
                     text: "test get card",
                     handler: () => {
                         const card = getCard();
+                        setLibCards(card);
                         console.log(card);
                     },
                 },
@@ -407,22 +409,22 @@ export default function LibManagement() {
                     <Typography>{loadingInfo}</Typography>
                 </Backdrop>
             )}
-            {ready ? "ready" : "not ready"}
-            {getCard()
-                .slice(10)
-                .map((card) => {
-                    return (
-                        <LibCardMUI
-                            libObj={card.libObj}
-                            repoName={card.repoName}
-                            abbr={card.abbr}
-                            libDisplayName={card.libDisplayName}
-                            installedVersion={card.installedVersion}
-                            installHandler={card.installHandler}
-                            uninstallHandler={card.uninstallHandler}
-                        />
-                    );
-                })}
+            {ready
+                ? libCards.slice(0, 10).map((card) => {
+                      return (
+                          <LibCardMUI
+                              key={card.libDisplayName}
+                              libObj={card.libObj}
+                              repoName={card.repoName}
+                              abbr={card.abbr}
+                              libDisplayName={card.libDisplayName}
+                              installedVersion={card.installedVersion}
+                              installHandler={card.installHandler}
+                              uninstallHandler={card.uninstallHandler}
+                          />
+                      );
+                  })
+                : "not ready"}
         </TabTemplate>
     );
 }

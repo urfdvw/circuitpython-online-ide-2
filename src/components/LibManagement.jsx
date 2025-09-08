@@ -494,7 +494,7 @@ export default function LibManagement() {
                         gap: 1,
                     }}
                 >
-                    {ready ? <PagedLibCards libCards={libCards} /> : "not ready"}
+                    {ready ? <PagedLibCards libCards={libCards} autoInstallHandler={() => {}} /> : "not ready"}
                 </Box>
             </Box>
         </TabTemplate>

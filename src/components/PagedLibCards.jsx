@@ -1,13 +1,13 @@
 import LibCardMUI from "../utilComponents/LibCardMUI";
 
 import React, { useMemo, useState, useEffect, useRef } from "react";
-import { Box, Stack, TextField, InputAdornment, Typography, Button, Divider, IconButton } from "@mui/material";
+import { Box, Stack, TextField, InputAdornment, Typography, Button, Divider, IconButton, Tooltip } from "@mui/material";
 import SearchIcon from "@mui/icons-material/Search";
 import CloseIcon from "@mui/icons-material/Close";
 import NavigateBeforeIcon from "@mui/icons-material/NavigateBefore";
 import NavigateNextIcon from "@mui/icons-material/NavigateNext";
 
-export default function PagedLibCards({ libCards = [], itemsPerPage = 20 }) {
+export default function PagedLibCards({ libCards = [], itemsPerPage = 20, autoInstallHandler }) {
     const [query, setQuery] = useState("");
     const [page, setPage] = useState(0);
     const listRef = useRef(null);
@@ -101,6 +101,11 @@ export default function PagedLibCards({ libCards = [], itemsPerPage = 20 }) {
                 }}
             >
                 <Stack direction="row" alignItems="center" spacing={2}>
+                    <Tooltip title="Analyze microcontroller and auto install libs and dependencies.">
+                        <Button size="small" variant="outlined" onClick={autoInstallHandler}>
+                            Auto Install
+                        </Button>
+                    </Tooltip>
                     <TextField
                         fullWidth
                         size="small"

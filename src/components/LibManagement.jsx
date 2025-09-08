@@ -16,8 +16,7 @@ import {
     compareVersions,
     versionToString,
 } from "../utilFunctions/installedLibUtils";
-import LibCardMUI from "../utilComponents/LibCardMUI";
-
+import PagedLibCards from "./PagedLibCards"
 import { Backdrop, CircularProgress, Typography } from "@mui/material";
 
 /* ---- util function ---- */
@@ -410,20 +409,7 @@ export default function LibManagement() {
                 </Backdrop>
             )}
             {ready
-                ? libCards.slice(0, 10).map((card) => {
-                      return (
-                          <LibCardMUI
-                              key={card.libDisplayName}
-                              libObj={card.libObj}
-                              repoName={card.repoName}
-                              abbr={card.abbr}
-                              libDisplayName={card.libDisplayName}
-                              installedVersion={card.installedVersion}
-                              installHandler={card.installHandler}
-                              uninstallHandler={card.uninstallHandler}
-                          />
-                      );
-                  })
+                ? <PagedLibCards libCards={libCards}/>
                 : "not ready"}
         </TabTemplate>
     );

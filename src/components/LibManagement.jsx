@@ -21,7 +21,80 @@ import {
     extractBundleUrls,
 } from "../utilFunctions/installedLibUtils";
 import PagedLibCards from "./PagedLibCards";
-import { Backdrop, CircularProgress, Typography } from "@mui/material";
+import { Backdrop, CircularProgress, Typography, Box, Divider, Button } from "@mui/material";
+
+import { useTheme } from "@mui/material/styles";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import CloseIcon from "@mui/icons-material/Close";
+
+function RowItem({ title, description, status = 1, button }) {
+    const theme = useTheme();
+    const LEFT_WIDTH = 48;
+
+    const icon =
+        status === 0 ? (
+            <CloseIcon fontSize="medium" sx={{ color: theme.palette.error.main }} />
+        ) : status === 0.5 ? (
+            <CheckCircleIcon fontSize="medium" sx={{ color: theme.palette.warning.main }} />
+        ) : (
+            <CheckCircleIcon fontSize="medium" sx={{ color: theme.palette.success.main }} />
+        );
+
+    return (
+        <Box
+            sx={{
+                width: "100%",
+                display: "flex",
+                alignItems: "stretch",
+            }}
+        >
+            {/* Left (fixed) */}
+            <Box
+                sx={{
+                    flex: `0 0 ${LEFT_WIDTH}px`,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                {icon}
+            </Box>
+
+            {/* Middle (expand to max) */}
+            <Box
+                sx={{
+                    flexGrow: 1,
+                    overflow: "auto",
+                    minWidth: 0, // enable ellipsis
+                    display: "flex",
+                    flexDirection: "column",
+                }}
+            >
+                <Typography variant="subtitle1" noWrap title={title}>
+                    {title}
+                </Typography>
+                {description ? (
+                    <Typography variant="body2" color="text.secondary" noWrap title={description}>
+                        {description}
+                    </Typography>
+                ) : null}
+            </Box>
+
+            {/* Right (shrink-to-content, but *can* shrink) */}
+            <Box
+                sx={{
+                    flexGrow: 0,
+                    display: "flex",
+                    minWidth: 0, // cooperate with container shrinking
+                    overflow: "hidden", // prevents overflow when super narrow
+                }}
+            >
+                {/* optional: keep button on one line without overflow */}
+                <Box sx={{ display: "inline-flex", whiteSpace: "nowrap", minWidth: 0 }}>{button}</Box>
+            </Box>
+        </Box>
+    );
+}
 
 /* ---- components ---- */
 
@@ -369,16 +442,61 @@ export default function LibManagement() {
             ],
         },
     ];
+    const btnRow1 = (
+        <Button size="small" variant="contained">
+            Do Thing
+        </Button>
+    );
+    const btnRow2 = (
+        <Button size="small" variant="outlined">
+            Details
+        </Button>
+    );
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
-            {loadingInfo.length > 0 && (
-                <Backdrop sx={{ position: "relative", height: "100%", color: "#fff" }} open={true}>
-                    <CircularProgress color="inherit" />
-                    <Typography>{loadingInfo}</Typography>
-                </Backdrop>
-            )}
-            {ready ? <PagedLibCards libCards={libCards} /> : "not ready"}
+            <Box
+                sx={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    bgcolor: "background.default",
+                }}
+            >
+                {/* Row 1 (auto height) */}
+                <RowItem
+                    title="Placeholder Title • Row 1"
+                    description="Placeholder description for row one goes here."
+                    status={1}
+                    button={btnRow1}
+                />
+
+                <Divider />
+
+                {/* Row 2 (auto height) */}
+                <RowItem
+                    title="Placeholder Title • Row 2"
+                    // no description -> falls back to single-row middle column
+                    status={0.5}
+                    button={btnRow2}
+                />
+
+                <Divider />
+
+                {/* Row 3 (fills remaining space) */}
+                <Box
+                    sx={{
+                        flex: 1,
+                        overflow: "auto",
+                        display: "flex",
+                        flexDirection: "column",
+                        gap: 1,
+                    }}
+                >
+                    {ready ? <PagedLibCards libCards={libCards} /> : "not ready"}
+                </Box>
+            </Box>
         </TabTemplate>
     );
 }

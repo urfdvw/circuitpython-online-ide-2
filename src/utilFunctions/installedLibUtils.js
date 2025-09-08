@@ -422,3 +422,35 @@ export function versionToString(v) {
     const patch = v.patch ?? 0;
     return `${major}.${minor}.${patch}`;
 }
+
+export function isBundleJsonFileName(str) {
+    const pattern = /^.+-\d{8}\.json$/;
+    return pattern.test(str);
+}
+
+export async function fetchBundleAssets(repo) {
+    const response = await fetch(`https://api.github.com/repos/adafruit/${repo}/releases/latest`);
+    const data = await response.json();
+
+    return data.assets;
+}
+
+export function getBundleTimeStamp(assets) {
+    return assets.at(0).updated_at;
+}
+
+export function extractBundleUrls(assets) {
+    const result = [];
+
+    for (const asset of assets) {
+        const name = asset.name;
+        const match = name.match(/^.+-(\d+)\.x-mpy-.*\.zip$/);
+        if (match) {
+            const version = parseInt(match[1], 10);
+            const url = asset.browser_download_url;
+            result.push({ version, url });
+        }
+    }
+
+    return result;
+}

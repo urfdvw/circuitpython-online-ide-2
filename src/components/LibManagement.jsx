@@ -15,43 +15,13 @@ import {
     filterNamesInJsons,
     compareVersions,
     versionToString,
+    isBundleJsonFileName,
+    fetchBundleAssets,
+    getBundleTimeStamp,
+    extractBundleUrls,
 } from "../utilFunctions/installedLibUtils";
-import PagedLibCards from "./PagedLibCards"
+import PagedLibCards from "./PagedLibCards";
 import { Backdrop, CircularProgress, Typography } from "@mui/material";
-
-/* ---- util function ---- */
-
-function isBundleJsonFileName(str) {
-    const pattern = /^.+-\d{8}\.json$/;
-    return pattern.test(str);
-}
-
-async function fetchBundleAssets(repo) {
-    const response = await fetch(`https://api.github.com/repos/adafruit/${repo}/releases/latest`);
-    const data = await response.json();
-
-    return data.assets;
-}
-
-function getBundleTimeStamp(assets) {
-    return assets.at(0).updated_at;
-}
-
-function extractBundleUrls(assets) {
-    const result = [];
-
-    for (const asset of assets) {
-        const name = asset.name;
-        const match = name.match(/^.+-(\d+)\.x-mpy-.*\.zip$/);
-        if (match) {
-            const version = parseInt(match[1], 10);
-            const url = asset.browser_download_url;
-            result.push({ version, url });
-        }
-    }
-
-    return result;
-}
 
 /* ---- components ---- */
 
@@ -408,9 +378,7 @@ export default function LibManagement() {
                     <Typography>{loadingInfo}</Typography>
                 </Backdrop>
             )}
-            {ready
-                ? <PagedLibCards libCards={libCards}/>
-                : "not ready"}
+            {ready ? <PagedLibCards libCards={libCards} /> : "not ready"}
         </TabTemplate>
     );
 }

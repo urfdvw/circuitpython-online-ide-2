@@ -29,104 +29,7 @@ import RowItem from "../utilComponents/RowItem";
 
 export default function LibManagement() {
     const { appConfig, rootDirHandle, boardInfo } = useContext(AppContext);
-    const [installedLibs, setInstalledLibs] = useState(null);
-    const [loadingInfo, setLoadingInfo] = useState("");
-    // const [refreshStep, setRefreshStep] = useState(1); // refresh on start
-    const [refreshStep, setRefreshStep] = useState(0);
     const [libCards, setLibCards] = useState([]);
-
-    async function prepareBundle() {
-        for (let i = 0; i < bundles.length; i++) {
-            bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
-
-            if (bundles[i].updateDateTime.getText()) {
-                const timeStampOnline = getBundleTimeStamp(bundles[i].assets);
-                // console.log(timeStampOnline);
-                const timeStampCache = bundles[i].updateDateTime.getText();
-                // console.log(timeStampCache);
-                if (timeStampOnline === timeStampCache) {
-                    console.log(`bundle  ${bundles[i].repo} up to date`);
-                    continue;
-                } else {
-                    if (confirm(`New version of ${bundles[i].repo} found, you want to upgrade?`)) {
-                        console.log("start downloading bundle to cache");
-                    } else {
-                        console.log("canceled download. Using cached bundle");
-                        continue;
-                    }
-                }
-            } else {
-                console.log("no time stamp found, start downloading bundle to cache");
-            }
-
-            // download zips
-            const zipUrls = extractBundleUrls(bundles[i].assets);
-            for (let j = 0; j < zipUrls.length; j++) {
-                console.log(`start downloading CPY ${zipUrls[j].version} version of ${bundles[i].repo}`);
-                await bundles[i].zips[zipUrls[j].version].downloadZipFromWeb(zipUrls[j].url);
-                console.log(`end downloading CPY ${zipUrls[j].version} version of ${bundles[i].repo}`);
-            }
-
-            // download json
-            const jsonUrl = bundles[i].assets.filter((x) => isBundleJsonFileName(x.name)).at(0).browser_download_url;
-            console.log("start downloading json file of " + bundles[i].repo);
-            await bundles[i].json.downloadTextFromWeb(jsonUrl);
-            console.log("finish downloading json file of " + bundles[i].repo);
-
-            // record time stamp
-            bundles[i].updateDateTime.setText(getBundleTimeStamp(bundles[i].assets));
-        }
-    }
-    async function prepareMcu() {
-        if (!boardInfo.cpy_version.major) {
-            confirm("Cannot get board CircuitPython version from boot_out.txt!");
-            return;
-        }
-        const libFodlerPath = "lib/";
-        const { dirHandle: libFolderHandle, fileHandle } = await path2Handles(rootDirHandle, libFodlerPath);
-        console.log(libFolderHandle);
-        const installedLibs = await getInstalledLibVersions(libFolderHandle);
-        console.log(installedLibs);
-        console.log("---- Got installed lib names and version ----");
-        setInstalledLibs(installedLibs);
-    }
-
-    async function refresh() {
-        if (refreshStep === 1) {
-            setLoadingInfo("Downloading bundles from Github");
-            setRefreshStep(2);
-        } else if (refreshStep === 2) {
-            try {
-                console.log(`start ${loadingInfo}`);
-                await prepareBundle();
-                console.log(`done ${loadingInfo}`);
-                setLoadingInfo("Analyzing microcontroller files");
-                setRefreshStep(3);
-            } catch {
-                confirm("Failed to download bundles. Please connect to Internet and refresh again.");
-                setLoadingInfo("");
-                setRefreshStep(0);
-            }
-        } else if (refreshStep === 3) {
-            try {
-                console.log(`start ${loadingInfo}`);
-                await prepareMcu();
-                console.log(`done ${loadingInfo}`);
-                setLoadingInfo("");
-                setRefreshStep(0);
-            } catch {
-                confirm(
-                    "Failed to read files from microcontroller. Please connect to microcontroller folder and refresh again."
-                );
-                setLoadingInfo("");
-                setRefreshStep(0);
-            }
-        }
-    }
-
-    useEffect(() => {
-        refresh();
-    }, [refreshStep]);
 
     const jsonAdafruit = useTextStorage("jsonAdafruit");
     const updateDateTimeAdafruit = useTextStorage("updateDateTimeAdafruit");
@@ -181,7 +84,59 @@ export default function LibManagement() {
         ]
     );
 
+    const [bundlesReady, setBundlesReady] = useState(0);
+
+    async function getBundleState() {
+        let lowBundle = 1;
+        for (let i = 0; i < bundles.length; i++) {
+            bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
+            if (bundles[i].updateDateTime.getText()) {
+                const timeStampOnline = getBundleTimeStamp(bundles[i].assets);
+                // console.log(timeStampOnline);
+                const timeStampCache = bundles[i].updateDateTime.getText();
+                // console.log(timeStampCache);
+                if (timeStampOnline === timeStampCache) {
+                    console.log("bundle up to date");
+                    lowBundle = Math.min(1, lowBundle);
+                } else {
+                    console.log("bundle upgrade available");
+                    lowBundle = Math.min(0.5, lowBundle);
+                }
+            } else {
+                console.log("no bundle yet");
+                lowBundle = Math.min(0, lowBundle);
+            }
+        }
+        setBundlesReady(lowBundle);
+        console.log("Got assets from git hub");
+    }
+
     useEffect(() => {
+        try {
+            getBundleState();
+        } catch {
+            confirm("Failed to get assets from git hub. Please connect to internet and retry");
+        }
+    }, [bundles]);
+
+    useEffect(() => {
+        //debug
+        console.log(bundles.map((bundle) => bundle.assets));
+    }, [bundles]);
+
+    function downloadingBundle() {
+        for (let bundle of bundles) {
+            for (let key in bundle.zips) {
+                if (bundle.zips[key].preparingZip) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    useEffect(() => {
+        // debug
         console.log(
             bundles.map((bundle) => {
                 const out = [];
@@ -192,22 +147,59 @@ export default function LibManagement() {
             })
         );
     }, [bundles]);
-    const [ready, setReady] = useState(false);
+
+    async function prepareBundle() {
+        for (let i = 0; i < bundles.length; i++) {
+            // download zips
+            const zipUrls = extractBundleUrls(bundles[i].assets);
+            for (let j = 0; j < zipUrls.length; j++) {
+                console.log(`start downloading CPY ${zipUrls[j].version} version of ${bundles[i].repo}`);
+                await bundles[i].zips[zipUrls[j].version].downloadZipFromWeb(zipUrls[j].url);
+                console.log(`end downloading CPY ${zipUrls[j].version} version of ${bundles[i].repo}`);
+            }
+
+            // download json
+            const jsonUrl = bundles[i].assets.filter((x) => isBundleJsonFileName(x.name)).at(0).browser_download_url;
+            console.log("start downloading json file of " + bundles[i].repo);
+            await bundles[i].json.downloadTextFromWeb(jsonUrl);
+            console.log("finish downloading json file of " + bundles[i].repo);
+
+            // record time stamp
+            bundles[i].updateDateTime.setText(getBundleTimeStamp(bundles[i].assets));
+        }
+    }
+
+    const [installedLibs, setInstalledLibs] = useState(null);
+    async function prepareMcu() {
+        if (!boardInfo.cpy_version.major) {
+            confirm("Cannot get board CircuitPython version from boot_out.txt!");
+            return;
+        }
+        const libFodlerPath = "lib/";
+        const { dirHandle: libFolderHandle, fileHandle } = await path2Handles(rootDirHandle, libFodlerPath);
+        console.log(libFolderHandle);
+        const installedLibs = await getInstalledLibVersions(libFolderHandle);
+        console.log(installedLibs);
+        console.log("---- Got installed lib names and version ----");
+        setInstalledLibs(installedLibs);
+    }
+
+    const [boardCpySupported, setBoardCpySupported] = useState(false);
 
     useEffect(() => {
         if (!boardInfo) {
-            setReady(false);
+            setBoardCpySupported(false);
             return;
         }
         if (!(boardInfo.cpy_version.major in bundles[0].zips)) {
-            setReady(false);
+            setBoardCpySupported(false);
             return;
         }
         if (!bundles[0].zips[boardInfo.cpy_version.major].zipReady) {
-            setReady(false);
+            setBoardCpySupported(false);
             return;
         }
-        setReady(true);
+        setBoardCpySupported(true);
     }, [bundles, boardInfo]);
 
     async function uninstallLib(name) {
@@ -308,7 +300,7 @@ export default function LibManagement() {
 
     function getCard() {
         const cards = [];
-        if (!ready) {
+        if (!boardCpySupported) {
             return cards;
         } else {
             for (const bundle of bundles) {
@@ -345,12 +337,6 @@ export default function LibManagement() {
             label: "tests",
             options: [
                 {
-                    text: "test refresh",
-                    handler: () => {
-                        setRefreshStep(1);
-                    },
-                },
-                {
                     text: "test autoInstall (refresh first)",
                     handler: autoInstall,
                 },
@@ -371,9 +357,13 @@ export default function LibManagement() {
             ],
         },
     ];
-    const btnRow1 = (
-        <Button size="small" variant="contained">
-            Do Thing
+    const btnRow1 = downloadingBundle() ? (
+        <Typography>downloading</Typography>
+    ) : bundlesReady === 1 ? (
+        false
+    ) : (
+        <Button size="small" variant="outlined" onClick={prepareBundle}>
+            {bundlesReady === 0 ? "Download" : "Upgrade"}
         </Button>
     );
     const btnRow2 = (
@@ -395,9 +385,15 @@ export default function LibManagement() {
             >
                 {/* Row 1 (auto height) */}
                 <RowItem
-                    title="Placeholder Title • Row 1"
-                    description="Placeholder description for row one goes here."
-                    status={1}
+                    title="Step 1: Prepare Bundles"
+                    description={
+                        bundlesReady === 1
+                            ? ""
+                            : bundlesReady === 0
+                            ? "Bundle not downloaded"
+                            : "Bundle upgrade available"
+                    }
+                    status={bundlesReady}
                     button={btnRow1}
                 />
 
@@ -423,7 +419,11 @@ export default function LibManagement() {
                         gap: 1,
                     }}
                 >
-                    {ready ? <PagedLibCards libCards={libCards} autoInstallHandler={() => {}} /> : "not ready"}
+                    {boardCpySupported ? (
+                        <PagedLibCards libCards={libCards} autoInstallHandler={autoInstall} />
+                    ) : (
+                        "not ready"
+                    )}
                 </Box>
             </Box>
         </TabTemplate>

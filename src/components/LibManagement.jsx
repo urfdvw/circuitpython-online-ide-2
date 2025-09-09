@@ -19,18 +19,19 @@ import {
     fetchBundleAssets,
     getBundleTimeStamp,
     extractBundleUrls,
+    sleep,
 } from "../utilFunctions/installedLibUtils";
 import PagedLibCards from "./PagedLibCards";
 import { Typography, Box, Divider, Button } from "@mui/material";
 
 import RowItem from "../utilComponents/RowItem";
 
-/* ---- components ---- */
-
 export default function LibManagement() {
-    const { appConfig, rootDirHandle, boardInfo } = useContext(AppContext);
-    const [libCards, setLibCards] = useState([]);
+    const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
 
+    /* ---- Step 1: bundles ---- */
+
+    // tech debt: how to make cpy version support more scalable
     const jsonAdafruit = useTextStorage("jsonAdafruit");
     const updateDateTimeAdafruit = useTextStorage("updateDateTimeAdafruit");
     const zipAdafruit9 = useZipStorage("zipAdafruit9");
@@ -112,17 +113,21 @@ export default function LibManagement() {
     }, []);
 
     function downloadingBundle() {
+        // function to check if bundle is in the process of downloading
         for (let bundle of bundles) {
             for (let key in bundle.zips) {
                 if (bundle.zips[key].preparingZip) {
                     return true;
                 }
             }
+            if (bundle.json.preparingText) {
+                return true;
+            }
         }
         return false;
     }
 
-    async function prepareBundle() {
+    async function downloadBundles() {
         console.log(bundles);
         for (let i = 0; i < bundles.length; i++) {
             // download zips
@@ -145,20 +150,7 @@ export default function LibManagement() {
         await getBundleState();
     }
 
-    const [installedLibs, setInstalledLibs] = useState(null);
-    async function prepareMcu() {
-        if (!boardInfo.cpy_version.major) {
-            confirm("Cannot get board CircuitPython version from boot_out.txt!");
-            return;
-        }
-        const libFodlerPath = "lib/";
-        const { dirHandle: libFolderHandle, fileHandle } = await path2Handles(rootDirHandle, libFodlerPath);
-        console.log(libFolderHandle);
-        const installedLibs = await getInstalledLibVersions(libFolderHandle);
-        console.log(installedLibs);
-        console.log("---- Got installed lib names and version ----");
-        setInstalledLibs(installedLibs);
-    }
+    /* ---- Step 2: Analyze MCU ---- */
 
     const [boardCpySupported, setBoardCpySupported] = useState(false);
 
@@ -177,6 +169,26 @@ export default function LibManagement() {
         }
         setBoardCpySupported(true);
     }, [bundles, boardInfo]);
+
+    async function analyzeMcu() {
+        if (!rootFolderDirectoryReady) {
+            confirm("Please connect microcontroller drive in the IDE and retry");
+            return;
+        }
+        if (!boardCpySupported) {
+            confirm("Cannot get board CircuitPython version from boot_out.txt!");
+            return;
+        }
+        const libFodlerPath = "lib/";
+        const { dirHandle: libFolderHandle, fileHandle } = await path2Handles(rootDirHandle, libFodlerPath);
+        console.log(libFolderHandle);
+        const installedLibs = await getInstalledLibVersions(libFolderHandle);
+        console.log(installedLibs);
+        console.log("---- Got installed lib names and version ----");
+        return installedLibs;
+    }
+
+    /* ---- action functions ---- */
 
     async function uninstallLib(name) {
         name = name.split(".")[0]; // to remove extension if there
@@ -201,11 +213,14 @@ export default function LibManagement() {
         }
     }
 
-    async function batchUninstallLib(pendingLibs) {
-        console.log(pendingLibs);
-        for (const lib of pendingLibs) {
-            await uninstallLib(lib.name);
+    async function batchUninstallLib(pendingLibNames) {
+        console.log(pendingLibNames);
+        for (const libName of pendingLibNames) {
+            await uninstallLib(libName);
         }
+        // refresh card view
+        await sleep(1000); // 等待 1 秒
+        await refreshCards();
     }
 
     async function installLib(name, zip) {
@@ -225,6 +240,7 @@ export default function LibManagement() {
     }
 
     async function batchInstallLib(pendingLibs) {
+        const installedLibs = await analyzeMcu();
         /* ---- dependencies ---- */
         const bundleZipsOfBoardVersion = bundles.map((bundle) => {
             return bundle.zips[boardInfo.cpy_version.major];
@@ -257,24 +273,23 @@ export default function LibManagement() {
                                 lib.version
                             )}, MCU: ${versionToString(installedLib[0].version)}`
                         );
-                        installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
+                        await installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
                     }
                 } else {
                     console.log(`${lib.name} is not installed yet`);
-                    installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
+                    await installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
                 }
             }
         }
+        // refresh card view
+        await sleep(1000); // 等待 1 秒
+        await refreshCards();
     }
 
-    async function autoInstall() {
-        const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
-        console.log(scannedLibs);
-        console.log("---- Got required lib names ----");
-        batchInstallLib(scannedLibs);
-    }
-
-    function getCard() {
+    /* ---- Cards ---- */
+    const [libCards, setLibCards] = useState([]);
+    async function refreshCards() {
+        const installedLibs = await analyzeMcu();
         const cards = [];
         if (!boardCpySupported) {
             return cards;
@@ -298,55 +313,48 @@ export default function LibManagement() {
                             batchInstallLib([bundleLibName]);
                         },
                         uninstallHandler: () => {
-                            uninstallLib(bundleLibName);
+                            batchUninstallLib([bundleLibName]);
                         },
                         installedVersion: installedVersion,
                     });
                 }
             }
         }
-        return cards;
+        setLibCards(cards);
     }
+
+    /* ---- UI ---- */
 
     const menuStructure = [
         {
             label: "tests",
-            options: [
-                {
-                    text: "test autoInstall (refresh first)",
-                    handler: autoInstall,
-                },
-                {
-                    text: "test clean up (refresh first)",
-                    handler: () => {
-                        batchUninstallLib(installedLibs);
-                    },
-                },
-                {
-                    text: "test get card",
-                    handler: () => {
-                        const card = getCard();
-                        setLibCards(card);
-                        console.log(card);
-                    },
-                },
-            ],
+            options: [],
         },
     ];
+
     const btnRow1 = downloadingBundle() ? (
         <Typography>downloading</Typography>
     ) : bundlesReady === 1 ? (
         false
     ) : (
-        <Button size="small" variant="outlined" onClick={prepareBundle}>
+        <Button size="small" variant="outlined" onClick={downloadBundles}>
             {bundlesReady === 0 ? "Download" : "Upgrade"}
         </Button>
     );
     const btnRow2 = (
-        <Button size="small" variant="outlined">
-            Details
+        <Button size="small" variant="outlined" onClick={refreshCards}>
+            Analyze
         </Button>
     );
+
+    async function autoInstall() {
+        // scan to get required libs
+        const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
+        console.log("---- Got required lib names ----");
+        console.log(scannedLibs);
+        // install
+        await batchInstallLib(scannedLibs);
+    }
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
@@ -378,30 +386,34 @@ export default function LibManagement() {
 
                         {/* Row 2 (auto height) */}
                         <RowItem
-                            title="Placeholder Title • Row 2"
-                            // no description -> falls back to single-row middle column
-                            status={0.5}
+                            title="Step 2: Analyze Microcontroller"
+                            status={libCards.length > 0 ? 1 : 0}
                             button={btnRow2}
                         />
 
                         <Divider />
 
                         {/* Row 3 (fills remaining space) */}
-                        <Box
-                            sx={{
-                                flex: 1,
-                                overflow: "auto",
-                                display: "flex",
-                                flexDirection: "column",
-                                gap: 1,
-                            }}
-                        >
-                            {boardCpySupported ? (
-                                <PagedLibCards libCards={libCards} autoInstallHandler={autoInstall} />
-                            ) : (
-                                "not ready"
-                            )}
-                        </Box>
+                        {libCards.length === 0 ? null : (
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    overflow: "auto",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 1,
+                                }}
+                            >
+                                {boardCpySupported ? (
+                                    <PagedLibCards libCards={libCards} autoInstallHandler={autoInstall} />
+                                ) : (
+                                    <Typography>
+                                        CircuitPython version not supported. Please install the latest version of
+                                        CircuitPython on the microcontroller and retry.
+                                    </Typography>
+                                )}
+                            </Box>
+                        )}
                     </>
                 )}
             </Box>

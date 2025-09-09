@@ -454,3 +454,7 @@ export function extractBundleUrls(assets) {
 
     return result;
 }
+
+export function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}

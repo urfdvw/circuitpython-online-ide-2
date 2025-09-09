@@ -1,5 +1,5 @@
 import TabTemplate from "../utilComponents/TabTemplate";
-import { useContext, useEffect, useState, useMemo } from "react";
+import { useContext, useEffect, useState, useMemo, useCallback } from "react";
 import { AppContext } from "../AppContext";
 import {
     path2Handles,
@@ -36,62 +36,53 @@ export default function LibManagement() {
     const zipAdafruit9 = useZipStorage("zipAdafruit9");
     const zipAdafruit10 = useZipStorage("zipAdafruit10");
     const zipAdafruit11 = useZipStorage("zipAdafruit11");
+    const [assetsAdafruit, setAssetsAdafruit] = useState(null);
 
     const jsonCommunity = useTextStorage("jsonCommunity");
     const updateDateTimeCommunity = useTextStorage("updateDateTimeCommunity");
     const zipCommunity9 = useZipStorage("zipCommunity9");
     const zipCommunity10 = useZipStorage("zipCommunity10");
     const zipCommunity11 = useZipStorage("zipCommunity11");
+    const [assetsCommunity, setAssetsCommunity] = useState(null);
 
-    const bundles = useMemo(
-        () => [
-            {
-                repo: "Adafruit_CircuitPython_Bundle",
-                abbr: "Adafruit",
-                json: jsonAdafruit,
-                zips: {
-                    9: zipAdafruit9,
-                    10: zipAdafruit10,
-                    11: zipAdafruit11,
-                },
-                updateDateTime: updateDateTimeAdafruit,
-                assets: null,
+    const bundles = [
+        {
+            repo: "Adafruit_CircuitPython_Bundle",
+            abbr: "Adafruit",
+            json: jsonAdafruit,
+            zips: {
+                9: zipAdafruit9,
+                10: zipAdafruit10,
+                11: zipAdafruit11,
             },
-            {
-                repo: "CircuitPython_Community_Bundle",
-                abbr: "Community",
-                json: jsonCommunity,
-                zips: {
-                    9: zipCommunity9,
-                    10: zipCommunity10,
-                    11: zipCommunity11,
-                },
-                updateDateTime: updateDateTimeCommunity,
-                assets: null,
+            updateDateTime: updateDateTimeAdafruit,
+            assets: assetsAdafruit,
+            setAssets: setAssetsAdafruit,
+        },
+        {
+            repo: "CircuitPython_Community_Bundle",
+            abbr: "Community",
+            json: jsonCommunity,
+            zips: {
+                9: zipCommunity9,
+                10: zipCommunity10,
+                11: zipCommunity11,
             },
-        ],
-        [
-            jsonAdafruit,
-            updateDateTimeAdafruit,
-            zipAdafruit9,
-            zipAdafruit10,
-            zipAdafruit11,
-            jsonCommunity,
-            updateDateTimeCommunity,
-            zipCommunity9,
-            zipCommunity10,
-            zipCommunity11,
-        ]
-    );
+            updateDateTime: updateDateTimeCommunity,
+            assets: assetsCommunity,
+            setAssets: setAssetsCommunity,
+        },
+    ];
 
     const [bundlesReady, setBundlesReady] = useState(0);
 
     async function getBundleState() {
         let lowBundle = 1;
         for (let i = 0; i < bundles.length; i++) {
-            bundles[i].assets = await fetchBundleAssets(bundles[i].repo);
+            const assets = await fetchBundleAssets(bundles[i].repo);
+            bundles[i].setAssets(assets);
             if (bundles[i].updateDateTime.getText()) {
-                const timeStampOnline = getBundleTimeStamp(bundles[i].assets);
+                const timeStampOnline = getBundleTimeStamp(assets);
                 // console.log(timeStampOnline);
                 const timeStampCache = bundles[i].updateDateTime.getText();
                 // console.log(timeStampCache);
@@ -112,17 +103,13 @@ export default function LibManagement() {
     }
 
     useEffect(() => {
+        // init bundle states
         try {
             getBundleState();
         } catch {
             confirm("Failed to get assets from git hub. Please connect to internet and retry");
         }
-    }, [bundles]);
-
-    useEffect(() => {
-        //debug
-        console.log(bundles.map((bundle) => bundle.assets));
-    }, [bundles]);
+    }, []);
 
     function downloadingBundle() {
         for (let bundle of bundles) {
@@ -135,20 +122,8 @@ export default function LibManagement() {
         return false;
     }
 
-    useEffect(() => {
-        // debug
-        console.log(
-            bundles.map((bundle) => {
-                const out = [];
-                for (var key in bundle.zips) {
-                    out.push([key, bundle.zips[key].zipContents]);
-                }
-                return out;
-            })
-        );
-    }, [bundles]);
-
     async function prepareBundle() {
+        console.log(bundles);
         for (let i = 0; i < bundles.length; i++) {
             // download zips
             const zipUrls = extractBundleUrls(bundles[i].assets);
@@ -167,6 +142,7 @@ export default function LibManagement() {
             // record time stamp
             bundles[i].updateDateTime.setText(getBundleTimeStamp(bundles[i].assets));
         }
+        await getBundleState();
     }
 
     const [installedLibs, setInstalledLibs] = useState(null);
@@ -396,35 +372,38 @@ export default function LibManagement() {
                     status={bundlesReady}
                     button={btnRow1}
                 />
+                {bundlesReady === 0 ? null : (
+                    <>
+                        <Divider />
 
-                <Divider />
+                        {/* Row 2 (auto height) */}
+                        <RowItem
+                            title="Placeholder Title • Row 2"
+                            // no description -> falls back to single-row middle column
+                            status={0.5}
+                            button={btnRow2}
+                        />
 
-                {/* Row 2 (auto height) */}
-                <RowItem
-                    title="Placeholder Title • Row 2"
-                    // no description -> falls back to single-row middle column
-                    status={0.5}
-                    button={btnRow2}
-                />
+                        <Divider />
 
-                <Divider />
-
-                {/* Row 3 (fills remaining space) */}
-                <Box
-                    sx={{
-                        flex: 1,
-                        overflow: "auto",
-                        display: "flex",
-                        flexDirection: "column",
-                        gap: 1,
-                    }}
-                >
-                    {boardCpySupported ? (
-                        <PagedLibCards libCards={libCards} autoInstallHandler={autoInstall} />
-                    ) : (
-                        "not ready"
-                    )}
-                </Box>
+                        {/* Row 3 (fills remaining space) */}
+                        <Box
+                            sx={{
+                                flex: 1,
+                                overflow: "auto",
+                                display: "flex",
+                                flexDirection: "column",
+                                gap: 1,
+                            }}
+                        >
+                            {boardCpySupported ? (
+                                <PagedLibCards libCards={libCards} autoInstallHandler={autoInstall} />
+                            ) : (
+                                "not ready"
+                            )}
+                        </Box>
+                    </>
+                )}
             </Box>
         </TabTemplate>
     );

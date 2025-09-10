@@ -373,7 +373,6 @@ export default function LibManagement() {
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
-            ]
             <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
                 <Box sx={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                     <CircularProgress color="inherit" />

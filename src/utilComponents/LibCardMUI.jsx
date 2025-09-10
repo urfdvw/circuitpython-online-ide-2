@@ -70,7 +70,7 @@ export default function LibCardMUI({
                         "&:last-child": { pb: 1.5 },
                         flex: 1,
                         overflowX: "auto",
-                        padding: "3px"
+                        padding: "3px",
                     }}
                 >
                     <Stack spacing={0.5} alignItems="left" textAlign="left">
@@ -86,7 +86,7 @@ export default function LibCardMUI({
                                 </IconButton>
                             </Tooltip>
                             <Tooltip title={libDisplayName}>
-                                {libDisplayName}
+                                <Typography variant="span">{libDisplayName}</Typography>
                             </Tooltip>
                         </Typography>
 
@@ -99,8 +99,8 @@ export default function LibCardMUI({
                                     sameVersion
                                         ? "versions match"
                                         : outdated
-                                            ? "installed version → bundle version"
-                                            : "bundle version"
+                                        ? "installed version → bundle version"
+                                        : "bundle version"
                                 }
                             >
                                 <Box component="span">{versionLine}</Box>

@@ -1,0 +1,18 @@
+{
+    "name": "lib_management",
+    "title": "Library Management",
+    "description": "Library management tool settings",
+    "type": "object",
+    "properties": {
+        "lib_per_page": {
+            "title": "Number of libraries per page",
+            "type": "number",
+            "default": 20
+        },
+        "clean_up_in_auto": {
+            "title": "Clean up installed libs at the beginning of auto installation",
+            "type": "boolean",
+            "default": true
+        }
+    }
+}

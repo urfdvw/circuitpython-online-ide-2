@@ -215,7 +215,7 @@ export default function LibManagement() {
     }
 
     async function batchUninstallLib(pendingLibNames) {
-        setLibChangeInfo("Uninstalling lib");
+        setLibChangeInfo("Uninstalling libs");
         for (const libName of pendingLibNames) {
             await uninstallLib(libName);
         }
@@ -242,7 +242,7 @@ export default function LibManagement() {
     }
 
     async function batchInstallLib(pendingLibs) {
-        setLibChangeInfo("Installing Lib");
+        setLibChangeInfo("Installing Libs");
         const installedLibs = await analyzeMcu();
         /* ---- dependencies ---- */
         const bundleZipsOfBoardVersion = bundles.map((bundle) => {
@@ -356,7 +356,9 @@ export default function LibManagement() {
 
     async function autoInstall() {
         // clear
-        await clearInstalledLibs();
+        if (appConfig.config.lib_management.clean_up_in_auto) {
+            await clearInstalledLibs();
+        }
         // scan to get required libs
         const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
         console.log("---- Got required lib names ----");
@@ -391,8 +393,8 @@ export default function LibManagement() {
                         bundlesReady === 1
                             ? ""
                             : bundlesReady === 0
-                                ? "Bundle not downloaded"
-                                : "Bundle upgrade available"
+                            ? "Bundle not downloaded"
+                            : "Bundle upgrade available"
                     }
                     status={bundlesReady}
                     button={btnRow1}
@@ -422,7 +424,11 @@ export default function LibManagement() {
                                 }}
                             >
                                 {boardCpySupported ? (
-                                    <PagedLibCards libCards={libCards} autoInstallHandler={autoInstall} />
+                                    <PagedLibCards
+                                        libCards={libCards}
+                                        autoInstallHandler={autoInstall}
+                                        itemsPerPage={appConfig.config.lib_management.lib_per_page}
+                                    />
                                 ) : (
                                     <Typography>
                                         CircuitPython version not supported. Please install the latest version of

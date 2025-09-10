@@ -1,5 +1,5 @@
 import TabTemplate from "../utilComponents/TabTemplate";
-import { useContext, useEffect, useState, useMemo, useCallback } from "react";
+import { useContext, useEffect, useState } from "react";
 import { AppContext } from "../AppContext";
 import {
     path2Handles,
@@ -22,12 +22,13 @@ import {
     sleep,
 } from "../utilFunctions/installedLibUtils";
 import PagedLibCards from "./PagedLibCards";
-import { Typography, Box, Divider, Button } from "@mui/material";
+import { Typography, Box, Divider, Button, Backdrop, CircularProgress } from "@mui/material";
 
 import RowItem from "../utilComponents/RowItem";
 
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
+    const [isLoading, setIsLoading] = useState(false);
 
     /* ---- Step 1: bundles ---- */
 
@@ -214,13 +215,14 @@ export default function LibManagement() {
     }
 
     async function batchUninstallLib(pendingLibNames) {
-        console.log(pendingLibNames);
+        setIsLoading(true);
         for (const libName of pendingLibNames) {
             await uninstallLib(libName);
         }
         // refresh card view
         await sleep(1000); // 等待 1 秒
         await refreshCards();
+        setIsLoading(false);
     }
 
     async function installLib(name, zip) {
@@ -240,6 +242,7 @@ export default function LibManagement() {
     }
 
     async function batchInstallLib(pendingLibs) {
+        setIsLoading(true);
         const installedLibs = await analyzeMcu();
         /* ---- dependencies ---- */
         const bundleZipsOfBoardVersion = bundles.map((bundle) => {
@@ -284,6 +287,7 @@ export default function LibManagement() {
         // refresh card view
         await sleep(1000); // 等待 1 秒
         await refreshCards();
+        setIsLoading(false);
     }
 
     /* ---- Cards ---- */
@@ -369,6 +373,13 @@ export default function LibManagement() {
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
+            ]
+            <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
+                <Box sx={{ display: "flex", flexDirection: "row", gap: "10px" }}>
+                    <CircularProgress color="inherit" />
+                    <Typography component="p">Making changes to libs ...</Typography>
+                </Box>
+            </Backdrop>
             <Box
                 sx={{
                     width: "100%",

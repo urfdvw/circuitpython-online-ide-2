@@ -347,7 +347,18 @@ export default function LibManagement() {
         </Button>
     );
 
+    async function clearInstalledLibs() {
+        // scan to get required libs
+        const installedLibs = await analyzeMcu();
+        console.log("---- Got required lib names ----");
+        console.log(installedLibs);
+        // uninstall
+        await batchUninstallLib(installedLibs.map((lib) => lib.name));
+    }
+
     async function autoInstall() {
+        // clear
+        await clearInstalledLibs();
         // scan to get required libs
         const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
         console.log("---- Got required lib names ----");

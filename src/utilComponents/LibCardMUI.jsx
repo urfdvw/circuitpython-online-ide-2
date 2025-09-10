@@ -67,6 +67,7 @@ export default function LibCardMUI({
                         py: 1.5,
                         "&:last-child": { pb: 1.5 },
                         flex: 1,
+                        overflowX: "auto",
                     }}
                 >
                     <Stack spacing={0.5} alignItems="left" textAlign="left">

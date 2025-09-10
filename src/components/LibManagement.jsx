@@ -117,11 +117,11 @@ export default function LibManagement() {
         for (let bundle of bundles) {
             for (let key in bundle.zips) {
                 if (bundle.zips[key].preparingZip) {
-                    return "downloading bundle";
+                    return `downloading CPY ${key} version of ${bundle.repo}`;
                 }
             }
             if (bundle.json.preparingText) {
-                return "downloading bundle";
+                return `downloading content list of ${bundle.repo}`;
             }
         }
         return "";
@@ -391,8 +391,8 @@ export default function LibManagement() {
                         bundlesReady === 1
                             ? ""
                             : bundlesReady === 0
-                            ? "Bundle not downloaded"
-                            : "Bundle upgrade available"
+                                ? "Bundle not downloaded"
+                                : "Bundle upgrade available"
                     }
                     status={bundlesReady}
                     button={btnRow1}

@@ -140,7 +140,7 @@ export default function PagedLibCards({ libCards = [], itemsPerPage = 20, autoIn
 
             {/* Scrollable list */}
             <Box ref={listRef} sx={{ flex: 1, overflow: "auto" }}>
-                <Stack spacing={1.5} sx={{ p: 1.5 }}>
+                <Stack spacing={0} sx={{ p: 0 }}>
                     {pageItems.length === 0 ? (
                         <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: "center" }}>
                             No results.

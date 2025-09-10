@@ -41,11 +41,13 @@ export default function LibCardMUI({
         <Card
             variant="outlined"
             sx={{
-                borderRadius: 3,
-                p: 1,
+                borderRadius: 0,
+                p: 0,
+                margin: 0,
+                padding: 0,
             }}
         >
-            <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Stack direction="row" alignItems="center" spacing={0.5}>
                 {/* Left: check icon */}
                 <Box sx={{ width: 28, display: "flex", justifyContent: "center" }}>
                     {hasInstalled ? (
@@ -68,19 +70,23 @@ export default function LibCardMUI({
                         "&:last-child": { pb: 1.5 },
                         flex: 1,
                         overflowX: "auto",
+                        padding: "3px"
                     }}
                 >
                     <Stack spacing={0.5} alignItems="left" textAlign="left">
-                        <Typography variant="subtitle1" fontWeight={700}>
-                            {libDisplayName}
+                        <Typography variant="subtitle1" fontWeight={700} noWrap>
                             <Tooltip title="Check Lib Source Code">
                                 <IconButton
                                     onClick={() => {
                                         window.open(libObj.repo, "_blank");
                                     }}
+                                    sx={{ zoom: "70%", margin: "0px", marginRight: "5px", padding: "0px" }}
                                 >
                                     <GitHubIcon fontSize="small" />
                                 </IconButton>
+                            </Tooltip>
+                            <Tooltip title={libDisplayName}>
+                                {libDisplayName}
                             </Tooltip>
                         </Typography>
 
@@ -93,8 +99,8 @@ export default function LibCardMUI({
                                     sameVersion
                                         ? "versions match"
                                         : outdated
-                                        ? "installed version → bundle version"
-                                        : "bundle version"
+                                            ? "installed version → bundle version"
+                                            : "bundle version"
                                 }
                             >
                                 <Box component="span">{versionLine}</Box>
@@ -114,9 +120,9 @@ export default function LibCardMUI({
                 </CardContent>
 
                 {/* Right: actions */}
-                <CardActions sx={{ pr: 1 }}>
+                <CardActions sx={{ pr: 1, padding: "2px" }}>
                     {sameVersion ? (
-                        <Stack direction="column" spacing={1}>
+                        <Stack direction="column" spacing={0}>
                             <Button
                                 variant="outlined"
                                 color="inherit"
@@ -127,7 +133,7 @@ export default function LibCardMUI({
                             </Button>
                         </Stack>
                     ) : outdated ? (
-                        <Stack direction="column" spacing={1}>
+                        <Stack direction="column" spacing={0}>
                             <Button variant="contained" color="primary" size="small" onClick={() => installHandler?.()}>
                                 Upgrade
                             </Button>
@@ -141,7 +147,7 @@ export default function LibCardMUI({
                             </Button>
                         </Stack>
                     ) : (
-                        <Stack direction="column" spacing={1}>
+                        <Stack direction="column" spacing={0}>
                             <Button variant="contained" color="primary" size="small" onClick={() => installHandler?.()}>
                                 Install
                             </Button>

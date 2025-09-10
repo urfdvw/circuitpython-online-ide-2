@@ -25,9 +25,18 @@ import PagedLibCards from "./PagedLibCards";
 import { Typography, Box, Divider, Button, Backdrop, CircularProgress } from "@mui/material";
 
 import RowItem from "../utilComponents/RowItem";
+import { selectTabById } from "../layout/layoutUtils";
 
 export default function LibManagement() {
-    const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
+    const {
+        appConfig,
+        rootFolderDirectoryReady,
+        rootDirHandle,
+        boardInfo,
+        flexModel,
+        helpTabSelection,
+        configTabSelection,
+    } = useContext(AppContext);
 
     /* ---- Step 1: bundles ---- */
 
@@ -329,7 +338,24 @@ export default function LibManagement() {
 
     /* ---- UI ---- */
 
-    const menuStructure = [];
+    const menuStructure = [
+        {
+            text: "Settings",
+            handler: () => {
+                console.log("clicked on menu item `Settings`");
+                selectTabById(flexModel, "settings_tab");
+                configTabSelection.setTabName("lib_management");
+            },
+        },
+        {
+            text: "Help",
+            handler: () => {
+                console.log("clicked on menu item `Help`");
+                selectTabById(flexModel, "help_tab");
+                helpTabSelection.setTabName("lib_management");
+            },
+        },
+    ];
 
     const btnRow1 =
         bundlesReady === 1 ? (

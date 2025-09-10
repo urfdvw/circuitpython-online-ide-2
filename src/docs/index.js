@@ -14,6 +14,7 @@ import feedback_and_code_contribution from "./Feedback and Code Contribution.md"
 import version_history from "./Version history.md";
 import troubleshooting from "./Troubleshooting.md";
 import related_projects from "./Related projects.md";
+import lib_management from "./Lib Management.md";
 
 const docs = [
     {
@@ -50,6 +51,11 @@ const docs = [
         name: "plot",
         title: "Plot",
         body: plot,
+    },
+    {
+        name: "lib_management",
+        title: "Library Management",
+        body: lib_management,
     },
     {
         name: "backup",

@@ -9,7 +9,7 @@ const schemas = [
     editor_config_schema,
     serial_console_config_schema,
     plotter_config_schema,
-    backup_config_schema,
     lib_management_schema,
+    backup_config_schema,
 ];
 export default schemas;

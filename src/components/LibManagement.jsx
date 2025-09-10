@@ -199,7 +199,7 @@ export default function LibManagement() {
         try {
             const { dirHandle: folderLib, fileHandle } = await path2Handles(rootDirHandle, `lib/${name}`);
             console.log(folderLib);
-            removeEntry(libDirHandle, folderLib);
+            await removeEntry(libDirHandle, folderLib);
         } catch {
             console.log(`failed uninstalled folder lib: ${name}`);
         }
@@ -208,7 +208,7 @@ export default function LibManagement() {
         try {
             const { dirHandle, fileHandle: fileLib } = await path2Handles(rootDirHandle, `lib/${name}.mpy`);
             console.log(fileLib);
-            removeEntry(libDirHandle, fileLib);
+            await removeEntry(libDirHandle, fileLib);
         } catch {
             console.log(`failed uninstalled file lib: ${name}`);
         }
@@ -231,12 +231,12 @@ export default function LibManagement() {
         try {
             const folderLib = await zip.getEntryFromCache(`lib/${name}`);
             // console.log(folderLib);
-            copyEntry(folderLib, dirHandle, folderLib.name);
+            await copyEntry(folderLib, dirHandle, folderLib.name);
             console.log(`installed folder lib: ${name}`);
         } catch {
             const fileLib = await zip.getEntryFromCache(`lib/${name}.mpy`);
             // console.log(fileLib);
-            copyEntry(fileLib, dirHandle, fileLib.name);
+            await copyEntry(fileLib, dirHandle, fileLib.name);
             console.log(`installed file lib: ${name}`);
         }
     }

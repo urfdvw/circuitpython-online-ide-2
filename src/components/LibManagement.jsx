@@ -28,7 +28,6 @@ import RowItem from "../utilComponents/RowItem";
 
 export default function LibManagement() {
     const { appConfig, rootFolderDirectoryReady, rootDirHandle, boardInfo } = useContext(AppContext);
-    const [isLoading, setIsLoading] = useState(false);
 
     /* ---- Step 1: bundles ---- */
 
@@ -113,19 +112,19 @@ export default function LibManagement() {
         }
     }, []);
 
-    function downloadingBundle() {
+    function downloadingBundleInfo() {
         // function to check if bundle is in the process of downloading
         for (let bundle of bundles) {
             for (let key in bundle.zips) {
                 if (bundle.zips[key].preparingZip) {
-                    return true;
+                    return "downloading bundle";
                 }
             }
             if (bundle.json.preparingText) {
-                return true;
+                return "downloading bundle";
             }
         }
-        return false;
+        return "";
     }
 
     async function downloadBundles() {
@@ -190,6 +189,7 @@ export default function LibManagement() {
     }
 
     /* ---- action functions ---- */
+    const [libChangeInfo, setLibChangeInfo] = useState("");
 
     async function uninstallLib(name) {
         name = name.split(".")[0]; // to remove extension if there
@@ -215,14 +215,14 @@ export default function LibManagement() {
     }
 
     async function batchUninstallLib(pendingLibNames) {
-        setIsLoading(true);
+        setLibChangeInfo("Uninstalling lib");
         for (const libName of pendingLibNames) {
             await uninstallLib(libName);
         }
         // refresh card view
         await sleep(1000); // 等待 1 秒
         await refreshCards();
-        setIsLoading(false);
+        setLibChangeInfo("");
     }
 
     async function installLib(name, zip) {
@@ -242,7 +242,7 @@ export default function LibManagement() {
     }
 
     async function batchInstallLib(pendingLibs) {
-        setIsLoading(true);
+        setLibChangeInfo("Installing Lib");
         const installedLibs = await analyzeMcu();
         /* ---- dependencies ---- */
         const bundleZipsOfBoardVersion = bundles.map((bundle) => {
@@ -287,7 +287,7 @@ export default function LibManagement() {
         // refresh card view
         await sleep(1000); // 等待 1 秒
         await refreshCards();
-        setIsLoading(false);
+        setLibChangeInfo("");
     }
 
     /* ---- Cards ---- */
@@ -329,22 +329,16 @@ export default function LibManagement() {
 
     /* ---- UI ---- */
 
-    const menuStructure = [
-        {
-            label: "tests",
-            options: [],
-        },
-    ];
+    const menuStructure = [];
 
-    const btnRow1 = downloadingBundle() ? (
-        <Typography>downloading</Typography>
-    ) : bundlesReady === 1 ? (
-        false
-    ) : (
-        <Button size="small" variant="outlined" onClick={downloadBundles}>
-            {bundlesReady === 0 ? "Download" : "Upgrade"}
-        </Button>
-    );
+    const btnRow1 =
+        bundlesReady === 1 ? (
+            false
+        ) : (
+            <Button size="small" variant="outlined" onClick={downloadBundles}>
+                {bundlesReady === 0 ? "Download" : "Upgrade"}
+            </Button>
+        );
     const btnRow2 = (
         <Button size="small" variant="outlined" onClick={refreshCards}>
             Analyze
@@ -371,12 +365,14 @@ export default function LibManagement() {
         await batchInstallLib(scannedLibs);
     }
 
+    const loadingInfo = downloadingBundleInfo() + libChangeInfo;
+
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
-            <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={isLoading}>
+            <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loadingInfo.length > 0}>
                 <Box sx={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                     <CircularProgress color="inherit" />
-                    <Typography component="p">Making changes to libs ...</Typography>
+                    <Typography component="p">{loadingInfo}</Typography>
                 </Box>
             </Backdrop>
             <Box

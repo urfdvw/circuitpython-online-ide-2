@@ -15,7 +15,7 @@ async function fetchWithProxy(targetUrl) {
 export function useZipStorage(dbName) {
     const dbRef = useRef(null);
     const [preparingZip, setPreparingZip] = useState(false);
-    const [zipReady, setFileReady] = useState(false);
+    const [zipReady, setZipReady] = useState(false);
     const [zipContents, setZipContents] = useState([]);
 
     // ---------- utils ----------
@@ -132,7 +132,7 @@ export function useZipStorage(dbName) {
             const existing = await tryOpenExistingDB();
             if (!existing) {
                 if (!cancelled) {
-                    setFileReady(false);
+                    setZipReady(false);
                     setZipContents([]);
                 }
                 return;
@@ -140,7 +140,7 @@ export function useZipStorage(dbName) {
             if (!existing.objectStoreNames.contains("entries")) {
                 existing.close();
                 if (!cancelled) {
-                    setFileReady(false);
+                    setZipReady(false);
                     setZipContents([]);
                 }
                 return;
@@ -148,7 +148,7 @@ export function useZipStorage(dbName) {
             const keys = await existing.getAllKeys("entries");
             if (!cancelled) {
                 setZipContents(keys);
-                setFileReady(keys.length > 0);
+                setZipReady(keys.length > 0);
                 dbRef.current = existing;
             } else {
                 existing.close();
@@ -218,7 +218,7 @@ export function useZipStorage(dbName) {
             // refresh listing
             const allKeys = await db.getAllKeys("entries");
             setZipContents(allKeys);
-            setFileReady(allKeys.length > 0);
+            setZipReady(allKeys.length > 0);
             return true;
         },
         [recreateDB]
@@ -229,7 +229,7 @@ export function useZipStorage(dbName) {
         async (zipUrl) => {
             if (!zipUrl) throw new Error("zipUrl is required.");
             setPreparingZip(true);
-            setFileReady(false);
+            setZipReady(false);
             setZipContents([]);
 
             try {
@@ -250,7 +250,7 @@ export function useZipStorage(dbName) {
         if (window.showOpenFilePicker) {
             try {
                 setPreparingZip(true);
-                setFileReady(false);
+                setZipReady(false);
                 setZipContents([]);
                 const [handle] = await window.showOpenFilePicker({
                     types: [{ description: "ZIP archives", accept: { "application/zip": [".zip"] } }],
@@ -293,7 +293,7 @@ export function useZipStorage(dbName) {
                     return;
                 }
                 setPreparingZip(true);
-                setFileReady(false);
+                setZipReady(false);
                 setZipContents([]);
                 try {
                     const buf = await file.arrayBuffer();
@@ -459,7 +459,7 @@ export function useZipStorage(dbName) {
         dbRef.current = null;
         await deleteDB(dbName);
         setZipContents([]);
-        setFileReady(false);
+        setZipReady(false);
     }, [dbName]);
 
     return {

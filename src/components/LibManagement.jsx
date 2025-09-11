@@ -84,6 +84,10 @@ export default function LibManagement() {
         },
     ];
 
+    // useEffect(() => {
+    //     console.log(bundles)
+    // }, [bundles])
+
     const [bundlesReady, setBundlesReady] = useState(0);
 
     async function getBundleState() {
@@ -180,12 +184,16 @@ export default function LibManagement() {
     }, [bundles, boardInfo]);
 
     async function analyzeMcu() {
+        if (bundlesReady === 0) {
+            confirm("Please download library bundles and retry");
+            return;
+        }
         if (!rootFolderDirectoryReady) {
             confirm("Please connect microcontroller drive in the IDE and retry");
             return;
         }
         if (!boardCpySupported) {
-            confirm("Cannot get board CircuitPython version from boot_out.txt!");
+            confirm("CircuitPython version not supported. Please install the latest version of CircuitPython on the microcontroller and retry.");
             return;
         }
         const libFodlerPath = "lib/";
@@ -433,8 +441,8 @@ export default function LibManagement() {
                             bundlesReady === 1
                                 ? ""
                                 : bundlesReady === 0
-                                ? "Bundle not downloaded"
-                                : "Bundle upgrade available"
+                                    ? "Bundle not downloaded"
+                                    : "Bundle upgrade available"
                         }
                         status={bundlesReady}
                         button={btnRow1}

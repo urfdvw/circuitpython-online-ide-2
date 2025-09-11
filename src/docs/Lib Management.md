@@ -1,47 +1,58 @@
 This tool will help install and upgrade dependent libraries on to the microcontroller without leaving the IDE.
 
-## Prepare
-
-
-
-### Step 1: Prepare bundles
+## Prepare bundles
 
 If this is the first time you use the tool,
 you will need to connect to the internet.
-Click on the "DOWNLOAD" button on the right of step 1 to download the library bundles.
+Click on the "DOWNLOAD" button on the top right to download the library bundles.
 Once downloaded, they will stay there even if you close the browser,
 So next time you visit CircuitPython Online IDE, you don't need to download them again.
 
-If there is a more recent version,
-you can click on on the "DOWNLOAD" button on the right of step 1 to download the latest version.
+If there is a more recent version of library bundles,
+you can click on on the "UPGRADE" button on the top right to download the latest version.
+Even though this step is optional, it is suggested to keep the bundle up to date.
 
 PS:
-1. downloaded resources are stored in browser cache, so clear browser cache will remove downloaded library bundles.
+1. downloaded resources are stored in browser cache, so clearing browser cache will remove downloaded library bundles.
 2. You can use previous downloaded library bundles without internet.
-
-### Step 2: Analyze Microcontrollers
-
-To run this step microcontrollers need to be opened as a USB drive in the IDE.
-If you see the folder view on the left is showing contents on your microcontroller,
-it means you are safe to proceed.
-
-This step will analyze the files on your micro controller,
-so that the IDE can see which libraries are already installed.
-
-Click on the "ANALYZE" button on the right of step 2.
-Once it is down, you will see a list of libraries show below in the list,
-where installed libraries has a check mark on the left.
-
-After you did any manual file operations on the CIRCUITPY drive,
-Please reclick on the "ANALYZE" button to refresh.
 
 ## Use case: Auto Install
 
 Click on the button on the top left corner of the list.
 The tool will analyze your python code on the microcontroller,
-and then install all necessary libraries from the bundles,
+and then install all necessary libraries from the bundles.
 
 This should be the mostly used case.
+Can be suitable for testing out example code,
+or just focusing on code construction and let the tool take care of the dependencies.
+
+related settings
+- Clean up installed libs at the beginning of auto installation
+    - turning this off will speed up the installation process
+    - turning this on can clean up unused libraries
 
 ## Use case: Manual Install
 
+The tool will show all the libs in the bundles as a list,
+where installed libs are shown first.
+Users can also use the search bar to filter the list.
+
+For each library shown on the list,
+green check mark means the installed library version is the same as the version in the bundle.
+If there is a different version in the bundle, the checkmark will become orange.
+Users can manually choose to install/upgrade or uninstall libraries by buttons on the right.
+
+Note that installing or upgrade will also install/upgrade dependencies,
+while uninstalling a library will only uninstall itself.
+
+related settings
+- Number of libraries per page
+
+## Menu Options
+
+- Refresh library list
+    - After you did any manual file operations on the CIRCUITPY drive, 
+    the installation status are not going to be reflected immediately on the library list. 
+    This option is for refreshing the list manually.
+- Settings: go to library management related settings
+- help: go to library management related help documentation

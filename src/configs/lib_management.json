@@ -12,7 +12,7 @@
         "clean_up_in_auto": {
             "title": "Clean up installed libs at the beginning of auto installation",
             "type": "boolean",
-            "default": true
+            "default": false
         }
     }
 }

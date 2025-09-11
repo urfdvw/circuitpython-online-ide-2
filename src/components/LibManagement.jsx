@@ -26,7 +26,8 @@ import { Typography, Box, Divider, Button, Backdrop, CircularProgress } from "@m
 
 import RowItem from "../utilComponents/RowItem";
 import { selectTabById } from "../layout/layoutUtils";
-import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab"
+import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
+import NewWindow from "react-new-window";
 
 function useNotification() {
     const [notificationVisible, setNotificationVisible] = useState(false);
@@ -63,7 +64,8 @@ export default function LibManagement() {
         configTabSelection,
     } = useContext(AppContext);
 
-    const { notificationVisible, notificationText, notify } = useNotification()
+    const { notificationVisible, notificationText, notify } = useNotification();
+    const [installationLog, setInstallationLog] = useState("");
 
     /* ---- Step 1: bundles ---- */
 
@@ -220,7 +222,9 @@ export default function LibManagement() {
             return;
         }
         if (!boardCpySupported) {
-            confirm("CircuitPython version not supported. Please install the latest version of CircuitPython on the microcontroller and retry.");
+            confirm(
+                "CircuitPython version not supported. Please install the latest version of CircuitPython on the microcontroller and retry."
+            );
             return;
         }
         const libFodlerPath = "lib/";
@@ -256,6 +260,9 @@ export default function LibManagement() {
         } catch {
             console.log(`failed uninstalled file lib: ${name}`);
         }
+
+        const now = new Date().toLocaleTimeString();
+        setInstallationLog((cur) => cur + `\n${now.toString()}: uninstalled ${name}`);
     }
 
     async function batchUninstallLib(pendingLibNames) {
@@ -283,6 +290,9 @@ export default function LibManagement() {
             await copyEntry(fileLib, dirHandle, fileLib.name);
             console.log(`installed file lib: ${name}`);
         }
+
+        const now = new Date().toLocaleTimeString();
+        setInstallationLog((cur) => cur + `\n${now.toString()}: installed ${name}`);
     }
 
     async function batchInstallLib(pendingLibs) {
@@ -359,11 +369,11 @@ export default function LibManagement() {
                         libDisplayName: bundleLibName,
                         installHandler: async () => {
                             await batchInstallLib([bundleLibName]);
-                            notify(`Installed ${bundleLibName}`)
+                            notify(`Installed ${bundleLibName}`);
                         },
                         uninstallHandler: () => {
                             batchUninstallLib([bundleLibName]);
-                            notify(`Uninstalled ${bundleLibName}`)
+                            notify(`Uninstalled ${bundleLibName}`);
                         },
                         installedVersion: installedVersion,
                     });
@@ -383,7 +393,6 @@ export default function LibManagement() {
     }, [bundlesReady, boardCpySupported]);
 
     /* ---- UI ---- */
-
 
     const menuStructure = [
         {
@@ -431,6 +440,8 @@ export default function LibManagement() {
     }
 
     async function autoInstall() {
+        let now = new Date().toLocaleTimeString();
+        setInstallationLog((cur) => cur + `\n${now.toString()}: auto install started`);
         // clear
         if (appConfig.config.lib_management.clean_up_in_auto) {
             await clearInstalledLibs();
@@ -441,15 +452,29 @@ export default function LibManagement() {
         console.log(scannedLibs);
         // install
         await batchInstallLib(scannedLibs);
+
         notify("Auto install finished");
+        now = new Date().toLocaleTimeString();
+        setInstallationLog((cur) => cur + `\n${now.toString()}: auto install finished`);
     }
 
     const loadingInfo = downloadingBundleInfo() + libChangeInfo;
 
     return (
         <SiblingWithBottomRightTab label={notificationText} visible={notificationVisible}>
+            <NewWindow
+                title={"Installation Log"}
+                // onUnload={() => {
+                //     setPopped(false);
+                // }}
+            >
+                <pre>{installationLog}</pre>
+            </NewWindow>
             <TabTemplate menuStructure={menuStructure} title="Library Management">
-                <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loadingInfo.length > 0}>
+                <Backdrop
+                    sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
+                    open={loadingInfo.length > 0}
+                >
                     <Box sx={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                         <CircularProgress color="inherit" />
                         <Typography component="p">{loadingInfo}</Typography>
@@ -473,8 +498,8 @@ export default function LibManagement() {
                                 bundlesReady === 1
                                     ? ""
                                     : bundlesReady === 0
-                                        ? "Bundle not downloaded"
-                                        : "Bundle upgrade available"
+                                    ? "Bundle not downloaded"
+                                    : "Bundle upgrade available"
                             }
                             status={bundlesReady}
                             button={btnRow1}

@@ -75,6 +75,15 @@ export default function LibCardMUI({
                 >
                     <Stack spacing={0.5} alignItems="left" textAlign="left">
                         <Typography variant="subtitle1" fontWeight={700} noWrap>
+                            <Tooltip title={libDisplayName}>
+                                <Typography variant="span">{libDisplayName}</Typography>
+                            </Tooltip>
+                        </Typography>
+
+                        <Typography
+                            variant="body2"
+                            sx={{ color: theme.palette.grey[700], display: "flex", alignItems: "left" }}
+                        >
                             <Tooltip title="Check Lib Source Code">
                                 <IconButton
                                     onClick={() => {
@@ -85,15 +94,6 @@ export default function LibCardMUI({
                                     <GitHubIcon fontSize="small" />
                                 </IconButton>
                             </Tooltip>
-                            <Tooltip title={libDisplayName}>
-                                <Typography variant="span">{libDisplayName}</Typography>
-                            </Tooltip>
-                        </Typography>
-
-                        <Typography
-                            variant="body2"
-                            sx={{ color: theme.palette.grey[700], display: "flex", alignItems: "left" }}
-                        >
                             <Tooltip
                                 title={
                                     sameVersion

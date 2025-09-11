@@ -349,20 +349,29 @@ export default function LibManagement() {
 
     const menuStructure = [
         {
-            text: "Settings",
-            handler: () => {
-                console.log("clicked on menu item `Settings`");
-                selectTabById(flexModel, "settings_tab");
-                configTabSelection.setTabName("lib_management");
-            },
-        },
-        {
-            text: "Help",
-            handler: () => {
-                console.log("clicked on menu item `Help`");
-                selectTabById(flexModel, "help_tab");
-                helpTabSelection.setTabName("lib_management");
-            },
+            label: "≡",
+            options: [
+                {
+                    text: "Refresh Library List",
+                    handler: refreshCards,
+                },
+                {
+                    text: "Settings",
+                    handler: () => {
+                        console.log("clicked on menu item `Settings`");
+                        selectTabById(flexModel, "settings_tab");
+                        configTabSelection.setTabName("lib_management");
+                    },
+                },
+                {
+                    text: "Help",
+                    handler: () => {
+                        console.log("clicked on menu item `Help`");
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("lib_management");
+                    },
+                },
+            ],
         },
     ];
 
@@ -374,12 +383,6 @@ export default function LibManagement() {
                 {bundlesReady === 0 ? "Download" : "Upgrade"}
             </Button>
         );
-    const btnRow2 = (
-        <Button size="small" variant="outlined" onClick={refreshCards}>
-            Analyze
-        </Button>
-    );
-
     async function clearInstalledLibs() {
         // scan to get required libs
         const installedLibs = await analyzeMcu();
@@ -421,34 +424,29 @@ export default function LibManagement() {
                     bgcolor: "background.default",
                 }}
             >
-                {/* Row 1 (auto height) */}
-                <RowItem
-                    title="Step 1: Prepare Bundles"
-                    description={
-                        bundlesReady === 1
-                            ? ""
-                            : bundlesReady === 0
-                            ? "Bundle not downloaded"
-                            : "Bundle upgrade available"
-                    }
-                    status={bundlesReady}
-                    button={btnRow1}
-                />
-                {bundlesReady === 0 ? null : (
+                {bundlesReady === 1 ? (
+                    false
+                ) : (
+                    <RowItem
+                        title="Prepare Library Bundles"
+                        description={
+                            bundlesReady === 1
+                                ? ""
+                                : bundlesReady === 0
+                                ? "Bundle not downloaded"
+                                : "Bundle upgrade available"
+                        }
+                        status={bundlesReady}
+                        button={btnRow1}
+                    />
+                )}
+
+                {bundlesReady > 0 && (
                     <>
                         <Divider />
-
-                        {/* Row 2 (auto height) */}
-                        <RowItem
-                            title="Step 2: Analyze Microcontroller"
-                            status={libCards.length > 0 ? 1 : 0}
-                            button={btnRow2}
-                        />
-
-                        <Divider />
-
-                        {/* Row 3 (fills remaining space) */}
-                        {libCards.length === 0 ? null : (
+                        {libCards.length === 0 ? (
+                            <Typography>Please open CIRCUITPY drive</Typography>
+                        ) : (
                             <Box
                                 sx={{
                                     flex: 1,

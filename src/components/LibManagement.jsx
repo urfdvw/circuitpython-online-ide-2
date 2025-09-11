@@ -336,6 +336,15 @@ export default function LibManagement() {
         setLibCards(cards);
     }
 
+    useEffect(() => {
+        function autoRefreshCards() {
+            if (boardCpySupported && bundlesReady !== 0) {
+                refreshCards();
+            }
+        }
+        autoRefreshCards();
+    }, [bundlesReady, boardCpySupported]);
+
     /* ---- UI ---- */
 
     const menuStructure = [

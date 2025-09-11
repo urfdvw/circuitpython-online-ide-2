@@ -81,6 +81,13 @@ export default function AppMenu() {
                     },
                 },
                 {
+                    text: "Library Management",
+                    handler: () => {
+                        console.log("clicked on menu item `Library Management`");
+                        openTab(flexModel, "Library Management", "lib_management");
+                    },
+                },
+                {
                     text: "Backup",
                     handler: () => {
                         console.log("clicked on menu item `Backup`");

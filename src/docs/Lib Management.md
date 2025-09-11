@@ -1,58 +1,66 @@
-This tool will help install and upgrade dependent libraries on to the microcontroller without leaving the IDE.
+This tool makes it easy to install and update the libraries your microcontroller needs, right inside the IDE.
 
 ## Prepare bundles
 
-If this is the first time you use the tool,
-you will need to connect to the internet.
-Click on the "DOWNLOAD" button on the top right to download the library bundles.
-Once downloaded, they will stay there even if you close the browser,
-So next time you visit CircuitPython Online IDE, you don't need to download them again.
+*Make sure the CIRCUITPY drive is open in the IDE before you start.*
 
-If there is a more recent version of library bundles,
-you can click on on the "UPGRADE" button on the top right to download the latest version.
-Even though this step is optional, it is suggested to keep the bundle up to date.
+The first time you use this tool,
+you need to be connected to the internet.
+Click the "DOWNLOAD" button at the top right to get the library bundles.
+Once downloaded, they will stay in your browser, even if you close it.
+Next time you open CircuitPython Online IDE, you won’t need to download them again.
 
-PS:
-1. downloaded resources are stored in browser cache, so clearing browser cache will remove downloaded library bundles.
-2. You can use previous downloaded library bundles without internet.
+If a newer version of the bundles is available,
+you can click the "UPGRADE" button at the top right to get the latest one.
+This step is optional, but keeping the bundles updated is recommended.
+
+Note:
+1. Bundles are saved in your browser’s cache. If you clear the cache, the bundles will be removed.
+2. Once downloaded, you can use the bundles offline without internet.
 
 ## Use case: Auto Install
 
-Click on the button on the top left corner of the list.
-The tool will analyze your python code on the microcontroller,
-and then install all necessary libraries from the bundles.
+Click the button in the top left corner of the list.
+The tool will read your Python code on the microcontroller
+and automatically install the libraries it needs from the bundles.
 
-This should be the mostly used case.
-Can be suitable for testing out example code,
-or just focusing on code construction and let the tool take care of the dependencies.
+This is the easiest and most common way to use the tool.
+It’s great for trying example code
+or focusing on writing your program while the tool handles the libraries.
 
-related settings
+Settings you can adjust:
 - Clean up installed libs at the beginning of auto installation
-    - turning this off will speed up the installation process
-    - turning this on can clean up unused libraries
+    - Off: faster, but unused libraries may stay  
+    - On: removes all libraries first, then installs what’s needed  
 
 ## Use case: Manual Install
 
-The tool will show all the libs in the bundles as a list,
-where installed libs are shown first.
-Users can also use the search bar to filter the list.
+The tool can also show you a list of all libraries in the bundles,
+with the libraries you already have installed shown first.
+You can use the search bar to quickly find what you need.
 
-For each library shown on the list,
-green check mark means the installed library version is the same as the version in the bundle.
-If there is a different version in the bundle, the checkmark will become orange.
-Users can manually choose to install/upgrade or uninstall libraries by buttons on the right.
+Each entry shows the following information:
+- Check mark:  
+    - Green means the installed version matches the bundle  
+    - Orange means the installed version is different  
+- Library name  
+- GitHub icon: click to open the library’s GitHub page with documentation and examples  
+- Version number  
+- Bundle name  
+- Action buttons: install, upgrade, or uninstall the library  
 
-Note that installing or upgrade will also install/upgrade dependencies,
-while uninstalling a library will only uninstall itself.
+Note:
+- Installing or upgrading a library will also install or upgrade its dependencies.  
+- Uninstalling a library will only remove that single library.  
 
-related settings
+Settings you can adjust:
 - Number of libraries per page
 
 ## Menu Options
 
-- Refresh library list
-    - After you did any manual file operations on the CIRCUITPY drive, 
-    the installation status are not going to be reflected immediately on the library list. 
-    This option is for refreshing the list manually.
-- Settings: go to library management related settings
-- help: go to library management related help documentation
+- Refresh library list  
+    - If you add or remove files directly on the CIRCUITPY drive,  
+      the library list won’t update right away.  
+      Use this option to refresh it manually.  
+- Settings: open the library management settings  
+- Help: open the help guide for library management  

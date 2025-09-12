@@ -51,7 +51,13 @@ export default function RowItem({ title, description, status = 1, button }) {
                     {title}
                 </Typography>
                 {description ? (
-                    <Typography variant="body2" color="text.secondary" noWrap title={description}>
+                    <Typography
+                        variant="body2"
+                        color="text.secondary"
+                        noWrap
+                        title={description}
+                        sx={{ whiteSpace: "pre-line" }}
+                    >
                         {description}
                     </Typography>
                 ) : null}

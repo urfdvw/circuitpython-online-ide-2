@@ -414,6 +414,8 @@ export default function LibManagement() {
 
     /* ---- UI ---- */
 
+    const [hideUpgrade, setHideUpgrade] = useState(false);
+
     const menuStructure = [
         {
             label: "≡",
@@ -427,6 +429,10 @@ export default function LibManagement() {
                     handler: () => {
                         setPopped(true);
                     },
+                },
+                hideUpgrade && {
+                    text: "Download Bundle",
+                    handler: downloadBundles,
                 },
                 {
                     text: "Settings",
@@ -444,7 +450,7 @@ export default function LibManagement() {
                         helpTabSelection.setTabName("lib_management");
                     },
                 },
-            ],
+            ].filter((x) => x),
         },
     ];
 
@@ -452,9 +458,20 @@ export default function LibManagement() {
         bundlesReady === 1 ? (
             false
         ) : (
-            <Button size="small" variant="outlined" onClick={downloadBundles}>
-                {bundlesReady === 0 ? "Download" : "Upgrade"}
-            </Button>
+            <Box sx={{ display: "flex", flexDirection: "column" }}>
+                <Button size="small" variant="outlined" onClick={downloadBundles}>
+                    {bundlesReady === 0 ? "Download" : "Upgrade"}
+                </Button>
+                <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => {
+                        setHideUpgrade(true);
+                    }}
+                >
+                    Hide
+                </Button>
+            </Box>
         );
     async function clearInstalledLibs() {
         // scan to get required libs
@@ -487,6 +504,21 @@ export default function LibManagement() {
     }
 
     const loadingInfo = downloadingBundleInfo() + libChangeInfo;
+
+    function getBundleVersionDiff() {
+        return bundles
+            .map((bundle) => {
+                const bundleTime = getBundleTimeStamp(bundle.assets).split("T")[0];
+                const installedTime = bundle.updateDateTime.getText().split("T")[0];
+                if (bundleTime != installedTime) {
+                    return `${bundle.abbr}: ${installedTime} -> ${bundleTime}`;
+                } else {
+                    return null;
+                }
+            })
+            .filter((x) => x)
+            .join("\n");
+    }
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
@@ -531,7 +563,7 @@ export default function LibManagement() {
                     bgcolor: "background.default",
                 }}
             >
-                {bundlesReady === 1 ? (
+                {bundlesReady === 1 || hideUpgrade ? (
                     false
                 ) : (
                     <RowItem
@@ -541,7 +573,7 @@ export default function LibManagement() {
                                 ? ""
                                 : bundlesReady === 0
                                 ? "Bundle not downloaded"
-                                : "Bundle upgrade available"
+                                : "Bundle upgrade available\n" + getBundleVersionDiff()
                         }
                         status={bundlesReady}
                         button={btnRow1}

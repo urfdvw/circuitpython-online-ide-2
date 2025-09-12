@@ -320,10 +320,19 @@ export default function LibManagement() {
                 const installedLib = installedLibs.filter(
                     (installedLib) => installedLib.name.split(".")[0] === lib.name
                 );
+
+                const now = new Date().toLocaleTimeString();
                 if (installedLib.length > 0) {
                     if (compareVersions(installedLib[0].version, lib.version) === 0) {
                         console.log(
                             `version of ${lib.name} is the same in bundle and MCU: ${versionToString(lib.version)}`
+                        );
+                        setInstallationLog(
+                            (cur) =>
+                                cur +
+                                `\n${now.toString()}: version of ${
+                                    lib.name
+                                } is the same in bundle and MCU: ${versionToString(lib.version)}`
                         );
                     } else {
                         console.log(
@@ -331,10 +340,20 @@ export default function LibManagement() {
                                 lib.version
                             )}, MCU: ${versionToString(installedLib[0].version)}`
                         );
+                        setInstallationLog(
+                            (cur) =>
+                                cur +
+                                `\n${now.toString()}: version of ${
+                                    lib.name
+                                } is different in bundle and MCU. bundle: ${versionToString(
+                                    lib.version
+                                )}, MCU: ${versionToString(installedLib[0].version)}`
+                        );
                         await installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
                     }
                 } else {
                     console.log(`${lib.name} is not installed yet`);
+                    setInstallationLog((cur) => cur + `\n${now.toString()}: ${lib.name} is not installed yet`);
                     await installLib(lib.name, bundle.zips[boardInfo.cpy_version.major]);
                 }
             }
@@ -451,6 +470,8 @@ export default function LibManagement() {
         setInstallationLog((cur) => cur + `\n${now.toString()}: auto install started`);
         // clear
         if (appConfig.config.lib_management.clean_up_in_auto) {
+            now = new Date().toLocaleTimeString();
+            setInstallationLog((cur) => cur + `\n${now.toString()}: clean up before installation`);
             await clearInstalledLibs();
         }
         // scan to get required libs
@@ -490,7 +511,9 @@ export default function LibManagement() {
                         setPopped(false);
                     }}
                 >
-                    <pre>{installationLog}</pre>
+                    <Box sx={{ height: "100%", width: "100%", overflow: "auto" }}>
+                        <pre>{installationLog}</pre>
+                    </Box>
                 </NewWindow>
             )}
             <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loadingInfo.length > 0}>

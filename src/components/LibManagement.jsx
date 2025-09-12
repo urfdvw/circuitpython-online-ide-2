@@ -22,11 +22,10 @@ import {
     sleep,
 } from "../utilFunctions/installedLibUtils";
 import PagedLibCards from "./PagedLibCards";
-import { Typography, Box, Divider, Button, Backdrop, CircularProgress } from "@mui/material";
+import { Typography, Box, Divider, Button, Backdrop, CircularProgress, Slide } from "@mui/material";
 
 import RowItem from "../utilComponents/RowItem";
 import { selectTabById } from "../layout/layoutUtils";
-import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
 import NewWindow from "react-new-window";
 
 function useNotification() {
@@ -66,6 +65,8 @@ export default function LibManagement() {
 
     const { notificationVisible, notificationText, notify } = useNotification();
     const [installationLog, setInstallationLog] = useState("");
+    const [popped, setPopped] = useState(false);
+    const containerRef = useRef(null);
 
     /* ---- Step 1: bundles ---- */
 
@@ -371,8 +372,8 @@ export default function LibManagement() {
                             await batchInstallLib([bundleLibName]);
                             notify(`Installed ${bundleLibName}`);
                         },
-                        uninstallHandler: () => {
-                            batchUninstallLib([bundleLibName]);
+                        uninstallHandler: async () => {
+                            await batchUninstallLib([bundleLibName]);
                             notify(`Uninstalled ${bundleLibName}`);
                         },
                         installedVersion: installedVersion,
@@ -393,7 +394,6 @@ export default function LibManagement() {
     }, [bundlesReady, boardCpySupported]);
 
     /* ---- UI ---- */
-    const [popped, setPopped] = useState(false);
 
     const menuStructure = [
         {
@@ -468,13 +468,21 @@ export default function LibManagement() {
     const loadingInfo = downloadingBundleInfo() + libChangeInfo;
 
     return (
-        <SiblingWithBottomRightTab
-            label={notificationText}
-            visible={notificationVisible}
-            onClick={() => {
-                setPopped(true);
-            }}
-        >
+        <TabTemplate menuStructure={menuStructure} title="Library Management">
+            <Slide in={notificationVisible} mountOnEnter unmountOnExit>
+                <Box sx={{ position: "absolute", top: "20%", left: "50%" }}>
+                    <Box
+                        sx={{
+                            transform: "translateX(-50%)",
+                            transformOrigin: "center",
+                        }}
+                    >
+                        <Button variant="contained" onClick={() => setPopped(true)}>
+                            {notificationText}
+                        </Button>
+                    </Box>
+                </Box>
+            </Slide>
             {popped && (
                 <NewWindow
                     title={"Installation Log"}
@@ -485,75 +493,70 @@ export default function LibManagement() {
                     <pre>{installationLog}</pre>
                 </NewWindow>
             )}
-            <TabTemplate menuStructure={menuStructure} title="Library Management">
-                <Backdrop
-                    sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}
-                    open={loadingInfo.length > 0}
-                >
-                    <Box sx={{ display: "flex", flexDirection: "row", gap: "10px" }}>
-                        <CircularProgress color="inherit" />
-                        <Typography component="p">{loadingInfo}</Typography>
-                    </Box>
-                </Backdrop>
-                <Box
-                    sx={{
-                        width: "100%",
-                        height: "100%",
-                        display: "flex",
-                        flexDirection: "column",
-                        bgcolor: "background.default",
-                    }}
-                >
-                    {bundlesReady === 1 ? (
-                        false
-                    ) : (
-                        <RowItem
-                            title="Prepare Library Bundles"
-                            description={
-                                bundlesReady === 1
-                                    ? ""
-                                    : bundlesReady === 0
-                                    ? "Bundle not downloaded"
-                                    : "Bundle upgrade available"
-                            }
-                            status={bundlesReady}
-                            button={btnRow1}
-                        />
-                    )}
-
-                    {bundlesReady > 0 && (
-                        <>
-                            <Divider />
-                            {libCards.length === 0 ? (
-                                <Typography>Please open CIRCUITPY drive</Typography>
-                            ) : (
-                                <Box
-                                    sx={{
-                                        flex: 1,
-                                        overflow: "auto",
-                                        display: "flex",
-                                        flexDirection: "column",
-                                        gap: 1,
-                                    }}
-                                >
-                                    {boardCpySupported ? (
-                                        <PagedLibCards
-                                            libCards={libCards}
-                                            autoInstallHandler={autoInstall}
-                                            itemsPerPage={appConfig.config.lib_management.lib_per_page}
-                                        />
-                                    ) : (
-                                        <Typography>
-                                            CircuitPython version not supported. Please install the latest version of
-                                            CircuitPython on the microcontroller and retry.
-                                        </Typography>
-                                    )}
-                                </Box>
-                            )}
-                        </>
-                    )}
+            <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loadingInfo.length > 0}>
+                <Box sx={{ display: "flex", flexDirection: "row", gap: "10px" }}>
+                    <CircularProgress color="inherit" />
+                    <Typography component="p">{loadingInfo}</Typography>
                 </Box>
-            </TabTemplate>
-        </SiblingWithBottomRightTab>
+            </Backdrop>
+            <Box
+                sx={{
+                    width: "100%",
+                    height: "100%",
+                    display: "flex",
+                    flexDirection: "column",
+                    bgcolor: "background.default",
+                }}
+            >
+                {bundlesReady === 1 ? (
+                    false
+                ) : (
+                    <RowItem
+                        title="Prepare Library Bundles"
+                        description={
+                            bundlesReady === 1
+                                ? ""
+                                : bundlesReady === 0
+                                ? "Bundle not downloaded"
+                                : "Bundle upgrade available"
+                        }
+                        status={bundlesReady}
+                        button={btnRow1}
+                    />
+                )}
+
+                {bundlesReady > 0 && (
+                    <>
+                        <Divider />
+                        {libCards.length === 0 ? (
+                            <Typography>Please open CIRCUITPY drive</Typography>
+                        ) : (
+                            <Box
+                                sx={{
+                                    flex: 1,
+                                    overflow: "auto",
+                                    display: "flex",
+                                    flexDirection: "column",
+                                    gap: 1,
+                                }}
+                            >
+                                {boardCpySupported ? (
+                                    <PagedLibCards
+                                        libCards={libCards}
+                                        autoInstallHandler={autoInstall}
+                                        itemsPerPage={appConfig.config.lib_management.lib_per_page}
+                                    />
+                                ) : (
+                                    <Typography>
+                                        CircuitPython version not supported. Please install the latest version of
+                                        CircuitPython on the microcontroller and retry.
+                                    </Typography>
+                                )}
+                            </Box>
+                        )}
+                    </>
+                )}
+            </Box>
+        </TabTemplate>
     );
 }

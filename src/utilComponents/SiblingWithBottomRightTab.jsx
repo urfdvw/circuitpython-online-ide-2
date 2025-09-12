@@ -1,10 +1,10 @@
 import React from "react";
-import { Box, Button, Tooltip, Slide } from "@mui/material";
+import { Box, Button, Tooltip } from "@mui/material";
 
-const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick = null, visible = true }) => {
+const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick = null }) => {
     return (
         <Box position="relative" display="inline-block" sx={{
-            height: "100%", width: "100%"
+            height: "100%"
         }}>
             {/* Main sibling component */}
             {children}
@@ -17,28 +17,25 @@ const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick
                     right: 0,
                 }}
             >
-
-                <Slide in={visible} timeout={500}>
-                    <Tooltip title={tooltip} placement="top">
-                        <Button
-                            onClick={onClick}
-                            variant="contained"
-                            // color="primary"
-                            size="small"
-                            sx={{
-                                opacity: 0.5,
-                                borderTopLeftRadius: 12,
-                                borderBottomRightRadius: 0,
-                                borderTopRightRadius: 0,
-                                borderBottomLeftRadius: 0,
-                                textTransform: "none",
-                                minWidth: "10px",
-                            }}
-                        >
-                            {label}
-                        </Button>
-                    </Tooltip>
-                </Slide>
+                <Tooltip title={tooltip} placement="top">
+                    <Button
+                        onClick={onClick}
+                        variant="contained"
+                        // color="primary"
+                        size="small"
+                        sx={{
+                            opacity: 0.5,
+                            borderTopLeftRadius: 12,
+                            borderBottomRightRadius: 0,
+                            borderTopRightRadius: 0,
+                            borderBottomLeftRadius: 0,
+                            textTransform: "none",
+                            minWidth: "10px",
+                        }}
+                    >
+                        {label}
+                    </Button>
+                </Tooltip>
             </Box>
         </Box>
     );

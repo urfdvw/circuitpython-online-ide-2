@@ -160,11 +160,11 @@ export default function LibManagement() {
         for (let bundle of bundles) {
             for (let key in bundle.zips) {
                 if (bundle.zips[key].preparingZip) {
-                    return `downloading CPY ${key} version of ${bundle.repo}`;
+                    return `Downloading CPY ${key} version of ${bundle.repo}`;
                 }
             }
             if (bundle.json.preparingText) {
-                return `downloading content list of ${bundle.repo}`;
+                return `Downloading content list of ${bundle.repo}`;
             }
         }
         return "";
@@ -458,19 +458,21 @@ export default function LibManagement() {
         bundlesReady === 1 ? (
             false
         ) : (
-            <Box sx={{ display: "flex", flexDirection: "column" }}>
+            <Box sx={{ display: "flex", flexDirection: "column", justifyContent: "center" }}>
                 <Button size="small" variant="outlined" onClick={downloadBundles}>
                     {bundlesReady === 0 ? "Download" : "Upgrade"}
                 </Button>
-                <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => {
-                        setHideUpgrade(true);
-                    }}
-                >
-                    Hide
-                </Button>
+                {bundlesReady !== 0 && (
+                    <Button
+                        size="small"
+                        variant="outlined"
+                        onClick={() => {
+                            setHideUpgrade(true);
+                        }}
+                    >
+                        Hide
+                    </Button>
+                )}
             </Box>
         );
     async function clearInstalledLibs() {

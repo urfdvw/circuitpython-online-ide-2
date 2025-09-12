@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, Tooltip, Fade } from "@mui/material";
+import { Box, Button, Tooltip, Slide } from "@mui/material";
 
 const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick = null, visible = true }) => {
     return (
@@ -18,7 +18,7 @@ const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick
                 }}
             >
 
-                <Fade in={visible} timeout={500}>
+                <Slide in={visible} timeout={500}>
                     <Tooltip title={tooltip} placement="top">
                         <Button
                             onClick={onClick}
@@ -38,7 +38,7 @@ const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick
                             {label}
                         </Button>
                     </Tooltip>
-                </Fade>
+                </Slide>
             </Box>
         </Box>
     );

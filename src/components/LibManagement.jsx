@@ -393,6 +393,7 @@ export default function LibManagement() {
     }, [bundlesReady, boardCpySupported]);
 
     /* ---- UI ---- */
+    const [popped, setPopped] = useState(false);
 
     const menuStructure = [
         {
@@ -401,6 +402,12 @@ export default function LibManagement() {
                 {
                     text: "Refresh Library List",
                     handler: refreshCards,
+                },
+                {
+                    text: "Show Installation Log",
+                    handler: () => {
+                        setPopped(true);
+                    },
                 },
                 {
                     text: "Settings",
@@ -461,15 +468,23 @@ export default function LibManagement() {
     const loadingInfo = downloadingBundleInfo() + libChangeInfo;
 
     return (
-        <SiblingWithBottomRightTab label={notificationText} visible={notificationVisible}>
-            <NewWindow
-                title={"Installation Log"}
-                // onUnload={() => {
-                //     setPopped(false);
-                // }}
-            >
-                <pre>{installationLog}</pre>
-            </NewWindow>
+        <SiblingWithBottomRightTab
+            label={notificationText}
+            visible={notificationVisible}
+            onClick={() => {
+                setPopped(true);
+            }}
+        >
+            {popped && (
+                <NewWindow
+                    title={"Installation Log"}
+                    onUnload={() => {
+                        setPopped(false);
+                    }}
+                >
+                    <pre>{installationLog}</pre>
+                </NewWindow>
+            )}
             <TabTemplate menuStructure={menuStructure} title="Library Management">
                 <Backdrop
                     sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }}

@@ -1,3 +1,9 @@
+## Version 2.2.0
+Released on Septemper 12th, 2025
+
+Significant updates from version 2.1.0 include:
+- Lib Management tool
+
 ## Version 2.1.0
 Released on July 18th, 2025
 

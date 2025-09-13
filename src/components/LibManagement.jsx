@@ -279,21 +279,24 @@ export default function LibManagement() {
 
     async function installLib(name, zip) {
         name = name.split(".")[0]; // to remove extension if there
+        setLibChangeInfo(`Installing ${name}`);
         const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, "lib");
         try {
             const folderLib = await zip.getEntryFromCache(`lib/${name}`);
-            // console.log(folderLib);
+            console.log("trying to install folder", folderLib);
             await copyEntry(folderLib, dirHandle, folderLib.name);
             console.log(`installed folder lib: ${name}`);
-        } catch {
+        } catch (e) {
+            console.error(e); // failed on adafruit_midi
             const fileLib = await zip.getEntryFromCache(`lib/${name}.mpy`);
-            // console.log(fileLib);
+            console.log("trying to install file", fileLib);
             await copyEntry(fileLib, dirHandle, fileLib.name);
             console.log(`installed file lib: ${name}`);
         }
 
         const now = new Date().toLocaleTimeString();
         setInstallationLog((cur) => cur + `\n${now.toString()}: installed ${name}`);
+        setLibChangeInfo("");
     }
 
     async function batchInstallLib(pendingLibs) {

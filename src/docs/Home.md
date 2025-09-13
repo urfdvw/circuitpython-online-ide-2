@@ -9,4 +9,5 @@ This IDE includes essential tools and useful features for CircuitPython microcon
 - Code editor with support for multiple tabs
 - Serial Console for communication and the Read-Evaluate-Print Loop (REPL)
 - Serial data plotter
+- Library Management
 - Project backup

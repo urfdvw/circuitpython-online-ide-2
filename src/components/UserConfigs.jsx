@@ -16,11 +16,11 @@ export default function UserConfigs() {
                     )
                 ) {
                     localStorage.clear();
-                    location.reload();
                     const dbs = await window.indexedDB.databases();
                     dbs.forEach((db) => {
                         window.indexedDB.deleteDatabase(db.name);
                     });
+                    location.reload();
                 }
             },
         },

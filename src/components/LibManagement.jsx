@@ -287,7 +287,7 @@ export default function LibManagement() {
             await copyEntry(folderLib, dirHandle, folderLib.name);
             console.log(`installed folder lib: ${name}`);
         } catch (e) {
-            console.error(e); // failed on adafruit_midi
+            console.warn(e);
             const fileLib = await zip.getEntryFromCache(`lib/${name}.mpy`);
             console.log("trying to install file", fileLib);
             await copyEntry(fileLib, dirHandle, fileLib.name);

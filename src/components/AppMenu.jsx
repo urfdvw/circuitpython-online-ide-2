@@ -88,17 +88,17 @@ export default function AppMenu() {
                     },
                 },
                 {
-                    text: "Backup",
-                    handler: () => {
-                        console.log("clicked on menu item `Backup`");
-                        openTab(flexModel, "Backup", "backup");
-                    },
-                },
-                {
                     text: "Camera",
                     handler: () => {
                         console.log("clicked on menu item `Camera`");
                         openTab(flexModel, "Camera", "doc_cam");
+                    },
+                },
+                {
+                    text: "Backup",
+                    handler: () => {
+                        console.log("clicked on menu item `Backup`");
+                        openTab(flexModel, "Backup", "backup");
                     },
                 },
                 // {

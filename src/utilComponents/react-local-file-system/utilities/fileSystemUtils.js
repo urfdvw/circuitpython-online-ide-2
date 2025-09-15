@@ -1,3 +1,7 @@
+export function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // path level ====================================
 export async function path2Handles(directoryHandle, rawPath, opt = {}) {
     const { create = true, treatLastAsFile = false } = opt;
@@ -50,13 +54,18 @@ export async function getFromPath(rootDirHandle, path) {
 // file level ====================================
 
 export async function writeFileText(fileHandle, text) {
-    // Create a FileSystemWritableFileStream to write to.
-    const writable = await fileHandle.createWritable();
-    // Write the contents of the file to the stream.
-    await writable.write(text);
-    // Close the file and write the contents to disk.
-    await writable.close();
-    console.log("Successfully wrote to", fileHandle.name);
+    try {
+        // Create a FileSystemWritableFileStream to write to.
+        const writable = await fileHandle.createWritable();
+        // Write the contents of the file to the stream.
+        await writable.write(text);
+        // Close the file and write the contents to disk.
+        await writable.close();
+        console.log("Successfully wrote to", fileHandle.name);
+        await sleep(200); // chill down
+    } catch (error) {
+        confirm("Write to file failed. " + error.message);
+    }
 }
 
 export async function getFileText(fileHandle) {
@@ -250,15 +259,27 @@ export async function compareFolders(sourceFolderHandle, targetFolderHandle, ski
 // Create -------------------------------------
 
 export async function addNewFolder(parentHandle, newFolderName) {
-    return await parentHandle.getDirectoryHandle(newFolderName, {
-        create: true,
-    });
+    try {
+        const newFolder = await parentHandle.getDirectoryHandle(newFolderName, {
+            create: true,
+        });
+        await sleep(200); // chill down
+        return newFolder;
+    } catch (error) {
+        confirm("Folder creation failed. " + error.message);
+    }
 }
 
 export async function addNewFile(parentHandle, newFileName) {
-    return await parentHandle.getFileHandle(newFileName, {
-        create: true,
-    });
+    try {
+        const newFile = await parentHandle.getFileHandle(newFileName, {
+            create: true,
+        });
+        await sleep(200); // chill down
+        return newFile;
+    } catch (error) {
+        confirm("File creation failed. " + error.message);
+    }
 }
 
 export async function addRandomFolderTree(folderHandle, numLayers, numEntries) {
@@ -310,11 +331,21 @@ export async function cleanFolder(parentHandle) {
 
 export async function _removeFolder(parentHandle, folderHandle) {
     await cleanFolder(folderHandle);
-    await parentHandle.removeEntry(folderHandle.name);
+    try {
+        await parentHandle.removeEntry(folderHandle.name);
+        await sleep(200); // chill down
+    } catch (error) {
+        confirm("Failed to remove folder. " + error.message);
+    }
 }
 
 export async function _removeFile(parentHandle, fileHandle) {
-    await parentHandle.removeEntry(fileHandle.name);
+    try {
+        await parentHandle.removeEntry(fileHandle.name);
+        await sleep(200); // chill down
+    } catch (error) {
+        confirm("Failed to remove file. " + error.message);
+    }
 }
 
 // Copy --------------------------------------
@@ -348,12 +379,17 @@ export async function _copyFolder(folderHandle, targetFolderHandle, newName) {
 }
 
 async function _copyFile(fileHandle, targetFolderHandle, newName) {
-    const fileData = await fileHandle.getFile();
-    const newFileHandle = await addNewFile(targetFolderHandle, newName);
-    const writable = await newFileHandle.createWritable();
-    await writable.write(fileData);
-    await writable.close();
-    return newFileHandle;
+    try {
+        const fileData = await fileHandle.getFile();
+        const newFileHandle = await addNewFile(targetFolderHandle, newName);
+        const writable = await newFileHandle.createWritable();
+        await writable.write(fileData);
+        await writable.close();
+        await sleep(200); // chill down
+        return newFileHandle;
+    } catch (error) {
+        confirm("Write to file failed. " + error.message);
+    }
 }
 
 // Compound (Copy then Delete) ----------------------------------

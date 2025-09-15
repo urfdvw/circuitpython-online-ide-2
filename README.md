@@ -11,6 +11,7 @@ This IDE includes essential tools and useful features for CircuitPython microcon
 - Code editor with support for multiple tabs
 - Serial Console for communication and the Read-Evaluate-Print Loop (REPL)
 - Serial data plotter
+- Library Management
 - Project backup
 
 
@@ -61,7 +62,7 @@ REPL (Read-Evaluate-Print Loop) is a coding mode where you can interact with the
 
 ## About
 
-Version: 2.1.0
+Version: 2.2.0
 
 [CircuitPython](https://circuitpython.org/) is a version of Python that runs on microcontrollers and single-board computers. Its development is sponsored by [Adafruit](https://www.adafruit.com/).
 

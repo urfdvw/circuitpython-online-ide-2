@@ -1,1 +1,0 @@
-## This Project is not supported on mobile devices

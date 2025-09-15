@@ -1,26 +1,45 @@
+export function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // path level ====================================
-export async function path2Handles(directoryHandle, path, opt) {
-    if (!opt) {
-        opt = {
-            create: true,
-        };
-    }
-    // change windows path to the world standard
-    path.replace("\\", "/");
-    // split path to levels
+export async function path2Handles(directoryHandle, rawPath, opt = {}) {
+    const { create = true, treatLastAsFile = false } = opt;
+
+    // 1) 规范化路径：反斜杠 -> 斜杠，去掉多余的 /
+    let path = String(rawPath || "").replace(/\\/g, "/");
     const levels = path
         .split("/")
-        .map((l) => l.trim())
-        .filter((x) => x);
-    // get dir handle
-    let curDirectoryHandle = directoryHandle;
-    for (const l of levels.slice(0, -1)) {
-        const nextHandle = await curDirectoryHandle.getDirectoryHandle(l, opt);
-        curDirectoryHandle = nextHandle;
+        .map((s) => s.trim())
+        .filter(Boolean); // 去掉空段
+
+    // 边界：空路径，直接返回起点目录
+    if (levels.length === 0) {
+        return { dirHandle: directoryHandle, fileHandle: null };
     }
-    // get file handle
-    const fileHandle = levels.at(-1) === "" ? null : await curDirectoryHandle.getFileHandle(levels.at(-1), opt);
-    return { dirHandle: curDirectoryHandle, fileHandle };
+
+    // 简单的“看起来像文件名”判断：包含 . 且不是以 . 开头的隐藏目录
+    const looksLikeFile = (name) => /\.[^./\\]+$/.test(name) && !/^\.[^/\\]+$/.test(name);
+
+    // 2) 逐级进入到“最后一段的父目录”
+    let curDir = directoryHandle;
+    for (let i = 0; i < levels.length - 1; i++) {
+        const seg = levels[i];
+        curDir = await curDir.getDirectoryHandle(seg, { create });
+    }
+
+    // 3) 处理最后一段：可能是目录，也可能是文件
+    const last = levels[levels.length - 1];
+    const lastIsFile = treatLastAsFile || looksLikeFile(last);
+
+    if (lastIsFile) {
+        const fileHandle = await curDir.getFileHandle(last, { create });
+        // 对于文件，返回父目录 + 文件句柄
+        return { dirHandle: curDir, fileHandle };
+    } else {
+        const dirHandle = await curDir.getDirectoryHandle(last, { create });
+        return { dirHandle, fileHandle: null };
+    }
 }
 
 export async function writeToPath(rootDirHandle, path, text) {
@@ -35,13 +54,18 @@ export async function getFromPath(rootDirHandle, path) {
 // file level ====================================
 
 export async function writeFileText(fileHandle, text) {
-    // Create a FileSystemWritableFileStream to write to.
-    const writable = await fileHandle.createWritable();
-    // Write the contents of the file to the stream.
-    await writable.write(text);
-    // Close the file and write the contents to disk.
-    await writable.close();
-    console.log("Successfully wrote to", fileHandle.name);
+    try {
+        // Create a FileSystemWritableFileStream to write to.
+        const writable = await fileHandle.createWritable();
+        // Write the contents of the file to the stream.
+        await writable.write(text);
+        // Close the file and write the contents to disk.
+        await writable.close();
+        console.log("Successfully wrote to", fileHandle.name);
+        await sleep(200); // chill down
+    } catch (error) {
+        confirm("Write to file failed. " + error.message);
+    }
 }
 
 export async function getFileText(fileHandle) {
@@ -235,15 +259,27 @@ export async function compareFolders(sourceFolderHandle, targetFolderHandle, ski
 // Create -------------------------------------
 
 export async function addNewFolder(parentHandle, newFolderName) {
-    return await parentHandle.getDirectoryHandle(newFolderName, {
-        create: true,
-    });
+    try {
+        const newFolder = await parentHandle.getDirectoryHandle(newFolderName, {
+            create: true,
+        });
+        await sleep(200); // chill down
+        return newFolder;
+    } catch (error) {
+        confirm("Folder creation failed. " + error.message);
+    }
 }
 
 export async function addNewFile(parentHandle, newFileName) {
-    return await parentHandle.getFileHandle(newFileName, {
-        create: true,
-    });
+    try {
+        const newFile = await parentHandle.getFileHandle(newFileName, {
+            create: true,
+        });
+        await sleep(200); // chill down
+        return newFile;
+    } catch (error) {
+        confirm("File creation failed. " + error.message);
+    }
 }
 
 export async function addRandomFolderTree(folderHandle, numLayers, numEntries) {
@@ -295,11 +331,21 @@ export async function cleanFolder(parentHandle) {
 
 export async function _removeFolder(parentHandle, folderHandle) {
     await cleanFolder(folderHandle);
-    await parentHandle.removeEntry(folderHandle.name);
+    try {
+        await parentHandle.removeEntry(folderHandle.name);
+        await sleep(200); // chill down
+    } catch (error) {
+        confirm("Failed to remove folder. " + error.message);
+    }
 }
 
 export async function _removeFile(parentHandle, fileHandle) {
-    await parentHandle.removeEntry(fileHandle.name);
+    try {
+        await parentHandle.removeEntry(fileHandle.name);
+        await sleep(200); // chill down
+    } catch (error) {
+        confirm("Failed to remove file. " + error.message);
+    }
 }
 
 // Copy --------------------------------------
@@ -333,12 +379,17 @@ export async function _copyFolder(folderHandle, targetFolderHandle, newName) {
 }
 
 async function _copyFile(fileHandle, targetFolderHandle, newName) {
-    const fileData = await fileHandle.getFile();
-    const newFileHandle = await addNewFile(targetFolderHandle, newName);
-    const writable = await newFileHandle.createWritable();
-    await writable.write(fileData);
-    await writable.close();
-    return newFileHandle;
+    try {
+        const fileData = await fileHandle.getFile();
+        const newFileHandle = await addNewFile(targetFolderHandle, newName);
+        const writable = await newFileHandle.createWritable();
+        await writable.write(fileData);
+        await writable.close();
+        await sleep(200); // chill down
+        return newFileHandle;
+    } catch (error) {
+        confirm("Write to file failed. " + error.message);
+    }
 }
 
 // Compound (Copy then Delete) ----------------------------------

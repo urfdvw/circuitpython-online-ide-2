@@ -26,9 +26,12 @@ import { isMobile } from "react-device-detect";
 import MobileSupportInfo from "./supportInfo/MobileSupportInfo";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
+import { getFromPath } from "./utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import useEditorTabs from "./hooks/useEditorTabs";
 // serial
 import { useSerial, useSerialCommands } from "./hooks/useSerial";
+// Board info
+import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 
 function App() {
     // testing state
@@ -84,6 +87,19 @@ function App() {
         serialOutput,
         serialReady
     );
+    // Board info
+    const [boardInfo, setBoardInfo] = useState(null);
+    useEffect(() => {
+        async function getBoardInfo() {
+            if (!rootFolderDirectoryReady) {
+                setBoardInfo(null);
+                return;
+            }
+            const boot_out_txt = await getFromPath(rootDirHandle, "boot_out.txt");
+            setBoardInfo(parseCircuitPythonInfo(boot_out_txt));
+        }
+        getBoardInfo();
+    }, [rootFolderDirectoryReady, rootDirHandle]);
 
     /**** main logic ****/
     if (isMobile) {
@@ -140,7 +156,8 @@ function App() {
                 sendCtrlD,
                 sendCode,
                 codeHistory,
-
+                // board info
+                boardInfo,
             }}
         >
             <DarkTheme dark={dark} highContrast={highContrast} />

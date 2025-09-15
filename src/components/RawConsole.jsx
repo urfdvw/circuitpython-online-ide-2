@@ -10,8 +10,6 @@ import { Box, Button, Tooltip } from "@mui/material";
 import { grey } from "@mui/material/colors";
 
 const DARK_GREY = grey[300];
-// for scroll to the button
-import ScrollableFeed from "react-scrollable-feed"; // https://stackoverflow.com/a/52673227/7037749
 // ACE
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-python";

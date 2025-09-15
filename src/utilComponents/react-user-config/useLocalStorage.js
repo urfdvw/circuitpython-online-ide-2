@@ -4,17 +4,17 @@ import { isDefined } from "./utils";
 
 function getLocalStorageObjects() {
     `Convert localStorage into an object.
-    
-    If anything unexpected happens,
-    clear the storage and return empty object.`;
-    // https://codereview.stackexchange.com/a/273991
-    try {
-        return Object.keys(localStorage).reduce((obj, k) => ({ ...obj, [k]: JSON.parse(localStorage.getItem(k)) }), {});
-    } catch {
-        console.warn("LocalStorage contents cannot be converted to objects. bleached.");
-        localStorage.clear();
-        return {};
-    }
+    skip not json values`;
+    const result = Object.keys(localStorage).reduce((obj, k) => {
+        try {
+            obj[k] = JSON.parse(localStorage.getItem(k));
+        } catch {
+            // skip if JSON.parse fails
+        }
+        return obj;
+    }, {});
+
+    return result;
 }
 
 export function useLocalStorage(section) {

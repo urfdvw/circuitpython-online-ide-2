@@ -229,7 +229,9 @@ const RawConsole = () => {
             options: [
                 {
                     text: "Connect to Serial Port",
-                    handler: connectToSerialPort,
+                    handler: () => {
+                        connectToSerialPort(appConfig.config.serial_console.fresh_start_serial);
+                    },
                 },
                 {
                     text: "Clear",
@@ -327,7 +329,13 @@ const RawConsole = () => {
             </Box>
         </TabTemplate>
     ) : (
-        <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
+        <Button
+            onClick={() => {
+                connectToSerialPort(appConfig.config.serial_console.fresh_start_serial);
+            }}
+        >
+            Connect to Serial Port
+        </Button>
     );
 };
 

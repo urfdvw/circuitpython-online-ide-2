@@ -21,11 +21,10 @@
             "type": "boolean",
             "default": false
         },
-        "force_exec": {
-            "title": "Enforce execution of sent code",
-            "description": "When selected, this option ensures code executes instantly upon submission, interrupting any active processes. This configuration is applicable exclusively in code mode.",
+        "fresh_start_serial": {
+            "title": "Soft reboot after connected to serial.",
             "type": "boolean",
-            "default": true
+            "default": false
         }
     }
 }

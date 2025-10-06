@@ -26,7 +26,8 @@ const video_css = {
 };
 
 export default function Navigation() {
-    const { openDirectory, rootFolderDirectoryReady, serialReady, connectToSerialPort } = useContext(AppContext);
+    const { openDirectory, rootFolderDirectoryReady, serialReady, connectToSerialPort, appConfig } =
+        useContext(AppContext);
 
     return (
         <Typography component="div" sx={{ margin: "20pt" }}>
@@ -51,7 +52,14 @@ export default function Navigation() {
                     {rootFolderDirectoryReady ? "✅" : ""}
                 </li>
                 <li>
-                    Step 2. <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
+                    Step 2.{" "}
+                    <Button
+                        onClick={() => {
+                            connectToSerialPort(appConfig.config.serial_console.fresh_start_serial);
+                        }}
+                    >
+                        Connect to Serial Port
+                    </Button>
                     {serialReady ? "✅" : ""}
                 </li>
                 {serialReady && rootFolderDirectoryReady ? (

@@ -31,7 +31,7 @@ const useSerial = () => {
         return () => clearInterval(interval);
     }, []);
 
-    const connectToSerialPort = async () => {
+    const connectToSerialPort = async (refresh) => {
         if (serialReady) {
             if (confirm("Do you want to connect to a new device?")) {
                 await disconnectFromSerialPort();
@@ -53,11 +53,13 @@ const useSerial = () => {
                  * Please ignore whatever is before the first `soft reboot` text
                  */
                 console.log("trying to restart MCU program");
-                // break any current run (no effect/harm in repl)
-                await sendDataToSerialPort(constants.CTRL_C);
-                await sleep(500);
-                // start a fresh run (No matter from REPL or code)
-                await sendDataToSerialPort(constants.CTRL_D);
+                if (refresh) {
+                    // break any current run (no effect/harm in repl)
+                    await sendDataToSerialPort(constants.CTRL_C);
+                    await sleep(500);
+                    // start a fresh run (No matter from REPL or code)
+                    await sendDataToSerialPort(constants.CTRL_D);
+                }
             } else {
                 serial.close();
             }

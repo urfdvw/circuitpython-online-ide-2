@@ -28,8 +28,9 @@ import MenuBar from "../utilComponents/MenuBar";
 import { selectTabById } from "../layout/layoutUtils";
 // Xterm
 import XtermConsole from "./XtermConsole";
-
+// code snippet editor
 import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
+import { isPythonIncomplete } from "../utilFunctions/serialHelpers";
 
 const RawSerialWrite = ({
     text,
@@ -206,6 +207,9 @@ const RawConsole = () => {
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
+            return;
+        }
+        if (isPythonIncomplete(text)) {
             return;
         }
         sendCode(text);

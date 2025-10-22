@@ -186,9 +186,7 @@ const RawSerialWrite = ({
 
 const RawConsole = () => {
     const {
-        fullSerialHistory,
         serialOutput,
-        clearSerialOutput,
         serialReady,
         connectToSerialPort,
         sendCtrlC,
@@ -247,7 +245,7 @@ const RawConsole = () => {
                     text: "Download Log",
                     handler: () => {
                         console.log("Download Log");
-                        downloadAsFile("serial log.txt", fullSerialHistory + serialOutput);
+                        downloadAsFile("serial log.txt", serialOutput);
                     },
                 },
                 {

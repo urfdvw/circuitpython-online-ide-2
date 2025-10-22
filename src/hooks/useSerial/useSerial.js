@@ -7,7 +7,6 @@ const serial = new SerialCommunication();
 
 const useSerial = () => {
     const [serialReady, setSerialReady] = useState(false);
-    const [fullSerialHistory, setFullSerialHistory] = useState("");
     const [serialOutput, setSerialOutput] = useState("");
 
     useEffect(() => {
@@ -45,15 +44,25 @@ const useSerial = () => {
             if (status) {
                 /* cleanup history */
                 console.log("cleanup from MCU serial history");
-                setFullSerialHistory("");
-                setSerialOutput("");
-                /** restart the script on mcu, with benefits:
-                 * * There will not be any "half blocks" when staring the IDE
-                 * * Behavior of CPY each time when IDE starts are consistent
-                 * Please ignore whatever is before the first `soft reboot` text
-                 */
-                console.log("trying to restart MCU program");
+                setSerialOutput(
+                    (prev) =>
+                        prev +
+                        `
+
+================ Serial connected ================
+
+                `
+                );
                 if (refresh) {
+                    setSerialOutput(
+                        (prev) =>
+                            prev +
+                            `
+
+================ Attempting Soft reboot ================
+
+                `
+                    );
                     // break any current run (no effect/harm in repl)
                     await sendDataToSerialPort(constants.CTRL_C);
                     await sleep(500);
@@ -82,20 +91,11 @@ const useSerial = () => {
         }
     };
 
-    function clearSerialOutput() {
-        setFullSerialHistory((hist) => {
-            return hist + serialOutput;
-        });
-        setSerialOutput("");
-    }
-
     return {
         connectToSerialPort,
         disconnectFromSerialPort,
         sendDataToSerialPort,
-        clearSerialOutput,
         serialOutput,
-        fullSerialHistory,
         serialReady,
         serial,
     };

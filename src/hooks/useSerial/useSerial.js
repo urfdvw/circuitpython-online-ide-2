@@ -22,13 +22,8 @@ const useSerial = () => {
     }, []);
     // check if port closed unexpected
     useEffect(() => {
-        const interval = setInterval(() => {
-            if (serial.port === null) {
-                setSerialReady(false);
-            }
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+        setSerialReady(serial.port ? serial.port.connected : false);
+    }, [serial.port, serial.port && serial.port.connected]);
 
     const connectToSerialPort = async (refresh) => {
         if (serialReady) {
@@ -44,25 +39,7 @@ const useSerial = () => {
             if (status) {
                 /* cleanup history */
                 console.log("cleanup from MCU serial history");
-                setSerialOutput(
-                    (prev) =>
-                        prev +
-                        `
-
-================ Serial connected ================
-
-                `
-                );
                 if (refresh) {
-                    setSerialOutput(
-                        (prev) =>
-                            prev +
-                            `
-
-================ Attempting Soft reboot ================
-
-                `
-                    );
                     // break any current run (no effect/harm in repl)
                     await sendDataToSerialPort(constants.CTRL_C);
                     await sleep(500);
@@ -91,10 +68,15 @@ const useSerial = () => {
         }
     };
 
+    function addToSerialOutput(text) {
+        setSerialOutput((prev) => prev + text);
+    }
+
     return {
         connectToSerialPort,
         disconnectFromSerialPort,
         sendDataToSerialPort,
+        addToSerialOutput,
         serialOutput,
         serialReady,
         serial,

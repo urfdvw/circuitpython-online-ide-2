@@ -268,7 +268,7 @@ const RawConsole = () => {
         },
     ];
 
-    return serialReady ? (
+    return serialOutput.length > 0 ? (
         <TabTemplate title={serialReady ? serialTitle : "Not Connected"} menuStructure={menuStructure}>
             <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
                 <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>

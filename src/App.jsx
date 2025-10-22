@@ -76,6 +76,7 @@ function App() {
     const {
         connectToSerialPort,
         sendDataToSerialPort,
+        addToSerialOutput,
         serialOutput,
         serialReady,
         serial,
@@ -145,6 +146,7 @@ function App() {
                 // serial
                 connectToSerialPort,
                 sendDataToSerialPort,
+                addToSerialOutput,
                 serialOutput,
                 serialReady,
                 serial,

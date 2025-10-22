@@ -12,7 +12,7 @@ const invert_css = {
 };
 
 const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
-    const { appConfig, sendDataToSerialPort, serial } = useContext(AppContext);
+    const { appConfig, sendDataToSerialPort, serial, serialReady, addToSerialOutput } = useContext(AppContext);
 
     const terminalOptions = {
         convertEol: true,
@@ -29,7 +29,7 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
     useEffect(() => {
         /* terminal init */
         if (!terminalRef.current) {
-            console.error("Error initializing terminal")
+            console.error("Error initializing terminal");
             return;
         }
         if (!terminal.current.element) {
@@ -47,10 +47,10 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             // auto fit
             terminal.current.loadAddon(fitAddon);
             fitAddon.fit();
-            const observer = new ResizeObserver(entries => {
+            const observer = new ResizeObserver((entries) => {
                 for (let entry of entries) {
                     const { width, height } = entry.contentRect;
-                    console.log('Size changed:', width, height);
+                    console.log("Size changed:", width, height);
                     fitAddon.fit();
                 }
             });
@@ -61,6 +61,23 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             });
         }
     }, []);
+
+    useEffect(() => {
+        let info = serialReady
+            ? `
+
+================ Serial connected ================
+
+`
+            : `
+
+================ Serial disconnected ================
+
+`;
+        console.log(info);
+        addToSerialOutput(info);
+        terminal.current.write(info);
+    }, [serialReady]);
 
     useEffect(() => {
         if (!terminal.current) {

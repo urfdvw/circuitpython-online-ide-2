@@ -37,8 +37,6 @@ const useSerial = () => {
             const status = await serial.open();
             setSerialReady(status);
             if (status) {
-                /* cleanup history */
-                console.log("cleanup from MCU serial history");
                 if (refresh) {
                     // break any current run (no effect/harm in repl)
                     await sendDataToSerialPort(constants.CTRL_C);

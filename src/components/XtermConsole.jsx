@@ -24,7 +24,6 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
     const terminal = useRef(new Terminal(terminalOptions));
     const terminalRef = useRef(null);
     const fitAddon = new FitAddon();
-    console.log(terminal.current);
 
     useEffect(() => {
         /* terminal init */
@@ -61,23 +60,6 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             });
         }
     }, []);
-
-    useEffect(() => {
-        let info = serialReady
-            ? `
-
-================ Serial connected ================
-
-`
-            : `
-
-================ Serial disconnected ================
-
-`;
-        console.log(info);
-        addToSerialOutput(info);
-        terminal.current.write(info);
-    }, [serialReady]);
 
     useEffect(() => {
         if (!terminal.current) {

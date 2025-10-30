@@ -27,6 +27,15 @@ export default class SerialCommunication {
                 this.writeLoop();
 
                 console.log("successfully opened serial communication");
+
+                for (const id in this.readerCallbacks) {
+                    this.readerCallbacks[id](`
+
+================ Serial connected ================
+
+
+`);
+                }
                 return true;
             } catch (error) {
                 console.error("Error opening serial port:", error);
@@ -70,6 +79,14 @@ export default class SerialCommunication {
             this.port = null;
         }
 
+        for (const id in this.readerCallbacks) {
+            this.readerCallbacks[id](`
+
+================ Serial disconnected ================
+
+
+`);
+        }
         console.log("closed serial communication");
     }
 

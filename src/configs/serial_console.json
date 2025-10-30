@@ -9,6 +9,11 @@
             "type": "number",
             "default": 12
         },
+        "always_dark": {
+            "title": "Serial console always use dark theme",
+            "type": "boolean",
+            "default": false
+        },
         "show_snippet_editor": {
             "title": "Show code snippet editor",
             "description": "This is better for sending multiple lines of code to Python RELP",

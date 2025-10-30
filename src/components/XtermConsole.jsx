@@ -74,6 +74,10 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
         console.log("Clear terminal", clearTrigger);
     }, [clearTrigger]);
 
+    let isDarkTheme = JSON.parse(localStorage.getItem("isDarkTheme"));
+    let always_dark = appConfig.config.serial_console.always_dark;
+    let color_css = always_dark ? (isDarkTheme ? { ...invert_css } : {}) : invert_css;
+
     return (
         <div
             ref={terminalRef}
@@ -82,7 +86,7 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
                 height: "100%",
                 overflowY: "hidden",
                 scrollbarColor: "#777 #000",
-                ...invert_css,
+                ...color_css,
             }}
         />
     );

@@ -76,9 +76,8 @@ function App() {
     const {
         connectToSerialPort,
         sendDataToSerialPort,
-        clearSerialOutput,
+        addToSerialOutput,
         serialOutput,
-        fullSerialHistory,
         serialReady,
         serial,
     } = useSerial();
@@ -147,9 +146,8 @@ function App() {
                 // serial
                 connectToSerialPort,
                 sendDataToSerialPort,
-                clearSerialOutput,
+                addToSerialOutput,
                 serialOutput,
-                fullSerialHistory,
                 serialReady,
                 serial,
                 sendCtrlC,

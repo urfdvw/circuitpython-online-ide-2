@@ -6,7 +6,7 @@ import AppContext from "../AppContext";
 import React, { useContext } from "react";
 
 export default function AppMenu() {
-    const { flexModel, helpTabSelection, openDirectory, connectToSerialPort } = useContext(AppContext);
+    const { flexModel, helpTabSelection, openDirectory, connectToSerialPort, appConfig } = useContext(AppContext);
     const DARK_PURPLE = deepPurple[500];
     const DARK_GREY = grey[900];
 
@@ -64,7 +64,7 @@ export default function AppMenu() {
                     text: "Serial Port",
                     handler: () => {
                         console.log("clicked on menu item `Serial`");
-                        connectToSerialPort();
+                        connectToSerialPort(appConfig.config.serial_console.fresh_start_serial);
                     },
                 },
             ],

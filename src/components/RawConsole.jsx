@@ -28,8 +28,9 @@ import MenuBar from "../utilComponents/MenuBar";
 import { selectTabById } from "../layout/layoutUtils";
 // Xterm
 import XtermConsole from "./XtermConsole";
-
+// code snippet editor
 import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
+import { isPythonIncomplete } from "../utilFunctions/serialHelpers";
 
 const RawSerialWrite = ({
     text,
@@ -185,9 +186,7 @@ const RawSerialWrite = ({
 
 const RawConsole = () => {
     const {
-        fullSerialHistory,
         serialOutput,
-        clearSerialOutput,
         serialReady,
         connectToSerialPort,
         sendCtrlC,
@@ -206,6 +205,9 @@ const RawConsole = () => {
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
+            return;
+        }
+        if (isPythonIncomplete(text)) {
             return;
         }
         sendCode(text);
@@ -229,7 +231,9 @@ const RawConsole = () => {
             options: [
                 {
                     text: "Connect to Serial Port",
-                    handler: connectToSerialPort,
+                    handler: () => {
+                        connectToSerialPort(appConfig.config.serial_console.fresh_start_serial);
+                    },
                 },
                 {
                     text: "Clear",
@@ -241,7 +245,7 @@ const RawConsole = () => {
                     text: "Download Log",
                     handler: () => {
                         console.log("Download Log");
-                        downloadAsFile("serial log.txt", fullSerialHistory + serialOutput);
+                        downloadAsFile("serial log.txt", serialOutput);
                     },
                 },
                 {
@@ -264,7 +268,7 @@ const RawConsole = () => {
         },
     ];
 
-    return serialReady ? (
+    return serialOutput.length > 0 ? (
         <TabTemplate title={serialReady ? serialTitle : "Not Connected"} menuStructure={menuStructure}>
             <Box sx={{ display: "flex", flexDirection: "column", height: "100%", overflowX: "hidden" }}>
                 <Box sx={{ flex: 1, display: "flex", flexDirection: "column", overflow: "auto" }}>
@@ -327,7 +331,13 @@ const RawConsole = () => {
             </Box>
         </TabTemplate>
     ) : (
-        <Button onClick={connectToSerialPort}>Connect to Serial Port</Button>
+        <Button
+            onClick={() => {
+                connectToSerialPort(appConfig.config.serial_console.fresh_start_serial);
+            }}
+        >
+            Connect to Serial Port
+        </Button>
     );
 };
 

@@ -7,7 +7,6 @@ const serial = new SerialCommunication();
 
 const useSerial = () => {
     const [serialReady, setSerialReady] = useState(false);
-    const [fullSerialHistory, setFullSerialHistory] = useState("");
     const [serialOutput, setSerialOutput] = useState("");
 
     useEffect(() => {
@@ -23,15 +22,10 @@ const useSerial = () => {
     }, []);
     // check if port closed unexpected
     useEffect(() => {
-        const interval = setInterval(() => {
-            if (serial.port === null) {
-                setSerialReady(false);
-            }
-        }, 1000);
-        return () => clearInterval(interval);
-    }, []);
+        setSerialReady(serial.port ? serial.port.connected : false);
+    }, [serial.port, serial.port && serial.port.connected]);
 
-    const connectToSerialPort = async () => {
+    const connectToSerialPort = async (refresh) => {
         if (serialReady) {
             if (confirm("Do you want to connect to a new device?")) {
                 await disconnectFromSerialPort();
@@ -43,21 +37,13 @@ const useSerial = () => {
             const status = await serial.open();
             setSerialReady(status);
             if (status) {
-                /* cleanup history */
-                console.log("cleanup from MCU serial history");
-                setFullSerialHistory("");
-                setSerialOutput("");
-                /** restart the script on mcu, with benefits:
-                 * * There will not be any "half blocks" when staring the IDE
-                 * * Behavior of CPY each time when IDE starts are consistent
-                 * Please ignore whatever is before the first `soft reboot` text
-                 */
-                console.log("trying to restart MCU program");
-                // break any current run (no effect/harm in repl)
-                await sendDataToSerialPort(constants.CTRL_C);
-                await sleep(500);
-                // start a fresh run (No matter from REPL or code)
-                await sendDataToSerialPort(constants.CTRL_D);
+                if (refresh) {
+                    // break any current run (no effect/harm in repl)
+                    await sendDataToSerialPort(constants.CTRL_C);
+                    await sleep(500);
+                    // start a fresh run (No matter from REPL or code)
+                    await sendDataToSerialPort(constants.CTRL_D);
+                }
             } else {
                 serial.close();
             }
@@ -80,20 +66,16 @@ const useSerial = () => {
         }
     };
 
-    function clearSerialOutput() {
-        setFullSerialHistory((hist) => {
-            return hist + serialOutput;
-        });
-        setSerialOutput("");
+    function addToSerialOutput(text) {
+        setSerialOutput((prev) => prev + text);
     }
 
     return {
         connectToSerialPort,
         disconnectFromSerialPort,
         sendDataToSerialPort,
-        clearSerialOutput,
+        addToSerialOutput,
         serialOutput,
-        fullSerialHistory,
         serialReady,
         serial,
     };

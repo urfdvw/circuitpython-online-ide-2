@@ -12,7 +12,7 @@ const invert_css = {
 };
 
 const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
-    const { appConfig, sendDataToSerialPort, serial } = useContext(AppContext);
+    const { appConfig, sendDataToSerialPort, serial, serialReady, addToSerialOutput } = useContext(AppContext);
 
     const terminalOptions = {
         convertEol: true,
@@ -24,12 +24,11 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
     const terminal = useRef(new Terminal(terminalOptions));
     const terminalRef = useRef(null);
     const fitAddon = new FitAddon();
-    console.log(terminal.current);
 
     useEffect(() => {
         /* terminal init */
         if (!terminalRef.current) {
-            console.error("Error initializing terminal")
+            console.error("Error initializing terminal");
             return;
         }
         if (!terminal.current.element) {
@@ -47,10 +46,10 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             // auto fit
             terminal.current.loadAddon(fitAddon);
             fitAddon.fit();
-            const observer = new ResizeObserver(entries => {
+            const observer = new ResizeObserver((entries) => {
                 for (let entry of entries) {
                     const { width, height } = entry.contentRect;
-                    console.log('Size changed:', width, height);
+                    console.log("Size changed:", width, height);
                     fitAddon.fit();
                 }
             });
@@ -75,6 +74,10 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
         console.log("Clear terminal", clearTrigger);
     }, [clearTrigger]);
 
+    let isDarkTheme = JSON.parse(localStorage.getItem("isDarkTheme"));
+    let always_dark = appConfig.config.serial_console.always_dark;
+    let color_css = always_dark ? (isDarkTheme ? { ...invert_css } : {}) : invert_css;
+
     return (
         <div
             ref={terminalRef}
@@ -83,7 +86,7 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
                 height: "100%",
                 overflowY: "hidden",
                 scrollbarColor: "#777 #000",
-                ...invert_css,
+                ...color_css,
             }}
         />
     );

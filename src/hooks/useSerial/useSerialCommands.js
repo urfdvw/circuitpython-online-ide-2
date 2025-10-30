@@ -60,17 +60,10 @@ export default function useSerialCommands(sendDataToSerialPort, serialOutput, se
         }
         addCodeHistory(code);
         code = code.split("\r").join("");
-        if (force) {
-            // TODO: need clean up
-            // if (config.serial_console.force_exec && config.serial_console.send_mode === "code") {
-            // if code running, break execution before send code
+        if (!force) {
             if (serialOutput.slice(-4, -1) !== ">>>") {
-                await sendCtrlC(); // break execution
-                await sleep(500);
-                await sendCtrlC(); // jump RELP if necessary
-                await sleep(500);
-                // TODO: This might cause a second new line in RELP when no code running
-                // can be improved if know how to read updated output in the function
+                confirm("Before sending Python code to the serial console, make sure to start RELP first.");
+                return;
             }
         }
         if (code.split("\n").length > 1) {

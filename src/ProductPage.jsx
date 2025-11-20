@@ -22,27 +22,27 @@ const FEATURES = [
   {
     heading: "Folder View",
     body: "Manage file on your microcontroller",
-    image: "https://placehold.co/600x400/EEE/311b92?text=Folder+View" 
+    image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/folder_view.png" 
   },
   {
     heading: "Code Editor",
     body: "Python highlighting and Multi-tab support",
-    image: "https://placehold.co/600x400/EEE/311b92?text=Code+Editor"
+    image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/editor.png"
   },
   {
     heading: "Serial Console",
     body: "For communication and REPL",
-    image: "https://placehold.co/600x400/EEE/311b92?text=Serial+Console"
+    image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/serial_console.png"
   },
   {
     heading: "Plotter",
     body: "Visualize sensor data",
-    image: "https://placehold.co/600x400/EEE/311b92?text=Plotter"
+    image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/plotter.png"
   },
   {
     heading: "Library Management",
     body: "Automated dependency handling with manual control options",
-    image: "https://placehold.co/600x400/EEE/311b92?text=Lib+Manager"
+    image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/library_management.png"
   },
   {
     heading: "Camera",
@@ -122,7 +122,7 @@ const ProductPage = () => {
             <Grid item xs={12} md={7}>
               <Box 
                 component="img"
-                src="https://placehold.co/800x600/EEE/311b92?text=Product+Showcase"
+                src="https://urfdvw.github.io/circuitpython-online-ide-2/media/main.png"
                 alt="CircuitPython Online IDE"
                 sx={{ 
                   width: '100%', 
@@ -166,10 +166,10 @@ const ProductPage = () => {
                 >
                   <CardMedia
                     component="img"
-                    height="200"
+                    height="250"
                     image={feature.image}
                     alt={feature.heading}
-                    sx={{ backgroundColor: '#f5f5f5' }}
+                    sx={{ backgroundColor: '#ffffff', objectFit: 'contain' }}
                   />
                   <CardContent>
                     <Typography gutterBottom variant="h6" component="div" sx={{ color: COLORS.title, fontWeight: 600 }}>

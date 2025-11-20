@@ -21,7 +21,7 @@ import { isMobile } from 'react-device-detect';
 const FEATURES = [
   {
     heading: "Folder View",
-    body: "Manage file on microcontroller",
+    body: "Manage file on your microcontroller",
     image: "https://placehold.co/600x400/EEE/311b92?text=Folder+View" 
   },
   {
@@ -31,7 +31,7 @@ const FEATURES = [
   },
   {
     heading: "Serial Console",
-    body: "For communication and RELP",
+    body: "For communication and REPL",
     image: "https://placehold.co/600x400/EEE/311b92?text=Serial+Console"
   },
   {
@@ -41,7 +41,7 @@ const FEATURES = [
   },
   {
     heading: "Library Management",
-    body: "Full auto or manually",
+    body: "Automated dependency handling with manual control options",
     image: "https://placehold.co/600x400/EEE/311b92?text=Lib+Manager"
   },
   {
@@ -93,7 +93,7 @@ const ProductPage = () => {
       >
         <Toolbar sx={{ justifyContent: 'space-between' }}>
           <Typography variant="h6" component="div" sx={{ color: COLORS.title, fontWeight: 700 }}>
-            CircuitPython IDE
+            CircuitPython Online IDE
           </Typography>
           
           {/* Button hidden strictly on mobile devices via react-device-detect */}
@@ -106,6 +106,7 @@ const ProductPage = () => {
                 textTransform: 'none',
                 '&:hover': { backgroundColor: '#311b92' }
               }}
+              onClick={() => window.open('/', "_self")}
             >
               Open IDE
             </Button>
@@ -118,7 +119,6 @@ const ProductPage = () => {
         {/* --- Main Stage --- */}
         <Box component="section" sx={{ py: { xs: 4, md: 10 } }}>
           <Grid container spacing={6} alignItems="center">
-            {/* MODIFICATION 1: Image is larger (md={7}) than text (md={5}) */}
             <Grid item xs={12} md={7}>
               <Box 
                 component="img"
@@ -138,7 +138,7 @@ const ProductPage = () => {
                 CircuitPython Online IDE
               </Typography>
               <Typography variant="h6" sx={{ color: COLORS.textSecondary, fontWeight: 400, lineHeight: 1.6 }}>
-                A browser-based IDE for CircuitPython supported microcontrollers.
+                A powerful browser-based IDE for CircuitPython microcontrollers.
               </Typography>
             </Grid>
           </Grid>
@@ -148,9 +148,7 @@ const ProductPage = () => {
 
         {/* --- Feature Section --- */}
         <Box component="section" sx={{ py: { xs: 6, md: 8 } }}>
-          <Typography variant="h4" align="center" gutterBottom sx={{ color: COLORS.title, mb: 6, fontWeight: 600 }}>
-            Features
-          </Typography>
+          {/* Modification: "Features" Title Removed */}
           <Grid container spacing={4}>
             {FEATURES.map((feature, index) => (
               <Grid item xs={12} md={4} key={index}>
@@ -192,8 +190,10 @@ const ProductPage = () => {
         {/* --- Quick Start Section --- */}
         <Box component="section" sx={{ py: { xs: 6, md: 10 } }}>
           <Grid container spacing={6} alignItems="center">
-            {/* Desktop: Video Left (larger). Mobile: Video Top */}
-            <Grid item xs={12} md={7}>
+            
+            {/* Video Item */}
+            {/* Modification: Order 2 on mobile (bottom), Order 1 on desktop (left) */}
+            <Grid item xs={12} md={7} sx={{ order: { xs: 2, md: 1 } }}>
               <Box sx={{ 
                 position: 'relative', 
                 paddingBottom: '56.25%', // 16:9 Aspect Ratio
@@ -214,8 +214,9 @@ const ProductPage = () => {
               </Box>
             </Grid>
             
-            {/* MODIFICATION 2: Title is now visible on all screen sizes */}
-            <Grid item xs={12} md={5}>
+            {/* Title Item */}
+            {/* Modification: Order 1 on mobile (top), Order 2 on desktop (right) */}
+            <Grid item xs={12} md={5} sx={{ order: { xs: 1, md: 2 }, mb: { xs: 2, md: 0 } }}>
               <Typography variant="h4" component="h2" sx={{ color: COLORS.title, fontWeight: 600 }}>
                 Quick Start Guide
               </Typography>
@@ -232,9 +233,7 @@ const ProductPage = () => {
               <Typography variant="h6" gutterBottom sx={{ color: COLORS.title, fontWeight: 600 }}>
                 About
               </Typography>
-              <Typography variant="body2" paragraph sx={{ color: COLORS.textSecondary }}>
-                Version: 2.2.1
-              </Typography>
+              {/* Modification: Version number removed */}
               <Typography variant="body2" paragraph sx={{ color: COLORS.textSecondary }}>
                 <Link href="https://circuitpython.org/" target="_blank" color="inherit" underline="hover">CircuitPython</Link> is a version of Python that runs on microcontrollers and single-board computers. Its development is sponsored by <Link href="https://www.adafruit.com/" target="_blank" color="inherit" underline="hover">Adafruit</Link>.
               </Typography>

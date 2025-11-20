@@ -69,6 +69,10 @@ const video_css = {
 };
 
 const ProductPage = () => {
+  React.useEffect(() => {
+    document.body.style.overflow = 'auto';
+  }, []);
+  
   return (
     <Box sx={{ 
       minHeight: '100vh', 

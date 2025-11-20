@@ -34,6 +34,10 @@ import { useSerial, useSerialCommands } from "./hooks/useSerial";
 import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 
 function App() {
+    useEffect(() => {
+        document.body.style.overflow = 'hidden';
+    }, []);
+  
     // testing state
     const [testCount, setTestCount] = useState(0);
     // layout

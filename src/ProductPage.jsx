@@ -69,10 +69,6 @@ const video_css = {
 };
 
 const ProductPage = () => {
-  React.useEffect(() => {
-    document.body.style.overflow = 'auto';
-  }, []);
-  
   return (
     <Box sx={{ 
       minHeight: '100vh', 
@@ -204,7 +200,6 @@ const ProductPage = () => {
                 <Box sx={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}>
                    <iframe
                         style={video_css}
-                        frameBorder={0}
                         src="https://www.youtube.com/embed/kq554m21G4A?si=xLRUJNfd6tvAqGuH&cc_load_policy=1&cc_lang_pref=en"
                         title="Quick Start Guide"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

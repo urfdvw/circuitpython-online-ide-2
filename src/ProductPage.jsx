@@ -144,6 +144,11 @@ const ProductPage = () => {
           </Grid>
         </Box>
 
+        {isMobile &&
+        <Typography variant="h6" sx={{ color: COLORS.textSecondary, fontWeight: 400, lineHeight: 1.6 }}>
+          To use the IDE, visit circuitpy.dev on a desktop browser.
+        </Typography> }
+
         <Divider sx={{ borderColor: COLORS.accentBorder }} />
 
         {/* --- Feature Section --- */}

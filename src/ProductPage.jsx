@@ -54,8 +54,8 @@ const FEATURES = [
 // --- Styles & Theme Constants ---
 
 const COLORS = {
-  background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8FC 100%)', // White to faint violet
-  title: '#311b92', // Deep Dark Purple
+  background: 'linear-gradient(180deg, #FFFFFF 0%, #FAF8FC 100%)', 
+  title: '#311b92', 
   accentBorder: '#ede7f6',
   buttonBg: '#4a148c',
   textSecondary: '#5f6368',
@@ -118,8 +118,8 @@ const ProductPage = () => {
         {/* --- Main Stage --- */}
         <Box component="section" sx={{ py: { xs: 4, md: 10 } }}>
           <Grid container spacing={6} alignItems="center">
-            {/* Desktop: Image Left. Mobile: Image Top (default Grid order) */}
-            <Grid item xs={12} md={6}>
+            {/* MODIFICATION 1: Image is larger (md={7}) than text (md={5}) */}
+            <Grid item xs={12} md={7}>
               <Box 
                 component="img"
                 src="https://placehold.co/800x600/EEE/311b92?text=Product+Showcase"
@@ -133,7 +133,7 @@ const ProductPage = () => {
                 }}
               />
             </Grid>
-            <Grid item xs={12} md={6}>
+            <Grid item xs={12} md={5}>
               <Typography variant="h3" component="h1" gutterBottom sx={{ color: COLORS.title, fontWeight: 700 }}>
                 CircuitPython Online IDE
               </Typography>
@@ -192,7 +192,7 @@ const ProductPage = () => {
         {/* --- Quick Start Section --- */}
         <Box component="section" sx={{ py: { xs: 6, md: 10 } }}>
           <Grid container spacing={6} alignItems="center">
-            {/* Desktop: Video Left. Mobile: Video Only */}
+            {/* Desktop: Video Left (larger). Mobile: Video Top */}
             <Grid item xs={12} md={7}>
               <Box sx={{ 
                 position: 'relative', 
@@ -215,8 +215,8 @@ const ProductPage = () => {
               </Box>
             </Grid>
             
-            {/* Text hidden on mobile (xs: 'none'), visible on desktop (md: 'block') */}
-            <Grid item xs={12} md={5} sx={{ display: { xs: 'none', md: 'block' } }}>
+            {/* MODIFICATION 2: Title is now visible on all screen sizes */}
+            <Grid item xs={12} md={5}>
               <Typography variant="h4" component="h2" sx={{ color: COLORS.title, fontWeight: 600 }}>
                 Quick Start Guide
               </Typography>
@@ -229,7 +229,6 @@ const ProductPage = () => {
         {/* --- Footer --- */}
         <Box component="footer" sx={{ py: 6 }}>
           <Grid container spacing={4}>
-            {/* About Column */}
             <Grid item xs={12} md={4}>
               <Typography variant="h6" gutterBottom sx={{ color: COLORS.title, fontWeight: 600 }}>
                 About
@@ -245,7 +244,6 @@ const ProductPage = () => {
               </Typography>
             </Grid>
 
-            {/* Contact Column */}
             <Grid item xs={12} md={4}>
               <Typography variant="h6" gutterBottom sx={{ color: COLORS.title, fontWeight: 600 }}>
                 Contact Me
@@ -259,7 +257,6 @@ const ProductPage = () => {
               </Typography>
             </Grid>
 
-            {/* Socials Column */}
             <Grid item xs={12} md={4}>
               <Typography variant="h6" gutterBottom sx={{ color: COLORS.title, fontWeight: 600 }}>
                 Connect
@@ -278,10 +275,9 @@ const ProductPage = () => {
             </Grid>
           </Grid>
           
-          {/* Copyright / Bottom Line */}
           <Box sx={{ mt: 4, textAlign: 'center' }}>
              <Typography variant="caption" color="text.secondary">
-                © {new Date().getFullYear()} CircuitPython Online IDE.
+                {new Date().getFullYear()} CircuitPython Online IDE.
              </Typography>
           </Box>
         </Box>

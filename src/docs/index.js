@@ -74,7 +74,7 @@ const docs = [
     },
     {
         name: "feedback_and_code_contribution",
-        title: "Feedback and Code Contribution.md",
+        title: "Feedback",
         body: feedback_and_code_contribution,
     },
     {

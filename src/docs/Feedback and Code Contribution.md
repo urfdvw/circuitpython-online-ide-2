@@ -1,3 +1,5 @@
+# Feedback and Contribution
+
 ## Steps
 1. **Review Existing Discussions:** 
 You are encouraged to read through **Troubleshooting** and [the GitHub Issues and PRs](https://github.com/urfdvw/circuitpython-online-ide-2/issues?q=) before giving your feedback. You can do this even if you don't have a GitHub account. Please also take advantage of the search function.

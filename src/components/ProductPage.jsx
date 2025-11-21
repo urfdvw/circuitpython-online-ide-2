@@ -54,7 +54,7 @@ const FEATURES = [
 // --- Styles & Theme Constants ---
 
 const COLORS = {
-    background: "linear-gradient(180deg, #FFFFFF 0%, #FAF8FC 100%)",
+    background: "linear-gradient(90deg, #f5f1f9ff 30%, #ede3f6ff 90%)",
     title: "#311b92",
     accentBorder: "#ede7f6",
     buttonBg: "#4a148c",
@@ -143,7 +143,7 @@ const ProductPage = () => {
                                     height: "auto",
                                     borderRadius: "12px",
                                     boxShadow: "0 10px 30px rgba(49, 27, 146, 0.08)",
-                                    border: `1px solid ${COLORS.accentBorder}`,
+                                    border: `1.5px solid ${COLORS.accentBorder}`,
                                 }}
                             />
                         </Grid>
@@ -181,9 +181,10 @@ const ProductPage = () => {
                                         display: "flex",
                                         flexDirection: "column",
                                         borderRadius: "12px",
-                                        border: `1px solid ${COLORS.accentBorder}`,
+                                        border: `1.5px solid ${COLORS.accentBorder}`,
                                         transition: "transform 0.2s",
                                         "&:hover": { transform: "translateY(-4px)" },
+                                        boxShadow: "0 10px 30px rgba(49, 27, 146, 0.08)",
                                     }}
                                 >
                                     <CardMedia
@@ -227,6 +228,7 @@ const ProductPage = () => {
                                     height: 0,
                                     overflow: "hidden",
                                     borderRadius: "12px",
+                                    boxShadow: "0 10px 30px rgba(49, 27, 146, 0.08)",
                                 }}
                             >
                                 <Box sx={{ position: "absolute", top: 0, left: 0, width: "100%", height: "100%" }}>

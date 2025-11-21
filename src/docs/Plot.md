@@ -1,5 +1,4 @@
-# Plot
-
+## Introduction
 The plot feature available in the CircuitPython Online IDE is highly beneficial when working with sensors or monitoring variable value changes.
 
 You will need to write CircuitPython code to print data through the `print()` function.

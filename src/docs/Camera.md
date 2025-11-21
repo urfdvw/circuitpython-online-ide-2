@@ -1,4 +1,4 @@
-## Camera
+## Introduction
 
 The Camera Tool is designed to help you visually capture your microcontroller hardware setup directly within the IDE. Whether you're a teacher presenting to a class or a maker documenting your project, this tool makes it easy to stream, inspect, or record live footage of your devices.
 

@@ -1,5 +1,3 @@
-# Folder View
-
 - The **Folder View** tab is located on the left border on startup.
     - Click the label on the border to toggle the display of the **Folder View**.
     - Drag the label to move the tab to other tab sets or borders.

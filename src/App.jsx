@@ -23,6 +23,7 @@ import DarkTheme from "react-lazy-dark-theme";
 import useChannel from "./utilHooks/useChannel";
 // device support
 import { isMobile } from "react-device-detect";
+import MobileSupportInfo from "./supportInfo/MobileSupportInfo";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
 import { getFromPath } from "./utilComponents/react-local-file-system/utilities/fileSystemUtils";
@@ -33,13 +34,6 @@ import { useSerial, useSerialCommands } from "./hooks/useSerial";
 import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 
 function App() {
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        if (isMobile) {
-            window.open('/info', "_self")
-        }
-    }, []);
-  
     // testing state
     const [testCount, setTestCount] = useState(0);
     // layout
@@ -107,6 +101,10 @@ function App() {
     }, [rootFolderDirectoryReady, rootDirHandle]);
 
     /**** main logic ****/
+    if (isMobile) {
+        return <MobileSupportInfo />;
+    }
+
     if (!appConfig.ready) {
         return;
     }

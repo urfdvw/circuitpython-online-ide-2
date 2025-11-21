@@ -15,9 +15,9 @@ This IDE includes essential tools and useful features for CircuitPython microcon
 - Project backup
 
 
-[![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)
-
 # Quick Start
+
+[![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)
 
 ## Set up
 - Connect your CircuitPython-supported microcontroller board to your computer via a USB cable.

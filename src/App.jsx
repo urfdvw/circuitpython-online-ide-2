@@ -36,7 +36,7 @@ function App() {
     useEffect(() => {
         document.body.style.overflow = 'hidden';
         if (isMobile) {
-            window.open('/info', "_self")
+            window.open('https://urfdvw.github.io/circuitpython-online-ide-2/info', "_self")
         }
     }, []);
   

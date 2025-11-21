@@ -106,7 +106,7 @@ const ProductPage = () => {
                 textTransform: 'none',
                 '&:hover': { backgroundColor: '#311b92' }
               }}
-              onClick={() => window.open('/', "_self")}
+              onClick={() => window.open('https://urfdvw.github.io/circuitpython-online-ide-2', "_self")}
             >
               Open IDE
             </Button>

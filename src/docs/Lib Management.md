@@ -1,8 +1,6 @@
-# Library Management
-
 This tool makes it easy to install and update the libraries your microcontroller needs, right inside the IDE.
 
-[Video Tutorial](https://www.youtube.com/watch?v=pno0WYdwzSo)
+[![Library Management Guide](https://img.youtube.com/vi/pno0WYdwzSo/0.jpg)](https://www.youtube.com/watch?v=pno0WYdwzSo)
 
 ## Prepare bundles
 

@@ -15,6 +15,7 @@ async function generateMarkdown() {
     try {
         // Read content from the existing markdown file
         const title = "# CircuitPython Online IDE 2";
+        const quickStartTitle = "# Quick Start";
         const video =
             "[![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)";
         const HomeContent = await fs.readFile(HomePath, "utf8");
@@ -25,6 +26,7 @@ async function generateMarkdown() {
         const combinedContent = [
             title,
             HomeContent,
+            quickStartTitle,
             video,
             QuickStartContent,
             AboutContent.replace("## CircuitPython Online IDE", "## About"),

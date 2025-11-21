@@ -12,10 +12,10 @@ createRoot(document.getElementById("root")).render(
         <BrowserRouter>
             <Routes>
                 {/* If path is /, show App */}
-                <Route path="/" element={<App />} />
+                <Route path="/circuitpython-online-ide-2/" element={<App />} />
                 
                 {/* If path is /info, show ProductPage */}
-                <Route path="/info" element={<ProductPage />} />
+                <Route path="/circuitpython-online-ide-2/info" element={<ProductPage />} />
             </Routes>
         </BrowserRouter>
     </StrictMode>

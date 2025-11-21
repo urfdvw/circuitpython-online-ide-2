@@ -47,7 +47,7 @@ const FEATURES = [
   {
     heading: "Camera",
     body: "Show your microcontroller to others",
-    image: "https://placehold.co/600x400/EEE/311b92?text=Camera"
+    image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/camera.png"
   }
 ];
 
@@ -144,12 +144,12 @@ const ProductPage = () => {
           </Grid>
         </Box>
 
-        {isMobile &&
-        <Typography variant="h6" sx={{ color: COLORS.textSecondary, fontWeight: 400, lineHeight: 1.6 }}>
-          To use the IDE, visit circuitpy.dev on a desktop browser.
-        </Typography> }
-
         <Divider sx={{ borderColor: COLORS.accentBorder }} />
+
+        {isMobile &&
+        <Typography variant="h7" sx={{ color: COLORS.textSecondary, fontWeight: 400, lineHeight: 1.6 }}>
+          <i>To use the IDE, visit <b>circuitpy.dev</b> on a desktop browser.</i>
+        </Typography> }
 
         {/* --- Feature Section --- */}
         <Box component="section" sx={{ py: { xs: 6, md: 8 } }}>

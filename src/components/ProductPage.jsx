@@ -14,7 +14,7 @@ import {
     Link,
     CssBaseline,
 } from "@mui/material";
-import { isMobile } from "react-device-detect";
+import { isMobile, isSafari, isFirefox } from "react-device-detect";
 
 // --- Content Data (Original Text) ---
 
@@ -79,6 +79,7 @@ const ProductPage = () => {
                 minHeight: "100vh",
                 background: COLORS.background,
                 color: "#333",
+                width: "100%",
             }}
         >
             <CssBaseline />
@@ -91,28 +92,40 @@ const ProductPage = () => {
                     backgroundColor: "rgba(255, 255, 255, 0.95)",
                     borderBottom: `1px solid ${COLORS.accentBorder}`,
                     backdropFilter: "blur(8px)",
+                    width: "100%",
                 }}
             >
-                <Toolbar sx={{ justifyContent: "space-between" }}>
-                    <Typography variant="h6" component="div" sx={{ color: COLORS.title, fontWeight: 700 }}>
+                <Toolbar sx={{ justifyContent: "space-between", width: "100%" }}>
+                    <Typography
+                        variant={isMobile ? "h6" : "h5"}
+                        component="div"
+                        sx={{ color: COLORS.title, fontWeight: 700 }}
+                    >
                         CircuitPython Online IDE
                     </Typography>
 
-                    {/* Button hidden strictly on mobile devices via react-device-detect */}
-                    {!isMobile && (
-                        <Button
-                            variant="contained"
-                            sx={{
-                                backgroundColor: COLORS.buttonBg,
-                                borderRadius: "8px",
-                                textTransform: "none",
-                                "&:hover": { backgroundColor: "#311b92" },
-                            }}
-                            onClick={() => window.open("https://urfdvw.github.io/circuitpython-online-ide-2", "_self")}
-                        >
-                            Open IDE
-                        </Button>
-                    )}
+                    <Button
+                        variant="contained"
+                        sx={{
+                            backgroundColor: COLORS.buttonBg,
+                            borderRadius: "8px",
+                            textTransform: "none",
+                            "&:hover": { backgroundColor: "#311b92" },
+                            size: isMobile ? "small" : "medium",
+                        }}
+                        onClick={() => {
+                            if (isMobile) {
+                                alert("To use the IDE, visit circuitpy.dev on a desktop browser.");
+                            }
+                            if (isSafari || isFirefox) {
+                                alert(
+                                    "To use the IDE, visit circuitpy.dev on a Chrome or Chromium-based browser, such as Edge and Opera."
+                                );
+                            }
+                        }}
+                    >
+                        Open IDE
+                    </Button>
                 </Toolbar>
             </AppBar>
 
@@ -154,14 +167,6 @@ const ProductPage = () => {
                 </Box>
 
                 <Divider sx={{ borderColor: COLORS.accentBorder }} />
-
-                {isMobile && (
-                    <Typography variant="h7" sx={{ color: COLORS.textSecondary, fontWeight: 400, lineHeight: 1.6 }}>
-                        <i>
-                            To use the IDE, visit <b>circuitpy.dev</b> on a desktop browser.
-                        </i>
-                    </Typography>
-                )}
 
                 {/* --- Feature Section --- */}
                 <Box component="section" sx={{ py: { xs: 6, md: 8 } }}>

@@ -22,7 +22,7 @@ import DarkTheme from "react-lazy-dark-theme";
 // channel
 import useChannel from "./utilHooks/useChannel";
 // device support
-import { isMobile } from "react-device-detect";
+import { isMobile, isSafari, isFirefox } from "react-device-detect";
 import ProductPage from "./components/ProductPage";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
@@ -34,12 +34,13 @@ import { useSerial, useSerialCommands } from "./hooks/useSerial";
 import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 
 function App() {
-    
-    if (isMobile) {
+    if (isMobile || isSafari || isFirefox) {
         return <ProductPage />;
-    } else {
-        document.body.style.overflow = "hidden";
     }
+
+    useEffect(() => {
+        document.body.style.overflow = "hidden";
+    }, []);
 
     // testing state
     const [testCount, setTestCount] = useState(0);

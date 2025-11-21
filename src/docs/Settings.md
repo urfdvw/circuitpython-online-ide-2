@@ -1,3 +1,5 @@
+# Settings
+
 The **Settings tab** is located on the right border on startup.
 - Click the label on the border to toggle the display of the **Settings tab**.
 - Drag the label to move the tab to other tab sets or borders.

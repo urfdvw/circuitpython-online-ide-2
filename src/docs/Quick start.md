@@ -1,3 +1,5 @@
+# Quick Start
+
 ## Set up
 - Connect your CircuitPython-supported microcontroller board to your computer via a USB cable.
 - **Open the [CircuitPython Online IDE](https://urfdvw.github.io/circuitpython-online-ide-2/) in a supported browser (Chrome, Edge, etc.).**

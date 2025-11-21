@@ -1,3 +1,5 @@
+# Serial Console
+
 ## Toolbar
 
 ### Serial Title

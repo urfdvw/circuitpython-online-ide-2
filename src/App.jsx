@@ -23,6 +23,7 @@ import DarkTheme from "react-lazy-dark-theme";
 import useChannel from "./utilHooks/useChannel";
 // device support
 import { isMobile } from "react-device-detect";
+import ProductPage from "./components/ProductPage";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
 import { getFromPath } from "./utilComponents/react-local-file-system/utilities/fileSystemUtils";
@@ -33,13 +34,13 @@ import { useSerial, useSerialCommands } from "./hooks/useSerial";
 import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 
 function App() {
-    useEffect(() => {
-        document.body.style.overflow = 'hidden';
-        if (isMobile) {
-            window.open('https://urfdvw.github.io/circuitpython-online-ide-2/info', "_self")
-        }
-    }, []);
-  
+    
+    if (isMobile) {
+        return <ProductPage />;
+    } else {
+        document.body.style.overflow = "hidden";
+    }
+
     // testing state
     const [testCount, setTestCount] = useState(0);
     // layout
@@ -79,14 +80,8 @@ function App() {
         rootDirHandle: backupDirHandle,
     } = useFileSystem();
     // serial
-    const {
-        connectToSerialPort,
-        sendDataToSerialPort,
-        addToSerialOutput,
-        serialOutput,
-        serialReady,
-        serial,
-    } = useSerial();
+    const { connectToSerialPort, sendDataToSerialPort, addToSerialOutput, serialOutput, serialReady, serial } =
+        useSerial();
     const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands(
         sendDataToSerialPort,
         serialOutput,

@@ -1,0 +1,6 @@
+body {
+    /* Uncomment the following line to disable scroll.
+       Comment to test content size*/
+    overflow: hidden;
+    margin: 0;
+}

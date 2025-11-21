@@ -17,6 +17,8 @@ Released on September 16th, 2025
 Significant updates from version 2.1.0 include:
 - Lib Management tool
 
+[![Library Management Guide](https://img.youtube.com/vi/pno0WYdwzSo/0.jpg)](https://www.youtube.com/watch?v=pno0WYdwzSo)
+
 ## Version 2.1.0
 Released on July 18th, 2025
 

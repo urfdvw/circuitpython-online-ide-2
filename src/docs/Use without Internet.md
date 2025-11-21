@@ -1,5 +1,3 @@
-# Use without Internet
-
 _This project is currently in rapid development. The offline version should be utilized primarily in situations with unstable internet connections. To ensure access to the latest features, it's recommended to use the online version whenever possible._
 
 ## Downloading the Portable Version

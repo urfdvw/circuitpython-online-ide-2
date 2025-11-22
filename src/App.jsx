@@ -97,7 +97,9 @@ function App() {
                 return;
             }
             const boot_out_txt = await getFromPath(rootDirHandle, "boot_out.txt");
-            setBoardInfo(parseCircuitPythonInfo(boot_out_txt));
+            const board_info = parseCircuitPythonInfo(boot_out_txt);
+            console.log("board_info:", board_info);
+            setBoardInfo(board_info);
         }
         getBoardInfo();
     }, [rootFolderDirectoryReady, rootDirHandle]);
@@ -105,6 +107,10 @@ function App() {
     /**** main logic ****/
     if (!appConfig.ready) {
         return;
+    }
+
+    if (appConfig.config.general.show_board_id && boardInfo) {
+        document.title = "CPy: " + boardInfo.board_id.split("_").join(" ");
     }
 
     // theme config

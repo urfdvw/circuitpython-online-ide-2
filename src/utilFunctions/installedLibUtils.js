@@ -409,8 +409,8 @@ export function compareVersions(a, b) {
     const [aMaj, aMin, aPat] = toNums(a);
     const [bMaj, bMin, bPat] = toNums(b);
 
-    if (aMaj !== bMaj) return aMaj < bMaj ? -1 : 1;
-    if (aMin !== bMin) return aMin < bMin ? -1 : 1;
+    if (aMaj !== bMaj) return aMaj < bMaj ? -100 : 100;
+    if (aMin !== bMin) return aMin < bMin ? -10 : 10;
     if (aPat !== bPat) return aPat < bPat ? -1 : 1;
     return 0;
 }

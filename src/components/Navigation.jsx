@@ -5,6 +5,14 @@ import Typography from "@mui/material/Typography";
 import AppContext from "../AppContext";
 // mui
 import Button from "@mui/material/Button";
+// add table imports
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
 // theme
 import { NoTheme } from "react-lazy-dark-theme";
 // board info
@@ -74,16 +82,31 @@ function InstallCpy() {
 }
 
 export default function Navigation() {
-    const { openDirectory, rootFolderDirectoryReady, serialReady, connectToSerialPort, appConfig } =
+    const { openDirectory, rootFolderDirectoryReady, serialReady, connectToSerialPort, appConfig, boardInfo } =
         useContext(AppContext);
+    const [cpyInfo, setCpyInfo] = useState(null);
+    useEffect(() => {
+        const fetchCpyInfo = async () => {
+            const cpy_info = await fetchLatestCircuitPythonInfo();
+            setCpyInfo(cpy_info);
+        };
+        fetchCpyInfo();
+    }, []);
 
     return (
         <Typography component="div" sx={{ margin: "20pt" }}>
-            <p> Please connect your microcontroller to this computer by a usb data cable before following the steps.</p>
+            <p>
+                Please connect your microcontroller to this computer by a <b>USB data cable</b> before following the
+                steps.
+            </p>
+            <p>
+                If you have not installed CircuitPython on your microcontroller, please check{" "}
+                <a href="https://learn.adafruit.com/welcome-to-circuitpython/installing-circuitpython">
+                    <b>this tutorial</b>
+                </a>{" "}
+                first.
+            </p>
             <ul>
-                <li>
-                    <InstallCpy />
-                </li>
                 <li>
                     Step 1. <Button onClick={openDirectory}>Open CircuitPy Drive</Button>
                     {rootFolderDirectoryReady ? "✅" : ""}
@@ -99,12 +122,11 @@ export default function Navigation() {
                     </Button>
                     {serialReady ? "✅" : ""}
                 </li>
-                {serialReady && rootFolderDirectoryReady ? (
-                    <li>🎉 Setup complete! Open your files and let's start coding!</li>
-                ) : (
-                    ""
-                )}
             </ul>
+
+            {serialReady && rootFolderDirectoryReady && (
+                <p>🎉 Setup complete! Open your files and let's start coding!</p>
+            )}
 
             <NoTheme style={{ width: "100%" }}>
                 <div style={video_parent_css}>
@@ -118,6 +140,54 @@ export default function Navigation() {
                     ></iframe>
                 </div>
             </NoTheme>
+
+            {boardInfo && cpyInfo && compareVersions(cpyInfo.version, boardInfo.cpy_version) > 0 && (
+                <Typography component="div">
+                    <p>
+                        ⬆️ New CircuitPython version {versionToString(cpyInfo.version)} is available!{" "}
+                        <a href={`https://circuitpython.org/board/${boardInfo.board_id}/`}>
+                            <b>Click here to update.</b>
+                        </a>
+                    </p>
+                    <TableContainer component={Paper} sx={{ marginTop: 2 }}>
+                        <Table size="small" aria-label="board info">
+                            <TableHead>
+                                <TableRow>
+                                    <TableCell></TableCell>
+                                    <TableCell>
+                                        <strong>Version</strong>
+                                    </TableCell>
+                                    <TableCell>
+                                        <strong>Update Date</strong>
+                                    </TableCell>
+                                </TableRow>
+                            </TableHead>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell component="th" scope="row">
+                                        Currently installed
+                                    </TableCell>
+                                    <TableCell component="th" scope="row">
+                                        {versionToString(boardInfo.cpy_version)}
+                                    </TableCell>
+                                    <TableCell>{boardInfo.cpy_datetime}</TableCell>
+                                </TableRow>
+                            </TableBody>
+                            <TableBody>
+                                <TableRow>
+                                    <TableCell component="th" scope="row">
+                                        Latest available
+                                    </TableCell>
+                                    <TableCell component="th" scope="row">
+                                        {versionToString(cpyInfo.version)}
+                                    </TableCell>
+                                    <TableCell>{cpyInfo.datetime}</TableCell>
+                                </TableRow>
+                            </TableBody>
+                        </Table>
+                    </TableContainer>
+                </Typography>
+            )}
         </Typography>
     );
 }

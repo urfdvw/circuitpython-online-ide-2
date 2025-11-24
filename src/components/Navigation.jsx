@@ -146,7 +146,7 @@ export default function Navigation() {
                     <p>
                         ⬆️ New CircuitPython version {versionToString(cpyInfo.version)} is available!{" "}
                         <a href={`https://circuitpython.org/board/${boardInfo.board_id}/`}>
-                            <b>Click here to update.</b>
+                            <b>Click here to upgrade.</b>
                         </a>
                     </p>
                     <TableContainer component={Paper} sx={{ marginTop: 2 }}>

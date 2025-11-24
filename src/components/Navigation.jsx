@@ -1,5 +1,5 @@
 // React
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import Typography from "@mui/material/Typography";
 //context
 import AppContext from "../AppContext";
@@ -7,6 +7,9 @@ import AppContext from "../AppContext";
 import Button from "@mui/material/Button";
 // theme
 import { NoTheme } from "react-lazy-dark-theme";
+// board info
+import { fetchLatestCircuitPythonInfo } from "../utilFunctions/baordInfoUtils";
+import { compareVersions, versionToString, parseVersion } from "../utilFunctions/installedLibUtils";
 
 const video_parent_css = {
     position: "relative",
@@ -25,6 +28,51 @@ const video_css = {
     height: "100%",
 };
 
+function InstallCpy() {
+    const { boardInfo } = useContext(AppContext);
+    const [cpyInfo, setCpyInfo] = useState(null);
+    useEffect(() => {
+        const fetchCpyInfo = async () => {
+            const cpy_info = await fetchLatestCircuitPythonInfo();
+            setCpyInfo(cpy_info);
+        };
+        fetchCpyInfo();
+    }, []);
+
+    if (boardInfo && cpyInfo && compareVersions(cpyInfo.version, boardInfo.cpy_version) > 0) {
+        return (
+            <>
+                Step 0.
+                <Button
+                    onClick={() => {
+                        window.open(`https://circuitpython.org/board/${boardInfo.board_id}/`, "_blank");
+                    }}
+                >
+                    Update to {cpyInfo.name}
+                </Button>
+                (Optional)
+            </>
+        );
+    }
+
+    return (
+        <>
+            Step 0.
+            <Button
+                onClick={() => {
+                    window.open(
+                        "https://learn.adafruit.com/welcome-to-circuitpython/installing-circuitpython",
+                        "_blank"
+                    );
+                }}
+            >
+                Install CircuitPython
+            </Button>
+            (Skip if installed recently)
+        </>
+    );
+}
+
 export default function Navigation() {
     const { openDirectory, rootFolderDirectoryReady, serialReady, connectToSerialPort, appConfig } =
         useContext(AppContext);
@@ -34,18 +82,7 @@ export default function Navigation() {
             <p> Please connect your microcontroller to this computer by a usb data cable before following the steps.</p>
             <ul>
                 <li>
-                    Step 0.
-                    <Button
-                        onClick={() => {
-                            window.open(
-                                "https://learn.adafruit.com/welcome-to-circuitpython/installing-circuitpython",
-                                "_blank"
-                            );
-                        }}
-                    >
-                        Install CircuitPython
-                    </Button>
-                    (Skip if installed recently)
+                    <InstallCpy />
                 </li>
                 <li>
                     Step 1. <Button onClick={openDirectory}>Open CircuitPy Drive</Button>
@@ -73,7 +110,6 @@ export default function Navigation() {
                 <div style={video_parent_css}>
                     <iframe
                         style={video_css}
-                        frameBorder={0}
                         src="https://www.youtube.com/embed/kq554m21G4A?si=xLRUJNfd6tvAqGuH&cc_load_policy=1&cc_lang_pref=en"
                         title="Quick Start Guide"
                         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"

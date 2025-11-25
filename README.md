@@ -1,77 +1,71 @@
-# CircuitPython Online IDE 2
+# CircuitPython Online IDE
+> The easiest way to code CircuitPython. **No installation** required. Perfect for **Education** and **Hobbyists**. Supports **Chromebooks**.
 
-***To use the IDE, please visit https://urfdvw.github.io/circuitpython-online-ide-2 on a computer. No installation is needed.***
+[![Launch IDE](https://img.shields.io/badge/🚀_Launch-Open_Web_Editor-green?style=for-the-badge&logo=google-chrome)](https://urfdvw.github.io/circuitpython-online-ide-2)
+---
 
-The **CircuitPython Online IDE** is a browser-based IDE (integrated development environment) compatible with Chrome or Chromium-based browsers on any computer, including **Chromebooks**. 
-It is primarily designed for educational environments and DIY enthusiasts.
-However, anyone working with CircuitPython will find this IDE beneficial.
+![CircuitPython Online IDE Demo](https://urfdvw.github.io/circuitpython-online-ide-2/media/main.png)
 
-This IDE includes essential tools and useful features for CircuitPython microcontroller projects, including:
-- File browser and management
-- Code editor with support for multiple tabs
-- Serial Console for communication and the Read-Evaluate-Print Loop (REPL)
-- Serial data plotter
-- Library Management
-- Project backup
+---
 
+## Why use this IDE?
 
-[![Quick introduction to CircuitPython Online IDE](https://img.youtube.com/vi/kq554m21G4A/0.jpg)](https://www.youtube.com/watch?v=kq554m21G4A)
+* **Instant Setup:** This IDE runs entirely in your browser. Just plug in your board and start coding. 
+* **Powerful tools:** Comes with a built-in **Library Manager** and **Serial Plotter**.
+* **Education Ready:** Works flawlessly on school **Chromebooks** where installing software is blocked.
 
-# Quick Start
+---
 
-## Set up
-- Connect your CircuitPython-supported microcontroller board to your computer via a USB cable.
-- **Open the [CircuitPython Online IDE](https://urfdvw.github.io/circuitpython-online-ide-2/) in a supported browser (Chrome, Edge, etc.).**
-    - In the middle of the IDE, you will see a tab called "Navigation". Follow the steps listed there.
-- If you have never installed CircuitPython on this microcontroller, please click on "Step 0. Install CircuitPython" and follow the guide there to install or upgrade CircuitPython.
-    - The microcontroller will appear as a USB drive in your computer's file system.
-- Click on "Step 1. Open CircuitPy Drive". In the popup file explorer, navigate to the root directory of your microcontroller, then click on 'open folder'.
-    - Click on the "allow" button to grant the IDE file editing permissions.
-    - Note, you should open the microcontroller drive as a whole instead of sub-folders or any single file.
-    - You should now see the files on the microcontroller in the left panel called "Folder View".
-- Click on "Step 2. Connect to Serial Port", select your microcontroller, then click on "connect".
-    - You will see some system information and running results in the right-side tab called "Serial Console".
-- You have now finished the setup process, and you can safely close the "Navigation" tab.
-    - You can reopen the Navigation tab by going to Menu bar -> Tools -> Navigation.
+## Key Features
 
-## Edit and run script
-Once you finish the setup above, the default mode is 'Script mode', which runs the code saved in the microcontroller. To switch back to 'Script mode' from 'REPL' mode (where you see `>>>`, which will be discussed in the next section), click on the `CTRL-D` button in the "Serial Console" tab.
+### 📦 One-Click Library Manager
+Never worry about dependencies again! Just write your code, and the IDE will analyze your imports and install all required libraries with a single click. You can also search and browse the entire Adafruit and Community Bundle to discover available libraries.
 
-- In "Folder View" (the left panel), click on the file you want to edit.
-    - "code.py" is the main Python file that serves as the entry point for all code. You will need to edit it most of the time.
-    - An Editor tab will appear.
-        - You can drag the tabs around to rearrange them.
-- Once you are done with code editing, click on the "Save" button in the Editor tab at the top right corner.
-    - This will trigger CircuitPython to soft reboot and run the changed code.
-    - You will see running results in the "Serial Console" tab.
-    - You can also use the "Serial Console" tab to send data to the microcontroller if your code includes `input()`.
-- Once you are done with the project, make sure you have saved everything and close the Online IDE safely.
-    - Your saved code will run on the microcontroller once it is connected to a power source like a phone charger or battery.
+![Library Manager Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/library_management.png)
 
-## REPL
+### 📈 Built-in Serial Plotter
+Visualizing sensor data? You don't need external tools. Plots numeric data from the serial output in real-time. Perfect for STEM experiments.
 
-REPL (Read-Evaluate-Print Loop) is a coding mode where you can interact with the microcontroller in real-time. In this mode, you send one or multiple lines of code instead of a whole script to the microcontroller. This piece of code is run immediately after the microcontroller receives it, and the result is displayed after it finishes. The microcontroller will be on halt until you send the next piece of code. While scripts are used as deliverables, REPL mode is often used for quick testing and debugging.
+![Serial Plotter Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/plotter.png)
 
-- Click on the `CTRL-C` button on the UI to start REPL mode.
-    - You might need to click more than once. Stop when you see `>>>` in the terminal.
-- Write one or multiple lines of code in the bottom section of the "Serial Console" tab.
-    - When writing multiple lines, use `Shift-Enter` to create a new line.
-- Click on the "Send" button in the bottom right corner of the "Serial Console" tab, or hit `Enter` on the keyboard after typing to send the code snippet to the microcontroller.
-- When typing code, use the `Up` and `Down` arrow keys on the keyboard to recall command history.
+### 📂 Visual File Management
+Manage files on your microcontroller just like on your computer. Create, edit, and organize without leaving the browser.
+
+![Folder View Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/folder_view.png)
+
+### 📷 Camera View
+Showcase your microcontroller to others during streaming, remote learning or collaboration. Share your camera feed directly through the IDE.
+
+![Camera View Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/camera.png)
 
 
-## About
+---
 
-Version: 2.2.2
+## Quick Start
 
-[CircuitPython](https://circuitpython.org/) is a version of Python that runs on microcontrollers and single-board computers. Its development is sponsored by [Adafruit](https://www.adafruit.com/).
+**You only need 3 steps:**
 
-The **CircuitPython Online IDE** is an open-source project published on GitHub Pages under the GPL 3 license. It is developed and maintained by [River Wang](https://github.com/urfdvw).
+1.  **Plug** your CircuitPython board into your computer via USB.
+1.  **Open** the [Online IDE](https://urfdvw.github.io/circuitpython-online-ide-2/) in browser.
+1.  **Connect** your microcontroller following the Navigation tab.
 
-## Contact Me
+---
 
-For IDE feedback, please check [this survey](https://docs.google.com/forms/d/e/1FAIpQLSdupiJIRViFwPpuQC1hMp8gRvhxACLoAjgepm_-IRZumwK7Cg/viewform). For other communications, please send an email to `urfdvw@gmail.com`. For the latest updates on the IDE and my DIY projects, please follow me on:
+## Compatibility
 
--   Twitter: [@River\_\_\_Wang](https://twitter.com/River___Wang)
--   YouTube: [@Riverwang](https://www.youtube.com/channel/UCeunCRTBkjHWynMl4I4le_A)
--   Mastodon: [@Riverwang@fosstodon.org](https://fosstodon.org/@Riverwang)
+* **Hardware:** Supports all CircuitPython boards.
+* **OS:** All desktop OSes including Chromebooks.
+* **Browsers:** Google Chrome, or Chromium-based browsers such as Microsoft Edge, Opera.
+
+---
+
+## Feedback & Community
+
+* **Tell me your story!** [Fill out the Survey](https://docs.google.com/forms/d/e/1FAIpQLSdupiJIRViFwPpuQC1hMp8gRvhxACLoAjgepm_-IRZumwK7Cg/viewform)
+* **Found a bug?** [Check out this guide](https://github.com/urfdvw/circuitpython-online-ide-2/blob/main/src/docs/Feedback%20and%20Code%20Contribution.md)
+* **Follow Me:**
+    * YouTube: [@Riverwang](https://www.youtube.com/channel/UCeunCRTBkjHWynMl4I4le_A)
+    * Twitter: [@River___Wang](https://twitter.com/River___Wang)
+    * Mastodon: [@Riverwang](https://fosstodon.org/@Riverwang)
+
+**If this project helped you, please give it a Star ⭐️ on GitHub!**

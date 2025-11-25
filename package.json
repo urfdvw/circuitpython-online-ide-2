@@ -5,10 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "node generateReadme.js && vite build",
+    "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "doc": "node generateReadme.js",
     "test": "jest"
   },
   "dependencies": {

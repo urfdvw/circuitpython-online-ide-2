@@ -20,6 +20,21 @@ import { isMobile, isSafari, isFirefox } from "react-device-detect";
 
 const FEATURES = [
     {
+        heading: "Library Management",
+        body: "Automated dependency handling",
+        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/library_management.png",
+    },
+    {
+        heading: "Plotter",
+        body: "Visualize sensor data",
+        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/plotter.png",
+    },
+    {
+        heading: "Camera",
+        body: "Show your microcontroller to others",
+        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/camera.png",
+    },
+    {
         heading: "Folder View",
         body: "Manage file on your microcontroller",
         image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/folder_view.png",
@@ -33,21 +48,6 @@ const FEATURES = [
         heading: "Serial Console",
         body: "For communication and REPL",
         image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/serial_console.png",
-    },
-    {
-        heading: "Plotter",
-        body: "Visualize sensor data",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/plotter.png",
-    },
-    {
-        heading: "Library Management",
-        body: "Automated dependency handling with manual control options",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/library_management.png",
-    },
-    {
-        heading: "Camera",
-        body: "Show your microcontroller to others",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/camera.png",
     },
 ];
 

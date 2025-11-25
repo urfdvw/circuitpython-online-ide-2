@@ -19,7 +19,7 @@
 ## Key Features
 
 ### 📦 One-Click Library Manager
-Never worry about dependencies again! Just write your code, and the IDE will analyze your imports and install all required libraries with a single click. You can also search and browse the entire Adafruit and Community Bundle to discover available drivers.
+Never worry about dependencies again! Just write your code, and the IDE will analyze your imports and install all required libraries with a single click. You can also search and browse the entire Adafruit and Community Bundle to discover available libraries.
 
 ![Library Manager Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/library_management.png)
 

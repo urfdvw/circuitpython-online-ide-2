@@ -18,24 +18,23 @@
 
 ## Key Features
 
-### 📦 One-Click Library Manager (Best Feature!)
-Forget about manually downloading bundles, unzipping, and dragging files.
-Just search for a library (e.g., `neopixel`, `adafruit_motor`) and install it directly to your board with one click.
+### 📦 One-Click Library Manager
+Never worry about dependencies again! Just write your code, and the IDE will analyze your imports and install all required libraries with a single click. You can also search and browse the entire Adafruit and Community Bundle to discover available drivers.
 
 ![Library Manager Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/library_management.png)
 
 ### 📈 Built-in Serial Plotter
-Visualizing sensor data? You don't need external tools. The IDE automatically plots numeric data from the serial output in real-time. Perfect for STEM science experiments.
+Visualizing sensor data? You don't need external tools. Plots numeric data from the serial output in real-time. Perfect for STEM experiments.
 
 ![Serial Plotter Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/plotter.png)
 
 ### 📂 Visual File Management
-Manage files on your microcontroller just like on your computer. Drag, drop, edit, and organize without leaving the browser.
+Manage files on your microcontroller just like on your computer. Create, edit, and organize without leaving the browser.
 
 ![Folder View Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/folder_view.png)
 
 ### 📷 Camera View
-Show your microcontroller to others during streaming, remote learning or collaboration. Share your camera feed directly through the IDE.
+Showcase your microcontroller to others during streaming, remote learning or collaboration. Share your camera feed directly through the IDE.
 
 ![Camera View Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/camera.png)
 

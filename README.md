@@ -4,7 +4,7 @@
 [![Launch IDE](https://img.shields.io/badge/🚀_Launch-Open_Web_Editor-green?style=for-the-badge&logo=google-chrome)](https://urfdvw.github.io/circuitpython-online-ide-2)
 ---
 
-![CircuitPython Online IDE Demo](https://urfdvw.github.io/circuitpython-online-ide-2/media/main.png)
+![CircuitPython Online IDE Demo](/docs/media/main.png)
 
 ---
 
@@ -21,22 +21,22 @@
 ### 📦 One-Click Library Manager
 Never worry about dependencies again! Just write your code, and the IDE will analyze your imports and install all required libraries with a single click. You can also search and browse the entire Adafruit and Community Bundle to discover available libraries.
 
-![Library Manager Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/library_management.png)
+![Library Manager Screenshot](/docs/media/library_management.png)
 
 ### 📈 Built-in Serial Plotter
 Visualizing sensor data? You don't need external tools. Plots numeric data from the serial output in real-time. Perfect for STEM experiments.
 
-![Serial Plotter Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/plotter.png)
+![Serial Plotter Screenshot](/docs/media/plotter.png)
 
 ### 📂 Visual File Management
 Manage files on your microcontroller just like on your computer. Create, edit, and organize without leaving the browser.
 
-![Folder View Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/folder_view.png)
+![Folder View Screenshot](/docs/media/folder_view.png)
 
 ### 📷 Camera View
 Showcase your microcontroller to others during streaming, remote learning or collaboration. Share your camera feed directly through the IDE.
 
-![Camera View Screenshot](https://urfdvw.github.io/circuitpython-online-ide-2/media/camera.png)
+![Camera View Screenshot](/docs/media/camera.png)
 
 
 ---
@@ -46,7 +46,7 @@ Showcase your microcontroller to others during streaming, remote learning or col
 **You only need 3 steps:**
 
 1.  **Plug** your CircuitPython board into your computer via USB.
-1.  **Open** the [Online IDE](https://urfdvw.github.io/circuitpython-online-ide-2/) in browser.
+1.  **Open** the [CircuitPython Online IDE](https://urfdvw.github.io/circuitpython-online-ide-2) (https://circuitpy.dev) in browser.
 1.  **Connect** your microcontroller following the Navigation tab.
 
 ---

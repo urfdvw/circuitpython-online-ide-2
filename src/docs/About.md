@@ -1,6 +1,6 @@
 ## CircuitPython Online IDE
 
-Version: 2.2.2
+Version: 2.2.3
 
 [CircuitPython](https://circuitpython.org/) is a version of Python that runs on microcontrollers and single-board computers. Its development is sponsored by [Adafruit](https://www.adafruit.com/).
 

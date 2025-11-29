@@ -1,3 +1,11 @@
+## Version 2.2.3
+Released on November 29th, 2025
+
+Significant updates from version 2.2.2 include:
+- Library Management related enhancement
+    - Skip examples in the bundle
+    - Added descriptions to list and search
+    
 ## Version 2.2.2
 Released on October 30th, 2025
 
@@ -6,7 +14,6 @@ Significant updates from version 2.2.1 include:
     - Added an option to use device ID as title
     - Added CircuitPython upgrade information in the Navigation page.
     - Re-organized Navigation page
-
 
 ## Version 2.2.1
 Released on October 30th, 2025

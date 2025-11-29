@@ -166,13 +166,16 @@ export function useZipStorage(dbName) {
             const zip = await JSZip.loadAsync(buf);
             const stripPrefix = computeStripPrefix(zip);
 
-            // collect dirs
+            // collect dirs (only for lib/ paths)
             const dirSet = new Set();
             for (const [rawPath, zipObj] of Object.entries(zip.files)) {
                 const orig = rawPath.replace(/\\/g, "/");
                 if (!orig || orig === stripPrefix) continue;
                 const stripped = stripPrefix && orig.startsWith(stripPrefix) ? orig.slice(stripPrefix.length) : orig;
                 if (!stripped) continue;
+
+                // Only process paths that start with lib/
+                if (!stripped.startsWith("lib/")) continue;
 
                 if (zipObj.dir) {
                     const d = stripped.endsWith("/") ? stripped.slice(0, -1) : stripped;
@@ -181,7 +184,7 @@ export function useZipStorage(dbName) {
                     const parts = stripped.split("/");
                     for (let i = 0; i < parts.length - 1; i++) {
                         const parent = parts.slice(0, i + 1).join("/");
-                        if (parent) dirSet.add(parent);
+                        if (parent && parent.startsWith("lib/")) dirSet.add(parent);
                     }
                 }
             }
@@ -195,13 +198,16 @@ export function useZipStorage(dbName) {
                 });
             }
 
-            // write files
+            // write files (only for lib/ paths)
             for (const [rawPath, zipObj] of Object.entries(zip.files)) {
                 if (zipObj.dir) continue;
                 const orig = rawPath.replace(/\\/g, "/");
                 if (!orig || orig === stripPrefix) continue;
                 const stripped = stripPrefix && orig.startsWith(stripPrefix) ? orig.slice(stripPrefix.length) : orig;
                 if (!stripped) continue;
+
+                // Only process paths that start with lib/
+                if (!stripped.startsWith("lib/")) continue;
 
                 await ensureDirsForPath(db, stripped);
                 const blob = await zipObj.async("blob");

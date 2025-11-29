@@ -80,6 +80,14 @@ export default function LibCardMUI({
                             </Tooltip>
                         </Typography>
 
+                        {libObj.pypi_description && (
+                            <Typography variant="body2">
+                                <Tooltip title={libObj.pypi_description}>
+                                    <Typography variant="span">{libObj.pypi_description}</Typography>
+                                </Tooltip>
+                            </Typography>
+                        )}
+
                         <Typography
                             variant="body2"
                             sx={{ color: theme.palette.grey[700], display: "flex", alignItems: "left" }}

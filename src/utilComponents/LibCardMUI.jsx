@@ -81,7 +81,7 @@ export default function LibCardMUI({
                         </Typography>
 
                         {libObj.pypi_description && (
-                            <Typography variant="body1" noWrap>
+                            <Typography variant="body2">
                                 <Tooltip title={libObj.pypi_description}>
                                     <Typography variant="span">{libObj.pypi_description}</Typography>
                                 </Tooltip>

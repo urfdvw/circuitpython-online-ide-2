@@ -16,7 +16,7 @@ export default function PagedLibCards({ libCards = [], itemsPerPage = 20, autoIn
         const q = query.trim().toLowerCase();
         if (!q) return libCards;
         return libCards.filter((card) => {
-            const fields = [card?.libDisplayName, card?.repoName, card?.abbr];
+            const fields = [card?.libDisplayName, card?.repoName, card?.abbr, card?.libObj?.pypi_description];
             return fields.some((f) =>
                 String(f || "")
                     .toLowerCase()

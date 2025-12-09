@@ -65,6 +65,12 @@
                 "children": [
                     {
                         "type": "tab",
+                        "name": "Debugger",
+                        "component": "debugger",
+                        "enableClose": true
+                    },
+                    {
+                        "type": "tab",
                         "name": "Navigation",
                         "component": "navigation",
                         "enableClose": true

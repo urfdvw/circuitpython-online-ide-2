@@ -3,7 +3,7 @@ import { grey, deepPurple } from "@mui/material/colors";
 import CornerIcons from "./CornerIcons";
 import { openTab, selectTabById } from "../layout/layoutUtils";
 import AppContext from "../AppContext";
-import React, { useContext } from "react";
+import { useContext } from "react";
 
 export default function AppMenu() {
     const { flexModel, helpTabSelection, openDirectory, connectToSerialPort, appConfig } = useContext(AppContext);

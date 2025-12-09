@@ -9,6 +9,7 @@ import DocCam from "../components/DocCam";
 import Backup from "../components/Backup";
 import RawPlotter from "../components/RawPlotter";
 import LibManagement from "../components/LibManagement";
+import Debugger from "../components/Debugger";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -78,6 +79,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <LibManagement />
+            </div>
+        );
+    } else if (component === "debugger") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <Debugger />
             </div>
         );
     }

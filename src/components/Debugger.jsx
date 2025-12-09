@@ -33,7 +33,7 @@ export default function Debugger() {
                     // Example usage of debugger utilities
                     await instrumentCode(rootDirHandle, pythonFiles, pythonFiles, {
                         "my_module.py": ["x"],
-                        "": ["__name__"],
+                        "": ["__name__", "y"],
                     });
                 }}
             >

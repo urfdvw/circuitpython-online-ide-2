@@ -48,10 +48,19 @@ self.addEventListener("fetch", (event) => {
             return cache.match(event.request).then((cachedResponse) => {
                 const fetchPromise = fetch(event.request)
                     .then((networkResponse) => {
-                        // Update the cache with the fresh resource
-                        cache.put(event.request, networkResponse.clone());
-                        return networkResponse;
-                    })
+                            // Only cache GET requests and successful responses.
+                            // The Cache API only supports caching GET requests; attempting to
+                            // cache other methods (e.g. HEAD) will throw a TypeError.
+                            try {
+                                if (event.request.method === 'GET' && networkResponse && networkResponse.ok) {
+                                    cache.put(event.request, networkResponse.clone());
+                                }
+                            } catch (cacheErr) {
+                                // Log and continue; do not let caching errors break responses.
+                                console.warn('Service worker cache.put failed:', cacheErr);
+                            }
+                            return networkResponse;
+                        })
                     .catch(() => {
                         // Network request failed; if there's a cache, serve it
                         console.log("Serving cached response for " + event.request.url);

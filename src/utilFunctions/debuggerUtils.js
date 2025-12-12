@@ -118,7 +118,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         });
 
         // Jump/Pause logic
-        block += `${indent}_dbg.bp = bool(input("<CV>" + str(ide_debug_data) + "</CV>"))\n`;
+        block += `${indent}_dbg.bp = bool(input("\x1b[?1049h" + str(ide_debug_data) + "\x1b[?1049l"))\n`;
         block += `${indent}_dbg.ts = _dbg.t()\n`;
 
         return block;

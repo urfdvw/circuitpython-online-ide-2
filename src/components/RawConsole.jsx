@@ -31,6 +31,8 @@ import XtermConsole from "./XtermConsole";
 // code snippet editor
 import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
 import { isPythonIncomplete } from "../utilFunctions/serialHelpers";
+// raw log
+import NewWindow from "react-new-window";
 
 const RawSerialWrite = ({
     text,
@@ -202,6 +204,7 @@ const RawConsole = () => {
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
     const [clearTrigger, setClearTrigger] = useState(0);
+    const [popped, setPopped] = useState(false);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
@@ -239,6 +242,12 @@ const RawConsole = () => {
                     text: "Clear",
                     handler: () => {
                         setClearTrigger((prev) => prev + 1);
+                    },
+                },
+                {
+                    text: "Raw Log",
+                    handler: () => {
+                        setPopped(true);
                     },
                 },
                 {
@@ -329,6 +338,18 @@ const RawConsole = () => {
                     </Box>
                 ) : null}
             </Box>
+
+            {popped && (
+                <NewWindow
+                    title={"Installation Log"}
+                    onUnload={() => {
+                        setPopped(false);
+                    }}
+                >
+                    <AceEditor value={serialOutput} theme="plain_text" width="100%" height="100%" wrapEnabled={true}
+                    ></AceEditor>
+                </NewWindow>
+            )}
         </TabTemplate>
     ) : (
         <Button

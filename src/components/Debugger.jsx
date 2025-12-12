@@ -1,9 +1,21 @@
 import { cleanupDebugFiles, getAllPythonFiles, instrumentCode } from "../utilFunctions/debuggerUtils";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import AppContext from "../AppContext";
+import SetDebugWatch from "./SetDebugWatch"
 
 export default function Debugger() {
     const { rootDirHandle } = useContext(AppContext);
+    const pythonFileNames = ["main.py", "utils.py", "sensor.py"];
+
+    // States managed by parent
+    const [debugFileNames, setDebugFileNames] = useState(["main.py"]);
+
+    // Ensure key "" always exists if you want strictly compliant initialization,
+    // though the component handles adding it if missing.
+    const [watchExpressions, setWatchExpressions] = useState({
+        "": ["x + y"], // Global watch
+        "main.py": ["cnt"], // Scoped watch
+    });
     return (
         <div>
             <h1>Debugger Component</h1>
@@ -39,6 +51,13 @@ export default function Debugger() {
             >
                 Instrument Code
             </button>
+            <SetDebugWatch
+                pythonFileNames={pythonFileNames}
+                debugFileNames={debugFileNames}
+                setDebugFileNames={setDebugFileNames}
+                watchExpressions={watchExpressions}
+                setWatchExpressions={setWatchExpressions}
+            />
         </div>
     );
 }

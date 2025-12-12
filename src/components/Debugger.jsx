@@ -62,9 +62,13 @@ export default function Debugger() {
             <button
                 onClick={async () => {
                     sendCtrlC();
+                    await sleep(100);
+                    sendCtrlC();
                     await sleep(500);
                     sendCtrlD();
                     await sleep(500);
+                    sendCtrlC();
+                    await sleep(100);
                     sendCtrlC();
                     await sleep(500);
                     sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);

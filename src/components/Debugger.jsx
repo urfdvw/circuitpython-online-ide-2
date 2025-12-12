@@ -5,7 +5,7 @@ import SetDebugWatch from "./SetDebugWatch";
 import * as constants from "../constants";
 
 export default function Debugger() {
-    const { rootDirHandle, sendCtrlC, sendCtrlD, sendDataToSerialPort } = useContext(AppContext);
+    const { rootDirHandle, sendCtrlC, sendCtrlD, sendDataToSerialPort, serialOutput } = useContext(AppContext);
     const [pythonFileNames, setPythonFileNames] = useState([]);
 
     // States managed by parent
@@ -14,6 +14,26 @@ export default function Debugger() {
     // Ensure key "" always exists if you want strictly compliant initialization,
     // though the component handles adding it if missing.
     const [watchExpressions, setWatchExpressions] = useState({});
+
+    const [debugHistory, setDebugHistory] = useState([]);
+
+    useEffect(() => {
+        if (!serialOutput.endsWith(constants.DEBUG_OUT_END)) {
+            return;
+        }
+        const lastBlock = serialOutput.split("==== Start Debugging ====").at(-1);
+        // console.log("Last Debug Block:", lastBlock);
+        const debugLines = lastBlock
+            .split(constants.DEBUG_OUT_START)
+            .slice(1)
+            .map((line) => line.split(constants.DEBUG_OUT_END)[0]);
+        // console.log("Parsed Debug Lines:", debugLines);
+        const debugLinesObjects = debugLines.map((line) => {
+            return JSON.parse(line);
+        });
+        console.log("Parsed Debug Lines:", debugLinesObjects);
+        setDebugHistory(debugLinesObjects);
+    }, [serialOutput]);
 
     return (
         <div>

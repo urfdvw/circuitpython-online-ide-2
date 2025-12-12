@@ -400,7 +400,7 @@ bp = False # jump to break point or not
 
 def t():
     """ get current time in ms """
-    return int(_time_now()) * time_unit
+    return int(_time_now() * time_unit)
 
 def m():
     """ get free memory """

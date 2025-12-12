@@ -346,7 +346,7 @@ const RawConsole = () => {
                         setPopped(false);
                     }}
                 >
-                    <AceEditor value={serialOutput} theme="plain_text" width="100%" height="100%" wrapEnabled={true}
+                    <AceEditor value={serialOutput} theme="plain_text" width="100%" height="100%" wrapEnabled={true} readOnly={true}
                     ></AceEditor>
                 </NewWindow>
             )}

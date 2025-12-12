@@ -2,9 +2,10 @@ import { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep } from "../
 import { useContext, useState, useEffect } from "react";
 import AppContext from "../AppContext";
 import SetDebugWatch from "./SetDebugWatch";
+import * as constants from "../constants";
 
 export default function Debugger() {
-    const { rootDirHandle, sendCtrlC, sendCtrlD, sendSingleLineText } = useContext(AppContext);
+    const { rootDirHandle, sendCtrlC, sendCtrlD, sendDataToSerialPort } = useContext(AppContext);
     const [pythonFileNames, setPythonFileNames] = useState([]);
 
     // States managed by parent
@@ -66,10 +67,27 @@ export default function Debugger() {
                     await sleep(500);
                     sendCtrlC();
                     await sleep(500);
-                    sendSingleLineText("from ide_debug_code import *\n")
+                    sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);
                 }}
             >
                 Restart
+            </button>
+            <br />
+
+            <button
+                onClick={async () => {
+                    sendDataToSerialPort(constants.LINE_END);
+                }}
+            >
+                Step
+            </button>
+
+            <button
+                onClick={async () => {
+                    sendDataToSerialPort(" " + constants.LINE_END);
+                }}
+            >
+                breakpoint
             </button>
             <SetDebugWatch
                 pythonFileNames={pythonFileNames}

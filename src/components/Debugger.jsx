@@ -80,7 +80,7 @@ export default function Debugger() {
 
             <button
                 onClick={async () => {
-                    sendDataToSerialPort(constants.LINE_END);
+                    sendDataToSerialPort("[S]" + constants.LINE_END);
                 }}
             >
                 Step
@@ -88,7 +88,7 @@ export default function Debugger() {
 
             <button
                 onClick={async () => {
-                    sendDataToSerialPort(" " + constants.LINE_END);
+                    sendDataToSerialPort("[BP]" + constants.LINE_END);
                 }}
             >
                 breakpoint

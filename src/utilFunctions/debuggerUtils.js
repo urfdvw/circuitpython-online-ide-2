@@ -118,7 +118,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         });
 
         // Jump/Pause logic
-        block += `${indent}_dbg.bp = bool(input("\x1b[?1049h" + str(ide_debug_data) + "\x1b[?1049l"))\n`;
+        block += `${indent}_dbg.bp = input("\x1b[?1049h" + str(ide_debug_data) + "\x1b[?1049l") == "[BP]"\n`;
         block += `${indent}_dbg.ts = _dbg.t()\n`;
 
         return block;
@@ -368,6 +368,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         if (shouldAddInit) {
             finalContent += "_dbg.ts = _dbg.t()\n";
             finalContent += "_dbg.bp = False\n";
+            finalContent += "print('==== Start Debugging ====')\n";
         }
 
         // Merge lines and insertions

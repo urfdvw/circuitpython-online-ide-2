@@ -1,10 +1,10 @@
-import { cleanupDebugFiles, getAllPythonFiles, instrumentCode } from "../utilFunctions/debuggerUtils";
+import { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep } from "../utilFunctions/debuggerUtils";
 import { useContext, useState, useEffect } from "react";
 import AppContext from "../AppContext";
 import SetDebugWatch from "./SetDebugWatch";
 
 export default function Debugger() {
-    const { rootDirHandle } = useContext(AppContext);
+    const { rootDirHandle, sendCtrlC, sendCtrlD, sendSingleLineText } = useContext(AppContext);
     const [pythonFileNames, setPythonFileNames] = useState([]);
 
     // States managed by parent
@@ -56,6 +56,20 @@ export default function Debugger() {
                 }}
             >
                 Instrument Code
+            </button>
+
+            <button
+                onClick={async () => {
+                    sendCtrlC();
+                    await sleep(500);
+                    sendCtrlD();
+                    await sleep(500);
+                    sendCtrlC();
+                    await sleep(500);
+                    sendSingleLineText("from ide_debug_code import *\n")
+                }}
+            >
+                Restart
             </button>
             <SetDebugWatch
                 pythonFileNames={pythonFileNames}

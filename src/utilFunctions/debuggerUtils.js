@@ -94,13 +94,14 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
 
         // If it is a STEP debug block (not a breakpoint), wrap in condition
         if (!isBreakpoint) {
-            block += `${indent}if not _dbg.jump_to_breakpoint:\n`;
+            block += `${indent}if not _dbg.bp:\n`;
             indent += "    "; // Increase indent for body
         }
 
         // Body start
         block += `${indent}ide_debug_data = {\n`;
-        block += `${indent}    "time": _dbg.time_now() - _dbg.timestamp,\n`;
+        block += `${indent}    "time": _dbg.t() - _dbg.ts,\n`;
+        block += `${indent}    "mem": _dbg.m(),\n`;
         block += `${indent}    "file": "${fileName}",\n`;
         block += `${indent}    "line": ${lineNum},\n`;
         block += `${indent}    "watch": {},\n`;
@@ -117,8 +118,8 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         });
 
         // Jump/Pause logic
-        block += `${indent}_dbg.jump_to_breakpoint = bool(input("<CV>" + str(ide_debug_data) + "</CV>"))\n`;
-        block += `${indent}_dbg.timestamp = _dbg.time_now()\n`;
+        block += `${indent}_dbg.bp = bool(input("<CV>" + str(ide_debug_data) + "</CV>"))\n`;
+        block += `${indent}_dbg.ts = _dbg.t()\n`;
 
         return block;
     };
@@ -365,8 +366,8 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         else if (fileName === "main.py" && !hasCodePy) shouldAddInit = true;
 
         if (shouldAddInit) {
-            finalContent += "_dbg.timestamp = _dbg.time_now()\n";
-            finalContent += "_dbg.jump_to_breakpoint = False\n";
+            finalContent += "_dbg.ts = _dbg.t()\n";
+            finalContent += "_dbg.bp = False\n";
         }
 
         // Merge lines and insertions
@@ -392,12 +393,18 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
 except ImportError:
     from time import ticks_ms as _time_now
     time_unit = 1
+import gc
 
-timestamp = 0
-jump_to_breakpoint = False
+ts = 0 # time stamp
+bp = False # jump to break point or not
 
-def time_now():
-    return _time_now() * time_unit
+def t():
+    """ get current time in ms """
+    return int(_time_now()) * time_unit
+
+def m():
+    """ get free memory """
+    return gc.mem_free()
 `;
 
     const stateFileHandle = await rootDir.getFileHandle(STATE_FILENAME, { create: true });
@@ -415,5 +422,9 @@ def time_now():
     }
 }
 
+function sleep(ms) {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 // Exporting functions if used as a module
-export { cleanupDebugFiles, getAllPythonFiles, instrumentCode };
+export { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep };

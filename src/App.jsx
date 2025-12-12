@@ -83,7 +83,7 @@ function App() {
     // serial
     const { connectToSerialPort, sendDataToSerialPort, addToSerialOutput, serialOutput, serialReady, serial } =
         useSerial();
-    const { sendCtrlC, sendCtrlD, sendCode, codeHistory } = useSerialCommands(
+    const { sendCtrlC, sendCtrlD, sendCode, sendSingleLineText, codeHistory } = useSerialCommands(
         sendDataToSerialPort,
         serialOutput,
         serialReady
@@ -157,6 +157,7 @@ function App() {
                 sendCtrlC,
                 sendCtrlD,
                 sendCode,
+                sendSingleLineText,
                 codeHistory,
                 // board info
                 boardInfo,

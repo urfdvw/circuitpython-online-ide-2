@@ -34,6 +34,38 @@ import { isPythonIncomplete } from "../utilFunctions/serialHelpers";
 // raw log
 import NewWindow from "react-new-window";
 
+// Raw Log Window component with auto-scroll on content update
+const RawLogWindow = ({ serialOutput }) => {
+    const rawLogRef = useRef(null);
+
+    useEffect(() => {
+        // Scroll to the last row whenever serialOutput changes
+        if (rawLogRef.current && rawLogRef.current.editor) {
+            const editor = rawLogRef.current.editor;
+            const session = editor.getSession();
+            const lineCount = session.getLength();
+            // Get the last line content to find its end position
+            const lastLineContent = session.getLine(lineCount - 1);
+            const lastColumnPos = lastLineContent ? lastLineContent.length : 0;
+            // Move cursor to end of last line
+            editor.gotoLine(lineCount, lastColumnPos, false);
+            editor.scrollToLine(lineCount - 1, true, true);
+        }
+    }, [serialOutput]);
+
+    return (
+        <AceEditor
+            ref={rawLogRef}
+            value={serialOutput}
+            theme="plain_text"
+            width="100%"
+            height="100%"
+            wrapEnabled={true}
+            readOnly={true}
+        ></AceEditor>
+    );
+};
+
 const RawSerialWrite = ({
     text,
     setText,
@@ -206,6 +238,8 @@ const RawConsole = () => {
     const [clearTrigger, setClearTrigger] = useState(0);
     const [popped, setPopped] = useState(false);
 
+    const rawLogRef = useRef(null);
+
     function consoleSendCommand() {
         if (text.trim().length === 0) {
             return;
@@ -346,8 +380,7 @@ const RawConsole = () => {
                         setPopped(false);
                     }}
                 >
-                    <AceEditor value={serialOutput} theme="plain_text" width="100%" height="100%" wrapEnabled={true} readOnly={true}
-                    ></AceEditor>
+                    <RawLogWindow serialOutput={serialOutput} />
                 </NewWindow>
             )}
         </TabTemplate>

@@ -97,6 +97,13 @@ export default function Debugger() {
             >
                 Restart
             </button>
+            <SetDebugWatch
+                pythonFileNames={pythonFileNames}
+                debugFileNames={debugFileNames}
+                setDebugFileNames={setDebugFileNames}
+                watchExpressions={watchExpressions}
+                setWatchExpressions={setWatchExpressions}
+            />
             <br />
 
             <button
@@ -114,13 +121,6 @@ export default function Debugger() {
             >
                 breakpoint
             </button>
-            <SetDebugWatch
-                pythonFileNames={pythonFileNames}
-                debugFileNames={debugFileNames}
-                setDebugFileNames={setDebugFileNames}
-                watchExpressions={watchExpressions}
-                setWatchExpressions={setWatchExpressions}
-            />
             <div style={{ height: "500px", width: "100%" }}>
                 {debugHistory && debugHistory.length > 0 && (
                     <DebugCodeView

@@ -3,6 +3,7 @@ import { FitAddon } from "xterm-addon-fit";
 import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import AppContext from "../AppContext";
+import { sleep } from "../utilFunctions/debuggerUtils";
 
 const invert_css = {
     WebkitFilter: "invert(100%) hue-rotate(180deg)",
@@ -55,8 +56,12 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             });
             observer.observe(terminal.current.element.parentElement);
             // serial call back
-            serial.registerReaderCallback("terminal", (data) => {
+            serial.registerReaderCallback("terminal", async (data) => {
                 terminal.current.write(data);
+                if (appConfig.config.serial_console.auto_scroll) {
+                    await sleep(100);
+                    terminal.current.scrollToBottom();
+                }
             });
         }
     }, []);

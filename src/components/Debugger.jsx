@@ -89,6 +89,14 @@ export default function Debugger() {
                 Instrument Code
             </button>
 
+            <SetDebugWatch
+                pythonFileNames={pythonFileNames}
+                debugFileNames={debugFileNames}
+                setDebugFileNames={setDebugFileNames}
+                watchExpressions={watchExpressions}
+                setWatchExpressions={setWatchExpressions}
+            />
+            <br />
             <button
                 onClick={async () => {
                     sendCtrlC();
@@ -106,14 +114,6 @@ export default function Debugger() {
             >
                 Restart
             </button>
-            <SetDebugWatch
-                pythonFileNames={pythonFileNames}
-                debugFileNames={debugFileNames}
-                setDebugFileNames={setDebugFileNames}
-                watchExpressions={watchExpressions}
-                setWatchExpressions={setWatchExpressions}
-            />
-            <br />
 
             <button
                 onClick={async () => {

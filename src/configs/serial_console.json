@@ -14,6 +14,11 @@
             "type": "boolean",
             "default": false
         },
+        "auto_scroll": {
+            "title": "Always scroll to the bottom on new content",
+            "type": "boolean",
+            "default": false
+        },
         "show_snippet_editor": {
             "title": "Show code snippet editor",
             "description": "This is better for sending multiple lines of code to Python RELP",

@@ -4,10 +4,10 @@ import Help from "../components/Help";
 import IdeFolderView from "../components/IdeFolderView";
 import IdeEditor from "../components/IdeEditor";
 import Navigation from "../components/Navigation";
-import RawConsole from "../components/RawConsole";
+import SerialConsole from "../components/SerialConsole";
 import DocCam from "../components/DocCam";
 import Backup from "../components/Backup";
-import RawPlotter from "../components/RawPlotter";
+import SerialPlotter from "../components/SerialPlotter";
 import LibManagement from "../components/LibManagement";
 import Debugger from "../components/Debugger";
 
@@ -54,7 +54,7 @@ const Factory = (node) => {
     } else if (component === "serial_raw") {
         return (
             <div className="tab_content" style={fullSize}>
-                <RawConsole />
+                <SerialConsole />
             </div>
         );
     } else if (component === "doc_cam") {
@@ -72,7 +72,7 @@ const Factory = (node) => {
     } else if (component === "plot") {
         return (
             <div className="tab_content" style={fullSize}>
-                <RawPlotter node={node} />
+                <SerialPlotter node={node} />
             </div>
         );
     } else if (component === "lib_management") {

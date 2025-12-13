@@ -3,6 +3,7 @@ import { useContext, useState, useEffect } from "react";
 import AppContext from "../AppContext";
 import SetDebugWatch from "./SetDebugWatch";
 import * as constants from "../constants";
+import DebugCodeView from "./DebugCodeView";
 
 export default function Debugger() {
     const { rootDirHandle, sendCtrlC, sendCtrlD, sendDataToSerialPort, serialOutput } = useContext(AppContext);
@@ -120,6 +121,15 @@ export default function Debugger() {
                 watchExpressions={watchExpressions}
                 setWatchExpressions={setWatchExpressions}
             />
+            <div style={{ height: "500px", width: "100%" }}>
+                {debugHistory && debugHistory.length > 0 && (
+                    <DebugCodeView
+                        rootDirHandle={rootDirHandle}
+                        fileName={debugHistory.at(-1).file}
+                        lineNumber={debugHistory.at(-1).line}
+                    />
+                )}
+            </div>
         </div>
     );
 }

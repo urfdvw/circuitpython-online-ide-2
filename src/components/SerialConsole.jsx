@@ -31,8 +31,6 @@ import XtermConsole from "./XtermConsole";
 // code snippet editor
 import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
 import { isPythonIncomplete } from "../utilFunctions/serialHelpers";
-// raw log
-import NewWindow from "react-new-window";
 
 // Raw Log Window component with auto-scroll on content update
 const RawLogWindow = ({ serialOutput }) => {
@@ -218,7 +216,7 @@ const RawSerialWrite = ({
     );
 };
 
-const RawConsole = () => {
+const SerialConsole = () => {
     const {
         serialOutput,
         serialReady,
@@ -236,7 +234,6 @@ const RawConsole = () => {
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
     const [clearTrigger, setClearTrigger] = useState(0);
-    const [popped, setPopped] = useState(false);
 
     const rawLogRef = useRef(null);
 
@@ -281,7 +278,6 @@ const RawConsole = () => {
                 {
                     text: "Raw Log",
                     handler: () => {
-                        setPopped(true);
                     },
                 },
                 {
@@ -372,17 +368,6 @@ const RawConsole = () => {
                     </Box>
                 ) : null}
             </Box>
-
-            {popped && (
-                <NewWindow
-                    title={"Installation Log"}
-                    onUnload={() => {
-                        setPopped(false);
-                    }}
-                >
-                    <RawLogWindow serialOutput={serialOutput} />
-                </NewWindow>
-            )}
         </TabTemplate>
     ) : (
         <Button
@@ -395,4 +380,4 @@ const RawConsole = () => {
     );
 };
 
-export default RawConsole;
+export default SerialConsole;

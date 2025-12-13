@@ -4,7 +4,6 @@ import { useEffect, useRef, useContext } from "react";
 import AppContext from "../AppContext";
 // ACE
 import AceEditor from "react-ace";
-import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 
@@ -32,7 +31,6 @@ export default function RawConsoleLog() {
         <AceEditor
             ref={rawLogRef}
             value={serialOutput}
-            theme="plain_text"
             width="100%"
             height="100%"
             wrapEnabled={true}

@@ -4,6 +4,7 @@ import AppContext from "../AppContext";
 import SetDebugWatch from "./SetDebugWatch";
 import * as constants from "../constants";
 import DebugCodeView from "./DebugCodeView";
+import DebugWatchDisplay from "./DebugWatchDisplay";
 
 export default function Debugger() {
     const { rootDirHandle, sendCtrlC, sendCtrlD, sendDataToSerialPort, serialOutput } = useContext(AppContext);
@@ -137,13 +138,17 @@ export default function Debugger() {
             >
                 breakpoint
             </button>
+            {historyIndex != debugHistory.length - 1 && <span>Time traveling</span>}
             <div style={{ height: "500px", width: "100%" }}>
                 {debugHistory && debugHistory.length > 0 && (
-                    <DebugCodeView
-                        rootDirHandle={rootDirHandle}
-                        fileName={debugHistory.at(historyIndex).file}
-                        lineNumber={debugHistory.at(historyIndex).line}
-                    />
+                    <>
+                        <DebugWatchDisplay variables={debugHistory.at(historyIndex).watch} />
+                        <DebugCodeView
+                            rootDirHandle={rootDirHandle}
+                            fileName={debugHistory.at(historyIndex).file}
+                            lineNumber={debugHistory.at(historyIndex).line}
+                        />
+                    </>
                 )}
             </div>
         </div>

@@ -10,6 +10,7 @@ import Backup from "../components/Backup";
 import SerialPlotter from "../components/SerialPlotter";
 import LibManagement from "../components/LibManagement";
 import Debugger from "../components/Debugger";
+import RawConsoleLog from "../components/RawConsoleLog";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -51,10 +52,16 @@ const Factory = (node) => {
                 <Navigation />
             </div>
         );
-    } else if (component === "serial_raw") {
+    } else if (component === "serial_console") {
         return (
             <div className="tab_content" style={fullSize}>
                 <SerialConsole />
+            </div>
+        );
+    } else if (component === "serial_raw_log") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <RawConsoleLog />
             </div>
         );
     } else if (component === "doc_cam") {

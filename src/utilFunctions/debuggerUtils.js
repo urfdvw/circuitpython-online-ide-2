@@ -433,5 +433,23 @@ function sleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Converts a number of bytes to a human-readable string.
+ * @param {number} bytes - The number of bytes.
+ * @param {number} decimals - How many decimal places to show (default 2).
+ * @return {string} - The formatted string (e.g., "1.5 MB").
+ */
+function formatBytes(bytes, decimals = 2) {
+    if (!+bytes) return "0 B";
+
+    const k = 1024;
+    const dm = decimals < 0 ? 0 : decimals;
+    const sizes = ["B", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"];
+
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+
+    return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
+}
+
 // Exporting functions if used as a module
-export { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep };
+export { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep, formatBytes };

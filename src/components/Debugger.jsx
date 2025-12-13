@@ -1,4 +1,10 @@
-import { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep } from "../utilFunctions/debuggerUtils";
+import {
+    cleanupDebugFiles,
+    getAllPythonFiles,
+    instrumentCode,
+    sleep,
+    formatBytes,
+} from "../utilFunctions/debuggerUtils";
 import { useContext, useState, useEffect } from "react";
 import AppContext from "../AppContext";
 import SetDebugWatch from "./SetDebugWatch";
@@ -138,11 +144,14 @@ export default function Debugger() {
             >
                 breakpoint
             </button>
-            {historyIndex != debugHistory.length - 1 && <span>Time traveling</span>}
             <div style={{ height: "500px", width: "100%" }}>
                 {debugHistory && debugHistory.length > 0 && (
                     <>
+                        {historyIndex != debugHistory.length - 1 && <span>Time traveling</span>}
                         <DebugWatchDisplay variables={debugHistory.at(historyIndex).watch} />
+                        file: {debugHistory.at(historyIndex).file}; free memory:{" "}
+                        {formatBytes(debugHistory.at(historyIndex).mem)}; time since last step:{" "}
+                        {debugHistory.at(historyIndex).time} ms
                         <DebugCodeView
                             rootDirHandle={rootDirHandle}
                             fileName={debugHistory.at(historyIndex).file}

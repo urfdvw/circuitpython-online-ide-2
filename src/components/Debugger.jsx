@@ -17,6 +17,7 @@ export default function Debugger() {
     const [watchExpressions, setWatchExpressions] = useState({});
 
     const [debugHistory, setDebugHistory] = useState([]);
+    const [historyIndex, setHistoryIndex] = useState(0);
 
     useEffect(() => {
         if (!serialOutput.endsWith(constants.DEBUG_OUT_END)) {
@@ -34,6 +35,7 @@ export default function Debugger() {
         });
         console.log("Parsed Debug Lines:", debugLinesObjects);
         setDebugHistory(debugLinesObjects);
+        setHistoryIndex(debugLinesObjects.length - 1);
     }, [serialOutput]);
 
     return (
@@ -108,10 +110,24 @@ export default function Debugger() {
 
             <button
                 onClick={async () => {
-                    sendDataToSerialPort("[S]" + constants.LINE_END);
+                    if (historyIndex > 0) {
+                        setHistoryIndex((prev) => prev - 1);
+                    }
                 }}
             >
-                Step
+                {"<< Step"}
+            </button>
+
+            <button
+                onClick={async () => {
+                    if (historyIndex == debugHistory.length - 1) {
+                        sendDataToSerialPort("[S]" + constants.LINE_END);
+                    } else {
+                        setHistoryIndex((prev) => prev + 1);
+                    }
+                }}
+            >
+                {"Step >>"}
             </button>
 
             <button
@@ -125,8 +141,8 @@ export default function Debugger() {
                 {debugHistory && debugHistory.length > 0 && (
                     <DebugCodeView
                         rootDirHandle={rootDirHandle}
-                        fileName={debugHistory.at(-1).file}
-                        lineNumber={debugHistory.at(-1).line}
+                        fileName={debugHistory.at(historyIndex).file}
+                        lineNumber={debugHistory.at(historyIndex).line}
                     />
                 )}
             </div>

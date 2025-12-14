@@ -64,7 +64,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         Python = await Language.load(globalWasmUrl);
     } else {
         // Try to detect a wasm file served from the app public folder
-        const defaultPath = "/tree-sitter-python.wasm";
+        const defaultPath = "./tree-sitter-python.wasm";
         try {
             const head = await fetch(defaultPath, { method: "HEAD" });
             if (head.ok) {

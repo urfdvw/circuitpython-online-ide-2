@@ -15,6 +15,7 @@ import version_history from "./Version history.md";
 import troubleshooting from "./Troubleshooting.md";
 import related_projects from "./Related projects.md";
 import lib_management from "./Lib Management.md";
+import debugger_help from "./Debugger.md";
 
 const docs = [
     {
@@ -58,14 +59,19 @@ const docs = [
         body: lib_management,
     },
     {
-        name: "backup",
-        title: "Backup",
-        body: backup,
+        name: "debugger",
+        title: "Debugger",
+        body: debugger_help,
     },
     {
         name: "camera",
         title: "Camera",
         body: camera,
+    },
+    {
+        name: "backup",
+        title: "Backup",
+        body: backup,
     },
     {
         name: "use_without_internet",

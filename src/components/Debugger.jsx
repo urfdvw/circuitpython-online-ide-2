@@ -13,9 +13,11 @@ import DebugCodeView from "./DebugCodeView";
 import DebugWatchDisplay from "./DebugWatchDisplay";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { Button, Backdrop, CircularProgress, Box, Typography } from "@mui/material";
+import { selectTabById } from "../layout/layoutUtils";
 
 export default function Debugger() {
-    const { rootDirHandle, sendCtrlC, sendCtrlD, sendDataToSerialPort, serialOutput } = useContext(AppContext);
+    const { rootDirHandle, sendCtrlC, sendCtrlD, sendDataToSerialPort, serialOutput, flexModel, helpTabSelection } =
+        useContext(AppContext);
 
     const [pythonFileNames, setPythonFileNames] = useState([]);
     const [debugFileNames, setDebugFileNames] = useState([]);
@@ -86,7 +88,12 @@ export default function Debugger() {
 
     const menuStructure =
         pageIndex === 0
-            ? []
+            ? [
+                  {
+                      text: "Start",
+                      handler: handleStartConfigPage,
+                  },
+              ]
             : pageIndex === 1
             ? [
                   {
@@ -114,7 +121,7 @@ export default function Debugger() {
                       },
                   },
                   {
-                      text: "Debugger",
+                      text: "Config",
                       handler: handleStartConfigPage,
                   },
               ];
@@ -132,7 +139,7 @@ export default function Debugger() {
                 handler: () => {
                     console.log("clicked on menu item `Help`");
                     selectTabById(flexModel, "help_tab");
-                    helpTabSelection.setTabName("camera");
+                    helpTabSelection.setTabName("debugger");
                 },
             },
         ].filter(Boolean),
@@ -140,9 +147,36 @@ export default function Debugger() {
 
     function infoPage() {
         return (
-            <>
-                <Button onClick={handleStartConfigPage}>Start</Button>
-            </>
+            <Box sx={{ p: "20px" }}>
+                <Typography component="p" variant="h5" paragraph>
+                    Debugger
+                </Typography>
+
+                <Button variant="contained" size="large" onClick={handleStartConfigPage}>
+                    Start
+                </Button>
+                <Typography component="p" paragraph>
+                    Please connect to CIRCUITPY drive and Serial Console before starting the debugger. It is suggested
+                    to start a fresh REPL session before starting the debugger.
+                </Typography>
+                <Typography component="p" paragraph>
+                    To start the debugger, click the "Start" button above.
+                </Typography>
+                <Typography component="p" paragraph>
+                    To set a breakpoint, add a inline comment <code># breakpoint</code> to the desired line in your
+                    code, such as:
+                </Typography>
+                <Typography component="pre" sx={{ backgroundColor: "#f5f5f5", p: "10px" }}>
+                    {"def my_function():\n    x = 10  # breakpoint\n    return x"}
+                </Typography>
+
+                <Typography component="p" paragraph>
+                    Note that the debugger will consume additional memory on your device. If you encounter memory
+                    issues, consider reducing the number of files being debugged or simplifying your watch expressions.
+                    Devices with limited memory resource, such as M0 (SAMD21), may not be able to run the debugger with
+                    larger code.
+                </Typography>
+            </Box>
         );
     }
 
@@ -196,10 +230,15 @@ export default function Debugger() {
                             </Button>
                         )}
                     </Box>
+
+                    <Box sx={{ width: "100%", maxHeight: "300px", overflow: "auto" }}>
+                        {debugHistory && debugHistory.length > 0 && (
+                            <DebugWatchDisplay variables={debugHistory.at(historyIndex).watch} />
+                        )}
+                    </Box>
                     <Box sx={{ width: "100%" }}>
                         {debugHistory && debugHistory.length > 0 && (
                             <>
-                                <DebugWatchDisplay variables={debugHistory.at(historyIndex).watch} />
                                 <Typography component="p">
                                     free memory: <b>{formatBytes(debugHistory.at(historyIndex).mem)}</b>; time since
                                     last pause: <b>{debugHistory.at(historyIndex).time} ms</b>

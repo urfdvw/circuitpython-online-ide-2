@@ -88,6 +88,13 @@ export default function AppMenu() {
                     },
                 },
                 {
+                    text: "Debugger",
+                    handler: () => {
+                        console.log("clicked on menu item `Debugger`");
+                        openTab(flexModel, "Debugger", "debugger");
+                    },
+                },
+                {
                     text: "Camera",
                     handler: () => {
                         console.log("clicked on menu item `Camera`");

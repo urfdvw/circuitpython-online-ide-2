@@ -231,7 +231,7 @@ export default function Debugger() {
                         )}
                     </Box>
 
-                    <Box sx={{ width: "100%", maxHeight: "300px", overflow: "auto" }}>
+                    <Box sx={{ width: "100%", maxHeight: "40%", overflow: "auto" }}>
                         {debugHistory && debugHistory.length > 0 && (
                             <DebugWatchDisplay variables={debugHistory.at(historyIndex).watch} />
                         )}

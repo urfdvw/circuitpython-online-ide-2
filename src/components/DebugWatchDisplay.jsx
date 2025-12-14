@@ -5,6 +5,7 @@ import TableCell from "@mui/material/TableCell";
 import TableContainer from "@mui/material/TableContainer";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
+import Tooltip from "@mui/material/Tooltip";
 
 /**
  * DebugWatchDisplay
@@ -38,14 +39,47 @@ const DebugWatchDisplay = ({ variables }) => {
                                 sx={{
                                     fontFamily: "monospace",
                                     width: "1%", // Forces column to be as small as possible
-                                    whiteSpace: "nowrap", // Prevents wrapping
+                                    maxWidth: "100px", // Max width for key column
                                     fontWeight: "bold",
                                     color: "primary.main",
                                     verticalAlign: "top", // Aligns to top if value is multi-line
                                     pr: 3, // Right padding for visual separation
+                                    whiteSpace: "nowrap",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    p: 0, // Remove padding to let tooltip cover cell
                                 }}
                             >
-                                {key}
+                                <Tooltip 
+                                    title={key}
+                                    slotProps={{
+                                        popper: {
+                                            modifiers: [
+                                                {
+                                                    name: "offset",
+                                                    options: {
+                                                        offset: [0, 0],
+                                                    },
+                                                },
+                                            ],
+                                        },
+                                    }}
+                                    sx={{
+                                        display: "block",
+                                        width: "100%",
+                                        height: "100%",
+                                    }}
+                                >
+                                    <span style={{
+                                        display: "block",
+                                        width: "100%",
+                                        height: "100%",
+                                        padding: "inherit",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                    }}>{key}</span>
+                                </Tooltip>
                             </TableCell>
 
                             {/* Right Column: Value (Expands to rest of width) */}

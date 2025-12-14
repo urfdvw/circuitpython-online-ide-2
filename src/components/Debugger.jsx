@@ -16,8 +16,17 @@ import { Button, Backdrop, CircularProgress, Box, Typography } from "@mui/materi
 import { selectTabById } from "../layout/layoutUtils";
 
 export default function Debugger() {
-    const { rootDirHandle, sendCtrlC, sendCtrlD, sendDataToSerialPort, serialOutput, flexModel, helpTabSelection } =
-        useContext(AppContext);
+    const {
+        rootDirHandle,
+        rootFolderDirectoryReady,
+        serialReady,
+        sendCtrlC,
+        sendCtrlD,
+        sendDataToSerialPort,
+        serialOutput,
+        flexModel,
+        helpTabSelection,
+    } = useContext(AppContext);
 
     const [pythonFileNames, setPythonFileNames] = useState([]);
     const [debugFileNames, setDebugFileNames] = useState([]);
@@ -44,7 +53,7 @@ export default function Debugger() {
         const debugLinesObjects = debugLines.map((line) => {
             return JSON.parse(line);
         });
-        console.log("Parsed Debug Lines:", debugLinesObjects);
+        // console.log("Parsed Debug Lines:", debugLinesObjects);
         setDebugHistory(debugLinesObjects);
         setHistoryIndex(debugLinesObjects.length - 1);
     }, [serialOutput]);
@@ -52,9 +61,13 @@ export default function Debugger() {
     const started = debugHistory.length > 0;
     const viewingLatest = started ? historyIndex === debugHistory.length - 1 : true;
 
-    console.log(started, viewingLatest);
+    // console.log(started, viewingLatest);
 
     async function handleStartConfigPage() {
+        if (!rootFolderDirectoryReady) {
+            alert("Please open CIRCUITPY drive first.");
+            return;
+        }
         // clean up states from previous debug session
         sendCtrlC();
         setDebugHistory([]);
@@ -68,6 +81,15 @@ export default function Debugger() {
     }
 
     async function handleStartDebuggerPage() {
+        if (!rootFolderDirectoryReady) {
+            alert("Please open CIRCUITPY drive first.");
+            return;
+        }
+        if (debugFileNames.length === 0) {
+            alert("Please select at least one file to debug.");
+            return;
+        }
+
         setLoadingInfo("Instrumenting code for debugging...");
 
         const filteredWatchExpressions = watchExpressions;
@@ -105,6 +127,14 @@ export default function Debugger() {
                   {
                       text: firstStart ? "Start" : "Restart",
                       handler: async () => {
+                          if (!serialReady) {
+                              alert("Please connect to Serial Console first.");
+                              return;
+                          }
+                          if (!rootFolderDirectoryReady) {
+                              alert("Please open CIRCUITPY drive first.");
+                              return;
+                          }
                           sendCtrlC();
                           await sleep(100);
                           sendCtrlC();
@@ -170,11 +200,18 @@ export default function Debugger() {
                     {"def my_function():\n    x = 10  # breakpoint\n    return x"}
                 </Typography>
 
+                <Typography component="p" variant="h6" paragraph>
+                    Limitations
+                </Typography>
+
                 <Typography component="p" paragraph>
-                    Note that the debugger will consume additional memory on your device. If you encounter memory
-                    issues, consider reducing the number of files being debugged or simplifying your watch expressions.
-                    Devices with limited memory resource, such as M0 (SAMD21), may not be able to run the debugger with
-                    larger code.
+                    Currently, only root level Python files (files directly under CIRCUITPY drive) are supported.
+                </Typography>
+
+                <Typography component="p" paragraph>
+                    The debugger will consume additional memory on your device. If you encounter memory issues, consider
+                    reducing the number of files being debugged or simplifying your watch expressions. Devices with
+                    limited memory resource, such as SAMD21(M0), may not be able to run the debugger with larger code.
                 </Typography>
             </Box>
         );

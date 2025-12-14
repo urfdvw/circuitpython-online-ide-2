@@ -26,6 +26,7 @@ export default function Debugger() {
 
     const [pageIndex, setPageIndex] = useState(0);
     const [loadingInfo, setLoadingInfo] = useState("");
+    const [firstStart, setFirstStart] = useState(true);
 
     useEffect(() => {
         if (!serialOutput.endsWith(constants.DEBUG_OUT_END)) {
@@ -46,7 +47,18 @@ export default function Debugger() {
         setHistoryIndex(debugLinesObjects.length - 1);
     }, [serialOutput]);
 
+    const started = debugHistory.length > 0;
+    const viewingLatest = started ? historyIndex === debugHistory.length - 1 : true;
+
+    console.log(started, viewingLatest);
+
     async function handleStartConfigPage() {
+        // clean up states from previous debug session
+        sendCtrlC();
+        setDebugHistory([]);
+        setHistoryIndex(0);
+        setFirstStart(true);
+
         const pythonFiles = await getAllPythonFiles(rootDirHandle);
         setPythonFileNames(pythonFiles);
         console.log("Python Files:", pythonFiles);
@@ -67,7 +79,64 @@ export default function Debugger() {
         setPageIndex(2);
     }
 
-    const menuStructure = [];
+    var title = pageIndex === 0 ? "Information" : pageIndex === 1 ? "Configuration" : "Debugger";
+    if (!viewingLatest) {
+        title += " (Rewound)";
+    }
+
+    const menuStructure =
+        pageIndex === 0
+            ? []
+            : pageIndex === 1
+            ? [
+                  {
+                      text: "Run Debugger",
+                      handler: handleStartDebuggerPage,
+                  },
+              ]
+            : [
+                  {
+                      text: firstStart ? "Start" : "Restart",
+                      handler: async () => {
+                          sendCtrlC();
+                          await sleep(100);
+                          sendCtrlC();
+                          await sleep(500);
+                          sendCtrlD();
+                          await sleep(500);
+                          sendCtrlC();
+                          await sleep(100);
+                          sendCtrlC();
+                          await sleep(500);
+                          sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);
+
+                          setFirstStart(false);
+                      },
+                  },
+                  {
+                      text: "Debugger",
+                      handler: handleStartConfigPage,
+                  },
+              ];
+    menuStructure.push({
+        label: "≡",
+        options: [
+            pageIndex !== 2 && {
+                text: "clean up debug files",
+                handler: async () => {
+                    await cleanupDebugFiles(rootDirHandle);
+                },
+            },
+            {
+                text: "Help",
+                handler: () => {
+                    console.log("clicked on menu item `Help`");
+                    selectTabById(flexModel, "help_tab");
+                    helpTabSelection.setTabName("camera");
+                },
+            },
+        ].filter(Boolean),
+    });
 
     function infoPage() {
         return (
@@ -87,7 +156,6 @@ export default function Debugger() {
                     watchExpressions={watchExpressions}
                     setWatchExpressions={setWatchExpressions}
                 />
-                <Button onClick={handleStartDebuggerPage}>Start</Button>
             </>
         );
     }
@@ -97,25 +165,6 @@ export default function Debugger() {
             <>
                 <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
                     <Box sx={{ width: "100%", borderBottom: "1px solid grey" }}>
-                        <Button onClick={handleStartConfigPage}>Config</Button>
-                        <Button
-                            onClick={async () => {
-                                sendCtrlC();
-                                await sleep(100);
-                                sendCtrlC();
-                                await sleep(500);
-                                sendCtrlD();
-                                await sleep(500);
-                                sendCtrlC();
-                                await sleep(100);
-                                sendCtrlC();
-                                await sleep(500);
-                                sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);
-                            }}
-                        >
-                            Restart
-                        </Button>
-
                         <Button
                             onClick={async () => {
                                 if (historyIndex > 0) {
@@ -123,7 +172,7 @@ export default function Debugger() {
                                 }
                             }}
                         >
-                            {"<< Step"}
+                            {"Rewind"}
                         </Button>
 
                         <Button
@@ -135,25 +184,29 @@ export default function Debugger() {
                                 }
                             }}
                         >
-                            {"Step >>"}
+                            {viewingLatest ? "Step" : "Forward"}
                         </Button>
-
-                        <Button
-                            onClick={async () => {
-                                sendDataToSerialPort("[BP]" + constants.LINE_END);
-                            }}
-                        >
-                            breakpoint
-                        </Button>
+                        {viewingLatest && (
+                            <Button
+                                onClick={async () => {
+                                    sendDataToSerialPort("[BP]" + constants.LINE_END);
+                                }}
+                            >
+                                breakpoint
+                            </Button>
+                        )}
                     </Box>
                     <Box sx={{ width: "100%" }}>
                         {debugHistory && debugHistory.length > 0 && (
                             <>
-                                {historyIndex != debugHistory.length - 1 && <span>Time traveling</span>}
                                 <DebugWatchDisplay variables={debugHistory.at(historyIndex).watch} />
-                                file: {debugHistory.at(historyIndex).file}; free memory:{" "}
-                                {formatBytes(debugHistory.at(historyIndex).mem)}; time since last step:{" "}
-                                {debugHistory.at(historyIndex).time} ms
+                                <Typography component="p">
+                                    free memory: <b>{formatBytes(debugHistory.at(historyIndex).mem)}</b>; time since
+                                    last pause: <b>{debugHistory.at(historyIndex).time} ms</b>
+                                </Typography>
+                                <Typography component="p">
+                                    file: <b>{debugHistory.at(historyIndex).file}</b>;
+                                </Typography>
                             </>
                         )}
                     </Box>
@@ -172,7 +225,7 @@ export default function Debugger() {
     }
 
     return (
-        <TabTemplate title="Debugger" menuStructure={menuStructure}>
+        <TabTemplate title={title} menuStructure={menuStructure}>
             <Backdrop sx={{ color: "#fff", zIndex: (theme) => theme.zIndex.drawer + 1 }} open={loadingInfo.length > 0}>
                 <Box sx={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                     <CircularProgress color="inherit" />

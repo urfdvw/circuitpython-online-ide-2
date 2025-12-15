@@ -110,11 +110,11 @@ const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
           left: 2px; 
           
           /* Vertically centered */
-          top: 50%;
+          top: 9px;
           transform: translateY(-50%);
           
           color: #3498db;
-          font-size: 10px;
+          font-size: 18px;
           z-index: 10;
         }
       `}</style>

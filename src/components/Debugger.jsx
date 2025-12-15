@@ -223,8 +223,12 @@ export default function Debugger() {
 
                 <Typography component="p" paragraph>
                     The debugger will consume additional memory on your device. If you encounter memory issues, consider
-                    reducing the number of files being debugged or simplifying your watch expressions. Devices with
-                    limited memory resource, such as SAMD21(M0), may not be able to run the debugger with larger code.
+                    reducing the number of files being debugged or simplifying your watch expressions.
+                </Typography>
+
+                <Typography component="p" paragraph>
+                    The debugger doesn't support SAMD21(M0) chips due to the lack of json module in CircuitPython for
+                    these chips. This chip is also very memory constrained and not recommended in general.
                 </Typography>
             </Box>
         );

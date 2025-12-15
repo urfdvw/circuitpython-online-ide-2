@@ -1,11 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import AceEditor from "react-ace";
 
-import "ace-builds/src-noconflict/mode-javascript";
+import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/theme-tomorrow";
 import "ace-builds/src-noconflict/ext-language_tools";
 
+import AppContext from "../AppContext";
+
 const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
+    const { appConfig, fileLookUp, helpTabSelection, configTabSelection, flexModel, sendCtrlC, sendCtrlD, sendCode } =
+        useContext(AppContext);
+
+    const config = appConfig.config;
     const [content, setContent] = useState("");
     const [error, setError] = useState(false);
     const [loading, setLoading] = useState(true);
@@ -150,14 +156,14 @@ const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
 
             <AceEditor
                 ref={editorRef}
-                mode="javascript"
+                mode="python"
                 theme="tomorrow"
                 name="debug_editor"
                 width="100%"
                 height="100%"
                 value={content}
                 readOnly={true}
-                fontSize={14}
+                fontSize={config.editor.font + "pt"}
                 showPrintMargin={false}
                 showGutter={true}
                 highlightActiveLine={true}

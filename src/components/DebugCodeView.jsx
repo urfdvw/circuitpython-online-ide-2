@@ -58,14 +58,26 @@ const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
                 const editor = editorRef.current.editor;
                 const session = editor.getSession();
 
-                // 1. Clear old breakpoints
+                // 1. Clear old breakpoints and classes
                 session.clearBreakpoints();
+                const lines = content.split("\n");
+                lines.forEach((line, idx) => {
+                    session.removeGutterDecoration(idx, "breakpoint-comment");
+                });
 
-                // 2. Set new breakpoint (Ace uses 0-indexed rows)
+                // 2. Find and highlight rows with breakpoint comments
+                const breakpointRegex = /#\s*break\s*point/i;
+                lines.forEach((line, idx) => {
+                    if (breakpointRegex.test(line)) {
+                        session.addGutterDecoration(idx, "breakpoint-comment");
+                    }
+                });
+
+                // 3. Set current line breakpoint (Ace uses 0-indexed rows)
                 const row = lineNumber - 1;
                 session.setBreakpoint(row, "debug-red-dot");
 
-                // 3. Scroll and Focus
+                // 4. Scroll and Focus
                 editor.gotoLine(lineNumber, 0, true);
                 editor.scrollToLine(lineNumber, true, true, function () {});
             }, 50); // 50ms delay is usually sufficient to bypass the race condition
@@ -116,6 +128,23 @@ const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
           color: #3498db;
           font-size: 18px;
           z-index: 10;
+        }
+
+        /* Highlight rows with breakpoint comments in red */
+        // .ace_gutter-cell.breakpoint-comment {
+        //   background-color: rgba(231, 76, 60, 0.3);
+        // }
+
+        .ace_gutter-cell.breakpoint-comment::after {
+          content: "●";
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          color: #ff0000;
+        //   background-color: rgba(231, 76, 60, 0.2);
+          pointer-events: none;
         }
       `}</style>
 

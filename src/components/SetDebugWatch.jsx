@@ -165,9 +165,18 @@ const SetDebugWatch = ({
     return (
         <Box sx={{ width: "calc(100% - 2px - 10px)", margin: "5px" }}>
             {/* --- Debug Targets --- */}
-            <Typography variant="h6" gutterBottom>
-                Debug Targets
-            </Typography>
+            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
+                <Typography variant="h6" gutterBottom sx={{ m: 0 }}>
+                    Debug Targets
+                </Typography>
+                <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setDebugFileNames([...pythonFileNames])}
+                >
+                    Select All
+                </Button>
+            </Box>
             <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
                 <FormGroup>
                     {pythonFileNames.map((fileName) => (

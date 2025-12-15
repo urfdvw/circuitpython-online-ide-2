@@ -101,22 +101,20 @@ const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
           position: relative;
         }
         
-        /* The Red Dot */
+        /* The Blue Right Arrow */
         .ace_gutter-cell.debug-red-dot::before {
-          content: "";
+          content: "▶";
           position: absolute;
           
-          /* Position: 8px from the left edge of the gutter */
-          left: 5px; 
+          /* Position: 2px from the left edge of the gutter */
+          left: 2px; 
           
           /* Vertically centered */
           top: 50%;
           transform: translateY(-50%);
           
-          width: 8px;
-          height: 8px;
-          background-color: #e74c3c;
-          border-radius: 50%;
+          color: #3498db;
+          font-size: 10px;
           z-index: 10;
         }
       `}</style>

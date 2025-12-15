@@ -426,6 +426,7 @@ def s(d):
         const writer = await handle.createWritable();
         await writer.write(content);
         await writer.close();
+        await sleep(100);
     }
 }
 

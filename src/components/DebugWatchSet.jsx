@@ -25,7 +25,7 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
-const SetDebugWatch = ({
+const DebugWatchSet = ({
     pythonFileNames,
     debugFileNames,
     setDebugFileNames,
@@ -165,21 +165,15 @@ const SetDebugWatch = ({
     return (
         <Box sx={{ width: "calc(100% - 2px - 10px)", margin: "5px" }}>
             {/* --- Debug Targets --- */}
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "center", mb: 2 }}>
-                <Typography variant="h6" gutterBottom sx={{ m: 0 }}>
-                    Debug Targets
-                </Typography>
-                <Button
-                    size="small"
-                    variant="outlined"
-                    onClick={() => setDebugFileNames([...pythonFileNames])}
-                >
+            <Typography variant="h6" gutterBottom sx={{ m: 0 }}>
+                Debug Targets
+            </Typography>
+            <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
+                <Button size="small" variant="outlined" onClick={() => setDebugFileNames([...pythonFileNames])}>
                     Select All
                 </Button>
-            </Box>
-            <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
                 <FormGroup>
-                    {pythonFileNames.map((fileName) => (
+                    {pythonFileNames.sort().map((fileName) => (
                         <FormControlLabel
                             key={fileName}
                             control={
@@ -309,4 +303,4 @@ const SetDebugWatch = ({
     );
 };
 
-export default SetDebugWatch;
+export default DebugWatchSet;

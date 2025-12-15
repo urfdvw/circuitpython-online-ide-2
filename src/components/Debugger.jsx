@@ -7,13 +7,14 @@ import {
 } from "../utilFunctions/debuggerUtils";
 import { useContext, useState, useEffect } from "react";
 import AppContext from "../AppContext";
-import SetDebugWatch from "./SetDebugWatch";
+import DebugWatchSet from "./DebugWatchSet";
 import * as constants from "../constants";
 import DebugCodeView from "./DebugCodeView";
 import DebugWatchDisplay from "./DebugWatchDisplay";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { Button, Backdrop, CircularProgress, Box, Typography } from "@mui/material";
 import { selectTabById } from "../layout/layoutUtils";
+import { grey, deepPurple } from "@mui/material/colors";
 
 export default function Debugger() {
     const {
@@ -114,6 +115,7 @@ export default function Debugger() {
                   {
                       text: "Start",
                       handler: handleStartConfigPage,
+                      color: deepPurple[500],
                   },
               ]
             : pageIndex === 1
@@ -121,11 +123,13 @@ export default function Debugger() {
                   {
                       text: "Run Debugger",
                       handler: handleStartDebuggerPage,
+                      color: deepPurple[500],
                   },
               ]
             : [
                   {
                       text: firstStart ? "Start" : "Restart",
+                      color: deepPurple[500],
                       handler: async () => {
                           if (!serialReady) {
                               alert("Please connect to Serial Console first.");
@@ -149,6 +153,10 @@ export default function Debugger() {
 
                           setFirstStart(false);
                       },
+                  },
+                  {
+                      text: "ReInstrument",
+                      handler: handleStartDebuggerPage,
                   },
                   {
                       text: "Config",
@@ -220,7 +228,7 @@ export default function Debugger() {
     function configPage() {
         return (
             <>
-                <SetDebugWatch
+                <DebugWatchSet
                     pythonFileNames={pythonFileNames}
                     debugFileNames={debugFileNames}
                     setDebugFileNames={setDebugFileNames}

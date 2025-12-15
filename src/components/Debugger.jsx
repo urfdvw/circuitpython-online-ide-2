@@ -64,16 +64,19 @@ export default function Debugger() {
 
     // console.log(started, viewingLatest);
 
-    async function handleStartConfigPage() {
-        if (!rootFolderDirectoryReady) {
-            alert("Please open CIRCUITPY drive first.");
-            return;
-        }
+    async function cleanUpState() {
         // clean up states from previous debug session
         sendCtrlC();
         setDebugHistory([]);
         setHistoryIndex(0);
         setFirstStart(true);
+    }
+
+    async function handleStartConfigPage() {
+        if (!rootFolderDirectoryReady) {
+            alert("Please open CIRCUITPY drive first.");
+            return;
+        }
 
         const pythonFiles = await getAllPythonFiles(rootDirHandle);
         setPythonFileNames(pythonFiles);
@@ -90,6 +93,8 @@ export default function Debugger() {
             alert("Please select at least one file to debug.");
             return;
         }
+
+        await cleanUpState();
 
         setLoadingInfo("Instrumenting code for debugging...");
 

@@ -212,6 +212,13 @@ export default function Debugger() {
                 <Typography component="pre" sx={{ backgroundColor: "#f5f5f5", p: "10px" }}>
                     {"def my_function():\n    x = 10  # breakpoint\n    return x"}
                 </Typography>
+                <Typography component="p" paragraph>
+                    You can also add this comment by clicking on the row number in the code editor. For a multi-line
+                    code row, please add the comment to the first row, such as:
+                </Typography>
+                <Typography component="pre" sx={{ backgroundColor: "#f5f5f5", p: "10px" }}>
+                    {"x = [# breakpoint\n    i * 100\n    for i in range(10)\n    if i % 2 == 0\n]"}
+                </Typography>
 
                 <Typography component="p" variant="h6" paragraph>
                     Limitations

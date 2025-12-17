@@ -12,9 +12,16 @@ import * as constants from "../constants";
 import DebugCodeView from "./DebugCodeView";
 import DebugWatchDisplay from "./DebugWatchDisplay";
 import TabTemplate from "../utilComponents/TabTemplate";
-import { Button, Backdrop, CircularProgress, Box, Typography } from "@mui/material";
+import { Button, Backdrop, CircularProgress, Box, Typography, Tooltip } from "@mui/material";
 import { selectTabById } from "../layout/layoutUtils";
-import { grey, deepPurple } from "@mui/material/colors";
+import { grey, deepPurple, red } from "@mui/material/colors";
+import SkipNextIcon from "@mui/icons-material/SkipNext";
+import EjectIcon from "@mui/icons-material/Eject";
+import IconButton from "@mui/material/IconButton";
+import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+
+const ICON_RED = red[600];
+const ICON_PURPLE = deepPurple[400];
 
 export default function Debugger() {
     const {
@@ -36,7 +43,7 @@ export default function Debugger() {
     const [debugHistory, setDebugHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
-    const [pageIndex, setPageIndex] = useState(0);
+    const [pageIndex, setPageIndex] = useState(2);
     const [loadingInfo, setLoadingInfo] = useState("");
     const [firstStart, setFirstStart] = useState(true);
 
@@ -109,10 +116,8 @@ export default function Debugger() {
         setPageIndex(2);
     }
 
-    var title = pageIndex === 0 ? "Information" : pageIndex === 1 ? "Configuration" : "Debugger";
-    if (!viewingLatest) {
-        title += " (Rewound)";
-    }
+    var title =
+        pageIndex === 0 ? "Information" : pageIndex === 1 ? "Configuration" : viewingLatest ? "Debugger" : "History";
 
     const menuStructure =
         pageIndex === 0
@@ -260,35 +265,82 @@ export default function Debugger() {
             <>
                 <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
                     <Box sx={{ width: "100%", borderBottom: "1px solid grey" }}>
-                        <Button
-                            onClick={async () => {
-                                if (historyIndex > 0) {
-                                    setHistoryIndex((prev) => prev - 1);
-                                }
-                            }}
-                        >
-                            {"Rewind"}
-                        </Button>
+                        {true ? (
+                            <>
+                                <Tooltip title="Rewind">
+                                    <IconButton
+                                        onClick={async () => {
+                                            if (historyIndex > 0) {
+                                                setHistoryIndex((prev) => prev - 1);
+                                            }
+                                        }}
+                                    >
+                                        <PlayArrowIcon sx={{ transform: "rotate(180deg)", color: ICON_RED }} />
+                                    </IconButton>
+                                </Tooltip>
+                                <Tooltip title={viewingLatest ? "Step" : "Forward"}>
+                                    <IconButton
+                                        onClick={async () => {
+                                            if (historyIndex == debugHistory.length - 1) {
+                                                sendDataToSerialPort("[S]" + constants.LINE_END);
+                                            } else {
+                                                setHistoryIndex((prev) => prev + 1);
+                                            }
+                                        }}
+                                    >
+                                        {viewingLatest ? (
+                                            <SkipNextIcon sx={{ color: ICON_PURPLE }} />
+                                        ) : (
+                                            <PlayArrowIcon sx={{ color: ICON_RED }} />
+                                        )}
+                                    </IconButton>
+                                </Tooltip>
 
-                        <Button
-                            onClick={async () => {
-                                if (historyIndex == debugHistory.length - 1) {
-                                    sendDataToSerialPort("[S]" + constants.LINE_END);
-                                } else {
-                                    setHistoryIndex((prev) => prev + 1);
-                                }
-                            }}
-                        >
-                            {viewingLatest ? "Step" : "Forward"}
-                        </Button>
-                        {viewingLatest && (
-                            <Button
-                                onClick={async () => {
-                                    sendDataToSerialPort("[BP]" + constants.LINE_END);
-                                }}
-                            >
-                                breakpoint
-                            </Button>
+                                {viewingLatest && (
+                                    <Tooltip title="Continue">
+                                        <IconButton
+                                            onClick={async () => {
+                                                sendDataToSerialPort("[BP]" + constants.LINE_END);
+                                            }}
+                                        >
+                                            <EjectIcon sx={{ transform: "rotate(90deg)", color: ICON_PURPLE }} />
+                                        </IconButton>
+                                    </Tooltip>
+                                )}
+                            </>
+                        ) : (
+                            <>
+                                <Button
+                                    onClick={async () => {
+                                        if (historyIndex > 0) {
+                                            setHistoryIndex((prev) => prev - 1);
+                                        }
+                                    }}
+                                >
+                                    {"Rewind"}
+                                </Button>
+
+                                <Button
+                                    onClick={async () => {
+                                        if (historyIndex == debugHistory.length - 1) {
+                                            sendDataToSerialPort("[S]" + constants.LINE_END);
+                                        } else {
+                                            setHistoryIndex((prev) => prev + 1);
+                                        }
+                                    }}
+                                >
+                                    {viewingLatest ? "Step" : "Forward"}
+                                </Button>
+                                {viewingLatest && (
+                                    <Button
+                                        onClick={async () => {
+                                            sendDataToSerialPort("[BP]" + constants.LINE_END);
+                                        }}
+                                    >
+                                        Continue
+                                    </Button>
+                                )}
+                            </>
                         )}
                     </Box>
 

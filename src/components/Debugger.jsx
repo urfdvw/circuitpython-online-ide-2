@@ -14,14 +14,20 @@ import DebugWatchDisplay from "./DebugWatchDisplay";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { Button, Backdrop, CircularProgress, Box, Typography, Tooltip } from "@mui/material";
 import { selectTabById } from "../layout/layoutUtils";
-import { grey, deepPurple, red } from "@mui/material/colors";
+import { grey, deepPurple, red, blue } from "@mui/material/colors";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import EjectIcon from "@mui/icons-material/Eject";
 import IconButton from "@mui/material/IconButton";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
+import FastForwardIcon from "@mui/icons-material/FastForward";
+import Divider from "@mui/material/Divider";
+import MemoryIcon from "@mui/icons-material/Memory";
+import TimerIcon from "@mui/icons-material/Timer";
 
 const ICON_RED = red[600];
 const ICON_PURPLE = deepPurple[400];
+const ICON_DISABLED = grey[400];
+const ICON_BLUE = blue[600];
 
 export default function Debugger() {
     const {
@@ -264,82 +270,121 @@ export default function Debugger() {
         return (
             <>
                 <Box sx={{ display: "flex", flexDirection: "column", height: "100%" }}>
-                    <Box sx={{ width: "100%", borderBottom: "1px solid grey" }}>
-                        {true ? (
-                            <>
-                                <Tooltip title="Rewind">
-                                    <IconButton
-                                        onClick={async () => {
-                                            if (historyIndex > 0) {
-                                                setHistoryIndex((prev) => prev - 1);
-                                            }
-                                        }}
-                                    >
-                                        <PlayArrowIcon sx={{ transform: "rotate(180deg)", color: ICON_RED }} />
-                                    </IconButton>
-                                </Tooltip>
-                                <Tooltip title={viewingLatest ? "Step" : "Forward"}>
-                                    <IconButton
-                                        onClick={async () => {
-                                            if (historyIndex == debugHistory.length - 1) {
-                                                sendDataToSerialPort("[S]" + constants.LINE_END);
-                                            } else {
-                                                setHistoryIndex((prev) => prev + 1);
-                                            }
-                                        }}
-                                    >
-                                        {viewingLatest ? (
-                                            <SkipNextIcon sx={{ color: ICON_PURPLE }} />
-                                        ) : (
-                                            <PlayArrowIcon sx={{ color: ICON_RED }} />
-                                        )}
-                                    </IconButton>
-                                </Tooltip>
+                    <Box
+                        sx={{
+                            width: "100%",
+                            borderBottom: "1px solid grey",
+                            display: "flex",
+                            direction: "row",
+                            alignItems: "center",
+                            gap: "0px",
+                            p: "0px",
+                        }}
+                    >
+                        <Tooltip
+                            title={viewingLatest ? "Step" : "Step: Forward to latest to continue debugging."}
+                            disabled={!viewingLatest}
+                        >
+                            <span>
+                                <IconButton
+                                    onClick={async () => {
+                                        sendDataToSerialPort("[S]" + constants.LINE_END);
+                                    }}
+                                >
+                                    <SkipNextIcon
+                                        sx={{ color: viewingLatest ? ICON_PURPLE : ICON_DISABLED }}
+                                        fontSize="small"
+                                    />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
 
-                                {viewingLatest && (
-                                    <Tooltip title="Continue">
-                                        <IconButton
-                                            onClick={async () => {
-                                                sendDataToSerialPort("[BP]" + constants.LINE_END);
-                                            }}
-                                        >
-                                            <EjectIcon sx={{ transform: "rotate(90deg)", color: ICON_PURPLE }} />
+                        <Tooltip
+                            title={viewingLatest ? "Continue" : "Continue: Forward to latest to continue debugging."}
+                            disabled={!viewingLatest}
+                        >
+                            <span>
+                                <IconButton
+                                    onClick={async () => {
+                                        sendDataToSerialPort("[BP]" + constants.LINE_END);
+                                    }}
+                                >
+                                    <EjectIcon
+                                        sx={{
+                                            transform: "rotate(90deg)",
+                                            color: viewingLatest ? ICON_PURPLE : ICON_DISABLED,
+                                        }}
+                                        fontSize="small"
+                                    />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                        <Divider orientation="vertical" flexItem />
+                        <Tooltip title="Rewind">
+                            <IconButton
+                                onClick={async () => {
+                                    if (historyIndex > 0) {
+                                        setHistoryIndex((prev) => prev - 1);
+                                    }
+                                }}
+                            >
+                                <PlayArrowIcon sx={{ transform: "rotate(180deg)", color: ICON_RED }} fontSize="small" />
+                            </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Forward">
+                            <span>
+                                <IconButton
+                                    onClick={async () => {
+                                        setHistoryIndex((prev) => prev + 1);
+                                    }}
+                                    disabled={viewingLatest}
+                                >
+                                    <PlayArrowIcon
+                                        sx={{ color: viewingLatest ? ICON_DISABLED : ICON_RED }}
+                                        fontSize="small"
+                                    />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+                        <Tooltip title="Forward to latest">
+                            <span>
+                                <IconButton
+                                    onClick={async () => {
+                                        setHistoryIndex(debugHistory.length - 1);
+                                    }}
+                                    disabled={viewingLatest}
+                                >
+                                    <FastForwardIcon
+                                        sx={{ color: viewingLatest ? ICON_DISABLED : ICON_RED }}
+                                        fontSize="small"
+                                    />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
+
+                        <Divider orientation="vertical" flexItem />
+                        {debugHistory && debugHistory.length > 0 && (
+                            <>
+                                <Tooltip title="free memory">
+                                    <span>
+                                        <IconButton disabled>
+                                            <MemoryIcon sx={{ color: ICON_BLUE }} fontSize="small" />
+                                            <Typography component="span">
+                                                {formatBytes(debugHistory.at(historyIndex).mem)}
+                                            </Typography>
                                         </IconButton>
-                                    </Tooltip>
-                                )}
-                            </>
-                        ) : (
-                            <>
-                                <Button
-                                    onClick={async () => {
-                                        if (historyIndex > 0) {
-                                            setHistoryIndex((prev) => prev - 1);
-                                        }
-                                    }}
-                                >
-                                    {"Rewind"}
-                                </Button>
-
-                                <Button
-                                    onClick={async () => {
-                                        if (historyIndex == debugHistory.length - 1) {
-                                            sendDataToSerialPort("[S]" + constants.LINE_END);
-                                        } else {
-                                            setHistoryIndex((prev) => prev + 1);
-                                        }
-                                    }}
-                                >
-                                    {viewingLatest ? "Step" : "Forward"}
-                                </Button>
-                                {viewingLatest && (
-                                    <Button
-                                        onClick={async () => {
-                                            sendDataToSerialPort("[BP]" + constants.LINE_END);
-                                        }}
-                                    >
-                                        Continue
-                                    </Button>
-                                )}
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title="time since last pause">
+                                    <span>
+                                        <IconButton disabled>
+                                            <TimerIcon sx={{ color: ICON_BLUE }} fontSize="small" />
+                                            <Typography component="span">
+                                                {debugHistory.at(historyIndex).time} ms
+                                            </Typography>
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
                             </>
                         )}
                     </Box>
@@ -352,10 +397,6 @@ export default function Debugger() {
                     <Box sx={{ width: "100%" }}>
                         {debugHistory && debugHistory.length > 0 && (
                             <>
-                                <Typography component="p">
-                                    free memory: <b>{formatBytes(debugHistory.at(historyIndex).mem)}</b>; time since
-                                    last pause: <b>{debugHistory.at(historyIndex).time} ms</b>
-                                </Typography>
                                 <Typography component="p">
                                     file: <b>{debugHistory.at(historyIndex).file}</b>;
                                 </Typography>

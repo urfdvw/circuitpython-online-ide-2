@@ -397,9 +397,7 @@ export default function Debugger() {
                     <Box sx={{ width: "100%" }}>
                         {debugHistory && debugHistory.length > 0 && (
                             <>
-                                <Typography component="p">
-                                    file: <b>{debugHistory.at(historyIndex).file}</b>;
-                                </Typography>
+                                <Typography component="p">{debugHistory.at(historyIndex).file}</Typography>
                             </>
                         )}
                     </Box>

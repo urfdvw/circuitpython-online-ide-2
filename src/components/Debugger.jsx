@@ -281,15 +281,13 @@ export default function Debugger() {
                             p: "0px",
                         }}
                     >
-                        <Tooltip
-                            title={viewingLatest ? "Step" : "Step: Forward to latest to continue debugging."}
-                            disabled={!viewingLatest}
-                        >
+                        <Tooltip title={viewingLatest ? "Step" : "Step: Forward to latest to continue debugging."}>
                             <span>
                                 <IconButton
                                     onClick={async () => {
                                         sendDataToSerialPort("[S]" + constants.LINE_END);
                                     }}
+                                    disabled={!viewingLatest}
                                 >
                                     <SkipNextIcon
                                         sx={{ color: viewingLatest ? ICON_PURPLE : ICON_DISABLED }}
@@ -301,13 +299,13 @@ export default function Debugger() {
 
                         <Tooltip
                             title={viewingLatest ? "Continue" : "Continue: Forward to latest to continue debugging."}
-                            disabled={!viewingLatest}
                         >
                             <span>
                                 <IconButton
                                     onClick={async () => {
-                                        sendDataToSerialPort("[BP]" + constants.LINE_END);
+                                        sendDataToSerialPort("[C]" + constants.LINE_END);
                                     }}
+                                    disabled={!viewingLatest}
                                 >
                                     <EjectIcon
                                         sx={{

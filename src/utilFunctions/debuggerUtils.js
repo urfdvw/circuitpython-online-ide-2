@@ -119,7 +119,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         });
 
         // Jump/Pause logic
-        block += `${indent}_dbg.bp = input("${constants.DEBUG_OUT_START}" + _dbg.s(ide_debug_data) + "${constants.DEBUG_OUT_END}") == "[BP]"\n`;
+        block += `${indent}_dbg.bp = input("${constants.DEBUG_OUT_START}" + _dbg.s(ide_debug_data) + "${constants.DEBUG_OUT_END}") == "[C]"\n`;
         block += `${indent}_dbg.ts = _dbg.t()\n`;
 
         return block;

@@ -95,32 +95,25 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
 
         // If it is a STEP debug block (not a breakpoint), wrap in condition
         if (!isBreakpoint) {
-            block += `${indent}if not _dbg.bp:\n`;
+            block += `${indent}if not _ds.c:\n`;
             indent += "    "; // Increase indent for body
         }
 
-        // Body start
-        block += `${indent}ide_debug_data = {\n`;
-        block += `${indent}    "time": _dbg.t() - _dbg.ts,\n`;
-        block += `${indent}    "mem": _dbg.m(),\n`;
-        block += `${indent}    "file": "${fileName}",\n`;
-        block += `${indent}    "line": ${lineNum},\n`;
-        block += `${indent}    "watch": {},\n`;
-        block += `${indent}}\n`;
+        // Body head
+        block += `${indent}_ds.sh("${fileName}", ${lineNum})\n`;
 
         // Watch expressions
         allWatches.forEach((expr) => {
             // Escape quotes in the expression key string if necessary
             const safeExprKey = expr.replace(/"/g, '\\"');
             block += `${indent}try:\n`;
-            block += `${indent}    ide_debug_data["watch"]["${safeExprKey}"] = str(${expr})\n`;
+            block += `${indent}    _ds.d["watch"]["${safeExprKey}"] = str(${expr})\n`;
             block += `${indent}except:\n`;
-            block += `${indent}    ide_debug_data["watch"]["${safeExprKey}"] = "\`${safeExprKey}\` cannot be evaluated"\n`;
+            block += `${indent}    _ds.d["watch"]["${safeExprKey}"] = _dbg.ER\n`;
         });
 
-        // Jump/Pause logic
-        block += `${indent}_dbg.bp = input("${constants.DEBUG_OUT_START}" + _dbg.s(ide_debug_data) + "${constants.DEBUG_OUT_END}") == "[C]"\n`;
-        block += `${indent}_dbg.ts = _dbg.t()\n`;
+        // Body tail
+        block += `${indent}_ds.st()\n`;
 
         return block;
     };
@@ -355,6 +348,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
 
         // 7. Add dependencies at beginning
         finalContent += "import ide_debug_state as _dbg\n";
+        finalContent += "_ds = _dbg.DebugStates()\n";
 
         // 8. Add initial states (Specific to code.py or main.py)
         // Logic: If code.py exists, add to it. Else if main.py exists, add to it.
@@ -367,8 +361,6 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         else if (fileName === "main.py" && !hasCodePy) shouldAddInit = true;
 
         if (shouldAddInit) {
-            finalContent += "_dbg.ts = _dbg.t()\n";
-            finalContent += "_dbg.bp = False\n";
             finalContent += "print('==== Start Debugging ====')\n";
         }
 
@@ -389,7 +381,8 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
     // 10. Write to folder
 
     // Write state module
-    const stateModuleContent = `try:
+    const stateModuleContent = `""" Util lib for debugging """ 
+try:
     from time import monotonic as _time_now
     time_unit = 1000
 except ImportError:
@@ -398,20 +391,48 @@ except ImportError:
 import gc
 import json
 
-ts = 0 # time stamp
-bp = False # jump to break point or not
+# constants
+ER = "cannot be evaluated" 
 
-def t():
+# private function
+def _time():
     """ get current time in ms """
-    return int(_time_now() * time_unit)
+    return int(_time_now() * time_unit * 100) / 100
 
-def m():
+def _memory():
     """ get free memory """
+    gc.collect()
     return gc.mem_free()
 
-def s(d):
-    """ convert to json """
-    return json.dumps(d)
+class DebugStates:
+    _instance = None
+    def __new__(cls, *args, **kwargs):
+        # Check if an instance already exists
+        if cls._instance is None:
+            # If not, create the single instance
+            cls._instance = super().__new__(cls)
+        return cls._instance
+    
+    def __init__(self):
+        self.t = _time() # time stamp
+        self.c = False # continue to next break point
+        self.d = {} # data
+
+    def sh(self, fileName, lineNum):
+        """ step head """
+        duration = _time() - self.t
+        self.d = {
+            "time": duration, # time since last pause
+            "mem": _memory(), # free memory
+            "file": fileName, # current file name
+            "line": lineNum, # current line number
+            "watch": {}, # watch expressions
+        }
+
+    def st(self):
+        """ step tail """
+        self.c = input("${constants.DEBUG_OUT_START}" + json.dumps(self.d) + "${constants.DEBUG_OUT_END}") == "[C]"
+        self.t = _time()
 `;
 
     const stateFileHandle = await rootDir.getFileHandle(STATE_FILENAME, { create: true });

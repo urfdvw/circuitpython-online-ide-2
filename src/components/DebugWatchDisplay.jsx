@@ -42,7 +42,7 @@ const DebugWatchDisplay = ({ variables }) => {
                                     maxWidth: "100px", // Max width for key column
                                     fontWeight: "bold",
                                     color: "primary.main",
-                                    verticalAlign: "top", // Aligns to top if value is multi-line
+                                    // verticalAlign: "top", // Aligns to top if value is multi-line
                                     pr: 3, // Right padding for visual separation
                                     whiteSpace: "nowrap",
                                     overflow: "hidden",

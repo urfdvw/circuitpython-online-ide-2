@@ -368,7 +368,7 @@ export default function Debugger() {
                                         <IconButton disabled>
                                             <MemoryIcon sx={{ color: ICON_BLUE }} fontSize="small" />
                                             <Typography component="span">
-                                                {formatBytes(debugHistory.at(historyIndex).mem)}
+                                                {formatBytes(debugHistory.at(historyIndex).m)}
                                             </Typography>
                                         </IconButton>
                                     </span>
@@ -378,7 +378,7 @@ export default function Debugger() {
                                         <IconButton disabled>
                                             <TimerIcon sx={{ color: ICON_BLUE }} fontSize="small" />
                                             <Typography component="span">
-                                                {debugHistory.at(historyIndex).time} ms
+                                                {debugHistory.at(historyIndex).t} ms
                                             </Typography>
                                         </IconButton>
                                     </span>
@@ -389,13 +389,13 @@ export default function Debugger() {
 
                     <Box sx={{ width: "100%", maxHeight: "40%", overflow: "auto" }}>
                         {debugHistory && debugHistory.length > 0 && (
-                            <DebugWatchDisplay variables={debugHistory.at(historyIndex).watch} />
+                            <DebugWatchDisplay variables={debugHistory.at(historyIndex).w} />
                         )}
                     </Box>
                     <Box sx={{ width: "100%" }}>
                         {debugHistory && debugHistory.length > 0 && (
                             <>
-                                <Typography component="p">{debugHistory.at(historyIndex).file}</Typography>
+                                <Typography component="p">{debugHistory.at(historyIndex).f}</Typography>
                             </>
                         )}
                     </Box>
@@ -403,8 +403,8 @@ export default function Debugger() {
                         {debugHistory && debugHistory.length > 0 && (
                             <DebugCodeView
                                 rootDirHandle={rootDirHandle}
-                                fileName={debugHistory.at(historyIndex).file}
-                                lineNumber={debugHistory.at(historyIndex).line}
+                                fileName={debugHistory.at(historyIndex).f}
+                                lineNumber={debugHistory.at(historyIndex).l}
                             />
                         )}
                     </Box>

@@ -107,9 +107,9 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
             // Escape quotes in the expression key string if necessary
             const safeExprKey = expr.replace(/"/g, '\\"');
             block += `${indent}try:\n`;
-            block += `${indent}    _ds.d["watch"]["${safeExprKey}"] = str(${expr})\n`;
+            block += `${indent}    _ds.d["w"]["${safeExprKey}"] = str(${expr})\n`;
             block += `${indent}except:\n`;
-            block += `${indent}    _ds.d["watch"]["${safeExprKey}"] = _dbg.ER\n`;
+            block += `${indent}    _ds.d["w"]["${safeExprKey}"] = _dbg.ER\n`;
         });
 
         // Body tail
@@ -416,17 +416,23 @@ class DebugStates:
     def __init__(self):
         self.t = _time() # time stamp
         self.c = False # continue to next break point
-        self.d = {} # data
+        self.d = {
+            "t": _time(), # time since last pause
+            "m": _memory(), # free memory
+            "f": "", # current file name
+            "l": 1, # current line number
+            "w": {}, # watch expressions
+        } # data
 
     def sh(self, fileName, lineNum):
         """ step head """
         duration = _time() - self.t
         self.d = {
-            "time": duration, # time since last pause
-            "mem": _memory(), # free memory
-            "file": fileName, # current file name
-            "line": lineNum, # current line number
-            "watch": {}, # watch expressions
+            "t": duration, # time since last pause
+            "m": _memory(), # free memory
+            "f": fileName, # current file name
+            "l": lineNum, # current line number
+            "w": {}, # watch expressions
         }
 
     def st(self):

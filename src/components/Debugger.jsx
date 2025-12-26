@@ -117,7 +117,7 @@ export default function Debugger() {
             filteredWatchExpressions[key] = filteredWatchExpressions[key].filter((expr) => expr.trim() !== "");
         }
         console.log("Watch Expressions:", filteredWatchExpressions);
-        await instrumentCode(rootDirHandle, pythonFileNames, debugFileNames, filteredWatchExpressions);
+        await instrumentCode(rootDirHandle, pythonFileNames, debugFileNames, filteredWatchExpressions, conditionalBreakpoints);
 
         setLoadingInfo("");
         setPageIndex(2);

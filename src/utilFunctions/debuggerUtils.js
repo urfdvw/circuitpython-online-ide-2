@@ -48,7 +48,7 @@ async function getAllPythonFiles(rootDir) {
 /**
  * Main Function: Instrument Code
  */
-async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExpressions) {
+async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExpressions, conditionalBreakpoints) {
     // Initialize Tree-sitter, locate wasm via Vite-served URL to ensure correct MIME
     await Parser.init({ locateFile: () => wasmUrl });
     const parser = new Parser();
@@ -88,14 +88,29 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
     const generateDebugBlock = (indent, isBreakpoint, fileName, lineNum, fileWatches) => {
         const globalWatches = watchExpressions[""] || [];
         const localWatches = watchExpressions[fileName] || [];
+
+        const globalCBP = conditionalBreakpoints[""] || [];
+        const localCBP = conditionalBreakpoints[fileName] || [];
+
         // Combine unique watches
         const allWatches = [...new Set([...globalWatches, ...localWatches])];
+        const allCBP = [...new Set([...globalCBP, ...localCBP])];
 
         let block = "";
 
         // If it is a STEP debug block (not a breakpoint), wrap in condition
         if (!isBreakpoint) {
-            block += `${indent}if not _ds.c:\n`;
+            // add conditional breakpoints
+            allCBP.forEach((expr) => {
+                // Escape quotes in the expression key string if necessary
+                const safeExprKey = expr.replace(/"/g, '\\"');
+                block += `${indent}try:\n`;
+                block += `${indent}    _ds.b = _ds.b or (${expr})\n`;
+                block += `${indent}except:\n`;
+                block += `${indent}    pass\n`;
+            });
+            // check if break
+            block += `${indent}if _ds.b:\n`;
             indent += "    "; // Increase indent for body
         }
 
@@ -415,7 +430,7 @@ class DebugStates:
     
     def __init__(self):
         self.t = _time() # time stamp
-        self.c = False # continue to next break point
+        self.b = True # break on the next step
         self.d = {
             "t": _time(), # time since last pause
             "m": _memory(), # free memory
@@ -437,7 +452,7 @@ class DebugStates:
 
     def st(self):
         """ step tail """
-        self.c = input("${constants.DEBUG_OUT_START}" + json.dumps(self.d) + "${constants.DEBUG_OUT_END}") == "[C]"
+        self.b = not input("${constants.DEBUG_OUT_START}" + json.dumps(self.d) + "${constants.DEBUG_OUT_END}") == "[C]"
         self.t = _time()
 `;
 

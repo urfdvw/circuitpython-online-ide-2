@@ -284,7 +284,7 @@ export default function Debugger() {
                             p: "0px",
                         }}
                     >
-                        <Tooltip title={viewingLatest ? "Step" : "Step: Forward to latest to continue debugging."}>
+                        <Tooltip title={viewingLatest ? "Step" : "Step: Forward to latest to continue debugging."} placement="top">
                             <span>
                                 <IconButton
                                     onClick={async () => {
@@ -301,7 +301,7 @@ export default function Debugger() {
                         </Tooltip>
 
                         <Tooltip
-                            title={viewingLatest ? "Continue" : "Continue: Forward to latest to continue debugging."}
+                            title={viewingLatest ? "Continue" : "Continue: Forward to latest to continue debugging."} placement="top"
                         >
                             <span>
                                 <IconButton
@@ -321,7 +321,7 @@ export default function Debugger() {
                             </span>
                         </Tooltip>
                         <Divider orientation="vertical" flexItem />
-                        <Tooltip title="Rewind">
+                        <Tooltip title="Rewind" placement="top">
                             <IconButton
                                 onClick={async () => {
                                     if (historyIndex > 0) {
@@ -332,7 +332,7 @@ export default function Debugger() {
                                 <PlayArrowIcon sx={{ transform: "rotate(180deg)", color: ICON_RED }} fontSize="small" />
                             </IconButton>
                         </Tooltip>
-                        <Tooltip title="Forward">
+                        <Tooltip title="Forward" placement="top">
                             <span>
                                 <IconButton
                                     onClick={async () => {
@@ -347,7 +347,7 @@ export default function Debugger() {
                                 </IconButton>
                             </span>
                         </Tooltip>
-                        <Tooltip title="Forward to latest">
+                        <Tooltip title="Forward to latest" placement="top">
                             <span>
                                 <IconButton
                                     onClick={async () => {
@@ -366,7 +366,7 @@ export default function Debugger() {
                         <Divider orientation="vertical" flexItem />
                         {debugHistory && debugHistory.length > 0 && (
                             <>
-                                <Tooltip title="free memory">
+                                <Tooltip title="free memory" placement="top">
                                     <span>
                                         <IconButton disabled>
                                             <MemoryIcon sx={{ color: ICON_BLUE }} fontSize="small" />
@@ -376,7 +376,7 @@ export default function Debugger() {
                                         </IconButton>
                                     </span>
                                 </Tooltip>
-                                <Tooltip title="time since last pause">
+                                <Tooltip title="time since last pause" placement="top">
                                     <span>
                                         <IconButton disabled>
                                             <TimerIcon sx={{ color: ICON_BLUE }} fontSize="small" />

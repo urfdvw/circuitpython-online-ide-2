@@ -101,14 +101,22 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         // If it is a STEP debug block (not a breakpoint), wrap in condition
         if (!isBreakpoint) {
             // add conditional breakpoints
-            allCBP.forEach((expr) => {
-                // Escape quotes in the expression key string if necessary
-                const safeExprKey = expr.replace(/"/g, '\\"');
+            if (allCBP.length === 1) {
+                const expr = allCBP[0];
                 block += `${indent}try:\n`;
-                block += `${indent}    _ds.b = _ds.b or (${expr})\n`;
+                block += `${indent}    _ds.b = _ds.b or bool(${expr})\n`;
                 block += `${indent}except:\n`;
                 block += `${indent}    pass\n`;
-            });
+            } else if (allCBP.length > 1) {
+                block += `${indent}try:\n`;
+                block += `${indent}    _ds.b = _ds.b or any([${allCBP
+                    .map((expr) => {
+                        return `bool(${expr})`;
+                    })
+                    .join(", ")}])\n`;
+                block += `${indent}except:\n`;
+                block += `${indent}    pass\n`;
+            }
             // check if break
             block += `${indent}if _ds.b:\n`;
             indent += "    "; // Increase indent for body

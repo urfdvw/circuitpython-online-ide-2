@@ -45,6 +45,7 @@ export default function Debugger() {
     const [pythonFileNames, setPythonFileNames] = useState([]);
     const [debugFileNames, setDebugFileNames] = useState([]);
     const [watchExpressions, setWatchExpressions] = useState({});
+    const [conditionalBreakpoints, setConditionalBreakpoints] = useState({});
 
     const [debugHistory, setDebugHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(0);
@@ -261,6 +262,8 @@ export default function Debugger() {
                     setDebugFileNames={setDebugFileNames}
                     watchExpressions={watchExpressions}
                     setWatchExpressions={setWatchExpressions}
+                    conditionalBreakpoints={conditionalBreakpoints} 
+                    setConditionalBreakpoints={setConditionalBreakpoints}
                 />
             </>
         );

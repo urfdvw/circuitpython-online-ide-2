@@ -25,47 +25,9 @@ import DeleteIcon from "@mui/icons-material/Delete";
 import AddIcon from "@mui/icons-material/Add";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 
-const DebugWatchSet = ({
-    pythonFileNames,
-    debugFileNames,
-    setDebugFileNames,
-    watchExpressions,
-    setWatchExpressions,
-}) => {
-    // --- 1. Cleanup Effect ---
-    useEffect(() => {
-        let debugFilesChanged = false;
-        let watchExprChanged = false;
-
-        // A. Clean debugFileNames
-        const validDebugFiles = debugFileNames.filter((fileName) => pythonFileNames.includes(fileName));
-
-        if (validDebugFiles.length !== debugFileNames.length) {
-            debugFilesChanged = true;
-        }
-
-        // B. Clean watchExpressions
-        const newWatchExpressions = { ...watchExpressions };
-        const currentKeys = Object.keys(newWatchExpressions);
-
-        currentKeys.forEach((key) => {
-            if (key !== "" && !validDebugFiles.includes(key)) {
-                delete newWatchExpressions[key];
-                watchExprChanged = true;
-            }
-        });
-
-        if (debugFilesChanged) {
-            setDebugFileNames(validDebugFiles);
-        }
-
-        if (watchExprChanged) {
-            setWatchExpressions(newWatchExpressions);
-        }
-    }, [pythonFileNames, debugFileNames, watchExpressions, setDebugFileNames, setWatchExpressions]);
-
-    // --- 2. Handlers ---
-
+// --- SUB-COMPONENT 1: DebugTargets ---
+// Parameters: pythonFileNames, debugFileNames, setDebugFileNames
+const DebugTargets = ({ pythonFileNames, debugFileNames, setDebugFileNames }) => {
     const handleFileToggle = (fileName) => {
         const currentIndex = debugFileNames.indexOf(fileName);
         const newDebugFiles = [...debugFileNames];
@@ -78,6 +40,64 @@ const DebugWatchSet = ({
         setDebugFileNames(newDebugFiles);
     };
 
+    return (
+        <Box>
+            <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
+                <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setDebugFileNames([...pythonFileNames])}
+                    sx={{ mb: 1 }}
+                >
+                    Select All
+                </Button>
+                <FormGroup>
+                    {[...pythonFileNames].sort().map((fileName) => (
+                        <FormControlLabel
+                            key={fileName}
+                            control={
+                                <Checkbox
+                                    checked={debugFileNames.includes(fileName)}
+                                    onChange={() => handleFileToggle(fileName)}
+                                />
+                            }
+                            label={fileName}
+                        />
+                    ))}
+                    {pythonFileNames.length === 0 && (
+                        <Typography variant="body2" color="text.secondary">
+                            No Python files available.
+                        </Typography>
+                    )}
+                </FormGroup>
+            </Paper>
+        </Box>
+    );
+};
+
+// --- SUB-COMPONENT 2: WatchExpressions ---
+// Parameters: debugFileNames, watchExpressions, setWatchExpressions
+const WatchExpressions = ({ debugFileNames, watchExpressions, setWatchExpressions }) => {
+    // --- Logic Encapsulation: Cleanup Effect ---
+    useEffect(() => {
+        let watchExprChanged = false;
+        const newWatchExpressions = { ...watchExpressions };
+        const currentKeys = Object.keys(newWatchExpressions);
+
+        currentKeys.forEach((key) => {
+            // If a scope is assigned to a file that is no longer being debugged, remove it
+            if (key !== "" && !debugFileNames.includes(key)) {
+                delete newWatchExpressions[key];
+                watchExprChanged = true;
+            }
+        });
+
+        if (watchExprChanged) {
+            setWatchExpressions(newWatchExpressions);
+        }
+    }, [debugFileNames, watchExpressions, setWatchExpressions]);
+
+    // --- Logic Encapsulation: Handlers ---
     const cloneWatchMap = (map) => {
         const newMap = {};
         Object.keys(map).forEach((key) => {
@@ -93,12 +113,10 @@ const DebugWatchSet = ({
         setWatchExpressions(newMap);
     };
 
-    // New: Duplicate Handler
     const handleDuplicateRow = (scope, index) => {
         const newMap = cloneWatchMap(watchExpressions);
         if (newMap[scope]) {
             const expressionToCopy = newMap[scope][index];
-            // Insert copy immediately after the original
             newMap[scope].splice(index + 1, 0, expressionToCopy);
         }
         setWatchExpressions(newMap);
@@ -122,25 +140,17 @@ const DebugWatchSet = ({
 
     const handleScopeChange = (oldScope, index, newScope) => {
         if (oldScope === newScope) return;
-
         const newMap = cloneWatchMap(watchExpressions);
         const expressionToMove = newMap[oldScope][index];
-
-        // Remove from old
         newMap[oldScope].splice(index, 1);
-
-        // Add to new
         if (!newMap[newScope]) newMap[newScope] = [];
         newMap[newScope].push(expressionToMove);
-
         setWatchExpressions(newMap);
     };
 
-    // --- 3. Flatten Data ---
+    // --- Logic Encapsulation: Flatten Data ---
     const flattenedRows = useMemo(() => {
         const rows = [];
-
-        // Sort keys: Files first, then Global ("")
         const fileKeys = Object.keys(watchExpressions)
             .filter((k) => k !== "")
             .sort();
@@ -163,43 +173,7 @@ const DebugWatchSet = ({
     }, [watchExpressions]);
 
     return (
-        <Box sx={{ width: "calc(100% - 2px - 10px)", margin: "5px" }}>
-            {/* --- Debug Targets --- */}
-            <Typography variant="h6" gutterBottom sx={{ m: 0 }}>
-                Debug Targets
-            </Typography>
-            <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
-                <Button size="small" variant="outlined" onClick={() => setDebugFileNames([...pythonFileNames])}>
-                    Select All
-                </Button>
-                <FormGroup>
-                    {pythonFileNames.sort().map((fileName) => (
-                        <FormControlLabel
-                            key={fileName}
-                            control={
-                                <Checkbox
-                                    checked={debugFileNames.includes(fileName)}
-                                    onChange={() => handleFileToggle(fileName)}
-                                />
-                            }
-                            label={fileName}
-                        />
-                    ))}
-                    {pythonFileNames.length === 0 && (
-                        <Typography variant="body2" color="text.secondary">
-                            No Python files available.
-                        </Typography>
-                    )}
-                </FormGroup>
-            </Paper>
-
-            <Divider sx={{ my: 3 }} />
-
-            {/* --- Watch Expressions --- */}
-            <Typography variant="h6" gutterBottom>
-                Watch Expressions
-            </Typography>
-
+        <Box>
             <TableContainer component={Paper} variant="outlined">
                 <Table size="small">
                     <TableHead>
@@ -214,7 +188,6 @@ const DebugWatchSet = ({
                     <TableBody>
                         {flattenedRows.map((row) => (
                             <TableRow key={row.key}>
-                                {/* Scope */}
                                 <TableCell>
                                     <FormControl fullWidth size="small" variant="standard">
                                         <Select
@@ -224,10 +197,7 @@ const DebugWatchSet = ({
                                             }
                                             disableUnderline
                                             displayEmpty
-                                            renderValue={(selected) => {
-                                                if (selected === "") return <em>(global)</em>;
-                                                return selected;
-                                            }}
+                                            renderValue={(selected) => (selected === "" ? <em>(global)</em> : selected)}
                                         >
                                             <MenuItem value="">
                                                 <em>(global)</em>
@@ -243,8 +213,6 @@ const DebugWatchSet = ({
                                         </Select>
                                     </FormControl>
                                 </TableCell>
-
-                                {/* Expression */}
                                 <TableCell>
                                     <TextField
                                         fullWidth
@@ -257,8 +225,6 @@ const DebugWatchSet = ({
                                         InputProps={{ disableUnderline: true }}
                                     />
                                 </TableCell>
-
-                                {/* Actions: Duplicate & Delete */}
                                 <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
                                     <Tooltip title="Duplicate">
                                         <IconButton
@@ -281,24 +247,71 @@ const DebugWatchSet = ({
                                 </TableCell>
                             </TableRow>
                         ))}
-
                         {flattenedRows.length === 0 && (
                             <TableRow>
                                 <TableCell colSpan={3} align="center" sx={{ py: 3, color: "text.secondary" }}>
-                                    No active watches. Click + to add one.
+                                    Click + to add one.
                                 </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
                 </Table>
-
-                {/* Add Button */}
                 <Box sx={{ p: 1, display: "flex", justifyContent: "center", borderTop: 1, borderColor: "divider" }}>
                     <Button startIcon={<AddIcon />} onClick={handleAddRow} variant="text" fullWidth>
-                        Add Watch Expression
+                        Add
                     </Button>
                 </Box>
             </TableContainer>
+        </Box>
+    );
+};
+
+// --- FINAL COMBINED COMPONENT ---
+const DebugWatchSet = ({
+    pythonFileNames,
+    debugFileNames,
+    setDebugFileNames,
+    watchExpressions,
+    setWatchExpressions,
+    conditionalBreakpoints,
+    setConditionalBreakpoints,
+}) => {
+    // --- Cleanup logic for valid Python files remains here as it bridges both domains ---
+    useEffect(() => {
+        const validDebugFiles = debugFileNames.filter((fileName) => pythonFileNames.includes(fileName));
+        if (validDebugFiles.length !== debugFileNames.length) {
+            setDebugFileNames(validDebugFiles);
+        }
+    }, [pythonFileNames, debugFileNames, setDebugFileNames]);
+
+    return (
+        <Box sx={{ width: "calc(100% - 2px - 10px)", margin: "5px" }}>
+            <Typography variant="h6" gutterBottom sx={{ m: 0 }}>
+                Debug Targets
+            </Typography>
+            <DebugTargets
+                pythonFileNames={pythonFileNames}
+                debugFileNames={debugFileNames}
+                setDebugFileNames={setDebugFileNames}
+            />
+
+            <Typography variant="h6" gutterBottom>
+                Watch Expressions
+            </Typography>
+            <WatchExpressions
+                debugFileNames={debugFileNames}
+                watchExpressions={watchExpressions}
+                setWatchExpressions={setWatchExpressions}
+            />
+
+            <Typography variant="h6" gutterBottom>
+                Conditional Breakpoints
+            </Typography>
+            <WatchExpressions
+                debugFileNames={debugFileNames}
+                watchExpressions={conditionalBreakpoints}
+                setWatchExpressions={setConditionalBreakpoints}
+            />
         </Box>
     );
 };

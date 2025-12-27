@@ -302,7 +302,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
                     const parts = lower.split("#");
                     if (parts.length > 1) {
                         const comment = parts[parts.length - 1].trim();
-                        return comment === "breakpoint" || comment === "break point";
+                        return comment === "●";
                     }
                     return false;
                 };

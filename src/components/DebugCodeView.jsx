@@ -72,7 +72,7 @@ const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
                 });
 
                 // 2. Find and highlight rows with breakpoint comments
-                const breakpointRegex = /#\s*break\s*point/i;
+                const breakpointRegex = /#\s*●/;
                 lines.forEach((line, idx) => {
                     if (breakpointRegex.test(line)) {
                         session.addGutterDecoration(idx, "breakpoint-comment");

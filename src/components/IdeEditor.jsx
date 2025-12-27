@@ -94,7 +94,7 @@ export default function IdeEditor({ node }) {
 
     // Function to check if a line has a breakpoint comment
     function hasBreakpointComment(lineText) {
-        const breakpointRegex = /#\s*breakpoint|#\s*break\s+point/i;
+        const breakpointRegex = /#\s*●/;
         return breakpointRegex.test(lineText);
     }
 
@@ -331,7 +331,7 @@ export default function IdeEditor({ node }) {
                     // Check if line already has breakpoint comment
                     if (hasBreakpointComment(line)) {
                         // Remove breakpoint comment
-                        const newLine = line.replace(/#\s*breakpoint|#\s*break\s+point/i, "").trimEnd();
+                        const newLine = line.replace(/#\s*●/, "").trimEnd();
                         const range = new Range(lineNum, 0, lineNum, line.length);
                         session.replace(range, newLine);
                         setText(session.getValue());
@@ -340,7 +340,7 @@ export default function IdeEditor({ node }) {
                         const codeRows = identifyCodeRows(session.getValue());
                         if (codeRows.has(lineNum)) {
                             console.log("Can set breakpoint on a code row.");
-                            const newLine = line + (line.trim() ? " " : "") + "# breakpoint";
+                            const newLine = line + (line.trim() ? " " : "") + "# ●";
                             const range = new Range(lineNum, 0, lineNum, line.length);
                             session.replace(range, newLine);
                             setText(session.getValue());

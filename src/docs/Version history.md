@@ -1,3 +1,12 @@
+## Version 2.3.0
+Released on December 30th, 2025
+
+Significant updates from version 2.2.3 include:
+- Debugger
+    - Debugger tool
+    - Editor change to set breakpoints
+- Serial Console raw log
+
 ## Version 2.2.3
 Released on November 29th, 2025
 

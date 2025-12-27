@@ -168,28 +168,20 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         // Combine unique watches
         const allWatches = [...new Set([...globalWatches, ...localWatches])];
         const allCBP = [...new Set([...globalCBP, ...localCBP])];
+        const allExpressions = [...allWatches, ...allCBP];
 
         let block = "";
 
         // If it is a STEP debug block (not a breakpoint), wrap in condition
         if (!isBreakpoint) {
             // add conditional breakpoints
-            if (allCBP.length === 1) {
-                const expr = allCBP[0];
+            allCBP.forEach((expr) => {
+                // Escape quotes in the expression key string if necessary
                 block += `${indent}try:\n`;
-                block += `${indent}    _ds.b = _ds.b or bool(${expr})\n`;
+                block += `${indent}    _ds.b = _ds.b or (${expr})\n`;
                 block += `${indent}except:\n`;
                 block += `${indent}    pass\n`;
-            } else if (allCBP.length > 1) {
-                block += `${indent}try:\n`;
-                block += `${indent}    _ds.b = _ds.b or any([${allCBP
-                    .map((expr) => {
-                        return `bool(${expr})`;
-                    })
-                    .join(", ")}])\n`;
-                block += `${indent}except:\n`;
-                block += `${indent}    pass\n`;
-            }
+            });
             // check if break
             block += `${indent}if _ds.b:\n`;
             indent += "    "; // Increase indent for body
@@ -199,7 +191,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         block += `${indent}_ds.sh("${fileName}", ${lineNum})\n`;
 
         // Watch expressions
-        allWatches.forEach((expr) => {
+        allExpressions.forEach((expr) => {
             // Escape quotes in the expression key string if necessary
             const safeExprKey = expr.replace(/"/g, '\\"');
             block += `${indent}try:\n`;

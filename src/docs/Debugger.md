@@ -47,7 +47,7 @@ You will be able to see the values during the debugging session.
 #### 3. Conditional Breakpoints
 
 Manage your conditional breakpoints here. You can define logic strings and the debugger will stop when ANY of the strings are `True`.
-The condition logic strings are automatically added to watch expressions.
+You can choose to add the condition logic strings to watch expressions.
 
 ---
 

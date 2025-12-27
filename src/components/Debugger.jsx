@@ -117,7 +117,13 @@ export default function Debugger() {
             filteredWatchExpressions[key] = filteredWatchExpressions[key].filter((expr) => expr.trim() !== "");
         }
         console.log("Watch Expressions:", filteredWatchExpressions);
-        await instrumentCode(rootDirHandle, pythonFileNames, debugFileNames, filteredWatchExpressions, conditionalBreakpoints);
+        await instrumentCode(
+            rootDirHandle,
+            pythonFileNames,
+            debugFileNames,
+            filteredWatchExpressions,
+            conditionalBreakpoints
+        );
 
         setLoadingInfo("");
         setPageIndex(2);
@@ -221,6 +227,22 @@ export default function Debugger() {
         );
     }
 
+    function mergeObjectOfLists(obj1, obj2) {
+        const result = { ...obj1 };
+
+        for (const [key, value] of Object.entries(obj2)) {
+            if (result.hasOwnProperty(key)) {
+                // Concatenate and deduplicate
+                result[key] = [...new Set([...result[key], ...value])];
+            } else {
+                // Key only exists in the second object
+                result[key] = [...value];
+            }
+        }
+
+        return result;
+    }
+
     function configPage() {
         return (
             <>
@@ -230,9 +252,16 @@ export default function Debugger() {
                     setDebugFileNames={setDebugFileNames}
                     watchExpressions={watchExpressions}
                     setWatchExpressions={setWatchExpressions}
-                    conditionalBreakpoints={conditionalBreakpoints} 
+                    conditionalBreakpoints={conditionalBreakpoints}
                     setConditionalBreakpoints={setConditionalBreakpoints}
                 />
+                <Button
+                    onClick={() => {
+                        setWatchExpressions((prev) => mergeObjectOfLists(prev, conditionalBreakpoints));
+                    }}
+                >
+                    Add conditions to watch
+                </Button>
             </>
         );
     }
@@ -252,7 +281,10 @@ export default function Debugger() {
                             p: "0px",
                         }}
                     >
-                        <Tooltip title={viewingLatest ? "Step" : "Step: Forward to latest to continue debugging."} placement="top">
+                        <Tooltip
+                            title={viewingLatest ? "Step" : "Step: Forward to latest to continue debugging."}
+                            placement="top"
+                        >
                             <span>
                                 <IconButton
                                     onClick={async () => {
@@ -269,7 +301,8 @@ export default function Debugger() {
                         </Tooltip>
 
                         <Tooltip
-                            title={viewingLatest ? "Continue" : "Continue: Forward to latest to continue debugging."} placement="top"
+                            title={viewingLatest ? "Continue" : "Continue: Forward to latest to continue debugging."}
+                            placement="top"
                         >
                             <span>
                                 <IconButton

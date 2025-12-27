@@ -168,7 +168,6 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         // Combine unique watches
         const allWatches = [...new Set([...globalWatches, ...localWatches])];
         const allCBP = [...new Set([...globalCBP, ...localCBP])];
-        const allExpressions = [...allWatches, ...allCBP];
 
         let block = "";
 
@@ -191,7 +190,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         block += `${indent}_ds.sh("${fileName}", ${lineNum})\n`;
 
         // Watch expressions
-        allExpressions.forEach((expr) => {
+        allWatches.forEach((expr) => {
             // Escape quotes in the expression key string if necessary
             const safeExprKey = expr.replace(/"/g, '\\"');
             block += `${indent}try:\n`;

@@ -7,6 +7,114 @@ const PREFIX = "ide_debug_";
 const STATE_FILENAME = "ide_debug_state.py";
 import * as constants from "../constants";
 
+async function getParser() {
+    // Initialize Tree-sitter, locate wasm via Vite-served URL to ensure correct MIME
+    await Parser.init({ locateFile: () => wasmUrl });
+    const parser = new Parser();
+
+    // Load the Python language grammar (tree-sitter compiled WASM).
+    // Provide the compiled language WASM in one of two ways:
+    // 1) Put `tree-sitter-python.wasm` in the `public/` folder so it's served at `/tree-sitter-python.wasm`.
+    // 2) Set `window.TREE_SITTER_PYTHON_WASM_URL` to the URL where the wasm is hosted.
+    // The code below will try (2) first, then (1). If neither is available it throws a helpful error.
+    let Python;
+    const globalWasmUrl = typeof window !== "undefined" && window.TREE_SITTER_PYTHON_WASM_URL;
+    if (globalWasmUrl) {
+        Python = await Language.load(globalWasmUrl);
+    } else {
+        // Try to detect a wasm file served from the app public folder
+        const defaultPath = "./tree-sitter-python.wasm";
+        try {
+            const head = await fetch(defaultPath, { method: "HEAD" });
+            if (head.ok) {
+                Python = await Language.load(defaultPath);
+            } else {
+                throw new Error("no-wasm");
+            }
+        } catch (e) {
+            // Don't throw here; log a helpful message and gracefully return so the UI does not crash.
+            // The calling code (UI) can show an error to the user if desired.
+            console.warn(
+                "Tree-sitter Python language WASM not found. To enable Python AST parsing, add a compiled `tree-sitter-python.wasm` to the `public/` folder (served at `/tree-sitter-python.wasm`), or set `window.TREE_SITTER_PYTHON_WASM_URL` to a hosted copy. Instrumentation will be skipped."
+            );
+            return; // abort instrumentation when language is unavailable
+        }
+    }
+
+    parser.setLanguage(Python);
+    return parser;
+}
+
+/**
+ * AST Logic: Identifies rows that should be instrumented.
+ * Takes the parser instance and raw code string.
+ * Returns a Set of 0-indexed row numbers.
+ */
+async function identifyCodeRows(codeText) {
+    const parser = await getParser();
+    const tree = parser.parse(codeText);
+    const codeRows = new Set();
+
+    const targetTypes = [
+        "expression_statement",
+        "assignment",
+        "return_statement",
+        "if_statement",
+        "for_statement",
+        "while_statement",
+        "try_statement",
+        "with_statement",
+        "function_definition",
+        "class_definition",
+        "break_statement",
+        "continue_statement",
+        "pass_statement",
+        "match_statement",
+    ];
+
+    const exclusionTypes = ["else_clause", "elif_clause", "except_clause", "finally_clause", "case_clause"];
+
+    const traverse = (node) => {
+        // Stop recursion if node is null
+        if (!node) return;
+
+        let isCodeRow = false;
+
+        // Node Types mapping
+        const type = node.type;
+
+        // Exclusion check
+        if (exclusionTypes.includes(type)) {
+            isCodeRow = false;
+        } else if (targetTypes.includes(type)) {
+            isCodeRow = true;
+
+            // Filtering: Docstrings
+            if (type === "expression_statement") {
+                if (node.childCount === 1 && node.firstChild.type === "string") {
+                    isCodeRow = false;
+                }
+            }
+        } else if (type === "decorated_definition") {
+            // Explicit handling for decorators as per instruction
+            isCodeRow = true;
+        }
+
+        if (isCodeRow) {
+            // "Strictly use the start row of the node"
+            codeRows.add(node.startPosition.row);
+        }
+
+        // Standard Child Traversal
+        for (let i = 0; i < node.childCount; i++) {
+            traverse(node.child(i));
+        }
+    };
+
+    traverse(tree.rootNode);
+    return codeRows;
+}
+
 /**
  * 9. Cleanup Function (Standalone)
  * Removes all files/folders starting with 'ide_debug_' in the root directory.
@@ -49,41 +157,6 @@ async function getAllPythonFiles(rootDir) {
  * Main Function: Instrument Code
  */
 async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExpressions, conditionalBreakpoints) {
-    // Initialize Tree-sitter, locate wasm via Vite-served URL to ensure correct MIME
-    await Parser.init({ locateFile: () => wasmUrl });
-    const parser = new Parser();
-
-    // Load the Python language grammar (tree-sitter compiled WASM).
-    // Provide the compiled language WASM in one of two ways:
-    // 1) Put `tree-sitter-python.wasm` in the `public/` folder so it's served at `/tree-sitter-python.wasm`.
-    // 2) Set `window.TREE_SITTER_PYTHON_WASM_URL` to the URL where the wasm is hosted.
-    // The code below will try (2) first, then (1). If neither is available it throws a helpful error.
-    let Python;
-    const globalWasmUrl = typeof window !== "undefined" && window.TREE_SITTER_PYTHON_WASM_URL;
-    if (globalWasmUrl) {
-        Python = await Language.load(globalWasmUrl);
-    } else {
-        // Try to detect a wasm file served from the app public folder
-        const defaultPath = "./tree-sitter-python.wasm";
-        try {
-            const head = await fetch(defaultPath, { method: "HEAD" });
-            if (head.ok) {
-                Python = await Language.load(defaultPath);
-            } else {
-                throw new Error("no-wasm");
-            }
-        } catch (e) {
-            // Don't throw here; log a helpful message and gracefully return so the UI does not crash.
-            // The calling code (UI) can show an error to the user if desired.
-            console.warn(
-                "Tree-sitter Python language WASM not found. To enable Python AST parsing, add a compiled `tree-sitter-python.wasm` to the `public/` folder (served at `/tree-sitter-python.wasm`), or set `window.TREE_SITTER_PYTHON_WASM_URL` to a hosted copy. Instrumentation will be skipped."
-            );
-            return; // abort instrumentation when language is unavailable
-        }
-    }
-
-    parser.setLanguage(Python);
-
     // 1. & 5. Helper to generate debug blocks
     const generateDebugBlock = (indent, isBreakpoint, fileName, lineNum, fileWatches) => {
         const globalWatches = watchExpressions[""] || [];
@@ -205,89 +278,9 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
 
         // If we are debugging this file, run Tree-sitter and insert blocks
         if (isDebugFile) {
-            const tree = parser.parse(lines.join("\n"));
-            const cursor = tree.walk();
-            const codeRows = new Set(); // Stores 0-indexed row numbers
-
-            // 3. Identify Code Rows
-            const traverse = (node) => {
-                // Stop recursion if node is null
-                if (!node) return;
-
-                let shouldTraverseChildren = true;
-                let isCodeRow = false;
-
-                // Node Types mapping
-                const type = node.type;
-
-                const targetTypes = [
-                    "expression_statement",
-                    "assignment",
-                    "return_statement",
-                    "if_statement",
-                    "for_statement",
-                    "while_statement",
-                    "try_statement",
-                    "with_statement",
-                    "function_definition",
-                    "class_definition",
-                    "break_statement",
-                    "continue_statement",
-                    "pass_statement",
-                    "match_statement",
-                ];
-
-                const exclusionTypes = ["else_clause", "elif_clause", "except_clause", "finally_clause", "case_clause"];
-
-                // Exclusion check
-                if (exclusionTypes.includes(type)) {
-                    // We assume we don't mark these, but we traverse their children
-                    // (children traversal happens naturally via recursive calls below)
-                    isCodeRow = false;
-                } else if (targetTypes.includes(type)) {
-                    isCodeRow = true;
-
-                    // Filtering: Docstrings
-                    if (type === "expression_statement") {
-                        if (node.childCount === 1 && node.firstChild.type === "string") {
-                            isCodeRow = false;
-                        }
-                    }
-
-                    // Filtering: Decorators
-                    // Tree-sitter usually structures this as:
-                    // decorated_definition -> (decorator, function_definition)
-                    // The prompt says: "If ... child of decorated_definition... use decorated_definition"
-                    // In tree-sitter loop, we will hit 'decorated_definition' first if we scan correctly.
-                    // However, standard traversal hits `decorated_definition` (not in target list) then children.
-                    // Let's check parent.
-                    if (node.parent && node.parent.type === "decorated_definition") {
-                        // If we are visiting the func/class def inside a decorated def, ignore this specific node
-                        // because we capture the parent 'decorated_definition' row.
-                        // Wait, 'decorated_definition' is NOT in targetTypes.
-                        // Logic adjustment: When we see a decorator, the Code Row is the start of the decorator.
-                        // In Tree-sitter python: `decorated_definition` wraps the decorators and the def.
-                        // We should detect `decorated_definition` explicitly.
-                    }
-                } else if (type === "decorated_definition") {
-                    // Explicit handling for decorators as per instruction
-                    isCodeRow = true;
-                }
-
-                if (isCodeRow) {
-                    // "Strictly use the start row of the node"
-                    // Tree-sitter rows are 0-indexed.
-                    codeRows.add(node.startPosition.row);
-                }
-
-                // Standard Child Traversal
-                // We traverse all children to find nested statements
-                for (let i = 0; i < node.childCount; i++) {
-                    traverse(node.child(i));
-                }
-            };
-
-            traverse(tree.rootNode);
+            // 3. Identify Code Rows via standalone AST function
+            const codeRows = await identifyCodeRows(lines.join("\n"));
+            // console.log(codeRows);
 
             // 4. Identify Breakpoints
             // & 5. Add Debug Blocks
@@ -300,28 +293,6 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
 
                 // Skip if for some reason line is undefined (EOF edge cases)
                 if (lineContent === undefined) continue;
-
-                // Check for breakpoint comment
-                // Logic: Multiline code row -> breakpoint is on the full row.
-                // We just check the specific line text of the start row?
-                // Prompt says: "if on a multi-line code row, it is the complete multi-line code row is a breakpoint row"
-                // And "if a code row has comment mentioning breakpoints"
-                // Usually, the comment might be at the END of the statement (last line).
-                // However, Step 4 implies checking the string.
-                // Implementation simplifiction: We check the text of the *start* line of the row first.
-                // If the comment is at the end of a multi-line statement, simple line scanning won't catch it unless we scan the whole node text.
-                // Given step 4 examples, it shows comments on the same line as code start or end.
-                // For robustness, let's scan the full text of the node if possible, but we only have line index here.
-                // Let's assume the comment is on the line where the statement *ends*?
-                // Actually, Step 4 examples show simple lines. Let's stick to checking the `lines[row]`.
-                // If the user puts `# breakpoint` on the last line of a multi-line function def, this simple logic might miss it
-                // unless we join lines. But let's strictly follow the "Code Row" concept.
-                // To cover multi-line breakpoint comments, we really should check the node's end row text too.
-                // But for this implementation, checking the start row is the safest interpretation of "before each the breakpoint row".
-
-                // wait, we need to check if the specific row has the comment.
-                // Step 4: "if a code row has comment... mark it"
-                // Let's check the line content of the detected row.
 
                 let isBreakpoint = false;
 
@@ -336,23 +307,8 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
                     return false;
                 };
 
-                // Note: Code row might span multiple lines.
-                // If I have:
-                // x = (
-                //   1, 2
-                // ) # breakpoint
-                // The code row is the first line. The comment is on the 3rd.
-                // We should ideally look at the specific node in tree-sitter to find comments attached to it.
-                // But simpler: Check if the *current line* has it.
-                // If strict adherence to "Code Row" (start line) having the comment:
                 if (checkStr(lineContent)) {
                     isBreakpoint = true;
-                } else {
-                    // Attempt to look ahead if it's a multi-line node?
-                    // Without node reference here (we just have row numbers), it's hard.
-                    // Let's assume standard usage: comment is on the start line OR user accepts limitation.
-                    // *Correction*: We can traverse tree again or map nodes to rows to access end-lines.
-                    // For now, checking the start line is the standard interpretation.
                 }
 
                 const indent = getIndent(lineContent);
@@ -503,4 +459,4 @@ function formatBytes(bytes, decimals = 2) {
 }
 
 // Exporting functions if used as a module
-export { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep, formatBytes };
+export { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep, formatBytes, identifyCodeRows };

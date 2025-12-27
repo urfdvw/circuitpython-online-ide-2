@@ -44,14 +44,14 @@ async function getParser() {
     parser.setLanguage(Python);
     return parser;
 }
+const parser = await getParser();
 
 /**
  * AST Logic: Identifies rows that should be instrumented.
  * Takes the parser instance and raw code string.
  * Returns a Set of 0-indexed row numbers.
  */
-async function identifyCodeRows(codeText) {
-    const parser = await getParser();
+function identifyCodeRows(codeText) {
     const tree = parser.parse(codeText);
     const codeRows = new Set();
 
@@ -279,8 +279,8 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         // If we are debugging this file, run Tree-sitter and insert blocks
         if (isDebugFile) {
             // 3. Identify Code Rows via standalone AST function
-            const codeRows = await identifyCodeRows(lines.join("\n"));
-            // console.log(codeRows);
+            const codeRows = identifyCodeRows(lines.join("\n"));
+            console.log(codeRows);
 
             // 4. Identify Breakpoints
             // & 5. Add Debug Blocks

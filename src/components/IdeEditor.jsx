@@ -23,6 +23,8 @@ import { FILE_EDITED } from "../constants";
 import * as FlexLayout from "flexlayout-react";
 // tab
 import TabTemplate from "../utilComponents/TabTemplate";
+// breakpoints
+import { identifyCodeRows } from "../utilFunctions/debuggerUtils";
 
 // CSS for breakpoint styling
 const breakpointStyles = `
@@ -335,10 +337,14 @@ export default function IdeEditor({ node }) {
                         setText(session.getValue());
                     } else {
                         // Add breakpoint comment
-                        const newLine = line + (line.trim() ? " " : "") + "# breakpoint";
-                        const range = new Range(lineNum, 0, lineNum, line.length);
-                        session.replace(range, newLine);
-                        setText(session.getValue());
+                        const codeRows = identifyCodeRows(session.getValue());
+                        if (codeRows.has(lineNum)) {
+                            console.log("Can set breakpoint on a code row.");
+                            const newLine = line + (line.trim() ? " " : "") + "# breakpoint";
+                            const range = new Range(lineNum, 0, lineNum, line.length);
+                            session.replace(range, newLine);
+                            setText(session.getValue());
+                        }
                     }
                 }
             });

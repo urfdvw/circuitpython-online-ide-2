@@ -206,48 +206,16 @@ export default function Debugger() {
                 <Typography component="p" variant="h5" paragraph>
                     Debugger
                 </Typography>
-
                 <Button variant="contained" size="large" onClick={handleStartConfigPage}>
                     Start
                 </Button>
+                <hr />
                 <Typography component="p" paragraph>
                     Please connect to CIRCUITPY drive and Serial Console before starting the debugger. It is suggested
                     to start a fresh REPL session before starting the debugger.
                 </Typography>
                 <Typography component="p" paragraph>
-                    To start the debugger, click the "Start" button above.
-                </Typography>
-                <Typography component="p" paragraph>
-                    To set a breakpoint, add a inline comment <code># breakpoint</code> to the desired line in your
-                    code, such as:
-                </Typography>
-                <Typography component="pre" sx={{ backgroundColor: "#f5f5f5", p: "10px" }}>
-                    {"def my_function():\n    x = 10  # breakpoint\n    return x"}
-                </Typography>
-                <Typography component="p" paragraph>
-                    You can also add this comment by clicking on the row number in the code editor. For a multi-line
-                    code row, please add the comment to the first row, such as:
-                </Typography>
-                <Typography component="pre" sx={{ backgroundColor: "#f5f5f5", p: "10px" }}>
-                    {"x = [# breakpoint\n    i * 100\n    for i in range(10)\n    if i % 2 == 0\n]"}
-                </Typography>
-
-                <Typography component="p" variant="h6" paragraph>
-                    Limitations
-                </Typography>
-
-                <Typography component="p" paragraph>
-                    Currently, only root level Python files (files directly under CIRCUITPY drive) are supported.
-                </Typography>
-
-                <Typography component="p" paragraph>
-                    The debugger will consume additional memory on your device. If you encounter memory issues, consider
-                    reducing the number of files being debugged or simplifying your watch expressions.
-                </Typography>
-
-                <Typography component="p" paragraph>
-                    The debugger doesn't support SAMD21(M0) chips due to the lack of json module in CircuitPython for
-                    these chips. This chip is also very memory constrained and not recommended in general.
+                    To set a breakpoint, click on the gutter (row number area) of the code editor.
                 </Typography>
             </Box>
         );

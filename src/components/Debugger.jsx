@@ -50,7 +50,7 @@ export default function Debugger() {
     const [debugHistory, setDebugHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
-    const [pageIndex, setPageIndex] = useState(2);
+    const [pageIndex, setPageIndex] = useState(0);
     const [loadingInfo, setLoadingInfo] = useState("");
     const [firstStart, setFirstStart] = useState(true);
 
@@ -58,7 +58,7 @@ export default function Debugger() {
         if (!serialOutput.endsWith(constants.DEBUG_OUT_END)) {
             return;
         }
-        const lastBlock = serialOutput.split("==== Start Debugging ====").at(-1);
+        const lastBlock = serialOutput.split(constants.DEBUG_START).at(-1);
         // console.log("Last Debug Block:", lastBlock);
         const debugLines = lastBlock
             .split(constants.DEBUG_OUT_START)

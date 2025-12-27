@@ -44,14 +44,14 @@ async function getParser() {
     parser.setLanguage(Python);
     return parser;
 }
-const parser = await getParser();
 
 /**
  * AST Logic: Identifies rows that should be instrumented.
  * Takes the parser instance and raw code string.
  * Returns a Set of 0-indexed row numbers.
  */
-function identifyCodeRows(codeText) {
+async function identifyCodeRows(codeText) {
+    const parser = await getParser();
     const tree = parser.parse(codeText);
     const codeRows = new Set();
 
@@ -279,7 +279,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         // If we are debugging this file, run Tree-sitter and insert blocks
         if (isDebugFile) {
             // 3. Identify Code Rows via standalone AST function
-            const codeRows = identifyCodeRows(lines.join("\n"));
+            const codeRows = await identifyCodeRows(lines.join("\n"));
             console.log(codeRows);
 
             // 4. Identify Breakpoints
@@ -340,7 +340,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         else if (fileName === "main.py" && !hasCodePy) shouldAddInit = true;
 
         if (shouldAddInit) {
-            finalContent += "print('==== Start Debugging ====')\n";
+            finalContent += `print('${constants.DEBUG_START}')\n`;
         }
 
         // Merge lines and insertions
@@ -349,6 +349,10 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
                 finalContent += insertions.get(i);
             }
             finalContent += lines[i] + "\n";
+        }
+
+        if (shouldAddInit) {
+            finalContent += `print('${constants.DEBUG_END}')\n`;
         }
 
         processedFiles.set(fileName, finalContent);

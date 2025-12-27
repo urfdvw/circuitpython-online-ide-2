@@ -11,6 +11,8 @@ export const SEPARATOR = RARE + "\n" + RARE;
 export const SOFT_REBOOT = "soft reboot";
 export const DEBUG_OUT_START = "\x1b[?1049hD";
 export const DEBUG_OUT_END = "D\x1b[?1049l";
+export const DEBUG_START = "==== Start Debugging ===="
+export const DEBUG_END = "==== End Debugging ===="
 
 // Editor
 export const FILE_EDITED = "⚝";

@@ -304,7 +304,7 @@ export default function IdeEditor({ node }) {
         const gutter = aceEditorRef.current.editor.renderer.$gutterLayer;
         if (gutter && !gutter.breakpointHandlerAttached) {
             const gutterElement = gutter.element;
-            gutterElement.addEventListener("click", (event) => {
+            gutterElement.addEventListener("click", async (event) => {
                 // Prefer getting the row directly from the clicked gutter cell DOM element
                 const cell = event.target.closest && event.target.closest(".ace_gutter-cell");
                 if (!cell) return;
@@ -347,7 +347,7 @@ export default function IdeEditor({ node }) {
                         setText(session.getValue());
                     } else {
                         // Add breakpoint comment
-                        const codeRows = identifyCodeRows(session.getValue());
+                        const codeRows = await identifyCodeRows(session.getValue());
                         if (codeRows.has(lineNum)) {
                             console.log("Can set breakpoint on a code row.");
                             const newLine = line + (line.trim() ? " " : "") + "# ●";

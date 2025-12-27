@@ -307,20 +307,30 @@ export default function IdeEditor({ node }) {
             gutterElement.addEventListener("click", (event) => {
                 // Prefer getting the row directly from the clicked gutter cell DOM element
                 const cell = event.target.closest && event.target.closest(".ace_gutter-cell");
+                if (!cell) return;
+
+                // --- Restricted Logic Change ---
+                // Ignore if the click target is the fold widget (the collapse arrow)
+                if (event.target.classList.contains("ace_fold-widget")) return;
+
+                // Restrict click to the left side of the gutter cell (to avoid triggering fold logic)
+                const rect = cell.getBoundingClientRect();
+                const relativeX = event.clientX - rect.left;
+                if (relativeX > rect.width - 20) return;
+                // --- End Logic Change ---
+
                 let lineNum = NaN;
-                if (cell) {
-                    const rowAttr =
-                        cell.getAttribute("data-row") ||
-                        cell.getAttribute("data-gutter-row") ||
-                        cell.getAttribute("data-ace-row");
-                    if (rowAttr !== null) {
-                        lineNum = parseInt(rowAttr, 10);
-                    } else {
-                        // Fallback: parse displayed line number and convert to zero-based index
-                        const displayed = parseInt(cell.textContent, 10);
-                        if (!isNaN(displayed)) {
-                            lineNum = displayed - 1;
-                        }
+                const rowAttr =
+                    cell.getAttribute("data-row") ||
+                    cell.getAttribute("data-gutter-row") ||
+                    cell.getAttribute("data-ace-row");
+                if (rowAttr !== null) {
+                    lineNum = parseInt(rowAttr, 10);
+                } else {
+                    // Fallback: parse displayed line number and convert to zero-based index
+                    const displayed = parseInt(cell.textContent, 10);
+                    if (!isNaN(displayed)) {
+                        lineNum = displayed - 1;
                     }
                 }
 

@@ -177,12 +177,12 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
             allCBP.forEach((expr) => {
                 // Escape quotes in the expression key string if necessary
                 block += `${indent}try:\n`;
-                block += `${indent}    _ds.b = _ds.b or (${expr})\n`;
+                block += `${indent}    _ds.us(${expr})\n`;
                 block += `${indent}except:\n`;
                 block += `${indent}    pass\n`;
             });
             // check if break
-            block += `${indent}if _ds.b:\n`;
+            block += `${indent}if _ds.e():\n`;
             indent += "    "; // Increase indent for body
         }
 
@@ -364,6 +364,7 @@ except ImportError:
     time_unit = 1
 import gc
 import json
+from time import sleep
 
 # constants
 ER = "cannot be evaluated" 
@@ -388,8 +389,13 @@ class DebugStates:
         return cls._instance
     
     def __init__(self):
+        """ self.s: finite state
+        ${constants.DEBUG_SIGNAL_CO}: continue without out evaluate
+        ${constants.DEBUG_SIGNAL_CW}: continue with out evaluate
+        ${constants.DEBUG_SIGNAL_S}: halt, evaluate
+        """
         self.t = _time() # time stamp
-        self.b = True # break on the next step
+        self.s = "${constants.DEBUG_SIGNAL_S}" # halt on the next step
         self.d = {
             "t": _time(), # time since last pause
             "m": _memory(), # free memory
@@ -409,9 +415,28 @@ class DebugStates:
             "w": {}, # watch expressions
         }
 
+    def e(self):
+        """ should evaluate? """
+        return not self.s == "${constants.DEBUG_SIGNAL_CO}"
+
+    def us(self, condition):
+        """ update state """
+        if self.s == "${constants.DEBUG_SIGNAL_S}":
+            return
+        if condition:
+            self.s = "${constants.DEBUG_SIGNAL_S}"
+
     def st(self):
         """ step tail """
-        self.b = not input("${constants.DEBUG_OUT_START}" + json.dumps(self.d) + "${constants.DEBUG_OUT_END}") == "[C]"
+        if self.e():
+            info = "${constants.DEBUG_OUT_START}" + json.dumps(self.d) + "${constants.DEBUG_OUT_END}"
+
+        if self.s == "${constants.DEBUG_SIGNAL_CW}":
+            print(info, end="")
+            sleep(len(info) * 0.001) # wait for the serial
+        if self.s == "${constants.DEBUG_SIGNAL_S}":
+            signal = input(info)
+            self.s = signal
         self.t = _time()
 `;
 

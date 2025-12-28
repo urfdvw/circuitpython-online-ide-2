@@ -17,6 +17,7 @@ import { selectTabById } from "../layout/layoutUtils";
 import { grey, deepPurple, red, blue } from "@mui/material/colors";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import EjectIcon from "@mui/icons-material/Eject";
+import EjectOutlinedIcon from "@mui/icons-material/EjectOutlined";
 import IconButton from "@mui/material/IconButton";
 import PlayArrowIcon from "@mui/icons-material/PlayArrow";
 import FastForwardIcon from "@mui/icons-material/FastForward";
@@ -282,7 +283,7 @@ export default function Debugger() {
                         }}
                     >
                         <Tooltip
-                            title={viewingLatest ? "Step" : "Step: Forward to latest to continue debugging."}
+                            title={viewingLatest ? "Step" : "Forward to latest to continue debugging."}
                             placement="top"
                         >
                             <span>
@@ -301,13 +302,13 @@ export default function Debugger() {
                         </Tooltip>
 
                         <Tooltip
-                            title={viewingLatest ? "Continue" : "Continue: Forward to latest to continue debugging."}
+                            title={viewingLatest ? "Continue and log" : "Forward to latest to continue debugging."}
                             placement="top"
                         >
                             <span>
                                 <IconButton
                                     onClick={async () => {
-                                        sendDataToSerialPort("[C]" + constants.LINE_END);
+                                        sendDataToSerialPort(constants.DEBUG_SIGNAL_CW + constants.LINE_END);
                                     }}
                                     disabled={!viewingLatest}
                                 >
@@ -321,7 +322,47 @@ export default function Debugger() {
                                 </IconButton>
                             </span>
                         </Tooltip>
+                        <Tooltip
+                            title={
+                                viewingLatest ? "Continue without logging" : "Forward to latest to continue debugging."
+                            }
+                            placement="top"
+                        >
+                            <span>
+                                <IconButton
+                                    onClick={async () => {
+                                        sendDataToSerialPort(constants.DEBUG_SIGNAL_CO + constants.LINE_END);
+                                    }}
+                                    disabled={!viewingLatest}
+                                >
+                                    <EjectOutlinedIcon
+                                        sx={{
+                                            transform: "rotate(90deg)",
+                                            color: viewingLatest ? ICON_PURPLE : ICON_DISABLED,
+                                        }}
+                                        fontSize="small"
+                                    />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
                         <Divider orientation="vertical" flexItem />
+                        <Tooltip title="Rewind to beginning" placement="top">
+                            <span>
+                                <IconButton
+                                    onClick={async () => {
+                                        setHistoryIndex(0);
+                                    }}
+                                >
+                                    <FastForwardIcon
+                                        sx={{
+                                            transform: "rotate(180deg)",
+                                            color: ICON_RED,
+                                        }}
+                                        fontSize="small"
+                                    />
+                                </IconButton>
+                            </span>
+                        </Tooltip>
                         <Tooltip title="Rewind" placement="top">
                             <IconButton
                                 onClick={async () => {

@@ -184,6 +184,8 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
             // check if break
             block += `${indent}if _ds.e():\n`;
             indent += "    "; // Increase indent for body
+        } else {
+            block += `${indent}_ds.us(True)\n`;
         }
 
         // Body head

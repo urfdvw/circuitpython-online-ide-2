@@ -1,0 +1,5 @@
+- start/end indicator
+    - stop/restart button
+- auto restart
+- auto re-instrumentation
+- UI refine into better workflow

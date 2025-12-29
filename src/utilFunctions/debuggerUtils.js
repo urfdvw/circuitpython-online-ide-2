@@ -397,7 +397,7 @@ class DebugStates:
         ${constants.DEBUG_SIGNAL_S}: halt, evaluate
         """
         self.t = _time() # time stamp
-        self.s = "${constants.DEBUG_SIGNAL_S}" # halt on the next step
+        self.s = "${constants.DEBUG_SIGNAL_CO}" # Continue without logging on start
         self.d = {
             "t": _time(), # time since last pause
             "m": _memory(), # free memory

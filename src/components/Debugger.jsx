@@ -54,6 +54,17 @@ export default function Debugger() {
     const [pageIndex, setPageIndex] = useState(0);
     const [loadingInfo, setLoadingInfo] = useState("");
     const [firstStart, setFirstStart] = useState(true);
+    const [debuggerRunning, setDebuggerRunning] = useState(false);
+
+    useEffect(() => {
+        console.log("Debugger Running:", debuggerRunning);
+    }, [debuggerRunning]);
+
+    useEffect(() => {
+        if (serialOutput.endsWith("\n>>> ")) {
+            setDebuggerRunning(false);
+        }
+    }, [serialOutput, setDebuggerRunning]);
 
     useEffect(() => {
         if (!serialOutput.endsWith(constants.DEBUG_OUT_END)) {
@@ -130,6 +141,31 @@ export default function Debugger() {
         setPageIndex(2);
     }
 
+    const startDebugging = async () => {
+        if (!serialReady) {
+            alert("Please connect to Serial Console first.");
+            return;
+        }
+        if (!rootFolderDirectoryReady) {
+            alert("Please open CIRCUITPY drive first.");
+            return;
+        }
+        await sendCtrlC();
+        await sleep(100);
+        await sendCtrlC();
+        await sleep(500);
+        await sendCtrlD();
+        await sleep(500);
+        await sendCtrlC();
+        await sleep(100);
+        await sendCtrlC();
+        await sleep(500);
+        await sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);
+
+        setFirstStart(false);
+        setDebuggerRunning(true);
+    };
+
     var title =
         pageIndex === 0 ? "Information" : pageIndex === 1 ? "Configuration" : viewingLatest ? "Debugger" : "History";
 
@@ -146,7 +182,10 @@ export default function Debugger() {
             ? [
                   {
                       text: "Run Debugger",
-                      handler: handleStartDebuggerPage,
+                      handler: async () => {
+                          await handleStartDebuggerPage();
+                          await startDebugging();
+                      },
                       color: deepPurple[500],
                   },
               ]
@@ -154,29 +193,7 @@ export default function Debugger() {
                   {
                       text: firstStart ? "Start" : "Restart",
                       color: deepPurple[500],
-                      handler: async () => {
-                          if (!serialReady) {
-                              alert("Please connect to Serial Console first.");
-                              return;
-                          }
-                          if (!rootFolderDirectoryReady) {
-                              alert("Please open CIRCUITPY drive first.");
-                              return;
-                          }
-                          sendCtrlC();
-                          await sleep(100);
-                          sendCtrlC();
-                          await sleep(500);
-                          sendCtrlD();
-                          await sleep(500);
-                          sendCtrlC();
-                          await sleep(100);
-                          sendCtrlC();
-                          await sleep(500);
-                          sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);
-
-                          setFirstStart(false);
-                      },
+                      handler: startDebugging,
                   },
                   {
                       text: "ReInstrument",

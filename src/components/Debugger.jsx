@@ -24,6 +24,8 @@ import FastForwardIcon from "@mui/icons-material/FastForward";
 import Divider from "@mui/material/Divider";
 import MemoryIcon from "@mui/icons-material/Memory";
 import TimerIcon from "@mui/icons-material/Timer";
+import ReplayIcon from "@mui/icons-material/Replay";
+import StopIcon from "@mui/icons-material/Stop";
 
 const ICON_RED = red[600];
 const ICON_PURPLE = deepPurple[400];
@@ -167,7 +169,15 @@ export default function Debugger() {
     };
 
     var title =
-        pageIndex === 0 ? "Information" : pageIndex === 1 ? "Configuration" : viewingLatest ? "Debugger" : "History";
+        pageIndex === 0
+            ? "Information"
+            : pageIndex === 1
+            ? "Configuration"
+            : !debuggerRunning
+            ? "Stopped"
+            : viewingLatest
+            ? "Debugger"
+            : "History";
 
     const menuStructure =
         pageIndex === 0
@@ -299,6 +309,27 @@ export default function Debugger() {
                             p: "0px",
                         }}
                     >
+                        {debuggerRunning ? (
+                            <Tooltip title={"Stop"} placement="top">
+                                <span>
+                                    <IconButton
+                                        onClick={async () => {
+                                            sendDataToSerialPort(constants.CTRL_C + constants.LINE_END);
+                                        }}
+                                    >
+                                        <StopIcon sx={{ color: ICON_PURPLE }} fontSize="small" />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        ) : (
+                            <Tooltip title={"Restart"} placement="top">
+                                <span>
+                                    <IconButton onClick={startDebugging}>
+                                        <ReplayIcon sx={{ color: ICON_PURPLE }} fontSize="small" />
+                                    </IconButton>
+                                </span>
+                            </Tooltip>
+                        )}
                         <Tooltip
                             title={viewingLatest ? "Step" : "Forward to latest to continue debugging."}
                             placement="top"
@@ -306,18 +337,17 @@ export default function Debugger() {
                             <span>
                                 <IconButton
                                     onClick={async () => {
-                                        sendDataToSerialPort("[S]" + constants.LINE_END);
+                                        sendDataToSerialPort(constants.DEBUG_SIGNAL_S + constants.LINE_END);
                                     }}
                                     disabled={!viewingLatest}
                                 >
                                     <SkipNextIcon
-                                        sx={{ color: viewingLatest ? ICON_PURPLE : ICON_DISABLED }}
+                                        sx={{ color: debuggerRunning && viewingLatest ? ICON_PURPLE : ICON_DISABLED }}
                                         fontSize="small"
                                     />
                                 </IconButton>
                             </span>
                         </Tooltip>
-
                         <Tooltip
                             title={viewingLatest ? "Continue and log" : "Forward to latest to continue debugging."}
                             placement="top"
@@ -332,7 +362,7 @@ export default function Debugger() {
                                     <EjectIcon
                                         sx={{
                                             transform: "rotate(90deg)",
-                                            color: viewingLatest ? ICON_PURPLE : ICON_DISABLED,
+                                            color: debuggerRunning && viewingLatest ? ICON_PURPLE : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -355,7 +385,7 @@ export default function Debugger() {
                                     <EjectOutlinedIcon
                                         sx={{
                                             transform: "rotate(90deg)",
-                                            color: viewingLatest ? ICON_PURPLE : ICON_DISABLED,
+                                            color: debuggerRunning && viewingLatest ? ICON_PURPLE : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -421,7 +451,6 @@ export default function Debugger() {
                                 </IconButton>
                             </span>
                         </Tooltip>
-
                         <Divider orientation="vertical" flexItem />
                         {debugHistory && debugHistory.length > 0 && (
                             <>

@@ -202,12 +202,7 @@ export default function Debugger() {
               ]
             : [
                   {
-                      text: firstStart ? "Start" : "Restart",
-                      color: deepPurple[500],
-                      handler: startDebugging,
-                  },
-                  {
-                      text: "ReInstrument",
+                      text: "ReInstrument", // TODO: should be auto re-instrument on code/config change
                       handler: handleStartDebuggerPage,
                   },
                   {
@@ -341,7 +336,7 @@ export default function Debugger() {
                                         await sendDataToSerialPort(constants.DEBUG_SIGNAL_S + constants.LINE_END);
                                         setDebuggerHalted(false);
                                     }}
-                                    disabled={!viewingLatest}
+                                    disabled={!(debuggerRunning && viewingLatest)}
                                 >
                                     <SkipNextIcon
                                         sx={{ color: debuggerRunning && viewingLatest ? ICON_PURPLE : ICON_DISABLED }}
@@ -360,7 +355,7 @@ export default function Debugger() {
                                         await sendDataToSerialPort(constants.DEBUG_SIGNAL_CW + constants.LINE_END);
                                         setDebuggerHalted(false);
                                     }}
-                                    disabled={!viewingLatest}
+                                    disabled={!(debuggerRunning && viewingLatest)}
                                 >
                                     <EjectIcon
                                         sx={{
@@ -384,7 +379,7 @@ export default function Debugger() {
                                         await sendDataToSerialPort(constants.DEBUG_SIGNAL_CO + constants.LINE_END);
                                         setDebuggerHalted(false);
                                     }}
-                                    disabled={!viewingLatest}
+                                    disabled={!(debuggerRunning && viewingLatest)}
                                 >
                                     <EjectOutlinedIcon
                                         sx={{

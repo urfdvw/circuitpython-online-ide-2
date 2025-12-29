@@ -57,10 +57,11 @@ export default function Debugger() {
     const [loadingInfo, setLoadingInfo] = useState("");
     const [firstStart, setFirstStart] = useState(true);
     const [debuggerRunning, setDebuggerRunning] = useState(false);
+    const [debuggerHalted, setDebuggerHalted] = useState(false);
 
     useEffect(() => {
-        console.log("Debugger Running:", debuggerRunning);
-    }, [debuggerRunning]);
+        console.log("debuggerHalted:", debuggerHalted);
+    }, [debuggerHalted]);
 
     useEffect(() => {
         if (serialOutput.endsWith("\n>>> ")) {
@@ -85,6 +86,7 @@ export default function Debugger() {
         // console.log("Parsed Debug Lines:", debugLinesObjects);
         setDebugHistory(debugLinesObjects);
         setHistoryIndex(debugLinesObjects.length - 1);
+        setDebuggerHalted(debugLinesObjects.at(-1).h);
     }, [serialOutput]);
 
     const started = debugHistory.length > 0;
@@ -168,16 +170,15 @@ export default function Debugger() {
         setDebuggerRunning(true);
     };
 
-    var title =
-        pageIndex === 0
-            ? "Information"
-            : pageIndex === 1
-            ? "Configuration"
-            : !debuggerRunning
-            ? "Stopped"
-            : viewingLatest
-            ? "Debugger"
-            : "History";
+    const debuggerTitle = !debuggerRunning
+        ? "Stopped"
+        : !viewingLatest
+        ? "History"
+        : debuggerHalted
+        ? "Halted"
+        : "Running";
+
+    const title = pageIndex === 0 ? "Information" : pageIndex === 1 ? "Configuration" : debuggerTitle;
 
     const menuStructure =
         pageIndex === 0
@@ -337,7 +338,8 @@ export default function Debugger() {
                             <span>
                                 <IconButton
                                     onClick={async () => {
-                                        sendDataToSerialPort(constants.DEBUG_SIGNAL_S + constants.LINE_END);
+                                        await sendDataToSerialPort(constants.DEBUG_SIGNAL_S + constants.LINE_END);
+                                        setDebuggerHalted(false);
                                     }}
                                     disabled={!viewingLatest}
                                 >
@@ -355,7 +357,8 @@ export default function Debugger() {
                             <span>
                                 <IconButton
                                     onClick={async () => {
-                                        sendDataToSerialPort(constants.DEBUG_SIGNAL_CW + constants.LINE_END);
+                                        await sendDataToSerialPort(constants.DEBUG_SIGNAL_CW + constants.LINE_END);
+                                        setDebuggerHalted(false);
                                     }}
                                     disabled={!viewingLatest}
                                 >
@@ -378,7 +381,8 @@ export default function Debugger() {
                             <span>
                                 <IconButton
                                     onClick={async () => {
-                                        sendDataToSerialPort(constants.DEBUG_SIGNAL_CO + constants.LINE_END);
+                                        await sendDataToSerialPort(constants.DEBUG_SIGNAL_CO + constants.LINE_END);
+                                        setDebuggerHalted(false);
                                     }}
                                     disabled={!viewingLatest}
                                 >

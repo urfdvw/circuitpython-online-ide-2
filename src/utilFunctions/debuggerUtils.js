@@ -404,6 +404,7 @@ class DebugStates:
             "f": "", # current file name
             "l": 1, # current line number
             "w": {}, # watch expressions
+            "h": False, # debugger halt
         } # data
 
     def sh(self, fileName, lineNum):
@@ -415,6 +416,7 @@ class DebugStates:
             "f": fileName, # current file name
             "l": lineNum, # current line number
             "w": {}, # watch expressions
+            "h": False, # debugger halt
         }
 
     def e(self):
@@ -430,13 +432,14 @@ class DebugStates:
 
     def st(self):
         """ step tail """
-        if self.e():
-            info = "${constants.DEBUG_OUT_START}" + json.dumps(self.d) + "${constants.DEBUG_OUT_END}"
-
         if self.s == "${constants.DEBUG_SIGNAL_CW}":
+            self.d["h"] = False
+            info = "${constants.DEBUG_OUT_START}" + json.dumps(self.d) + "${constants.DEBUG_OUT_END}"
             print(info, end="")
             sleep(len(info) * 0.001) # wait for the serial
         if self.s == "${constants.DEBUG_SIGNAL_S}":
+            self.d["h"] = True
+            info = "${constants.DEBUG_OUT_START}" + json.dumps(self.d) + "${constants.DEBUG_OUT_END}"
             signal = input(info)
             self.s = signal
         self.t = _time()

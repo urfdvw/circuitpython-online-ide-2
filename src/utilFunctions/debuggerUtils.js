@@ -52,6 +52,8 @@ async function getParser() {
  */
 async function identifyCodeRows(codeText) {
     const parser = await getParser();
+    if (!parser) return new Set(); // Return empty if parser failed to load
+
     const tree = parser.parse(codeText);
     const codeRows = new Set();
 
@@ -75,19 +77,27 @@ async function identifyCodeRows(codeText) {
     const exclusionTypes = ["else_clause", "elif_clause", "except_clause", "finally_clause", "case_clause"];
 
     const traverse = (node) => {
-        // Stop recursion if node is null
         if (!node) return;
 
         let isCodeRow = false;
-
-        // Node Types mapping
         const type = node.type;
 
-        // Exclusion check
         if (exclusionTypes.includes(type)) {
             isCodeRow = false;
         } else if (targetTypes.includes(type)) {
             isCodeRow = true;
+
+            // --- NEW LOGIC START ---
+            // If this is a function or class definition, check if it's decorated.
+            // If it is, the 'decorated_definition' node will handle the row marking.
+            if (
+                (type === "function_definition" || type === "class_definition") &&
+                node.parent &&
+                node.parent.type === "decorated_definition"
+            ) {
+                isCodeRow = false;
+            }
+            // --- NEW LOGIC END ---
 
             // Filtering: Docstrings
             if (type === "expression_statement") {
@@ -96,16 +106,16 @@ async function identifyCodeRows(codeText) {
                 }
             }
         } else if (type === "decorated_definition") {
-            // Explicit handling for decorators as per instruction
+            // This marks the row of the first decorator
             isCodeRow = true;
         }
 
         if (isCodeRow) {
-            // "Strictly use the start row of the node"
             codeRows.add(node.startPosition.row);
         }
 
         // Standard Child Traversal
+        // We still traverse children so that statements inside the function body are identified
         for (let i = 0; i < node.childCount; i++) {
             traverse(node.child(i));
         }

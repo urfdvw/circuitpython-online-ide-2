@@ -103,6 +103,8 @@ function App() {
         }
         getBoardInfo();
     }, [rootFolderDirectoryReady, rootDirHandle]);
+    // Debugger
+    const [instrumentationOutdated, setInstrumentationOutdated] = useState(true);
 
     /**** main logic ****/
     if (!appConfig.ready) {
@@ -160,6 +162,9 @@ function App() {
                 codeHistory,
                 // board info
                 boardInfo,
+                // debugger
+                instrumentationOutdated,
+                setInstrumentationOutdated,
             }}
         >
             <DarkTheme dark={dark} highContrast={highContrast} />

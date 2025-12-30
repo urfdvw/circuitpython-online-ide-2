@@ -43,6 +43,8 @@ export default function Debugger() {
         serialOutput,
         flexModel,
         helpTabSelection,
+        instrumentationOutdated,
+        setInstrumentationOutdated,
     } = useContext(AppContext);
 
     const [pythonFileNames, setPythonFileNames] = useState([]);
@@ -60,16 +62,23 @@ export default function Debugger() {
     const [debuggerHalted, setDebuggerHalted] = useState(false);
 
     useEffect(() => {
+        setInstrumentationOutdated(true);
+    }, [debugFileNames, watchExpressions, conditionalBreakpoints]);
+
+    useEffect(() => {
+        // for debugging
         console.log("debuggerHalted:", debuggerHalted);
     }, [debuggerHalted]);
 
     useEffect(() => {
+        // detect debugger stopped
         if (serialOutput.endsWith("\n>>> ")) {
             setDebuggerRunning(false);
         }
     }, [serialOutput, setDebuggerRunning]);
 
     useEffect(() => {
+        // get debug history
         if (!serialOutput.endsWith(constants.DEBUG_OUT_END)) {
             return;
         }
@@ -115,16 +124,19 @@ export default function Debugger() {
     }
 
     async function handleStartDebuggerPage() {
-        if (!rootFolderDirectoryReady) {
-            alert("Please open CIRCUITPY drive first.");
-            return;
-        }
         if (debugFileNames.length === 0) {
             alert("Please select at least one file to debug.");
             return;
         }
+        setPageIndex(2);
+        await startDebugging();
+    }
 
-        await cleanUpState();
+    async function instrumentCodeProcess() {
+        if (!rootFolderDirectoryReady) {
+            alert("Please open CIRCUITPY drive first.");
+            return;
+        }
 
         setLoadingInfo("Instrumenting code for debugging...");
 
@@ -142,10 +154,13 @@ export default function Debugger() {
         );
 
         setLoadingInfo("");
-        setPageIndex(2);
+        setInstrumentationOutdated(false);
     }
 
     const startDebugging = async () => {
+        if (instrumentationOutdated) {
+            await instrumentCodeProcess();
+        }
         if (!serialReady) {
             alert("Please connect to Serial Console first.");
             return;
@@ -154,6 +169,9 @@ export default function Debugger() {
             alert("Please open CIRCUITPY drive first.");
             return;
         }
+
+        await cleanUpState();
+
         await sendCtrlC();
         await sleep(100);
         await sendCtrlC();
@@ -186,7 +204,6 @@ export default function Debugger() {
                   {
                       text: "Start",
                       handler: handleStartConfigPage,
-                      color: deepPurple[500],
                   },
               ]
             : pageIndex === 1
@@ -194,17 +211,11 @@ export default function Debugger() {
                   {
                       text: "Run Debugger",
                       handler: async () => {
-                          await handleStartDebuggerPage();
-                          await startDebugging();
+                          handleStartDebuggerPage();
                       },
-                      color: deepPurple[500],
                   },
               ]
             : [
-                  {
-                      text: "ReInstrument", // TODO: should be auto re-instrument on code/config change
-                      handler: handleStartDebuggerPage,
-                  },
                   {
                       text: "Config",
                       handler: handleStartConfigPage,
@@ -218,6 +229,10 @@ export default function Debugger() {
                 handler: async () => {
                     await cleanupDebugFiles(rootDirHandle);
                 },
+            },
+            pageIndex == 2 && {
+                text: "ReInstrument", // TODO: should be auto re-instrument on code/config change
+                handler: instrumentCodeProcess,
             },
             {
                 text: "Help",
@@ -483,10 +498,12 @@ export default function Debugger() {
                         )}
                     </Box>
                     <Box sx={{ width: "100%" }}>
-                        {debugHistory && debugHistory.length > 0 && (
+                        {debugHistory && debugHistory.length > 0 ? (
                             <>
                                 <Typography component="p">{debugHistory.at(historyIndex).f}</Typography>
                             </>
+                        ) : (
+                            <Typography>Preparing ...</Typography>
                         )}
                     </Box>
                     <Box sx={{ flexGrow: 1, overflow: "auto" }}>

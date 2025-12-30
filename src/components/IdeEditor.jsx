@@ -55,8 +55,17 @@ function generateRandomNumber(a) {
 }
 
 export default function IdeEditor({ node }) {
-    const { appConfig, fileLookUp, helpTabSelection, configTabSelection, flexModel, sendCtrlC, sendCtrlD, sendCode } =
-        useContext(AppContext);
+    const {
+        appConfig,
+        fileLookUp,
+        helpTabSelection,
+        configTabSelection,
+        flexModel,
+        sendCtrlC,
+        sendCtrlD,
+        sendCode,
+        setInstrumentationOutdated,
+    } = useContext(AppContext);
     const config = appConfig.config;
     const fileHandle = fileLookUp[node.getConfig().fileKey];
     const aceEditorRef = useRef(null);
@@ -154,6 +163,7 @@ export default function IdeEditor({ node }) {
     function saveFile(text) {
         writeFileText(fileHandle, text);
         setFileEdited(false);
+        setInstrumentationOutdated(true);
     }
 
     // send code from editor

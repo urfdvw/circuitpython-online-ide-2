@@ -55,12 +55,17 @@ export default function Debugger() {
     const [debugHistory, setDebugHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
-    const [pageIndex, setPageIndex] = useState(0);
+    const [pageIndex, setPageIndex] = useState(1);
     const [loadingInfo, setLoadingInfo] = useState("");
     const [debuggerRunning, setDebuggerRunning] = useState(false);
     const [debuggerHalted, setDebuggerHalted] = useState(false);
 
     useEffect(() => {
+        handleStartConfigPage();
+    }, []); // initialize config page
+
+    useEffect(() => {
+        // for auto re instrumentation
         setInstrumentationOutdated(true);
     }, [debugFileNames, watchExpressions, conditionalBreakpoints]);
 
@@ -112,6 +117,7 @@ export default function Debugger() {
     async function handleStartConfigPage() {
         if (!rootFolderDirectoryReady) {
             alert("Please open CIRCUITPY drive first.");
+            setPageIndex(0);
             return;
         }
 

@@ -1,0 +1,12 @@
+- [x] start/end indicator
+    - [x] stop/restart button
+- [x] step running indicator
+    - [x] UI differentiate step running or waiting on user step or continue
+- [x] auto start on debugger page
+    - [x] need hint on when preparing
+- [x] auto re-instrumentation
+- UI refine into better workflow
+    - [x] only one button left in toolbar to reduce confusion
+        - I wanted to keep the button on the top instead of at the button, so that always visible and no need to scroll to see the button
+    - [x] select 'code.py' by default and will alert when the last file is deselected.
+    - [x] the first page is moved to backup if CIRCUITPY is not connected

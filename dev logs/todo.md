@@ -1,8 +1,0 @@
-- [x] start/end indicator
-    - [x] stop/restart button
-- [x] step running indicator
-    - [x] UI differentiate step running or waiting on user step or continue
-- [x] auto start on debugger page
-    - [x] need hint on when preparing
-- [x] auto re-instrumentation
-- UI refine into better workflow

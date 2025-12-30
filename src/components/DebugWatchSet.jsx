@@ -35,7 +35,7 @@ const DebugTargets = ({ pythonFileNames, debugFileNames, setDebugFileNames }) =>
         } else if (pythonFileNames.includes("main.py")) {
             setDebugFileNames(["main.py"]);
         }
-    }, []);
+    }, [pythonFileNames]);
     const handleFileToggle = (fileName) => {
         const currentIndex = debugFileNames.indexOf(fileName);
         const newDebugFiles = [...debugFileNames];

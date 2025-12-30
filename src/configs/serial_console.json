@@ -16,6 +16,7 @@
         },
         "auto_scroll": {
             "title": "Always scroll to the bottom on new content",
+            "description": "This will be turned on automatically when using debugger",
             "type": "boolean",
             "default": false
         },

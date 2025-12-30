@@ -34,6 +34,7 @@ const ICON_BLUE = blue[600];
 
 export default function Debugger() {
     const {
+        appConfig,
         rootDirHandle,
         rootFolderDirectoryReady,
         serialReady,
@@ -66,6 +67,12 @@ export default function Debugger() {
         } else {
             handleStartConfigPage();
         }
+
+        const originalSetting = appConfig.config.serial_console.auto_scroll;
+        appConfig.setConfigField("serial_console", "auto_scroll", true);
+        return () => {
+            appConfig.setConfigField("serial_console", "auto_scroll", originalSetting);
+        };
     }, []); // initialize config page
 
     useEffect(() => {

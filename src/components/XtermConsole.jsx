@@ -13,7 +13,7 @@ const invert_css = {
 };
 
 const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
-    const { appConfig, sendDataToSerialPort, serial, serialReady, addToSerialOutput } = useContext(AppContext);
+    const { appConfig, sendDataToSerialPort, serial, serialOutput } = useContext(AppContext);
 
     const terminalOptions = {
         convertEol: true,
@@ -58,13 +58,18 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             // serial call back
             serial.registerReaderCallback("terminal", async (data) => {
                 terminal.current.write(data);
-                if (appConfig.config.serial_console.auto_scroll) {
-                    await sleep(100);
-                    terminal.current.scrollToBottom();
-                }
             });
         }
     }, []);
+
+    useEffect(() => {
+        async function scroll() {
+            terminal.current.scrollToBottom();
+            await sleep(100);
+            terminal.current.scrollToBottom();
+        }
+        scroll();
+    }, [serialOutput]);
 
     useEffect(() => {
         if (!terminal.current) {

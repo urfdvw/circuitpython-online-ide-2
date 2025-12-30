@@ -61,7 +61,11 @@ export default function Debugger() {
     const [debuggerHalted, setDebuggerHalted] = useState(false);
 
     useEffect(() => {
-        handleStartConfigPage();
+        if (!rootFolderDirectoryReady) {
+            setPageIndex(0);
+        } else {
+            handleStartConfigPage();
+        }
     }, []); // initialize config page
 
     useEffect(() => {
@@ -117,7 +121,6 @@ export default function Debugger() {
     async function handleStartConfigPage() {
         if (!rootFolderDirectoryReady) {
             alert("Please open CIRCUITPY drive first.");
-            setPageIndex(0);
             return;
         }
 
@@ -262,10 +265,11 @@ export default function Debugger() {
                 </Button>
                 <hr />
                 <Typography component="p" paragraph>
-                    To set a breakpoint, click on the gutter (row number area) of the code editor.
+                    Please connect to CIRCUITPY drive and Serial Console before starting the debugger. It is suggested
+                    to start a fresh REPL session before starting the debugger.
                 </Typography>
                 <Typography component="p" paragraph>
-                    It is suggested to start a fresh REPL session before starting the debugger.
+                    To set a breakpoint, click on the gutter (row number area) of the code editor.
                 </Typography>
             </Box>
         );

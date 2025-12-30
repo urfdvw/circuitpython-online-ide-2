@@ -28,6 +28,14 @@ import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 // --- SUB-COMPONENT 1: DebugTargets ---
 // Parameters: pythonFileNames, debugFileNames, setDebugFileNames
 const DebugTargets = ({ pythonFileNames, debugFileNames, setDebugFileNames }) => {
+    useEffect(() => {
+        console.log(pythonFileNames);
+        if (pythonFileNames.includes("code.py")) {
+            setDebugFileNames(["code.py"]);
+        } else if (pythonFileNames.includes("main.py")) {
+            setDebugFileNames(["main.py"]);
+        }
+    }, []);
     const handleFileToggle = (fileName) => {
         const currentIndex = debugFileNames.indexOf(fileName);
         const newDebugFiles = [...debugFileNames];
@@ -35,6 +43,10 @@ const DebugTargets = ({ pythonFileNames, debugFileNames, setDebugFileNames }) =>
         if (currentIndex === -1) {
             newDebugFiles.push(fileName);
         } else {
+            if (debugFileNames.length === 1) {
+                alert("Please select at least one file to debug.");
+                return;
+            }
             newDebugFiles.splice(currentIndex, 1);
         }
         setDebugFileNames(newDebugFiles);
@@ -266,6 +278,22 @@ const WatchExpressions = ({ debugFileNames, watchExpressions, setWatchExpression
     );
 };
 
+function mergeObjectOfLists(obj1, obj2) {
+    const result = { ...obj1 };
+
+    for (const [key, value] of Object.entries(obj2)) {
+        if (result.hasOwnProperty(key)) {
+            // Concatenate and deduplicate
+            result[key] = [...new Set([...result[key], ...value])];
+        } else {
+            // Key only exists in the second object
+            result[key] = [...value];
+        }
+    }
+
+    return result;
+}
+
 // --- FINAL COMBINED COMPONENT ---
 const DebugWatchSet = ({
     pythonFileNames,
@@ -312,6 +340,14 @@ const DebugWatchSet = ({
                 watchExpressions={conditionalBreakpoints}
                 setWatchExpressions={setConditionalBreakpoints}
             />
+
+            <Button
+                onClick={() => {
+                    setWatchExpressions((prev) => mergeObjectOfLists(prev, conditionalBreakpoints));
+                }}
+            >
+                Add conditions to watch
+            </Button>
         </Box>
     );
 };

@@ -57,7 +57,6 @@ export default function Debugger() {
 
     const [pageIndex, setPageIndex] = useState(0);
     const [loadingInfo, setLoadingInfo] = useState("");
-    const [firstStart, setFirstStart] = useState(true);
     const [debuggerRunning, setDebuggerRunning] = useState(false);
     const [debuggerHalted, setDebuggerHalted] = useState(false);
 
@@ -108,7 +107,6 @@ export default function Debugger() {
         sendCtrlC();
         setDebugHistory([]);
         setHistoryIndex(0);
-        setFirstStart(true);
     }
 
     async function handleStartConfigPage() {
@@ -184,9 +182,13 @@ export default function Debugger() {
         await sleep(500);
         await sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);
 
-        setFirstStart(false);
         setDebuggerRunning(true);
     };
+
+    function helpHandler() {
+        selectTabById(flexModel, "help_tab");
+        helpTabSelection.setTabName("debugger");
+    }
 
     const debuggerTitle = !debuggerRunning
         ? "Stopped"
@@ -200,12 +202,7 @@ export default function Debugger() {
 
     const menuStructure =
         pageIndex === 0
-            ? [
-                  {
-                      text: "Start",
-                      handler: handleStartConfigPage,
-                  },
-              ]
+            ? []
             : pageIndex === 1
             ? [
                   {
@@ -224,23 +221,23 @@ export default function Debugger() {
     menuStructure.push({
         label: "≡",
         options: [
+            pageIndex == 2 && {
+                text: "ReInstrument", // TODO: should be auto re-instrument on code/config change
+                handler: instrumentCodeProcess,
+            },
+            pageIndex == 1 && {
+                text: "refresh file list",
+                handler: handleStartConfigPage,
+            },
             pageIndex !== 2 && {
                 text: "clean up debug files",
                 handler: async () => {
                     await cleanupDebugFiles(rootDirHandle);
                 },
             },
-            pageIndex == 2 && {
-                text: "ReInstrument", // TODO: should be auto re-instrument on code/config change
-                handler: instrumentCodeProcess,
-            },
             {
                 text: "Help",
-                handler: () => {
-                    console.log("clicked on menu item `Help`");
-                    selectTabById(flexModel, "help_tab");
-                    helpTabSelection.setTabName("debugger");
-                },
+                handler: helpHandler,
             },
         ].filter(Boolean),
     });
@@ -251,35 +248,21 @@ export default function Debugger() {
                 <Typography component="p" variant="h5" paragraph>
                     Debugger
                 </Typography>
-                <Button variant="contained" size="large" onClick={handleStartConfigPage}>
+                <Button variant="contained" size="large" onClick={handleStartConfigPage} sx={{ mr: "10px" }}>
                     Start
+                </Button>
+                <Button variant="outlined" size="large" onClick={helpHandler}>
+                    Help
                 </Button>
                 <hr />
                 <Typography component="p" paragraph>
-                    Please connect to CIRCUITPY drive and Serial Console before starting the debugger. It is suggested
-                    to start a fresh REPL session before starting the debugger.
+                    To set a breakpoint, click on the gutter (row number area) of the code editor.
                 </Typography>
                 <Typography component="p" paragraph>
-                    To set a breakpoint, click on the gutter (row number area) of the code editor.
+                    It is suggested to start a fresh REPL session before starting the debugger.
                 </Typography>
             </Box>
         );
-    }
-
-    function mergeObjectOfLists(obj1, obj2) {
-        const result = { ...obj1 };
-
-        for (const [key, value] of Object.entries(obj2)) {
-            if (result.hasOwnProperty(key)) {
-                // Concatenate and deduplicate
-                result[key] = [...new Set([...result[key], ...value])];
-            } else {
-                // Key only exists in the second object
-                result[key] = [...value];
-            }
-        }
-
-        return result;
     }
 
     function configPage() {
@@ -294,13 +277,6 @@ export default function Debugger() {
                     conditionalBreakpoints={conditionalBreakpoints}
                     setConditionalBreakpoints={setConditionalBreakpoints}
                 />
-                <Button
-                    onClick={() => {
-                        setWatchExpressions((prev) => mergeObjectOfLists(prev, conditionalBreakpoints));
-                    }}
-                >
-                    Add conditions to watch
-                </Button>
             </>
         );
     }

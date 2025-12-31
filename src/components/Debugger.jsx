@@ -113,10 +113,13 @@ export default function Debugger() {
         setDebuggerHalted(debugLinesObjects.at(-1).h);
     }, [serialOutput]);
 
-    const started = debugHistory.length > 0;
-    const viewingLatest = started ? historyIndex === debugHistory.length - 1 : true;
+    const hasHistory = debugHistory.length > 0;
+    const viewingLatest = historyIndex === debugHistory.length - 1;
+    const viewingFirst = historyIndex === 0;
 
-    // console.log(started, viewingLatest);
+    const canRunCode = debuggerRunning && debuggerHalted && viewingLatest;
+    const canRewind = hasHistory && (!debuggerRunning || debuggerHalted) && !viewingFirst;
+    const canForward = hasHistory && (!debuggerRunning || debuggerHalted) && !viewingLatest;
 
     async function cleanUpState() {
         // clean up states from previous debug session
@@ -344,10 +347,10 @@ export default function Debugger() {
                                         await sendDataToSerialPort(constants.DEBUG_SIGNAL_S + constants.LINE_END);
                                         setDebuggerHalted(false);
                                     }}
-                                    disabled={!(debuggerRunning && viewingLatest)}
+                                    disabled={!canRunCode}
                                 >
                                     <SkipNextIcon
-                                        sx={{ color: debuggerRunning && viewingLatest ? ICON_PURPLE : ICON_DISABLED }}
+                                        sx={{ color: canRunCode ? ICON_PURPLE : ICON_DISABLED }}
                                         fontSize="small"
                                     />
                                 </IconButton>
@@ -363,12 +366,12 @@ export default function Debugger() {
                                         await sendDataToSerialPort(constants.DEBUG_SIGNAL_CW + constants.LINE_END);
                                         setDebuggerHalted(false);
                                     }}
-                                    disabled={!(debuggerRunning && viewingLatest)}
+                                    disabled={!canRunCode}
                                 >
                                     <EjectIcon
                                         sx={{
                                             transform: "rotate(90deg)",
-                                            color: debuggerRunning && viewingLatest ? ICON_PURPLE : ICON_DISABLED,
+                                            color: canRunCode ? ICON_PURPLE : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -387,12 +390,12 @@ export default function Debugger() {
                                         await sendDataToSerialPort(constants.DEBUG_SIGNAL_CO + constants.LINE_END);
                                         setDebuggerHalted(false);
                                     }}
-                                    disabled={!(debuggerRunning && viewingLatest)}
+                                    disabled={!canRunCode}
                                 >
                                     <EjectOutlinedIcon
                                         sx={{
                                             transform: "rotate(90deg)",
-                                            color: debuggerRunning && viewingLatest ? ICON_PURPLE : ICON_DISABLED,
+                                            color: canRunCode ? ICON_PURPLE : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -406,11 +409,12 @@ export default function Debugger() {
                                     onClick={async () => {
                                         setHistoryIndex(0);
                                     }}
+                                    disabled={!canRewind}
                                 >
                                     <FastForwardIcon
                                         sx={{
                                             transform: "rotate(180deg)",
-                                            color: ICON_RED,
+                                            color: canRewind ? ICON_RED : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -418,15 +422,24 @@ export default function Debugger() {
                             </span>
                         </Tooltip>
                         <Tooltip title="Rewind" placement="top">
-                            <IconButton
-                                onClick={async () => {
-                                    if (historyIndex > 0) {
-                                        setHistoryIndex((prev) => prev - 1);
-                                    }
-                                }}
-                            >
-                                <PlayArrowIcon sx={{ transform: "rotate(180deg)", color: ICON_RED }} fontSize="small" />
-                            </IconButton>
+                            <span>
+                                <IconButton
+                                    onClick={async () => {
+                                        if (historyIndex > 0) {
+                                            setHistoryIndex((prev) => prev - 1);
+                                        }
+                                    }}
+                                    disabled={!canRewind}
+                                >
+                                    <PlayArrowIcon
+                                        sx={{
+                                            transform: "rotate(180deg)",
+                                            color: canRewind ? ICON_RED : ICON_DISABLED,
+                                        }}
+                                        fontSize="small"
+                                    />
+                                </IconButton>
+                            </span>
                         </Tooltip>
                         <Tooltip title="Forward" placement="top">
                             <span>
@@ -434,10 +447,10 @@ export default function Debugger() {
                                     onClick={async () => {
                                         setHistoryIndex((prev) => prev + 1);
                                     }}
-                                    disabled={viewingLatest}
+                                    disabled={!canForward}
                                 >
                                     <PlayArrowIcon
-                                        sx={{ color: viewingLatest ? ICON_DISABLED : ICON_RED }}
+                                        sx={{ color: canForward ? ICON_RED : ICON_DISABLED }}
                                         fontSize="small"
                                     />
                                 </IconButton>
@@ -449,40 +462,16 @@ export default function Debugger() {
                                     onClick={async () => {
                                         setHistoryIndex(debugHistory.length - 1);
                                     }}
-                                    disabled={viewingLatest}
+                                    disabled={!canForward}
                                 >
                                     <FastForwardIcon
-                                        sx={{ color: viewingLatest ? ICON_DISABLED : ICON_RED }}
+                                        sx={{ color: canForward ? ICON_RED : ICON_DISABLED }}
                                         fontSize="small"
                                     />
                                 </IconButton>
                             </span>
                         </Tooltip>
                         <Divider orientation="vertical" flexItem />
-                        {debugHistory && debugHistory.length > 0 && (
-                            <>
-                                <Tooltip title="free memory" placement="top">
-                                    <span>
-                                        <IconButton disabled>
-                                            <MemoryIcon sx={{ color: ICON_BLUE }} fontSize="small" />
-                                            <Typography component="span">
-                                                {formatBytes(debugHistory.at(historyIndex).m)}
-                                            </Typography>
-                                        </IconButton>
-                                    </span>
-                                </Tooltip>
-                                <Tooltip title="time since last pause" placement="top">
-                                    <span>
-                                        <IconButton disabled>
-                                            <TimerIcon sx={{ color: ICON_BLUE }} fontSize="small" />
-                                            <Typography component="span">
-                                                {debugHistory.at(historyIndex).t} ms
-                                            </Typography>
-                                        </IconButton>
-                                    </span>
-                                </Tooltip>
-                            </>
-                        )}
                     </Box>
 
                     <Box sx={{ width: "100%", maxHeight: "40%", overflow: "auto" }}>
@@ -506,6 +495,32 @@ export default function Debugger() {
                                 fileName={debugHistory.at(historyIndex).f}
                                 lineNumber={debugHistory.at(historyIndex).l}
                             />
+                        )}
+                    </Box>
+                    <Box sx={{ width: "100%" }}>
+                        {debugHistory && debugHistory.length > 0 && (
+                            <>
+                                <Tooltip title="free memory" placement="top">
+                                    <span>
+                                        <IconButton disabled>
+                                            <MemoryIcon sx={{ color: ICON_BLUE }} fontSize="small" />
+                                            <Typography component="span">
+                                                {formatBytes(debugHistory.at(historyIndex).m)}
+                                            </Typography>
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
+                                <Tooltip title="time since last pause" placement="top">
+                                    <span>
+                                        <IconButton disabled>
+                                            <TimerIcon sx={{ color: ICON_BLUE }} fontSize="small" />
+                                            <Typography component="span">
+                                                {debugHistory.at(historyIndex).t} ms
+                                            </Typography>
+                                        </IconButton>
+                                    </span>
+                                </Tooltip>
+                            </>
                         )}
                     </Box>
                 </Box>

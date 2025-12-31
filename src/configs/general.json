@@ -19,6 +19,11 @@
             "title": "Use board id as title",
             "type": "boolean",
             "default": false
+        },
+        "whats_new_2_3_0": {
+            "title": "Show version change info",
+            "type": "boolean",
+            "default": true
         }
     }
 }

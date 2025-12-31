@@ -14,7 +14,7 @@ import DebugWatchDisplay from "./DebugWatchDisplay";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { Button, Backdrop, CircularProgress, Box, Typography, Tooltip } from "@mui/material";
 import { selectTabById } from "../layout/layoutUtils";
-import { grey, deepPurple, red, blue } from "@mui/material/colors";
+import { grey, deepPurple, red, blue, green } from "@mui/material/colors";
 import SkipNextIcon from "@mui/icons-material/SkipNext";
 import EjectIcon from "@mui/icons-material/Eject";
 import EjectOutlinedIcon from "@mui/icons-material/EjectOutlined";
@@ -28,6 +28,7 @@ import ReplayIcon from "@mui/icons-material/Replay";
 import StopIcon from "@mui/icons-material/Stop";
 
 const ICON_RED = red[600];
+const ICON_GREEN = green[600];
 const ICON_PURPLE = deepPurple[400];
 const ICON_DISABLED = grey[400];
 const ICON_BLUE = blue[600];
@@ -324,7 +325,7 @@ export default function Debugger() {
                                             sendDataToSerialPort(constants.CTRL_C + constants.LINE_END);
                                         }}
                                     >
-                                        <StopIcon sx={{ color: ICON_PURPLE }} fontSize="small" />
+                                        <StopIcon sx={{ color: ICON_RED }} fontSize="small" />
                                     </IconButton>
                                 </span>
                             </Tooltip>
@@ -332,11 +333,12 @@ export default function Debugger() {
                             <Tooltip title={"Restart"} placement="top">
                                 <span>
                                     <IconButton onClick={startDebugging}>
-                                        <ReplayIcon sx={{ color: ICON_PURPLE }} fontSize="small" />
+                                        <ReplayIcon sx={{ color: ICON_GREEN }} fontSize="small" />
                                     </IconButton>
                                 </span>
                             </Tooltip>
                         )}
+                        <Divider orientation="vertical" flexItem />
                         <Tooltip
                             title={viewingLatest ? "Step" : "Forward to latest to continue debugging."}
                             placement="top"
@@ -350,7 +352,7 @@ export default function Debugger() {
                                     disabled={!canRunCode}
                                 >
                                     <SkipNextIcon
-                                        sx={{ color: canRunCode ? ICON_PURPLE : ICON_DISABLED }}
+                                        sx={{ color: canRunCode ? ICON_BLUE : ICON_DISABLED }}
                                         fontSize="small"
                                     />
                                 </IconButton>
@@ -371,7 +373,7 @@ export default function Debugger() {
                                     <EjectIcon
                                         sx={{
                                             transform: "rotate(90deg)",
-                                            color: canRunCode ? ICON_PURPLE : ICON_DISABLED,
+                                            color: canRunCode ? ICON_BLUE : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -395,7 +397,7 @@ export default function Debugger() {
                                     <EjectOutlinedIcon
                                         sx={{
                                             transform: "rotate(90deg)",
-                                            color: canRunCode ? ICON_PURPLE : ICON_DISABLED,
+                                            color: canRunCode ? ICON_BLUE : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -414,7 +416,7 @@ export default function Debugger() {
                                     <FastForwardIcon
                                         sx={{
                                             transform: "rotate(180deg)",
-                                            color: canRewind ? ICON_RED : ICON_DISABLED,
+                                            color: canRewind ? ICON_PURPLE : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -434,7 +436,7 @@ export default function Debugger() {
                                     <PlayArrowIcon
                                         sx={{
                                             transform: "rotate(180deg)",
-                                            color: canRewind ? ICON_RED : ICON_DISABLED,
+                                            color: canRewind ? ICON_PURPLE : ICON_DISABLED,
                                         }}
                                         fontSize="small"
                                     />
@@ -450,7 +452,7 @@ export default function Debugger() {
                                     disabled={!canForward}
                                 >
                                     <PlayArrowIcon
-                                        sx={{ color: canForward ? ICON_RED : ICON_DISABLED }}
+                                        sx={{ color: canForward ? ICON_PURPLE : ICON_DISABLED }}
                                         fontSize="small"
                                     />
                                 </IconButton>
@@ -465,7 +467,7 @@ export default function Debugger() {
                                     disabled={!canForward}
                                 >
                                     <FastForwardIcon
-                                        sx={{ color: canForward ? ICON_RED : ICON_DISABLED }}
+                                        sx={{ color: canForward ? ICON_PURPLE : ICON_DISABLED }}
                                         fontSize="small"
                                     />
                                 </IconButton>

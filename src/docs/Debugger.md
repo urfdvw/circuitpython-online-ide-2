@@ -83,6 +83,8 @@ The interface will jump to the **Debugger Page** once debugging starts. The debu
 
 ### Limitations
 
+* Debugger isn't supported if the IDE is downloaded as a html file and running locally.
+    - alternative is that you can download the [whole project](https://github.com/urfdvw/circuitpython-online-ide-2/archive/refs/heads/main.zip) and host a local server in folder `/docs/`.
 * Currently, only **root-level** Python files (files directly under the `CIRCUITPY` drive) are supported.
 * The debugger consumes additional memory (both Flash and RAM). If you encounter memory issues, consider debugging fewer files or simplifying your watch expressions.
 * The debugger does not support **SAMD21 (M0)** chips due to the lack of the `json` module in CircuitPython for these chips. These chips are also very memory-constrained and are not recommended in general.

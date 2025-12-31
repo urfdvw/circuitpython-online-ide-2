@@ -22,6 +22,10 @@ const WhatSNew = () => {
         setOpen(appConfig.config.general[version_config]);
     }, [appConfig.config.general[version_config]]);
 
+    if (window.location.protocol === "file:") {
+        return null;
+    }
+
     function gotItHandler() {
         setOpen(false);
         appConfig.setConfigField("general", version_config, false);
@@ -66,7 +70,7 @@ const WhatSNew = () => {
     return (
         <Dialog
             open={open}
-            maxWidth="sm" 
+            maxWidth="sm"
             fullWidth
             aria-labelledby="whats-new-dialog-title"
             PaperProps={{

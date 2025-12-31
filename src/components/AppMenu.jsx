@@ -87,7 +87,7 @@ export default function AppMenu() {
                         openTab(flexModel, "Library Management", "lib_management");
                     },
                 },
-                {
+                window.location.protocol !== "file:" && {
                     text: "Debugger",
                     handler: () => {
                         console.log("clicked on menu item `Debugger`");

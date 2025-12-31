@@ -1,5 +1,5 @@
 ## Version 2.3.0
-Released on December 30th, 2025
+Released on December 31th, 2025
 
 Significant updates from version 2.2.3 include:
 - Debugger

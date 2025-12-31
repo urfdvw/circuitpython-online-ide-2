@@ -207,8 +207,8 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
             const safeExprKey = expr.replace(/"/g, '\\"');
             block += `${indent}try:\n`;
             block += `${indent}    _ds.d["w"]["${safeExprKey}"] = str(${expr})\n`;
-            block += `${indent}except:\n`;
-            block += `${indent}    _ds.d["w"]["${safeExprKey}"] = _dbg.ER\n`;
+            block += `${indent}except Exception as _debug_e:\n`;
+            block += `${indent}    _ds.d["w"]["${safeExprKey}"] = str(_debug_e)\n`;
         });
 
         // Body tail
@@ -377,9 +377,6 @@ except ImportError:
 import gc
 import json
 from time import sleep
-
-# constants
-ER = "cannot be evaluated" 
 
 # private function
 def _time():

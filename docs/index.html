@@ -2369,8 +2369,8 @@ ${JSON.stringify(vr,null,2)}`),new Error("Language.load failed: no language func
 `,kr+="    "),On+=`${kr}_ds.sh("${zr}", ${Gr})
 `,Bn.forEach(jn=>{const Vn=jn.replace(/"/g,'\\"');On+=`${kr}try:
 `,On+=`${kr}    _ds.d["w"]["${Vn}"] = str(${jn})
-`,On+=`${kr}except:
-`,On+=`${kr}    _ds.d["w"]["${Vn}"] = _dbg.ER
+`,On+=`${kr}except Exception as _debug_e:
+`,On+=`${kr}    _ds.d["w"]["${Vn}"] = str(_debug_e)
 `}),On+=`${kr}_ds.st()
 `,On},yr=new Map;for(const kr of Ye){const Gr=await(await(await e.getFileHandle(kr)).getFile()).text();yr.set(kr,Gr)}const fr=kr=>{const Lr=kr.match(/^(\s*)/);return Lr?Lr[1]:""},sr=new Map;for(const kr of Ye){let zr=yr.get(kr).split(/\r?\n/);const Gr=new Map,Pr=et.includes(kr);if(zr=zr.map(kn=>{let Bn=kn.match(/^(\s*)from\s+([a-zA-Z0-9_]+)\s+import/);if(Bn){const On=Bn[2];if(Ye.includes(On+".py"))return kn.replace(`from ${On}`,`from ${PREFIX}${On}`)}let _n=kn.match(/^(\s*)import\s+([a-zA-Z0-9_]+)(\s+as\s+\w+)?$/);if(_n){const On=_n[2],jn=_n[3];if(Ye.includes(On+".py"))return jn?kn.replace(`import ${On}`,`import ${PREFIX}${On}`):`${_n[1]}import ${PREFIX}${On} as ${On}`}return kn}),Pr){const kn=await identifyCodeRows(zr.join(`
 `));console.log(kn);const Bn=Array.from(kn).sort((_n,On)=>_n-On);for(const _n of Bn){const On=zr[_n];if(On===void 0)continue;let jn=!1;(ai=>{const di=ai.toLowerCase().split("#");return di.length>1?di[di.length-1].trim()==="●":!1})(On)&&(jn=!0);const ni=fr(On),Ci=_n+1,ui=St(ni,jn,kr,Ci);Gr.set(_n,ui)}}let pr="";pr+=`import ide_debug_state as _dbg
@@ -2388,9 +2388,6 @@ except ImportError:
 import gc
 import json
 from time import sleep
-
-# constants
-ER = "cannot be evaluated" 
 
 # private function
 def _time():

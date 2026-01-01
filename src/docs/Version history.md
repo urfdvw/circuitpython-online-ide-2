@@ -2,11 +2,11 @@
 Released on December 31th, 2025
 
 - **Debugger tool**!!!
-    - Step-by-step debugging
-    - Clicking on the Editor gutter to set Breakpoints
+    - Stepping Through
     - Watch Expressions
-    - Conditional breakpoint
-    - Time traveling
+    - Editor Gutter Breakpoints
+    - Conditional Breakpoints
+    - Time Traveling
 - Serial Console
     - Raw log
 

@@ -101,7 +101,7 @@ export default function Navigation() {
             </p>
             <p>
                 If you have not installed CircuitPython on your microcontroller, please check{" "}
-                <a href="https://learn.adafruit.com/welcome-to-circuitpython/installing-circuitpython">
+                <a href="https://learn.adafruit.com/welcome-to-circuitpython/installing-circuitpython" target="_blank">
                     <b>this tutorial</b>
                 </a>{" "}
                 first.
@@ -145,7 +145,7 @@ export default function Navigation() {
                 <Typography component="div">
                     <p>
                         ⬆️ New CircuitPython version {versionToString(cpyInfo.version)} is available!{" "}
-                        <a href={`https://circuitpython.org/board/${boardInfo.board_id}/`}>
+                        <a href={`https://circuitpython.org/board/${boardInfo.board_id}/`} target="_blank">
                             <b>Click here to upgrade.</b>
                         </a>
                     </p>
@@ -155,7 +155,7 @@ export default function Navigation() {
                                 <TableRow>
                                     <TableCell></TableCell>
                                     <TableCell>
-                                        <strong>Version</strong>
+                                        <strong>CPy Version</strong>
                                     </TableCell>
                                     <TableCell>
                                         <strong>Update Date</strong>
@@ -188,6 +188,18 @@ export default function Navigation() {
                     </TableContainer>
                 </Typography>
             )}
+            <Button
+                onClick={() => {
+                    window.open(
+                        "https://docs.google.com/forms/d/e/1FAIpQLSdupiJIRViFwPpuQC1hMp8gRvhxACLoAjgepm_-IRZumwK7Cg/viewform",
+                        "_blank"
+                    );
+                }}
+                variant="contained"
+                sx={{ mt: "25px" }}
+            >
+                Submit Feedback
+            </Button>
         </Typography>
     );
 }

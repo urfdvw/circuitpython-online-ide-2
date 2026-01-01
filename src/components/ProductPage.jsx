@@ -20,34 +20,39 @@ import { isMobile, isSafari, isFirefox } from "react-device-detect";
 
 const FEATURES = [
     {
+        heading: "Debugger",
+        body: "Step, Breakpoints, Watches, Rewind, and More",
+        image: "./media/debugger.png",
+    },
+    {
         heading: "Library Management",
         body: "Automated dependency handling",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/library_management.png",
+        image: "./media/library_management.png",
     },
     {
         heading: "Plotter",
         body: "Visualize sensor data",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/plotter.png",
-    },
-    {
-        heading: "Camera",
-        body: "Show your microcontroller to others",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/camera.png",
+        image: "./media/plotter.png",
     },
     {
         heading: "Folder View",
         body: "Manage file on your microcontroller",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/folder_view.png",
+        image: "./media/folder_view.png",
     },
     {
         heading: "Code Editor",
         body: "Python highlighting and Multi-tab support",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/editor.png",
+        image: "./media/editor.png",
     },
     {
         heading: "Serial Console",
         body: "For communication and REPL",
-        image: "https://urfdvw.github.io/circuitpython-online-ide-2/media/serial_console.png",
+        image: "./media/serial_console.png",
+    },
+    {
+        heading: "Camera",
+        body: "Show your microcontroller to others",
+        image: "./media/camera.png",
     },
 ];
 
@@ -136,7 +141,7 @@ const ProductPage = () => {
                         <Grid item xs={12} md={7}>
                             <Box
                                 component="img"
-                                src="https://urfdvw.github.io/circuitpython-online-ide-2/media/main.png"
+                                src="./media/main.png"
                                 alt="CircuitPython Online IDE"
                                 sx={{
                                     width: "100%",

@@ -23,6 +23,26 @@ import { FILE_EDITED } from "../constants";
 import * as FlexLayout from "flexlayout-react";
 // tab
 import TabTemplate from "../utilComponents/TabTemplate";
+// breakpoints
+import { identifyCodeRows } from "../utilFunctions/debuggerUtils";
+
+// CSS for breakpoint styling
+const breakpointStyles = `
+    .ace_gutter-cell.ace_breakpoint::before {
+        content: "●";
+        color: #ff0000;
+        font-size: 18px;
+        font-weight: bold;
+          position: absolute;
+          left: 2px; 
+          top: 9px;
+          transform: translateY(-50%);
+          z-index: 10;
+    }
+    .ace_gutter-cell.ace_breakpoint {
+        cursor: pointer;
+    }
+`;
 
 function generateRandomNumber(a) {
     // Calculate the range between a and a/4
@@ -35,8 +55,17 @@ function generateRandomNumber(a) {
 }
 
 export default function IdeEditor({ node }) {
-    const { appConfig, fileLookUp, helpTabSelection, configTabSelection, flexModel, sendCtrlC, sendCtrlD, sendCode } =
-        useContext(AppContext);
+    const {
+        appConfig,
+        fileLookUp,
+        helpTabSelection,
+        configTabSelection,
+        flexModel,
+        sendCtrlC,
+        sendCtrlD,
+        sendCode,
+        setInstrumentationOutdated,
+    } = useContext(AppContext);
     const config = appConfig.config;
     const fileHandle = fileLookUp[node.getConfig().fileKey];
     const aceEditorRef = useRef(null);
@@ -44,6 +73,7 @@ export default function IdeEditor({ node }) {
     const [fileEdited, setFileEdited] = useState(false);
     const [popped, setPopped] = useState(false);
     const [fileExists, setFileExists] = useState(true);
+    const [breakpoints, setBreakpoints] = useState(new Set());
     // scheduled state checking
     useEffect(() => {
         const interval = setInterval(async () => {
@@ -71,6 +101,53 @@ export default function IdeEditor({ node }) {
         aceEditorRef.current.editor.session.setNewLineMode(config.editor.newline_mode);
     }, [config.editor.newline_mode]);
 
+    // Function to check if a line has a breakpoint comment
+    function hasBreakpointComment(lineText) {
+        const breakpointRegex = /#\s*●/;
+        return breakpointRegex.test(lineText);
+    }
+
+    // Function to update breakpoints based on text content
+    function updateBreakpointsFromText() {
+        const lines = text.split("\n");
+        const newBreakpoints = new Set();
+        lines.forEach((line, index) => {
+            if (hasBreakpointComment(line)) {
+                newBreakpoints.add(index);
+            }
+        });
+        setBreakpoints(newBreakpoints);
+    }
+
+    // Update breakpoints when text changes
+    useEffect(() => {
+        updateBreakpointsFromText();
+    }, [text]);
+
+    // Update gutter decorations whenever breakpoints change
+    useEffect(() => {
+        if (aceEditorRef.current) {
+            const editor = aceEditorRef.current.editor;
+            const session = editor.session;
+
+            // Add stylesheet for breakpoint styling if not already added
+            if (!document.getElementById("breakpoint-styles")) {
+                const styleEl = document.createElement("style");
+                styleEl.id = "breakpoint-styles";
+                styleEl.textContent = breakpointStyles;
+                document.head.appendChild(styleEl);
+            }
+
+            // Clear existing gutter decorations
+            session.clearBreakpoints();
+
+            // Add breakpoint markers to the gutter
+            breakpoints.forEach((lineNum) => {
+                session.setBreakpoint(lineNum, "ace_breakpoint");
+            });
+        }
+    }, [breakpoints]);
+
     const height = node.getRect().height;
     var mode = "text";
     if (fileHandle.name.toLowerCase().endsWith(".py")) {
@@ -86,6 +163,7 @@ export default function IdeEditor({ node }) {
     function saveFile(text) {
         writeFileText(fileHandle, text);
         setFileEdited(false);
+        setInstrumentationOutdated(true);
     }
 
     // send code from editor
@@ -231,6 +309,67 @@ export default function IdeEditor({ node }) {
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
+
+        // Add gutter click handler for breakpoints
+        const gutter = aceEditorRef.current.editor.renderer.$gutterLayer;
+        if (gutter && !gutter.breakpointHandlerAttached) {
+            const gutterElement = gutter.element;
+            gutterElement.addEventListener("click", async (event) => {
+                // Prefer getting the row directly from the clicked gutter cell DOM element
+                const cell = event.target.closest && event.target.closest(".ace_gutter-cell");
+                if (!cell) return;
+
+                // --- Restricted Logic Change ---
+                // Ignore if the click target is the fold widget (the collapse arrow)
+                if (event.target.classList.contains("ace_fold-widget")) return;
+
+                // Restrict click to the left side of the gutter cell (to avoid triggering fold logic)
+                const rect = cell.getBoundingClientRect();
+                const relativeX = event.clientX - rect.left;
+                if (relativeX > rect.width - 20) return;
+                // --- End Logic Change ---
+
+                let lineNum = NaN;
+                const rowAttr =
+                    cell.getAttribute("data-row") ||
+                    cell.getAttribute("data-gutter-row") ||
+                    cell.getAttribute("data-ace-row");
+                if (rowAttr !== null) {
+                    lineNum = parseInt(rowAttr, 10);
+                } else {
+                    // Fallback: parse displayed line number and convert to zero-based index
+                    const displayed = parseInt(cell.textContent, 10);
+                    if (!isNaN(displayed)) {
+                        lineNum = displayed - 1;
+                    }
+                }
+
+                if (!isNaN(lineNum) && lineNum >= 0) {
+                    const session = aceEditorRef.current.editor.session;
+                    const line = session.getLine(lineNum);
+
+                    // Check if line already has breakpoint comment
+                    if (hasBreakpointComment(line)) {
+                        // Remove breakpoint comment
+                        const newLine = line.replace(/#\s*●/, "").trimEnd();
+                        const range = new Range(lineNum, 0, lineNum, line.length);
+                        session.replace(range, newLine);
+                        setText(session.getValue());
+                    } else {
+                        // Add breakpoint comment
+                        const codeRows = await identifyCodeRows(session.getValue());
+                        if (codeRows.has(lineNum)) {
+                            console.log("Can set breakpoint on a code row.");
+                            const newLine = line + (line.trim() ? " " : "") + "# ●";
+                            const range = new Range(lineNum, 0, lineNum, line.length);
+                            session.replace(range, newLine);
+                            setText(session.getValue());
+                        }
+                    }
+                }
+            });
+            gutter.breakpointHandlerAttached = true;
+        }
     }
 
     const title =

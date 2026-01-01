@@ -37,7 +37,7 @@ function transpose(array) {
     return array[0].map((_, colIndex) => array.map((row) => parseFloat(row[colIndex])));
 }
 
-export default function RawPlotter({ node }) {
+export default function SerialPlotter({ node }) {
     const { appConfig, flexModel, serialOutput, configTabSelection, helpTabSelection } = useContext(AppContext);
     const config = appConfig.config;
 
@@ -52,9 +52,9 @@ export default function RawPlotter({ node }) {
     if (output || output.trim() !== "") {
         try {
             const last_active_block = output.split("soft reboot").at(-1);
-            // console.log("RawPlotter", "Last active block:", last_active_block);
+            // console.log("SerialPlotter", "Last active block:", last_active_block);
             const last_plot_text = last_active_block.split("startplot:").at(-1);
-            // console.log("RawPlotter", "Last plot data:", last_plot_text);
+            // console.log("SerialPlotter", "Last plot data:", last_plot_text);
 
             var plot_labels = last_plot_text.split("\n").at(0).trim().split(" ");
             // console.log("Plot labels:", plot_labels);

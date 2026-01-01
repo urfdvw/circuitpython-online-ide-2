@@ -2,8 +2,6 @@
 import { useState, useContext, useEffect, useRef } from "react";
 // context
 import AppContext from "../AppContext";
-// constants
-import * as constants from "../constants";
 // ---- Display ----
 // MUI
 import { Box, Button, Tooltip } from "@mui/material";
@@ -18,19 +16,15 @@ import "ace-builds/src-min-noconflict/ext-searchbox";
 // ---- util ----
 // download log
 import { downloadAsFile } from "../utilComponents/react-local-file-system";
-// textProcessor
-import { textProcessor } from "../hooks/useSerial";
-const { matchesInBetween, removeInBetween } = textProcessor;
 // teb template
 import TabTemplate from "../utilComponents/TabTemplate";
-import MenuBar from "../utilComponents/MenuBar";
-//
-import { selectTabById } from "../layout/layoutUtils";
 // Xterm
 import XtermConsole from "./XtermConsole";
 // code snippet editor
 import SiblingWithBottomRightTab from "../utilComponents/SiblingWithBottomRightTab";
 import { isPythonIncomplete } from "../utilFunctions/serialHelpers";
+
+import { openTab, selectTabById } from "../layout/layoutUtils";
 
 const RawSerialWrite = ({
     text,
@@ -184,7 +178,7 @@ const RawSerialWrite = ({
     );
 };
 
-const RawConsole = () => {
+const SerialConsole = () => {
     const {
         serialOutput,
         serialReady,
@@ -202,6 +196,8 @@ const RawConsole = () => {
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
     const [clearTrigger, setClearTrigger] = useState(0);
+
+    const rawLogRef = useRef(null);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {
@@ -239,6 +235,12 @@ const RawConsole = () => {
                     text: "Clear",
                     handler: () => {
                         setClearTrigger((prev) => prev + 1);
+                    },
+                },
+                {
+                    text: "Raw Log",
+                    handler: () => {
+                        openTab(flexModel, "Serial Raw Log", "serial_raw_log");
                     },
                 },
                 {
@@ -341,4 +343,4 @@ const RawConsole = () => {
     );
 };
 
-export default RawConsole;
+export default SerialConsole;

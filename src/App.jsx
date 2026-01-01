@@ -32,6 +32,8 @@ import useEditorTabs from "./hooks/useEditorTabs";
 import { useSerial, useSerialCommands } from "./hooks/useSerial";
 // Board info
 import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
+// version info
+import WhatSNew from "./components/WhatSNew";
 
 function App() {
     if (isMobile || isSafari || isFirefox) {
@@ -103,6 +105,8 @@ function App() {
         }
         getBoardInfo();
     }, [rootFolderDirectoryReady, rootDirHandle]);
+    // Debugger
+    const [instrumentationOutdated, setInstrumentationOutdated] = useState(true);
 
     /**** main logic ****/
     if (!appConfig.ready) {
@@ -160,9 +164,13 @@ function App() {
                 codeHistory,
                 // board info
                 boardInfo,
+                // debugger
+                instrumentationOutdated,
+                setInstrumentationOutdated,
             }}
         >
             <DarkTheme dark={dark} highContrast={highContrast} />
+            <WhatSNew />
             <div className="app">
                 <div className="app-header">
                     <AppMenu />

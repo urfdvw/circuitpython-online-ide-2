@@ -3,6 +3,7 @@ import { FitAddon } from "xterm-addon-fit";
 import { Terminal } from "xterm";
 import "xterm/css/xterm.css";
 import AppContext from "../AppContext";
+import { sleep } from "../utilFunctions/debuggerUtils";
 
 const invert_css = {
     WebkitFilter: "invert(100%) hue-rotate(180deg)",
@@ -12,7 +13,7 @@ const invert_css = {
 };
 
 const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
-    const { appConfig, sendDataToSerialPort, serial, serialReady, addToSerialOutput } = useContext(AppContext);
+    const { appConfig, sendDataToSerialPort, serial, serialOutput } = useContext(AppContext);
 
     const terminalOptions = {
         convertEol: true,
@@ -55,11 +56,20 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             });
             observer.observe(terminal.current.element.parentElement);
             // serial call back
-            serial.registerReaderCallback("terminal", (data) => {
+            serial.registerReaderCallback("terminal", async (data) => {
                 terminal.current.write(data);
             });
         }
     }, []);
+
+    useEffect(() => {
+        async function scroll() {
+            terminal.current.scrollToBottom();
+            await sleep(100);
+            terminal.current.scrollToBottom();
+        }
+        scroll();
+    }, [serialOutput]);
 
     useEffect(() => {
         if (!terminal.current) {

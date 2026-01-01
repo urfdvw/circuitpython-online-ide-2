@@ -1,0 +1,355 @@
+import React, { useEffect, useMemo } from "react";
+import {
+    Box,
+    Typography,
+    Checkbox,
+    FormControlLabel,
+    FormGroup,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    Select,
+    MenuItem,
+    TextField,
+    IconButton,
+    Button,
+    FormControl,
+    Divider,
+    Tooltip,
+} from "@mui/material";
+import DeleteIcon from "@mui/icons-material/Delete";
+import AddIcon from "@mui/icons-material/Add";
+import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+
+// --- SUB-COMPONENT 1: DebugTargets ---
+// Parameters: pythonFileNames, debugFileNames, setDebugFileNames
+const DebugTargets = ({ pythonFileNames, debugFileNames, setDebugFileNames }) => {
+    useEffect(() => {
+        console.log(pythonFileNames);
+        if (pythonFileNames.includes("code.py")) {
+            setDebugFileNames(["code.py"]);
+        } else if (pythonFileNames.includes("main.py")) {
+            setDebugFileNames(["main.py"]);
+        }
+    }, [pythonFileNames]);
+    const handleFileToggle = (fileName) => {
+        const currentIndex = debugFileNames.indexOf(fileName);
+        const newDebugFiles = [...debugFileNames];
+
+        if (currentIndex === -1) {
+            newDebugFiles.push(fileName);
+        } else {
+            if (debugFileNames.length === 1) {
+                alert("Please select at least one file to debug.");
+                return;
+            }
+            newDebugFiles.splice(currentIndex, 1);
+        }
+        setDebugFileNames(newDebugFiles);
+    };
+
+    return (
+        <Box>
+            <Paper variant="outlined" sx={{ p: 2, mb: 4 }}>
+                <Button
+                    size="small"
+                    variant="outlined"
+                    onClick={() => setDebugFileNames([...pythonFileNames])}
+                    sx={{ mb: 1 }}
+                >
+                    Select All
+                </Button>
+                <FormGroup>
+                    {[...pythonFileNames].sort().map((fileName) => (
+                        <FormControlLabel
+                            key={fileName}
+                            control={
+                                <Checkbox
+                                    checked={debugFileNames.includes(fileName)}
+                                    onChange={() => handleFileToggle(fileName)}
+                                />
+                            }
+                            label={fileName}
+                        />
+                    ))}
+                    {pythonFileNames.length === 0 && (
+                        <Typography variant="body2" color="text.secondary">
+                            No Python files available.
+                        </Typography>
+                    )}
+                </FormGroup>
+            </Paper>
+        </Box>
+    );
+};
+
+// --- SUB-COMPONENT 2: WatchExpressions ---
+// Parameters: debugFileNames, watchExpressions, setWatchExpressions
+const WatchExpressions = ({ debugFileNames, watchExpressions, setWatchExpressions }) => {
+    // --- Logic Encapsulation: Cleanup Effect ---
+    useEffect(() => {
+        let watchExprChanged = false;
+        const newWatchExpressions = { ...watchExpressions };
+        const currentKeys = Object.keys(newWatchExpressions);
+
+        currentKeys.forEach((key) => {
+            // If a scope is assigned to a file that is no longer being debugged, remove it
+            if (key !== "" && !debugFileNames.includes(key)) {
+                delete newWatchExpressions[key];
+                watchExprChanged = true;
+            }
+        });
+
+        if (watchExprChanged) {
+            setWatchExpressions(newWatchExpressions);
+        }
+    }, [debugFileNames, watchExpressions, setWatchExpressions]);
+
+    // --- Logic Encapsulation: Handlers ---
+    const cloneWatchMap = (map) => {
+        const newMap = {};
+        Object.keys(map).forEach((key) => {
+            newMap[key] = [...map[key]];
+        });
+        return newMap;
+    };
+
+    const handleAddRow = () => {
+        const newMap = cloneWatchMap(watchExpressions);
+        if (!newMap[""]) newMap[""] = [];
+        newMap[""].push("");
+        setWatchExpressions(newMap);
+    };
+
+    const handleDuplicateRow = (scope, index) => {
+        const newMap = cloneWatchMap(watchExpressions);
+        if (newMap[scope]) {
+            const expressionToCopy = newMap[scope][index];
+            newMap[scope].splice(index + 1, 0, expressionToCopy);
+        }
+        setWatchExpressions(newMap);
+    };
+
+    const handleDeleteRow = (scope, index) => {
+        const newMap = cloneWatchMap(watchExpressions);
+        if (newMap[scope]) {
+            newMap[scope].splice(index, 1);
+        }
+        setWatchExpressions(newMap);
+    };
+
+    const handleExpressionChange = (scope, index, newValue) => {
+        const newMap = cloneWatchMap(watchExpressions);
+        if (newMap[scope]) {
+            newMap[scope][index] = newValue;
+        }
+        setWatchExpressions(newMap);
+    };
+
+    const handleScopeChange = (oldScope, index, newScope) => {
+        if (oldScope === newScope) return;
+        const newMap = cloneWatchMap(watchExpressions);
+        const expressionToMove = newMap[oldScope][index];
+        newMap[oldScope].splice(index, 1);
+        if (!newMap[newScope]) newMap[newScope] = [];
+        newMap[newScope].push(expressionToMove);
+        setWatchExpressions(newMap);
+    };
+
+    // --- Logic Encapsulation: Flatten Data ---
+    const flattenedRows = useMemo(() => {
+        const rows = [];
+        const fileKeys = Object.keys(watchExpressions)
+            .filter((k) => k !== "")
+            .sort();
+        const orderedKeys = [...fileKeys, ""];
+
+        orderedKeys.forEach((scope) => {
+            const expressions = watchExpressions[scope];
+            if (Array.isArray(expressions)) {
+                expressions.forEach((expr, idx) => {
+                    rows.push({
+                        scope: scope,
+                        expression: expr,
+                        originalIndex: idx,
+                        key: `${scope}-${idx}`,
+                    });
+                });
+            }
+        });
+        return rows;
+    }, [watchExpressions]);
+
+    return (
+        <Box>
+            <TableContainer component={Paper} variant="outlined">
+                <Table size="small">
+                    <TableHead>
+                        <TableRow sx={{ backgroundColor: "action.hover" }}>
+                            <TableCell width="30%">Context (Scope)</TableCell>
+                            <TableCell width="60%">Expression</TableCell>
+                            <TableCell width="10%" align="center">
+                                Actions
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {flattenedRows.map((row) => (
+                            <TableRow key={row.key}>
+                                <TableCell>
+                                    <FormControl fullWidth size="small" variant="standard">
+                                        <Select
+                                            value={row.scope}
+                                            onChange={(e) =>
+                                                handleScopeChange(row.scope, row.originalIndex, e.target.value)
+                                            }
+                                            disableUnderline
+                                            displayEmpty
+                                            renderValue={(selected) => (selected === "" ? <em>(global)</em> : selected)}
+                                        >
+                                            <MenuItem value="">
+                                                <em>(global)</em>
+                                            </MenuItem>
+                                            {debugFileNames.map((file) => (
+                                                <MenuItem key={file} value={file}>
+                                                    {file}
+                                                </MenuItem>
+                                            ))}
+                                            {!debugFileNames.includes(row.scope) && row.scope !== "" && (
+                                                <MenuItem value={row.scope}>{row.scope}</MenuItem>
+                                            )}
+                                        </Select>
+                                    </FormControl>
+                                </TableCell>
+                                <TableCell>
+                                    <TextField
+                                        fullWidth
+                                        variant="standard"
+                                        placeholder="e.g. my_variable + 1"
+                                        value={row.expression}
+                                        onChange={(e) =>
+                                            handleExpressionChange(row.scope, row.originalIndex, e.target.value)
+                                        }
+                                        InputProps={{ disableUnderline: true }}
+                                    />
+                                </TableCell>
+                                <TableCell align="center" sx={{ whiteSpace: "nowrap" }}>
+                                    <Tooltip title="Duplicate">
+                                        <IconButton
+                                            size="small"
+                                            onClick={() => handleDuplicateRow(row.scope, row.originalIndex)}
+                                            sx={{ mr: 1 }}
+                                        >
+                                            <ContentCopyIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                    <Tooltip title="Delete">
+                                        <IconButton
+                                            size="small"
+                                            color="error"
+                                            onClick={() => handleDeleteRow(row.scope, row.originalIndex)}
+                                        >
+                                            <DeleteIcon fontSize="small" />
+                                        </IconButton>
+                                    </Tooltip>
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                        {flattenedRows.length === 0 && (
+                            <TableRow>
+                                <TableCell colSpan={3} align="center" sx={{ py: 3, color: "text.secondary" }}>
+                                    Click + to add one.
+                                </TableCell>
+                            </TableRow>
+                        )}
+                    </TableBody>
+                </Table>
+                <Box sx={{ p: 1, display: "flex", justifyContent: "center", borderTop: 1, borderColor: "divider" }}>
+                    <Button startIcon={<AddIcon />} onClick={handleAddRow} variant="text" fullWidth>
+                        Add
+                    </Button>
+                </Box>
+            </TableContainer>
+        </Box>
+    );
+};
+
+function mergeObjectOfLists(obj1, obj2) {
+    const result = { ...obj1 };
+
+    for (const [key, value] of Object.entries(obj2)) {
+        if (result.hasOwnProperty(key)) {
+            // Concatenate and deduplicate
+            result[key] = [...new Set([...result[key], ...value])];
+        } else {
+            // Key only exists in the second object
+            result[key] = [...value];
+        }
+    }
+
+    return result;
+}
+
+// --- FINAL COMBINED COMPONENT ---
+const DebugWatchSet = ({
+    pythonFileNames,
+    debugFileNames,
+    setDebugFileNames,
+    watchExpressions,
+    setWatchExpressions,
+    conditionalBreakpoints,
+    setConditionalBreakpoints,
+}) => {
+    // --- Cleanup logic for valid Python files remains here as it bridges both domains ---
+    useEffect(() => {
+        const validDebugFiles = debugFileNames.filter((fileName) => pythonFileNames.includes(fileName));
+        if (validDebugFiles.length !== debugFileNames.length) {
+            setDebugFileNames(validDebugFiles);
+        }
+    }, [pythonFileNames, debugFileNames, setDebugFileNames]);
+
+    return (
+        <Box sx={{ width: "calc(100% - 2px - 10px)", margin: "5px" }}>
+            <Typography variant="h6" gutterBottom sx={{ m: 0 }}>
+                Debug Targets
+            </Typography>
+            <DebugTargets
+                pythonFileNames={pythonFileNames}
+                debugFileNames={debugFileNames}
+                setDebugFileNames={setDebugFileNames}
+            />
+
+            <Typography variant="h6" gutterBottom>
+                Watch Expressions
+            </Typography>
+            <WatchExpressions
+                debugFileNames={debugFileNames}
+                watchExpressions={watchExpressions}
+                setWatchExpressions={setWatchExpressions}
+            />
+
+            <Typography variant="h6" gutterBottom>
+                Conditional Breakpoints
+            </Typography>
+            <WatchExpressions
+                debugFileNames={debugFileNames}
+                watchExpressions={conditionalBreakpoints}
+                setWatchExpressions={setConditionalBreakpoints}
+            />
+
+            <Button
+                onClick={() => {
+                    setWatchExpressions((prev) => mergeObjectOfLists(prev, conditionalBreakpoints));
+                }}
+            >
+                Add conditions to watch
+            </Button>
+        </Box>
+    );
+};
+
+export default DebugWatchSet;

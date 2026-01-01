@@ -73,5 +73,5 @@ export default function useSerialCommands(sendDataToSerialPort, serialOutput, se
         }
     }
 
-    return { sendCtrlC, sendCtrlD, sendSingleLineText, sendCode, codeHistory };
+    return { sendCtrlC, sendCtrlD, sendCode, codeHistory };
 }

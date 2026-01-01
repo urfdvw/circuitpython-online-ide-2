@@ -3,7 +3,7 @@ import { grey, deepPurple } from "@mui/material/colors";
 import CornerIcons from "./CornerIcons";
 import { openTab, selectTabById } from "../layout/layoutUtils";
 import AppContext from "../AppContext";
-import React, { useContext } from "react";
+import { useContext } from "react";
 
 export default function AppMenu() {
     const { flexModel, helpTabSelection, openDirectory, connectToSerialPort, appConfig } = useContext(AppContext);
@@ -85,6 +85,13 @@ export default function AppMenu() {
                     handler: () => {
                         console.log("clicked on menu item `Library Management`");
                         openTab(flexModel, "Library Management", "lib_management");
+                    },
+                },
+                window.location.protocol !== "file:" && {
+                    text: "Debugger",
+                    handler: () => {
+                        console.log("clicked on menu item `Debugger`");
+                        openTab(flexModel, "Debugger", "debugger");
                     },
                 },
                 {

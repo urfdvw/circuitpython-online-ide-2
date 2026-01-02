@@ -171,6 +171,7 @@ export default function Debugger() {
             conditionalBreakpoints
         );
 
+        sleep(1000); //chill down
         setLoadingInfo("");
         setInstrumentationOutdated(false);
     }
@@ -193,9 +194,13 @@ export default function Debugger() {
         await sendCtrlC();
         await sleep(100);
         await sendCtrlC();
+        await sleep(100);
+        await sendCtrlC();
         await sleep(500);
         await sendCtrlD();
         await sleep(500);
+        await sendCtrlC();
+        await sleep(100);
         await sendCtrlC();
         await sleep(100);
         await sendCtrlC();

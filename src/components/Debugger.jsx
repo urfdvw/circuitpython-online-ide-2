@@ -177,6 +177,7 @@ export default function Debugger() {
     }
 
     const startDebugging = async () => {
+        const hasCodePy = pythonFileNames.includes("code.py");
         if (instrumentationOutdated) {
             await instrumentCodeProcess();
         }
@@ -205,7 +206,11 @@ export default function Debugger() {
         await sleep(100);
         await sendCtrlC();
         await sleep(500);
-        await sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);
+        if (hasCodePy) {
+            await sendDataToSerialPort("from ide_debug_code import *" + constants.LINE_END);
+        } else {
+            await sendDataToSerialPort("from ide_debug_main import *" + constants.LINE_END);
+        }
 
         setDebuggerRunning(true);
     };

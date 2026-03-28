@@ -13,13 +13,11 @@
 ### ~~3. `babel-jest` missing from devDependencies~~ ✅ Removed
 Testing infrastructure removed entirely — `jest`, `babel-jest`, `jest-environment-jsdom`, `@babel/core`, `@babel/preset-env`, `jest.config.js`, and `__tests__/` all deleted.
 
-### 4. Event listeners registered on every render (not in `useEffect`)
-- **[src/components/IdeEditor.jsx](src/components/IdeEditor.jsx) lines 313–372** — Ace editor commands and gutter click handlers added on every render. A guard flag (`breakpointHandlerAttached`) partially mitigates this but is fragile.
-- **[src/components/SerialConsole.jsx](src/components/SerialConsole.jsx) lines 100–158** — Same pattern.
+### ~~4. Event listeners registered on every render (not in `useEffect`)~~ ✅ Fixed
+All Ace editor command registrations and gutter click handler moved into `useEffect` in both [src/components/IdeEditor.jsx](src/components/IdeEditor.jsx) and [src/components/SerialConsole.jsx](src/components/SerialConsole.jsx). Gutter click handler now properly adds and removes the event listener via effect cleanup.
 
-### 5. Serial callback registered with no cleanup (memory leak)
-**File:** [src/components/XtermConsole.jsx](src/components/XtermConsole.jsx) lines 59–61
-`serial.registerReaderCallback("terminal", ...)` is never unregistered. Callbacks accumulate on remount.
+### ~~5. Serial callback registered with no cleanup (memory leak)~~ ✅ Fixed
+[src/components/XtermConsole.jsx](src/components/XtermConsole.jsx) now calls `serial.unregisterReaderCallback("terminal")` in the `useEffect` cleanup, so the callback is removed on unmount.
 
 ---
 
@@ -60,9 +58,8 @@ Any unhandled render error crashes the entire app. No Error Boundary component e
 ### ~~11. `testEnvironment: "node"` in jest config~~ ✅ Removed
 jest.config.js deleted along with all test infrastructure.
 
-### 12. `useSerial` functions recreated on every render
-**File:** [src/hooks/useSerial/useSerial.js](src/hooks/useSerial/useSerial.js) lines 28–67
-`connectToSerialPort`, `sendDataToSerialPort`, etc. are not wrapped in `useCallback`, causing unnecessary downstream re-renders.
+### ~~12. `useSerial` functions recreated on every render~~ ✅ Fixed
+`connectToSerialPort`, `disconnectFromSerialPort`, `sendDataToSerialPort`, and `addToSerialOutput` in [src/hooks/useSerial/useSerial.js](src/hooks/useSerial/useSerial.js) are now wrapped with `useCallback`.
 
 ### 13. Cloud function CORS allows all origins
 **File:** [proxy cloud function/index.js](proxy%20cloud%20function/index.js)

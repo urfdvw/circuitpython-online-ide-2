@@ -201,14 +201,14 @@ export default function IdeEditor({ node }) {
                     aceEditorRef.current.editor.gotoLine(
                         currline + 1,
                         aceEditorRef.current.editor.session.getLine(currline).length,
-                        true
+                        true,
                     );
                     aceEditorRef.current.editor.insert("\n");
                 } else {
                     aceEditorRef.current.editor.gotoLine(
                         currline + 2,
                         aceEditorRef.current.editor.session.getLine(currline + 1).length,
-                        true
+                        true,
                     );
                 }
             }
@@ -246,26 +246,26 @@ export default function IdeEditor({ node }) {
         sendCode(cell);
     }
 
-    if (aceEditorRef.current !== null) {
-        // add key bindings
-        aceEditorRef.current.editor.commands.addCommand({
+    // Register key bindings — re-run when closures over changing values need updating
+    useEffect(() => {
+        if (aceEditorRef.current === null) return;
+        const commands = aceEditorRef.current.editor.commands;
+        commands.addCommand({
             name: "save",
             bindKey: { win: "Ctrl-S", mac: "Command-S" },
-            exec: () => {
-                saveFile(text);
-            },
+            exec: () => saveFile(text),
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "ctrl-c",
             bindKey: { win: "Ctrl-Shift-C", mac: "Ctrl-C" },
             exec: sendCtrlC,
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "ctrl-d",
             bindKey: { win: "Ctrl-Shift-D", mac: "Ctrl-D" },
             exec: sendCtrlD,
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "run_current",
             bindKey: { win: "Shift-Enter", mac: "Shift-Enter" },
             exec: function (editor) {
@@ -273,7 +273,7 @@ export default function IdeEditor({ node }) {
                 run_current(editor);
             },
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "run_current_and_del",
             bindKey: { win: "Alt-Enter", mac: "Alt-Enter" },
             exec: function (editor) {
@@ -281,7 +281,7 @@ export default function IdeEditor({ node }) {
                 run_current_and_del(editor);
             },
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "run_cell",
             bindKey: { win: "Ctrl-Enter", mac: "Cmd-Enter" },
             exec: function (editor) {
@@ -289,7 +289,7 @@ export default function IdeEditor({ node }) {
                 run_cell(editor);
             },
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "MyIntdent",
             bindKey: { win: "Ctrl-]", mac: "Cmd-]" },
             exec: function (editor) {
@@ -299,7 +299,7 @@ export default function IdeEditor({ node }) {
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "MyOutdent",
             bindKey: { win: "Ctrl-[", mac: "Cmd-[" },
             exec: function (editor) {
@@ -309,68 +309,56 @@ export default function IdeEditor({ node }) {
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
+    }, [text, sendCtrlC, sendCtrlD]);
 
-        // Add gutter click handler for breakpoints
+    // Register gutter click handler for breakpoints — once only after mount
+    useEffect(() => {
+        if (aceEditorRef.current === null) return;
         const gutter = aceEditorRef.current.editor.renderer.$gutterLayer;
-        if (gutter && !gutter.breakpointHandlerAttached) {
-            const gutterElement = gutter.element;
-            gutterElement.addEventListener("click", async (event) => {
-                // Prefer getting the row directly from the clicked gutter cell DOM element
-                const cell = event.target.closest && event.target.closest(".ace_gutter-cell");
-                if (!cell) return;
+        if (!gutter) return;
+        const gutterElement = gutter.element;
 
-                // --- Restricted Logic Change ---
-                // Ignore if the click target is the fold widget (the collapse arrow)
-                if (event.target.classList.contains("ace_fold-widget")) return;
+        async function handleGutterClick(event) {
+            const cell = event.target.closest && event.target.closest(".ace_gutter-cell");
+            if (!cell) return;
+            if (event.target.classList.contains("ace_fold-widget")) return;
+            const rect = cell.getBoundingClientRect();
+            if (event.clientX - rect.left > rect.width - 20) return;
 
-                // Restrict click to the left side of the gutter cell (to avoid triggering fold logic)
-                const rect = cell.getBoundingClientRect();
-                const relativeX = event.clientX - rect.left;
-                if (relativeX > rect.width - 20) return;
-                // --- End Logic Change ---
+            let lineNum = NaN;
+            const rowAttr =
+                cell.getAttribute("data-row") ||
+                cell.getAttribute("data-gutter-row") ||
+                cell.getAttribute("data-ace-row");
+            if (rowAttr !== null) {
+                lineNum = parseInt(rowAttr, 10);
+            } else {
+                const displayed = parseInt(cell.textContent, 10);
+                if (!isNaN(displayed)) lineNum = displayed - 1;
+            }
 
-                let lineNum = NaN;
-                const rowAttr =
-                    cell.getAttribute("data-row") ||
-                    cell.getAttribute("data-gutter-row") ||
-                    cell.getAttribute("data-ace-row");
-                if (rowAttr !== null) {
-                    lineNum = parseInt(rowAttr, 10);
+            if (!isNaN(lineNum) && lineNum >= 0) {
+                const session = aceEditorRef.current.editor.session;
+                const line = session.getLine(lineNum);
+                if (hasBreakpointComment(line)) {
+                    const newLine = line.replace(/#\s*●/, "").trimEnd();
+                    session.replace(new Range(lineNum, 0, lineNum, line.length), newLine);
+                    setText(session.getValue());
                 } else {
-                    // Fallback: parse displayed line number and convert to zero-based index
-                    const displayed = parseInt(cell.textContent, 10);
-                    if (!isNaN(displayed)) {
-                        lineNum = displayed - 1;
-                    }
-                }
-
-                if (!isNaN(lineNum) && lineNum >= 0) {
-                    const session = aceEditorRef.current.editor.session;
-                    const line = session.getLine(lineNum);
-
-                    // Check if line already has breakpoint comment
-                    if (hasBreakpointComment(line)) {
-                        // Remove breakpoint comment
-                        const newLine = line.replace(/#\s*●/, "").trimEnd();
-                        const range = new Range(lineNum, 0, lineNum, line.length);
-                        session.replace(range, newLine);
+                    const codeRows = await identifyCodeRows(session.getValue());
+                    if (codeRows.has(lineNum)) {
+                        console.log("Can set breakpoint on a code row.");
+                        const newLine = line + (line.trim() ? " " : "") + "# ●";
+                        session.replace(new Range(lineNum, 0, lineNum, line.length), newLine);
                         setText(session.getValue());
-                    } else {
-                        // Add breakpoint comment
-                        const codeRows = await identifyCodeRows(session.getValue());
-                        if (codeRows.has(lineNum)) {
-                            console.log("Can set breakpoint on a code row.");
-                            const newLine = line + (line.trim() ? " " : "") + "# ●";
-                            const range = new Range(lineNum, 0, lineNum, line.length);
-                            session.replace(range, newLine);
-                            setText(session.getValue());
-                        }
                     }
                 }
-            });
-            gutter.breakpointHandlerAttached = true;
+            }
         }
-    }
+
+        gutterElement.addEventListener("click", handleGutterClick);
+        return () => gutterElement.removeEventListener("click", handleGutterClick);
+    }, []);
 
     const title =
         "Editor: " + fileHandle.fullPath + (fileExists ? "" : " (deleted)") + (fileEdited ? " (unsaved changes)" : "");

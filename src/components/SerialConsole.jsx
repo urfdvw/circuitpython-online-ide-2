@@ -97,19 +97,20 @@ const RawSerialWrite = ({
         editor.session.insert(editor.getCursorPosition(), "\n");
     }
 
-    if (aceEditorRef.current !== null) {
-        // add key bindings
-        aceEditorRef.current.editor.commands.addCommand({
+    useEffect(() => {
+        if (aceEditorRef.current === null) return;
+        const commands = aceEditorRef.current.editor.commands;
+        commands.addCommand({
             name: "ctrl-c",
             bindKey: { win: "Ctrl-Shift-C", mac: "Ctrl-C" },
             exec: sendCtrlC,
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "ctrl-d",
             bindKey: { win: "Ctrl-Shift-D", mac: "Ctrl-D" },
             exec: sendCtrlD,
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "histUp",
             bindKey: { win: "Up", mac: "Up" },
             exec: function (editor) {
@@ -117,7 +118,7 @@ const RawSerialWrite = ({
                 histUp(editor);
             },
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "histDown",
             bindKey: { win: "Down", mac: "Down" },
             exec: function (editor) {
@@ -125,7 +126,7 @@ const RawSerialWrite = ({
                 histDown(editor);
             },
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "MyIntdent",
             bindKey: { win: "Ctrl-]", mac: "Cmd-]" },
             exec: function (editor) {
@@ -135,7 +136,7 @@ const RawSerialWrite = ({
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "MyOutdent",
             bindKey: { win: "Ctrl-[", mac: "Cmd-[" },
             exec: function (editor) {
@@ -145,17 +146,17 @@ const RawSerialWrite = ({
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "send",
             bindKey: config.serial_console.enter_to_send ? "Enter" : "Shift-Enter",
             exec: consoleSendCommand,
         });
-        aceEditorRef.current.editor.commands.addCommand({
+        commands.addCommand({
             name: "newline",
             bindKey: config.serial_console.enter_to_send ? "Shift-Enter" : "Enter",
             exec: addNewline,
         });
-    }
+    }, [sendCtrlC, sendCtrlD, histUp, histDown, consoleSendCommand, config.serial_console.enter_to_send]);
 
     return (
         <>
@@ -196,8 +197,6 @@ const SerialConsole = () => {
     const [text, setText] = useState("");
     const [codeHistIndex, setCodeHistIndex] = useState(-1);
     const [clearTrigger, setClearTrigger] = useState(0);
-
-    const rawLogRef = useRef(null);
 
     function consoleSendCommand() {
         if (text.trim().length === 0) {

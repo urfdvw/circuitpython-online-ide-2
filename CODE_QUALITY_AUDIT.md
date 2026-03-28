@@ -2,17 +2,16 @@
 
 ## Critical
 
-### 1. `npm` listed as a runtime dependency
-**File:** [package.json](package.json) line 28
-`"npm": "^11.6.0"` is listed under `dependencies`. npm is a package manager, not an app dependency. Remove it.
+### ~~1. `npm` listed as a runtime dependency~~ ✅ Fixed
+~~**File:** [package.json](package.json) line 28~~
+~~`"npm": "^11.6.0"` is listed under `dependencies`. npm is a package manager, not an app dependency. Remove it.~~
 
-### 2. 15 known npm vulnerabilities (8 high-severity)
-Includes XSS in `react-router-dom`, DoS in `diff`, prototype pollution in `lodash-es`, path traversal in `rollup`, and more.
-**Fix:** Run `npm audit fix`
+### ~~2. 15 known npm vulnerabilities (8 high-severity)~~ ✅ Fixed
+~~Includes XSS in `react-router-dom`, DoS in `diff`, prototype pollution in `lodash-es`, path traversal in `rollup`, and more.~~
+`npm audit fix` resolved all 15 vulnerabilities — 0 vulnerabilities remain. `react-router-dom` also removed entirely (unused dependency).
 
-### 3. `babel-jest` missing from devDependencies
-**File:** [jest.config.js](jest.config.js)
-The jest config uses `babel-jest` as the transformer but it is not installed — `npm test` will fail at runtime.
+### ~~3. `babel-jest` missing from devDependencies~~ ✅ Removed
+Testing infrastructure removed entirely — `jest`, `babel-jest`, `jest-environment-jsdom`, `@babel/core`, `@babel/preset-env`, `jest.config.js`, and `__tests__/` all deleted.
 
 ### 4. Event listeners registered on every render (not in `useEffect`)
 - **[src/components/IdeEditor.jsx](src/components/IdeEditor.jsx) lines 313–372** — Ace editor commands and gutter click handlers added on every render. A guard flag (`breakpointHandlerAttached`) partially mitigates this but is fragile.
@@ -58,9 +57,8 @@ Should use an env variable: `import.meta.env.VITE_PROXY_ENDPOINT`
 ### 10. No React Error Boundary
 Any unhandled render error crashes the entire app. No Error Boundary component exists anywhere in the codebase.
 
-### 11. `testEnvironment: "node"` in jest config
-**File:** [jest.config.js](jest.config.js)
-React tests require `"jsdom"`, not `"node"`. DOM-dependent component tests won't work.
+### ~~11. `testEnvironment: "node"` in jest config~~ ✅ Removed
+jest.config.js deleted along with all test infrastructure.
 
 ### 12. `useSerial` functions recreated on every render
 **File:** [src/hooks/useSerial/useSerial.js](src/hooks/useSerial/useSerial.js) lines 28–67
@@ -110,8 +108,8 @@ Throws in private browsing mode or when storage is full.
 **File:** [vite.config.js](vite.config.js)
 Builds to `./docs` instead of the conventional `./dist`. Misleading — "docs" implies documentation.
 
-### 22. Near-zero test coverage
-Only one dummy test file exists: [__tests__/testDummy.js](__tests__/testDummy.js). No component, hook, or integration tests.
+### ~~22. Near-zero test coverage~~ ✅ Removed
+Testing infrastructure removed intentionally. No tests exist.
 
 ---
 
@@ -119,7 +117,7 @@ Only one dummy test file exists: [__tests__/testDummy.js](__tests__/testDummy.js
 
 | Priority | Issues |
 |---|---|
-| Fix now | `npm` as dependency, `npm audit fix`, missing `babel-jest`, `testEnvironment: "node"` |
+| ~~Fix now~~ ✅ Done | ~~`npm` as dependency, `npm audit fix`, missing `babel-jest`, `testEnvironment: "node"`~~ |
 | Fix soon | Event listeners in render, unregistered serial callback, `alert()`/`confirm()`, silent catches |
 | Improve | Debug console.logs, hardcoded endpoint, large components, missing Error Boundary |
 | Cleanup | `var`, `==`, `.DS_Store`, missing `rel`, duplicate key bindings |

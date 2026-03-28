@@ -15,6 +15,8 @@ export default function DocCam() {
     const [deviceIds, setDeviceIds] = useState([]);
     const [selectedId, setSelectedId] = useState();
     const [popped, setPopped] = useState(false);
+    const [marking, setMarking] = useState(false);
+    const [clearMarksTrigger, setClearMarksTrigger] = useState(0);
 
     useEffect(() => {
         console.log(deviceIds);
@@ -77,6 +79,18 @@ export default function DocCam() {
             ],
         },
         {
+            text: marking ? "Stop Marking" : "Mark",
+            handler: () => {
+                setMarking((prev) => !prev);
+            },
+        },
+        {
+            text: "Clear Marks",
+            handler: () => {
+                setClearMarksTrigger((prev) => prev + 1);
+            },
+        },
+        {
             label: "≡",
             options: [
                 {
@@ -97,7 +111,7 @@ export default function DocCam() {
         },
     ];
     return (
-        <PopUp popped={popped} setPopped={setPopped} title="Camera" parentStyle={{ width: "100%" }}>
+        <PopUp popped={popped} setPopped={setPopped} title="Camera" parentStyle={{ width: "100%", height: "100%" }}>
             <TabTemplate title="Camera" menuStructure={menuStructure}>
                 <NoTheme>
                     <WebcamViewer
@@ -106,6 +120,8 @@ export default function DocCam() {
                         flipV={flipV}
                         setDeviceIdList={setDeviceIds}
                         selectedDeviceId={selectedId}
+                        marking={marking}
+                        clearMarksTrigger={clearMarksTrigger}
                     />
                 </NoTheme>
             </TabTemplate>

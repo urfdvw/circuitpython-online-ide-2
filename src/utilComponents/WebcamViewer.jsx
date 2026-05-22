@@ -10,9 +10,11 @@ const WebcamViewer = ({
     setDeviceIdList = () => {},
     marking = false,
     clearMarksTrigger = 0,
+    externalStream = null,
 }) => {
     const webcamRef = useRef(null);
     const canvasRef = useRef(null);
+    const externalVideoRef = useRef(null);
     const isDrawingRef = useRef(false);
     const lastPosRef = useRef({ x: 0, y: 0 });
     const [videoDeviceId, setVideoDeviceId] = useState(undefined);
@@ -76,6 +78,14 @@ const WebcamViewer = ({
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }, [clearMarksTrigger]);
 
+    // Attach external stream to video element
+    useEffect(() => {
+        const el = externalVideoRef.current;
+        if (!el || !externalStream) return;
+        el.srcObject = externalStream;
+        el.play().catch(() => {});
+    }, [externalStream]);
+
     function getCanvasPos(e) {
         const canvas = canvasRef.current;
         const rect = canvas.getBoundingClientRect();
@@ -124,21 +134,36 @@ const WebcamViewer = ({
         >
             <TransformComponent wrapperStyle={{ width: "100%", height: "100%" }}>
                 <div style={{ position: "relative", width: "100%", height: "100%" }}>
-                    <Webcam
-                        ref={webcamRef}
-                        audio={false}
-                        screenshotFormat="image/jpeg"
-                        videoConstraints={{
-                            facingMode: "user",
-                            deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
-                        }}
-                        style={{
-                            width: "100%",
-                            height: "100%",
-                            objectFit: "cover",
-                            transform: transformStyle,
-                        }}
-                    />
+                    {externalStream ? (
+                        <video
+                            ref={externalVideoRef}
+                            autoPlay
+                            playsInline
+                            muted
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                transform: transformStyle,
+                            }}
+                        />
+                    ) : (
+                        <Webcam
+                            ref={webcamRef}
+                            audio={false}
+                            screenshotFormat="image/jpeg"
+                            videoConstraints={{
+                                facingMode: "user",
+                                deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
+                            }}
+                            style={{
+                                width: "100%",
+                                height: "100%",
+                                objectFit: "cover",
+                                transform: transformStyle,
+                            }}
+                        />
+                    )}
                     <canvas
                         ref={canvasRef}
                         width={1280}

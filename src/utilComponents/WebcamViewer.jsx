@@ -155,6 +155,14 @@ const WebcamViewer = ({
                             videoConstraints={{
                                 facingMode: "user",
                                 deviceId: videoDeviceId ? { exact: videoDeviceId } : undefined,
+                                width: { ideal: 1920 },
+                                height: { ideal: 1080 },
+                            }}
+                            onUserMedia={(stream) => {
+                                const s = stream.getVideoTracks()[0]?.getSettings();
+                                if (s && (s.width < 1920 || s.height < 1080)) {
+                                    console.log(`[Webcam quality] Requested 1920x1080, got ${s.width}x${s.height}`);
+                                }
                             }}
                             style={{
                                 width: "100%",

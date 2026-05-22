@@ -14,6 +14,8 @@ import {
     Typography,
     CircularProgress,
     Box,
+    Snackbar,
+    Alert,
 } from "@mui/material";
 import QRCode from "react-qr-code";
 import Peer from "peerjs";
@@ -39,6 +41,7 @@ export default function DocCam() {
     const [phoneCamReady, setPhoneCamReady] = useState(false);
     const [idePeerId, setIdePeerId] = useState(null);
     const [peerError, setPeerError] = useState("");
+    const [disconnectMsg, setDisconnectMsg] = useState("");
     const idePeerRef = useRef(null);
     const activeCallRef = useRef(null);
 
@@ -82,6 +85,7 @@ export default function DocCam() {
             call.on("close", () => {
                 setExternalStream(null);
                 setCameraSource(null);
+                setDisconnectMsg("Phone camera disconnected");
             });
             call.on("error", (err) => setPeerError(err.message));
         });
@@ -212,6 +216,17 @@ export default function DocCam() {
                     </NoTheme>
                 </TabTemplate>
             </PopUp>
+
+            <Snackbar
+                open={!!disconnectMsg}
+                autoHideDuration={4000}
+                onClose={() => setDisconnectMsg("")}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            >
+                <Alert severity="warning" onClose={() => setDisconnectMsg("")}>
+                    {disconnectMsg}
+                </Alert>
+            </Snackbar>
 
             <Dialog open={phoneCamOpen} onClose={cancelPhoneCamDialog} maxWidth="xs" fullWidth>
                 <DialogTitle>Use Phone Camera</DialogTitle>

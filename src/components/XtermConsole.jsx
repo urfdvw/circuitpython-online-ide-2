@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useContext } from "react";
-import { FitAddon } from "xterm-addon-fit";
-import { Terminal } from "xterm";
-import "xterm/css/xterm.css";
+import { useEffect, useRef, useContext } from "react";
+import { FitAddon } from "@xterm/addon-fit";
+import { Terminal } from "@xterm/xterm";
+import "@xterm/xterm/css/xterm.css";
 import AppContext from "../AppContext";
 import { sleep } from "../utilFunctions/debuggerUtils";
 
@@ -60,6 +60,10 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
                 terminal.current.write(data);
             });
         }
+
+        return () => {
+            serial.unregisterReaderCallback("terminal");
+        };
     }, []);
 
     useEffect(() => {

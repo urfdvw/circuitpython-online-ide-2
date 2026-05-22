@@ -1,3 +1,10 @@
+## Version 2.3.1
+Released on May 22nd, 2026
+
+- Use your **Phone Camera** in the Camera tab to show your board!
+- Add **Marker** to Camera tab
+- Bug Fixes and Code Quality
+
 ## Version 2.3.0
 Released on December 31th, 2025
 

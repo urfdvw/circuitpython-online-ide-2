@@ -24,6 +24,7 @@ import useChannel from "./utilHooks/useChannel";
 // device support
 import { isMobile, isSafari, isFirefox } from "react-device-detect";
 import ProductPage from "./components/ProductPage";
+import CameraPage from "./components/CameraPage";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
 import { getFromPath } from "./utilComponents/react-local-file-system/utilities/fileSystemUtils";
@@ -36,6 +37,10 @@ import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 import WhatSNew from "./components/WhatSNew";
 
 function App() {
+    if (window.location.hash.startsWith("#/camera")) {
+        return <CameraPage />;
+    }
+
     if (isMobile || isSafari || isFirefox) {
         return <ProductPage />;
     }

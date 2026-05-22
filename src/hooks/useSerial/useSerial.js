@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import * as constants from "../../constants";
 import SerialCommunication from "./serial";
 import { sleep } from "./utils";
@@ -25,7 +25,21 @@ const useSerial = () => {
         setSerialReady(serial.port ? serial.port.connected : false);
     }, [serial.port, serial.port && serial.port.connected]);
 
-    const connectToSerialPort = async (refresh) => {
+    const disconnectFromSerialPort = useCallback(async () => {
+        await serial.close();
+        setSerialReady(false);
+    }, []);
+
+    const sendDataToSerialPort = useCallback(async (data) => {
+        try {
+            serial.write(data);
+            console.log("sent data to mcu:", [data]);
+        } catch (err) {
+            console.error("Failed to send data to MCU:", err);
+        }
+    }, []);
+
+    const connectToSerialPort = useCallback(async (refresh) => {
         if (serialReady) {
             if (confirm("Do you want to connect to a new device?")) {
                 await disconnectFromSerialPort();
@@ -50,21 +64,7 @@ const useSerial = () => {
         } catch (err) {
             console.error("Failed to connect:", err);
         }
-    };
-
-    const disconnectFromSerialPort = async function () {
-        await serial.close();
-        setSerialReady(false);
-    };
-
-    const sendDataToSerialPort = async (data) => {
-        try {
-            serial.write(data);
-            console.log("sent data to mcu:", [data]);
-        } catch (err) {
-            console.error("Failed to send data to MCU:", err);
-        }
-    };
+    }, [serialReady, disconnectFromSerialPort, sendDataToSerialPort]);
 
     function addToSerialOutput(text) {
         setSerialOutput((prev) => prev + text);

@@ -186,8 +186,8 @@ export default function DocCam() {
         <>
             <PopUp popped={popped} setPopped={setPopped} title="Camera" parentStyle={{ width: "100%", height: "100%" }}>
                 <TabTemplate title="Camera" menuStructure={menuStructure}>
-                    <NoTheme>
-                        {cameraSource !== null ? (
+                    {cameraSource !== null ? (
+                        <NoTheme>
                             <WebcamViewer
                                 rotation={rotation}
                                 flipH={flipH}
@@ -198,22 +198,22 @@ export default function DocCam() {
                                 clearMarksTrigger={clearMarksTrigger}
                                 externalStream={externalStream}
                             />
-                        ) : (
-                            <Box
-                                sx={{
-                                    width: "100%",
-                                    height: "100%",
-                                    display: "flex",
-                                    alignItems: "center",
-                                    justifyContent: "center",
-                                    backgroundColor: "#000",
-                                    color: "#555",
-                                }}
-                            >
-                                <Typography variant="body2">Select a camera to start</Typography>
-                            </Box>
-                        )}
-                    </NoTheme>
+                        </NoTheme>
+                    ) : (
+                        <Box
+                            sx={{
+                                width: "100%",
+                                height: "100%",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyContent: "center",
+                            }}
+                        >
+                            <Typography variant="body2" color="text.secondary">
+                                Select a camera to start
+                            </Typography>
+                        </Box>
+                    )}
                 </TabTemplate>
             </PopUp>
 

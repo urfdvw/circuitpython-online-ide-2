@@ -1,4 +1,4 @@
-import { useContext } from "react";
+import { useContext, useEffect, useState } from "react";
 import { Autocomplete, TextField, Typography, Box } from "@mui/material";
 import { Rnd } from "react-rnd";
 import WidgetContext from "./WidgetsContext";
@@ -22,19 +22,23 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
     const setY = (y) => setWidgetProperty("y", y);
 
     const { layoutIsLocked } = useContext(WidgetContext);
+    const [position, setPosition] = useState({ x: x ?? 0, y: y ?? 0 });
+
+    useEffect(() => {
+        setPosition({ x: x ?? 0, y: y ?? 0 });
+    }, [x, y]);
 
     return (
         <Rnd
             style={style}
             size={{ width: "auto", height: "auto" }}
-            position={{ x: x ?? 0, y: y ?? 0 }}
+            position={position}
+            bounds="parent"
             onDrag={(e, d) => {
-                // react-rnd is controlled via `position`, so the element only moves
-                // when we update x/y live during the drag (not just on drag stop).
-                setX(d.x);
-                setY(d.y);
+                setPosition({ x: d.x, y: d.y });
             }}
             onDragStop={(e, d) => {
+                setPosition({ x: d.x, y: d.y });
                 setX(d.x);
                 setY(d.y);
             }}

@@ -21,7 +21,7 @@ import VariableButton from "./VariableButton";
 import connected_variables from "./CIRCUITPY/connected_variables.py";
 
 const WIDGETS_PATH = "/ide/widgets.json";
-const LIB_PATH = "/lib/connected_variables.py";
+const LIB_PATH = "/connected_variables.py";
 
 export default function Widgets() {
     const { serialOutput, sendDataToSerialPort, rootDirHandle, rootFolderDirectoryReady } = useContext(AppContext);

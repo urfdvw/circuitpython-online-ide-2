@@ -1,6 +1,9 @@
 import { useState } from "react";
-import { findTabByName, findTabsetById } from "../layout/layoutUtils";
+import { findTabByName, findTabsetById, openTab } from "../layout/layoutUtils";
 import * as FlexLayout from "flexlayout-react";
+
+// canonical Connected Variable Widgets config file; opens in the Widgets tab, not the editor
+const WIDGETS_CONFIG_PATH = "/ide/widgets.json";
 
 export default function useEditorTabs(flexModel) {
     const [fileLookUp, setFileLookUp] = useState({});
@@ -8,6 +11,13 @@ export default function useEditorTabs(flexModel) {
     async function onFileClick(fileHandle) {
         const fileName = fileHandle.name;
         const fullPath = fileHandle.fullPath;
+
+        // route the widgets config to the Widgets tab instead of a JSON editor
+        if (fullPath === WIDGETS_CONFIG_PATH) {
+            openTab(flexModel, "Widgets", "widgets");
+            return;
+        }
+
         const tabNode = findTabByName(flexModel.getRoot(), fileName);
 
         if (tabNode instanceof FlexLayout.TabNode) {

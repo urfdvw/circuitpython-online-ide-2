@@ -108,13 +108,13 @@ export default function AppMenu() {
                         openTab(flexModel, "Backup", "backup");
                     },
                 },
-                // {
-                //     text: "Widgets",
-                //     handler: () => {
-                //         console.log("clicked on menu item `Widgets`");
-                //         //   openTab("Widgets", "widgets");
-                //     },
-                // },
+                {
+                    text: "Widgets",
+                    handler: () => {
+                        console.log("clicked on menu item `Widgets`");
+                        openTab(flexModel, "Widgets", "widgets");
+                    },
+                },
                 {
                     text: "Navigation",
                     handler: () => {

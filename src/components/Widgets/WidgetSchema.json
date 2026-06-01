@@ -1,0 +1,238 @@
+{
+    "title": "Widgets Configuration",
+    "type": "array",
+    "items": {
+        "type": "object",
+        "anyOf": [
+            {
+                "title": "Display",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "Display",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    }
+                }
+            },
+            {
+                "title": "Set",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "Set",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "type": {
+                        "type": "string",
+                        "enum": ["int", "float", "string", "bool", "json"],
+                        "default": "int"
+                    }
+                }
+            },
+            {
+                "title": "Cursor",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "Cursor",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "xMin": {
+                        "type": "number",
+                        "default": 0
+                    },
+                    "xMax": {
+                        "type": "number",
+                        "default": 10
+                    },
+                    "yMin": {
+                        "type": "number",
+                        "default": 0
+                    },
+                    "yMax": {
+                        "type": "number",
+                        "default": 10
+                    },
+                    "period": {
+                        "type": "number",
+                        "default": 0.15
+                    }
+                }
+            },
+            {
+                "title": "Slider",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "Slider",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "rangeMin": {
+                        "type": "number",
+                        "default": 0
+                    },
+                    "rangeMax": {
+                        "type": "number",
+                        "default": 10
+                    },
+                    "step": {
+                        "type": "number",
+                        "default": 1
+                    },
+                    "set": {
+                        "type": "number",
+                        "default": 5
+                    },
+                    "period": {
+                        "type": "number",
+                        "default": 0.2
+                    }
+                }
+            },
+            {
+                "title": "SliderReadOnly",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "SliderReadOnly",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "rangeMin": {
+                        "type": "number",
+                        "default": 0
+                    },
+                    "rangeMax": {
+                        "type": "number",
+                        "default": 10
+                    }
+                }
+            },
+            {
+                "title": "ColorPicker",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "ColorPicker",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "period": {
+                        "type": "number",
+                        "default": 0.1
+                    }
+                }
+            },
+            {
+                "title": "Button",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "Button",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30
+                    },
+                    "buttonText": {
+                        "type": "string",
+                        "default": "Button"
+                    }
+                }
+            }
+        ]
+    }
+}

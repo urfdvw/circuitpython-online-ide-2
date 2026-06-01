@@ -11,6 +11,7 @@ import SerialPlotter from "../components/SerialPlotter";
 import LibManagement from "../components/LibManagement";
 import Debugger from "../components/Debugger";
 import RawConsoleLog from "../components/RawConsoleLog";
+import Widgets from "../components/Widgets/Widgets";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -92,6 +93,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <Debugger />
+            </div>
+        );
+    } else if (component === "widgets") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <Widgets />
             </div>
         );
     }

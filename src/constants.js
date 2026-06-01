@@ -4,8 +4,11 @@ export const TITLE_END = "\x1B\\";
 export const CTRL_C = "\x03";
 export const CTRL_D = "\x04";
 export const LINE_END = "\x0D";
-export const CV_JSON_START = "<CV>"; // ConnectedVariableJson start
-export const CV_JSON_END = "</CV>";
+// Connected Variables: framed in the alt-screen-buffer escapes (hidden in any terminal,
+// same trick the debugger uses) with a CV-distinct "V" tag so CV frames are disambiguated
+// from the debugger's "D" frames (DEBUG_OUT_START/END) by the shared textProcessor helpers.
+export const CV_JSON_START = "\x1b[?1049hV"; // ConnectedVariableJson start
+export const CV_JSON_END = "V\x1b[?1049l";
 export const RARE = "\x1F";
 export const SEPARATOR = RARE + "\n" + RARE;
 export const SOFT_REBOOT = "soft reboot";

@@ -25,7 +25,6 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
     const terminal = useRef(new Terminal(terminalOptions));
     const terminalRef = useRef(null);
     const fitAddon = new FitAddon();
-    const didInitClearEffect = useRef(false);
 
     useEffect(() => {
         /* terminal init */
@@ -60,12 +59,6 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
             serial.registerReaderCallback("terminal", async (data) => {
                 terminal.current.write(data);
             });
-
-            // When the Xterm view mounts after serial data already exists,
-            // backfill the current log so the terminal matches the raw view.
-            if (serialOutput) {
-                terminal.current.write(serialOutput);
-            }
         }
 
         return () => {
@@ -91,10 +84,6 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
     }, [appConfig.config.serial_console.font]);
 
     useEffect(() => {
-        if (!didInitClearEffect.current) {
-            didInitClearEffect.current = true;
-            return;
-        }
         terminal.current.clear();
         console.log("Clear terminal", clearTrigger);
     }, [clearTrigger]);

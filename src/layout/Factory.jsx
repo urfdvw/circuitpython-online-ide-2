@@ -12,6 +12,7 @@ import LibManagement from "../components/LibManagement";
 import Debugger from "../components/Debugger";
 import RawConsoleLog from "../components/RawConsoleLog";
 import Widgets from "../components/Widgets/Widgets";
+import DataSerialConsole, { DataSerialRawLog } from "../components/DataSerialConsole";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -99,6 +100,18 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <Widgets />
+            </div>
+        );
+    } else if (component === "data_serial_console") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <DataSerialConsole />
+            </div>
+        );
+    } else if (component === "data_serial_raw_log") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <DataSerialRawLog />
             </div>
         );
     }

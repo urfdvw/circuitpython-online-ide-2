@@ -116,6 +116,13 @@ export default function AppMenu() {
                     },
                 },
                 {
+                    text: "Data Serial",
+                    handler: () => {
+                        console.log("clicked on menu item `Data Serial`");
+                        openTab(flexModel, "Data Serial", "data_serial_console");
+                    },
+                },
+                {
                     text: "Navigation",
                     handler: () => {
                         console.log("clicked on menu item `Navigation`");

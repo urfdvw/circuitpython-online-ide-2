@@ -4,11 +4,12 @@ export const TITLE_END = "\x1B\\";
 export const CTRL_C = "\x03";
 export const CTRL_D = "\x04";
 export const LINE_END = "\x0D";
-// Connected Variables: framed in the alt-screen-buffer escapes (hidden in any terminal,
-// same trick the debugger uses) with a CV-distinct "V" tag so CV frames are disambiguated
-// from the debugger's "D" frames (DEBUG_OUT_START/END) by the shared textProcessor helpers.
-export const CV_JSON_START = "\x1b[?1049hV"; // ConnectedVariableJson start
-export const CV_JSON_END = "V\x1b[?1049l";
+// Connected Variables travel on a dedicated USB CDC "data" channel (usb_cdc.data), NOT the REPL,
+// so we use plain-text markers (no terminal escapes). The board emits CV_SESSION_DIVIDER on
+// (re)connect so the IDE always has a known, clean starting point for parsing.
+export const CV_JSON_START = "<CV>"; // ConnectedVariableJson start
+export const CV_JSON_END = "</CV>";
+export const CV_SESSION_DIVIDER = "<CVSTART>";
 export const RARE = "\x1F";
 export const SEPARATOR = RARE + "\n" + RARE;
 export const SOFT_REBOOT = "soft reboot";

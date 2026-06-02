@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Box } from "@mui/material";
+import { Box, Typography } from "@mui/material";
 
 import AppContext from "../../AppContext";
 import TabTemplate from "../../utilComponents/TabTemplate";
@@ -22,12 +22,20 @@ import connected_variables from "./CIRCUITPY/connected_variables.py";
 
 const WIDGETS_PATH = "/ide/widgets.json";
 const LIB_PATH = "/connected_variables.py";
+const BOOT_PATH = "/boot.py";
 
 export default function Widgets() {
-    const { serialOutput, sendDataToSerialPort, rootDirHandle, rootFolderDirectoryReady } = useContext(AppContext);
+    const {
+        dataSerialOutput,
+        sendToDataSerialPort,
+        dataSerialReady,
+        rootDirHandle,
+        rootFolderDirectoryReady,
+    } = useContext(AppContext);
+    // Connected Variables travel on the data channel (usb_cdc.data), not the REPL serial.
     const { setVariableOnMcu, getVariableOnMcu, connectedVariables } = useConnectedVariables(
-        serialOutput,
-        sendDataToSerialPort
+        dataSerialOutput,
+        sendToDataSerialPort
     );
     const { variableWidgets, setVariableWidgets, getWidgetProperty, setWidgetProperty } = useVariableWidgets();
     const [layoutIsLocked, setLayoutIsLocked] = useState(false);
@@ -59,6 +67,30 @@ export default function Widgets() {
         return true;
     }
 
+    // Make sure boot.py enables the secondary USB CDC data channel (usb_cdc.data) that
+    // Connected Variables uses. Appends the enable snippet if missing, then asks for a hard reset.
+    async function ensureDataSerialInBootPy() {
+        let boot = "";
+        try {
+            boot = await getFromPath(rootDirHandle, BOOT_PATH);
+        } catch (e) {
+            boot = ""; // boot.py doesn't exist yet
+        }
+        const dataEnabled = /usb_cdc\.enable\([^)]*\bdata\s*=\s*True/.test(boot);
+        if (dataEnabled) {
+            alert("connected_variables installed. The data serial channel is already enabled in boot.py.");
+            return;
+        }
+        const base = boot.replace(/\s*$/, "");
+        const newBoot = (base ? base + "\n\n" : "") + "import usb_cdc\nusb_cdc.enable(console=True, data=True)\n";
+        await writeToPath(rootDirHandle, BOOT_PATH, newBoot);
+        alert(
+            "connected_variables installed and the data serial channel was enabled in boot.py.\n\n" +
+                "Please HARD-RESET the board (unplug/replug, or press its reset button) for the change " +
+                "to take effect, then open Tools → Data Serial and connect to the new (data) port."
+        );
+    }
+
     const menuStructure = [
         {
             text: showConfig ? "Back" : "Edit",
@@ -76,6 +108,7 @@ export default function Widgets() {
                     handler: async () => {
                         if (!requireDrive()) return;
                         await writeToPath(rootDirHandle, LIB_PATH, connected_variables);
+                        await ensureDataSerialInBootPy();
                     },
                 },
                 {
@@ -101,32 +134,32 @@ export default function Widgets() {
         const getProp = (propertyName) => getWidgetProperty(w.id, propertyName);
         const setProp = (propertyName, newValue) => setWidgetProperty(w.id, propertyName, newValue);
         const common = {
-            key: w.id,
             connectedVariables: connectedVariables,
             getWidgetProperty: getProp,
             setWidgetProperty: setProp,
         };
         switch (w.widgetType) {
             case "Set":
-                return <VariableSet {...common} setVariableOnMcu={setVariableOnMcu} />;
+                return <VariableSet key={w.id} {...common} setVariableOnMcu={setVariableOnMcu} />;
             case "Display":
-                return <VariableDisplay {...common} getVariableOnMcu={getVariableOnMcu} />;
+                return <VariableDisplay key={w.id} {...common} getVariableOnMcu={getVariableOnMcu} />;
             case "Cursor":
-                return <VariableCursor {...common} setVariableOnMcu={setVariableOnMcu} />;
+                return <VariableCursor key={w.id} {...common} setVariableOnMcu={setVariableOnMcu} />;
             case "Slider":
                 return (
                     <VariableSlider
+                        key={w.id}
                         {...common}
                         setVariableOnMcu={setVariableOnMcu}
                         getVariableOnMcu={getVariableOnMcu}
                     />
                 );
             case "SliderReadOnly":
-                return <VariableSliderReadOnly {...common} getVariableOnMcu={getVariableOnMcu} />;
+                return <VariableSliderReadOnly key={w.id} {...common} getVariableOnMcu={getVariableOnMcu} />;
             case "ColorPicker":
-                return <VariableColorPicker {...common} setVariableOnMcu={setVariableOnMcu} />;
+                return <VariableColorPicker key={w.id} {...common} setVariableOnMcu={setVariableOnMcu} />;
             case "Button":
-                return <VariableButton {...common} setVariableOnMcu={setVariableOnMcu} />;
+                return <VariableButton key={w.id} {...common} setVariableOnMcu={setVariableOnMcu} />;
             default:
                 return null;
         }
@@ -141,6 +174,12 @@ export default function Widgets() {
                     </Box>
                 ) : (
                     <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+                        {!dataSerialReady && (
+                            <Typography sx={{ p: 1, color: "text.secondary" }} component="p">
+                                Data Serial not connected — open <b>Tools → Data Serial</b> and connect to the
+                                board's data port for widgets to sync.
+                            </Typography>
+                        )}
                         {variableWidgets.map((w) => renderWidget(w))}
                     </Box>
                 )}

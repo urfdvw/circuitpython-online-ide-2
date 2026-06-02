@@ -12,8 +12,20 @@ const invert_css = {
     msFilter: "invert(100%) hue-rotate(180deg)",
 };
 
-const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
-    const { appConfig, sendDataToSerialPort, serial, serialOutput } = useContext(AppContext);
+const XtermConsole = ({
+    setSerialTitle,
+    clearTrigger,
+    serialInstance,
+    serialOutput: serialOutputProp,
+    readerId = "terminal",
+    enableInput = true,
+}) => {
+    const ctx = useContext(AppContext);
+    const { appConfig, sendDataToSerialPort } = ctx;
+    // Bind to a specific serial channel; default to the REPL serial from context. The data
+    // console passes its own instance/output and disables keyboard input (display-only).
+    const serial = serialInstance ?? ctx.serial;
+    const serialOutput = serialOutputProp ?? ctx.serialOutput;
 
     const terminalOptions = {
         convertEol: true,
@@ -35,14 +47,16 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
         if (!terminal.current.element) {
             terminal.current.open(terminalRef.current);
 
-            // data stream
-            terminal.current.onData((data) => {
-                sendDataToSerialPort(data);
-                console.log("sent", data);
-            });
+            // data stream (REPL console types into the board; display-only consoles don't)
+            if (enableInput) {
+                terminal.current.onData((data) => {
+                    sendDataToSerialPort(data);
+                    console.log("sent", data);
+                });
+            }
             terminal.current.onTitleChange((title) => {
                 console.log(title);
-                setSerialTitle(title);
+                if (setSerialTitle) setSerialTitle(title);
             });
             // auto fit
             terminal.current.loadAddon(fitAddon);
@@ -55,14 +69,24 @@ const XtermConsole = ({ setSerialTitle, clearTrigger }) => {
                 }
             });
             observer.observe(terminal.current.element.parentElement);
-            // serial call back
-            serial.registerReaderCallback("terminal", async (data) => {
-                terminal.current.write(data);
-            });
+
+            // Backfill: this console only mounts once its output is non-empty, so the terminal
+            // would otherwise miss everything received before it mounted (it shows in the raw log
+            // but not here). Write the accumulated output once, on open.
+            if (serialOutput) {
+                terminal.current.write(serialOutput);
+            }
         }
 
+        // Register the reader callback OUTSIDE the open-once guard so it survives React StrictMode
+        // remounts (mount → cleanup → mount). If it were inside the guard, the second mount would
+        // skip it (element already exists) and the terminal would end up with no data subscription.
+        serial.registerReaderCallback(readerId, (data) => {
+            terminal.current.write(data);
+        });
+
         return () => {
-            serial.unregisterReaderCallback("terminal");
+            serial.unregisterReaderCallback(readerId);
         };
     }, []);
 

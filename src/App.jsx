@@ -30,7 +30,7 @@ import { useFileSystem } from "./utilComponents/react-local-file-system";
 import { getFromPath } from "./utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import useEditorTabs from "./hooks/useEditorTabs";
 // serial
-import { useSerial, useSerialCommands } from "./hooks/useSerial";
+import { useSerial, useDataSerial, useSerialCommands } from "./hooks/useSerial";
 // Board info
 import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 // version info
@@ -95,6 +95,16 @@ function App() {
         serialOutput,
         serialReady
     );
+    // data serial (Connected Variables channel, usb_cdc.data)
+    const {
+        connectToDataSerialPort,
+        disconnectFromDataSerialPort,
+        sendToDataSerialPort,
+        clearDataSerialOutput,
+        dataSerialOutput,
+        dataSerialReady,
+        dataSerial,
+    } = useDataSerial();
     // Board info
     const [boardInfo, setBoardInfo] = useState(null);
     useEffect(() => {
@@ -167,6 +177,14 @@ function App() {
                 sendCtrlD,
                 sendCode,
                 codeHistory,
+                // data serial (Connected Variables channel)
+                connectToDataSerialPort,
+                disconnectFromDataSerialPort,
+                sendToDataSerialPort,
+                clearDataSerialOutput,
+                dataSerialOutput,
+                dataSerialReady,
+                dataSerial,
                 // board info
                 boardInfo,
                 // debugger

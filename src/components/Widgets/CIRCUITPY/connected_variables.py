@@ -1,11 +1,16 @@
 """Connected Variables helper for the CircuitPython Online IDE.
 
-Connects on-board variables to IDE widgets over the serial (CDC) channel.
+Connects on-board variables to IDE widgets over the SECOND USB CDC channel
+(``usb_cdc.data``) — a dedicated serial port separate from the REPL/console.
+Frames are plain text ``<CV>{json}</CV>``; on (re)connect the board emits a
+``<CVSTART>`` session divider so the IDE always has a clean parsing start point.
 
-The wire payload is framed inside the ANSI alt-screen-buffer escapes with a
-"V" tag (CV_JSON_START / CV_JSON_END). Terminals switch to the alternate
-screen and back around the JSON, so the data is invisible in any terminal,
-and the IDE distinguishes these frames from the debugger's "D" frames.
+Requires the data CDC to be enabled in boot.py:
+
+    import usb_cdc
+    usb_cdc.enable(console=True, data=True)
+
+(The IDE's "Install Library" does this for you, then asks you to hard-reset.)
 
 Usage (three equivalent ways to create a connected variable):
 
@@ -21,11 +26,11 @@ Usage (three equivalent ways to create a connected variable):
         time.sleep(1)
 """
 
-import json, sys, supervisor, time
+import json, time, usb_cdc
 
-CV_JSON_START = "\x1b[?1049hV"
-CV_JSON_END = "V\x1b[?1049l"
-LINE_END = "\n"
+CV_JSON_START = "<CV>"
+CV_JSON_END = "</CV>"
+CV_SESSION_DIVIDER = "<CVSTART>"
 UPDATE_PERIOD = 0.5
 
 
@@ -217,8 +222,17 @@ class ConnectedVariables:
             exit_action=self.exit_action,
         )
         self.last_time_stamp = time.monotonic()
+        self._was_connected = False
 
-        self._inited = True
+        if usb_cdc.data is None:
+            print(
+                "connected_variables: usb_cdc.data is not enabled. Add to boot.py:\n"
+                "    import usb_cdc\n"
+                "    usb_cdc.enable(console=True, data=True)\n"
+                "then hard-reset the board. (Or use the IDE's 'Install Library'.)"
+            )
+        else:
+            usb_cdc.data.timeout = 0  # non-blocking reads
 
         if not DOT_AUTODEFINE_SUPPORTED:
             print(
@@ -227,13 +241,48 @@ class ConnectedVariables:
                 "Use cv.define('x', ...) or cv['x'] = ... instead."
             )
 
+        self._inited = True
+
+        # best-effort session start (no-op if the IDE data port isn't open yet;
+        # heart_beat() will start the session when it later connects)
+        self._check_connection()
+
+    # --- data channel I/O ---------------------------------------------------
+
+    def _send(self, text):
+        """Write to the data channel, only when the IDE data port is open."""
+        data = usb_cdc.data
+        if data is not None and data.connected:
+            data.write(text.encode("utf-8"))
+
+    def serial_read(self):
+        """Read available bytes from the data channel (non-blocking)."""
+        data = usb_cdc.data
+        if data is None:
+            return
+        n = data.in_waiting
+        if n:
+            chunk = data.read(n)
+            if chunk:
+                self.cv_processor.push([chunk.decode("utf-8")])
+
+    def _check_connection(self):
+        """Emit a fresh session divider when the IDE (re)connects the data port."""
+        connected = usb_cdc.data is not None and usb_cdc.data.connected
+        if connected and not self._was_connected:
+            usb_cdc.data.reset_input_buffer()
+            self._send(CV_SESSION_DIVIDER)
+            self.update()  # push current state to the freshly-connected IDE
+        self._was_connected = connected
+
     # --- bidirectional sync -------------------------------------------------
 
     def update(self):
         self.serial_read()
-        print(CV_JSON_START + json.dumps(self.vars) + CV_JSON_END, end="")
+        self._send(CV_JSON_START + json.dumps(self.vars) + CV_JSON_END)
 
     def heart_beat(self):
+        self._check_connection()
         if time.monotonic() - self.last_time_stamp > UPDATE_PERIOD:
             self.update()
             self.last_time_stamp = time.monotonic()
@@ -250,20 +299,11 @@ class ConnectedVariables:
             for key, value in serial_updates_dict.items():
                 serial_updates_dict[key] = type(self.vars[key])(value)
             # echo update
-            print(CV_JSON_START + json.dumps(serial_updates_dict) + CV_JSON_END, end="")
+            self._send(CV_JSON_START + json.dumps(serial_updates_dict) + CV_JSON_END)
             # update
             self.vars.update(serial_updates_dict)
         except Exception as e:
-            self.serial_updates = ""  # clean up bad data
             print(e)
-
-    def serial_read(self):
-        """Read CDC data from the serial buffer if any (non-blocking).
-
-        Don't use input() elsewhere in your code while using this.
-        """
-        while n_bytes := supervisor.runtime.serial_bytes_available:
-            self.cv_processor.push([sys.stdin.read(n_bytes)])
 
     # --- variable creation / access -----------------------------------------
 
@@ -314,7 +354,7 @@ class ConnectedVariables:
         ), "variable type does not match in python"
         updates_dict = {name: value for name, value in zip(var_names, var_values)}
         self.vars.update(updates_dict)
-        print(CV_JSON_START + json.dumps(updates_dict) + CV_JSON_END, end="")
+        self._send(CV_JSON_START + json.dumps(updates_dict) + CV_JSON_END)
 
     # --- auto-define via attribute access (full builds only) ----------------
 

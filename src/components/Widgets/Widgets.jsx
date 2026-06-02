@@ -172,14 +172,16 @@ export default function Widgets() {
                     <Box sx={{ p: 1 }}>
                         <WidgetsConfig variableWidgets={variableWidgets} setVariableWidgets={setVariableWidgets} />
                     </Box>
+                ) : !dataSerialReady ? (
+                    <Box sx={{ p: 2 }}>
+                        <Typography component="p" sx={{ color: "text.secondary" }}>
+                            Data Serial is not connected. Connect to the board's data port
+                            (<b>Connect → Data Serial Port</b>, or <b>Tools → Data Serial</b>) for the widgets to
+                            sync — they'll appear here once connected.
+                        </Typography>
+                    </Box>
                 ) : (
                     <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
-                        {!dataSerialReady && (
-                            <Typography sx={{ p: 1, color: "text.secondary" }} component="p">
-                                Data Serial not connected — open <b>Tools → Data Serial</b> and connect to the
-                                board's data port for widgets to sync.
-                            </Typography>
-                        )}
                         {variableWidgets.map((w) => renderWidget(w))}
                     </Box>
                 )}

@@ -36,7 +36,23 @@ const XtermConsole = ({
 
     const terminal = useRef(new Terminal(terminalOptions));
     const terminalRef = useRef(null);
-    const fitAddon = new FitAddon();
+    // stable across renders (loaded once); recreating it each render would make the font/observer
+    // effects call fit() on an unloaded addon
+    const fitAddon = useRef(new FitAddon()).current;
+
+    // Only fit when the terminal is actually visible and sized. FlexLayout gives background tabs a
+    // zero/near-zero size; fitting then would shrink the terminal to a tiny column count and wrap
+    // incoming data weirdly (and it wouldn't recover when brought to the foreground).
+    const fitIfVisible = () => {
+        const el = terminalRef.current;
+        if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
+            try {
+                fitAddon.fit();
+            } catch (e) {
+                /* terminal not attached yet */
+            }
+        }
+    };
 
     useEffect(() => {
         /* terminal init */
@@ -60,13 +76,9 @@ const XtermConsole = ({
             });
             // auto fit
             terminal.current.loadAddon(fitAddon);
-            fitAddon.fit();
-            const observer = new ResizeObserver((entries) => {
-                for (let entry of entries) {
-                    const { width, height } = entry.contentRect;
-                    console.log("Size changed:", width, height);
-                    fitAddon.fit();
-                }
+            fitIfVisible();
+            const observer = new ResizeObserver(() => {
+                fitIfVisible();
             });
             observer.observe(terminal.current.element.parentElement);
 
@@ -91,6 +103,9 @@ const XtermConsole = ({
     }, []);
 
     useEffect(() => {
+        // Re-fit on new output: if the tab was just brought to the foreground, this resizes to the
+        // real width and xterm reflows the buffer (fixing anything wrapped while it was hidden).
+        fitIfVisible();
         async function scroll() {
             terminal.current.scrollToBottom();
             await sleep(100);
@@ -104,7 +119,7 @@ const XtermConsole = ({
             return;
         }
         terminal.current.options.fontSize = appConfig.config.serial_console.font + 3;
-        fitAddon.fit();
+        fitIfVisible();
     }, [appConfig.config.serial_console.font]);
 
     useEffect(() => {

@@ -1,9 +1,15 @@
 import { useContext, useEffect, useState } from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 
 import AppContext from "../../AppContext";
 import TabTemplate from "../../utilComponents/TabTemplate";
-import { writeToPath, getFromPath } from "../../utilComponents/react-local-file-system";
+import {
+    writeToPath,
+    getFromPath,
+    path2Handles,
+    getFileText,
+    checkFileExists,
+} from "../../utilComponents/react-local-file-system";
 
 import useConnectedVariables from "./useConnectedVariables";
 import useVariableWidgets from "./useVariableWidgets";
@@ -21,7 +27,8 @@ import VariableButton from "./VariableButton";
 import connected_variables from "./CIRCUITPY/connected_variables.py";
 
 const WIDGETS_PATH = "/ide/widgets.json";
-const LIB_PATH = "/connected_variables.py";
+const LIB_FILENAME = "connected_variables.py";
+const LIB_PATH = "/" + LIB_FILENAME;
 const BOOT_PATH = "/boot.py";
 
 export default function Widgets() {
@@ -29,6 +36,8 @@ export default function Widgets() {
         dataSerialOutput,
         sendToDataSerialPort,
         dataSerialReady,
+        connectToDataSerialPort,
+        openDirectory,
         rootDirHandle,
         rootFolderDirectoryReady,
     } = useContext(AppContext);
@@ -40,6 +49,8 @@ export default function Widgets() {
     const { variableWidgets, setVariableWidgets, getWidgetProperty, setWidgetProperty } = useVariableWidgets();
     const [layoutIsLocked, setLayoutIsLocked] = useState(false);
     const [showConfig, setShowConfig] = useState(false);
+    // null = checking, true/false = whether connected_variables.py is on the board
+    const [libInstalled, setLibInstalled] = useState(null);
 
     // auto-load the saved layout on mount, so opening ide/widgets.json shows the widgets
     useEffect(() => {
@@ -48,16 +59,35 @@ export default function Widgets() {
                 return;
             }
             try {
-                const loadedText = await getFromPath(rootDirHandle, WIDGETS_PATH);
+                const loadedText = await readFileIfExists(WIDGETS_PATH);
                 if (loadedText) {
                     setVariableWidgets(JSON.parse(loadedText));
                 }
             } catch (e) {
-                // no saved widgets yet; start with an empty canvas
+                // no saved widgets yet, or malformed JSON; start with an empty canvas
             }
         }
         load();
     }, [rootFolderDirectoryReady]);
+
+    // check whether the connected_variables library is installed on the board: present (checkFileExists
+    // does not create it) AND non-empty
+    useEffect(() => {
+        async function check() {
+            if (!rootFolderDirectoryReady || !rootDirHandle) {
+                setLibInstalled(false);
+                return;
+            }
+            if (!(await checkFileExists(rootDirHandle, LIB_FILENAME))) {
+                setLibInstalled(false);
+                return;
+            }
+            const fileHandle = await rootDirHandle.getFileHandle(LIB_FILENAME);
+            const text = await getFileText(fileHandle);
+            setLibInstalled(text.trim().length > 0);
+        }
+        check();
+    }, [rootFolderDirectoryReady, rootDirHandle]);
 
     function requireDrive() {
         if (!rootDirHandle) {
@@ -65,6 +95,17 @@ export default function Widgets() {
             return false;
         }
         return true;
+    }
+
+    // Read a file's text WITHOUT creating it (getFromPath/path2Handles default to create:true,
+    // which would otherwise create an empty file just by checking for it). Returns null if missing.
+    async function readFileIfExists(path) {
+        try {
+            const { fileHandle } = await path2Handles(rootDirHandle, path, { create: false });
+            return await getFileText(fileHandle);
+        } catch (e) {
+            return null;
+        }
     }
 
     // Make sure boot.py enables the secondary USB CDC data channel (usb_cdc.data) that
@@ -91,6 +132,14 @@ export default function Widgets() {
         );
     }
 
+    // write the library to the board and make sure boot.py enables the data channel
+    async function installLibrary() {
+        if (!requireDrive()) return;
+        await writeToPath(rootDirHandle, LIB_PATH, connected_variables);
+        setLibInstalled(true);
+        await ensureDataSerialInBootPy();
+    }
+
     const menuStructure = [
         {
             text: showConfig ? "Back" : "Edit",
@@ -105,11 +154,7 @@ export default function Widgets() {
             options: [
                 {
                     text: "Install Library",
-                    handler: async () => {
-                        if (!requireDrive()) return;
-                        await writeToPath(rootDirHandle, LIB_PATH, connected_variables);
-                        await ensureDataSerialInBootPy();
-                    },
+                    handler: installLibrary,
                 },
                 {
                     text: "Save Widgets",
@@ -122,7 +167,11 @@ export default function Widgets() {
                     text: "Load Widgets",
                     handler: async () => {
                         if (!requireDrive()) return;
-                        const loadedText = await getFromPath(rootDirHandle, WIDGETS_PATH);
+                        const loadedText = await readFileIfExists(WIDGETS_PATH);
+                        if (!loadedText) {
+                            alert("No saved widgets found at " + WIDGETS_PATH);
+                            return;
+                        }
                         setVariableWidgets(JSON.parse(loadedText));
                     },
                 },
@@ -172,13 +221,36 @@ export default function Widgets() {
                     <Box sx={{ p: 1 }}>
                         <WidgetsConfig variableWidgets={variableWidgets} setVariableWidgets={setVariableWidgets} />
                     </Box>
+                ) : !rootFolderDirectoryReady ? (
+                    <Box sx={{ p: 2 }}>
+                        <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
+                            The CIRCUITPY drive isn't open. Open it to detect your board, install the library, and
+                            save/load widget layouts.
+                        </Typography>
+                        <Button variant="contained" onClick={openDirectory}>
+                            Open CIRCUITPY Drive
+                        </Button>
+                    </Box>
+                ) : libInstalled === false ? (
+                    <Box sx={{ p: 2 }}>
+                        <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
+                            The Connected Variables library isn't installed on this board yet. Installing it
+                            copies <code>connected_variables.py</code> to the CIRCUITPY drive and enables the data
+                            serial channel in <code>boot.py</code> (you'll be asked to reset the board). Open the
+                            CIRCUITPY drive first if you haven't.
+                        </Typography>
+                        <Button variant="contained" onClick={installLibrary}>
+                            Install Library
+                        </Button>
+                    </Box>
                 ) : !dataSerialReady ? (
                     <Box sx={{ p: 2 }}>
-                        <Typography component="p" sx={{ color: "text.secondary" }}>
-                            Data Serial is not connected. Connect to the board's data port
-                            (<b>Connect → Data Serial Port</b>, or <b>Tools → Data Serial</b>) for the widgets to
-                            sync — they'll appear here once connected.
+                        <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
+                            Data Serial is not connected. Connect to the board's data port for the widgets to sync.
                         </Typography>
+                        <Button variant="contained" onClick={() => connectToDataSerialPort()}>
+                            Connect Data Serial
+                        </Button>
                     </Box>
                 ) : (
                     <Box sx={{ position: "relative", width: "100%", height: "100%" }}>

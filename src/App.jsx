@@ -35,6 +35,8 @@ import { useSerial, useDataSerial, useSerialCommands } from "./hooks/useSerial";
 import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 // version info
 import WhatSNew from "./components/WhatSNew";
+// agent bridge (window.__cpyAgent)
+import AgentBridge from "./agentBridge/AgentBridge";
 
 function App() {
     if (window.location.hash.startsWith("#/camera")) {
@@ -194,6 +196,7 @@ function App() {
         >
             <DarkTheme dark={dark} highContrast={highContrast} />
             <WhatSNew />
+            <AgentBridge />
             <div className="app">
                 <div className="app-header">
                     <AppMenu />

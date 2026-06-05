@@ -24,6 +24,12 @@
             "title": "Show version change info",
             "type": "boolean",
             "default": true
+        },
+        "enable_agent_bridge": {
+            "title": "Enable agent bridge (window.__cpyAgent)",
+            "description": "Expose file & serial tools on window.__cpyAgent so Agent can read/modify files and serial. Off by default for safety.",
+            "type": "boolean",
+            "default": false
         }
     }
 }

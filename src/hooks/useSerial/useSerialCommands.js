@@ -54,14 +54,24 @@ export default function useSerialCommands(sendDataToSerialPort, serialOutput, se
         await sendSingleLineText('exec("""' + code + '""")');
     }
 
-    async function sendCode(code, force) {
+    // opts.silent: don't pop a confirm() dialog on failure; instead return an
+    // error result object so non-interactive callers (e.g. the Agent
+    // bridge) can surface the error programmatically.
+    async function sendCode(code, force, opts = {}) {
         if (!serialReady) {
+            if (opts.silent) return { ok: false, error: "Serial is not connected." };
             return;
         }
         addCodeHistory(code);
         code = code.split("\r").join("");
         if (!force) {
             if (serialOutput.slice(-4, -1) !== ">>>") {
+                if (opts.silent) {
+                    return {
+                        ok: false,
+                        error: "REPL is not ready. Send Ctrl-C (ctrlC()) to reach the '>>>' prompt before sending code.",
+                    };
+                }
                 confirm("Before sending Python code to the serial console, make sure to start RELP first.");
                 return;
             }
@@ -71,6 +81,7 @@ export default function useSerialCommands(sendDataToSerialPort, serialOutput, se
         } else {
             await sendSingleLineText(code);
         }
+        if (opts.silent) return { ok: true };
     }
 
     return { sendCtrlC, sendCtrlD, sendCode, codeHistory };

@@ -16,6 +16,9 @@ import troubleshooting from "./Troubleshooting.md";
 import related_projects from "./Related projects.md";
 import lib_management from "./Lib Management.md";
 import debugger_help from "./Debugger.md";
+import agent_bridge from "./Agent Bridge.md";
+// Single source of truth for the agent system prompt (also used by the badge).
+import agent_system_prompt from "../agentBridge/systemPrompt.md";
 
 const docs = [
     {
@@ -62,6 +65,17 @@ const docs = [
         name: "debugger",
         title: "Debugger",
         body: debugger_help,
+    },
+    {
+        name: "agent_bridge",
+        title: "Agent Bridge",
+        body: agent_bridge,
+    },
+    {
+        name: "agent_bridge_prompt",
+        title: "Agent Prompt",
+        // Rendered from the single-source-of-truth prompt file, wrapped as a code block.
+        body: "# Agent Bridge — System Prompt\n\nClick the **Agent bridge: ON** badge (bottom-right) to copy this, or copy it here:\n\n```\n" + agent_system_prompt + "\n```",
     },
     {
         name: "camera",

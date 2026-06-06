@@ -7,7 +7,7 @@
 
 import { useContext, useEffect, useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
-import AppContext from "../AppContext";
+import AppContext from "../../AppContext";
 import { store, attachAgentBridge, detachAgentBridge } from "./cpyAgentBridge";
 import AGENT_SYSTEM_PROMPT from "./systemPrompt.md";
 

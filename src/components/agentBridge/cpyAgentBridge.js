@@ -22,7 +22,7 @@ import {
     moveEntry as fsMoveEntry,
     removeEntry as fsRemoveEntry,
     checkEntryExists,
-} from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+} from "../../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 
 // Shared mutable state. AgentBridge.jsx writes the latest references here on
 // every render; the API methods below read from it at call time.

@@ -13,6 +13,7 @@ import Debugger from "../components/Debugger";
 import RawConsoleLog from "../components/RawConsoleLog";
 import Widgets from "../components/Widgets/Widgets";
 import DataSerialConsole, { DataSerialRawLog } from "../components/DataSerialConsole";
+import AgentBridgeTab from "../components/agentBridge/AgentBridgeTab";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -112,6 +113,12 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <DataSerialRawLog />
+            </div>
+        );
+    } else if (component === "agent_bridge") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <AgentBridgeTab />
             </div>
         );
     }

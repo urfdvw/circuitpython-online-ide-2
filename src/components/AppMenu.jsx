@@ -103,6 +103,13 @@ export default function AppMenu() {
                     },
                 },
                 {
+                    text: "AI Agent Bridge",
+                    handler: () => {
+                        console.log("clicked on menu item `AI Agent Bridge`");
+                        openTab(flexModel, "AI Agent Bridge", "agent_bridge");
+                    },
+                },
+                {
                     text: "Camera",
                     handler: () => {
                         console.log("clicked on menu item `Camera`");

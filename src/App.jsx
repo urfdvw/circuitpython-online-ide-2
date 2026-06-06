@@ -36,7 +36,7 @@ import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
 // version info
 import WhatSNew from "./components/WhatSNew";
 // agent bridge (window.__cpyAgent)
-import AgentBridge from "./agentBridge/AgentBridge";
+import AgentBridge from "./components/agentBridge/AgentBridge";
 
 function App() {
     if (window.location.hash.startsWith("#/camera")) {

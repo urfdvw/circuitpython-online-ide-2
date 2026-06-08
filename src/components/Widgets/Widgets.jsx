@@ -183,7 +183,7 @@ export default function Widgets() {
         const getProp = (propertyName) => getWidgetProperty(w.id, propertyName);
         const setProp = (propertyName, newValue) => setWidgetProperty(w.id, propertyName, newValue);
         const common = {
-            connectedVariables: connectedVariables,
+            connectedVariables,
             getWidgetProperty: getProp,
             setWidgetProperty: setProp,
             // read-ack status for this widget's variable (write widgets show the indicator)

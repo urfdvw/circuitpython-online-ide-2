@@ -36,13 +36,11 @@ const XtermConsole = ({
 
     const terminal = useRef(new Terminal(terminalOptions));
     const terminalRef = useRef(null);
-    // stable across renders (loaded once); recreating it each render would make the font/observer
-    // effects call fit() on an unloaded addon
+    // stable instance, loaded once (a fresh one each render would break later fit() calls)
     const fitAddon = useRef(new FitAddon()).current;
 
-    // Only fit when the terminal is actually visible and sized. FlexLayout gives background tabs a
-    // zero/near-zero size; fitting then would shrink the terminal to a tiny column count and wrap
-    // incoming data weirdly (and it wouldn't recover when brought to the foreground).
+    // Only fit when visible & sized: FlexLayout gives hidden tabs zero size, and fitting then
+    // collapses the terminal to a tiny width and wraps incoming data.
     const fitIfVisible = () => {
         const el = terminalRef.current;
         if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
@@ -82,17 +80,14 @@ const XtermConsole = ({
             });
             observer.observe(terminal.current.element.parentElement);
 
-            // Backfill: this console only mounts once its output is non-empty, so the terminal
-            // would otherwise miss everything received before it mounted (it shows in the raw log
-            // but not here). Write the accumulated output once, on open.
+            // Backfill the output received before this console mounted (it gates on output > 0).
             if (serialOutput) {
                 terminal.current.write(serialOutput);
             }
         }
 
-        // Register the reader callback OUTSIDE the open-once guard so it survives React StrictMode
-        // remounts (mount → cleanup → mount). If it were inside the guard, the second mount would
-        // skip it (element already exists) and the terminal would end up with no data subscription.
+        // Register OUTSIDE the open-once guard so it survives a StrictMode remount — the 2nd mount
+        // skips the guarded block, which would otherwise leave the terminal with no subscription.
         serial.registerReaderCallback(readerId, (data) => {
             terminal.current.write(data);
         });
@@ -103,8 +98,7 @@ const XtermConsole = ({
     }, []);
 
     useEffect(() => {
-        // Re-fit on new output: if the tab was just brought to the foreground, this resizes to the
-        // real width and xterm reflows the buffer (fixing anything wrapped while it was hidden).
+        // re-fit on new output: catches a foreground transition and reflows anything wrapped while hidden
         fitIfVisible();
         async function scroll() {
             terminal.current.scrollToBottom();

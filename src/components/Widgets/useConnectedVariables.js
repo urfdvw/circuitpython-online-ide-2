@@ -120,5 +120,5 @@ export default function useConnectedVariables(dataFromBoard, sendToBoard) {
     const getVariableOnMcu = useCallback((name) => connectedVariables[name], [connectedVariables]);
     const isPending = useCallback((name) => !!pending[name], [pending]);
 
-    return { setVariableOnMcu, getVariableOnMcu, connectedVariables, isPending, pending };
+    return { setVariableOnMcu, getVariableOnMcu, connectedVariables, isPending };
 }

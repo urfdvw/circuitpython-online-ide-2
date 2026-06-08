@@ -48,7 +48,6 @@ export default function createSerialChannel({ readerId = "channel" } = {}) {
         const send = useCallback(async (data) => {
             try {
                 serial.write(data);
-                console.log(`[${readerId}] sent:`, [data]);
             } catch (err) {
                 console.error(`[${readerId}] failed to send:`, err);
             }

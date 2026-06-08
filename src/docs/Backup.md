@@ -1,4 +1,6 @@
-## Backup
+# Backup
+
+## Overview
 
 When working directly with code files on the microcontroller,
 leveraging backup tools such as cloud storage or version control systems like Git proves challenging.
@@ -40,7 +42,7 @@ File path and rows edited will show below in the tab.
 - Please make sure both Folders are opened, and view difference if necessary.
 - In the tab toolbar, click on **Sync** -> **Recover from Computer** to initiate the backup process.
 
-## Notes
+## Notes & Troubleshooting
 - It is strongly recommended to backup to a local folder with cloud synchronization or Git enabled.
 - Backup operations may consume a significant amount of computational resources on low-spec computers.
 - Files removed or overwritten by the backup or recover process are not recoverable.

@@ -14,7 +14,7 @@ import { useConfig } from "./utilComponents/react-user-config";
 import schemas from "./configs";
 // help
 import { useTabValueName } from "./utilComponents/TabedPages";
-import docs from "./docs";
+import { helpDocs } from "./docs";
 // hot keys
 import useLayoutHotKeys from "./hotKeys/useLayoutHotKeys";
 // theme
@@ -25,6 +25,7 @@ import useChannel from "./utilHooks/useChannel";
 import { isMobile, isSafari, isFirefox } from "react-device-detect";
 import ProductPage from "./components/ProductPage";
 import CameraPage from "./components/CameraPage";
+import DocsSite from "./components/DocsSite";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
 import { getFromPath } from "./utilComponents/react-local-file-system/utilities/fileSystemUtils";
@@ -41,6 +42,10 @@ import AgentBridge from "./components/agentBridge/AgentBridge";
 function App() {
     if (window.location.hash.startsWith("#/camera")) {
         return <CameraPage />;
+    }
+
+    if (window.location.hash.startsWith("#/docs")) {
+        return <DocsSite />;
     }
 
     if (isMobile || isSafari || isFirefox) {
@@ -62,7 +67,7 @@ function App() {
     //     console.log("config", appConfig);
     // }, [appConfig]); // debug
     // help
-    const helpTabSelection = useTabValueName(docs);
+    const helpTabSelection = useTabValueName(helpDocs);
     // useEffect(() => {
     //     console.log("helpTabSelection", helpTabSelection);
     // }, [helpTabSelection]); // debug

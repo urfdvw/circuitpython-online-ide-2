@@ -1,6 +1,18 @@
-## Code Editor
+# Editor
 
-The CircuitPython Online IDE uses [Ace](https://ace.c9.io/) as its code editor, providing a wide range of coding features.
+## Overview
+
+The CircuitPython Online IDE uses [Ace](https://ace.c9.io/) as its code editor, providing a wide range of coding features. Each open file appears in its own Editor tab, and saving a file triggers CircuitPython to soft reboot and run the changed code by default.
+
+## How to Use
+
+### Toolbar Buttons
+
+- **SAVE**: Save the file, which will trigger auto run in CircuitPython by default.
+- `≡` : Menu
+  - **Pop Up**: Detach this tab into a standalone window, useful for multi-monitor setups.
+  - **Help**: Open Editor Help
+  - **Settings**: Open Editor Settings
 
 ### Keyboard Shortcuts
 
@@ -22,19 +34,11 @@ REPL Mode Specific:
 - [Shift-Enter]: Run the current line or selected lines of code.
 - [Alt-Enter] ([Option-Enter]): Run and remove the current line or selected lines of code.
 
-## Toolbar
+## Notes & Troubleshooting
 
-### Title
+The tab title shows the file's path and status indicators:
 
 - Path: The full path of the file. This is useful when multiple files have the same name in the working directory.
 - **(unsaved changes)** indicator: Appears when the file content differs from the text in the Code Editor. Usually happens during editing or due to file changes outside the IDE.
   - The star icon, ⚝, in the tab title serves the same purpose.
 - **(deleted)** indicator: Appears when the opened file is no longer accessible, possibly due to deletion, relocation, or renaming. This can also occur if the working directory is missing, such as when the microcontroller is accidentally unplugged from the USB port.
-
-### Buttons
-
-- **SAVE**: Save the file, which will trigger auto run in CircuitPython by default.
-- `≡` : Menu
-  - **Pop Up**: Detach this tab into a standalone window, useful for multi-monitor setups.
-  - **Help**: Open Editor Help
-  - **Settings**: Open Editor Settings

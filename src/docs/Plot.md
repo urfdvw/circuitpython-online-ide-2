@@ -1,5 +1,7 @@
 # Plot
 
+## Overview
+
 The plot feature available in the CircuitPython Online IDE is highly beneficial when working with sensors or monitoring variable value changes.
 
 You will need to write CircuitPython code to print data through the `print()` function.
@@ -43,7 +45,10 @@ for x in range(N):
     # -----------------------------------------------------------------
 ```
 
-## Mu Editor Compatibility
+## Notes & Troubleshooting
+- The plot can be real-time if you keep the plot tab open while the data is being generated.
+
+### Mu Editor Compatibility
 
 Plot function is designed to be compatible with [Mu editor serial plotter](https://codewith.mu/en/tutorials/1.2/plotter).
 This means the following example code will also be able to plot properly
@@ -57,6 +62,3 @@ while True:
     time.sleep(0.05)
     print((random.randint(0, 100), random.randint(-100, 0), random.randint(-50, 50)))
 ```
-
-## Notes
-- The plot can be real-time if you keep the plot tab open while the data is being generated.

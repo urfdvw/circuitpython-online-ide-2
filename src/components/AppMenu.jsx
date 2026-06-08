@@ -20,8 +20,7 @@ export default function AppMenu() {
                     text: "About",
                     handler: () => {
                         console.log("clicked on menu item `About`");
-                        selectTabById(flexModel, "help_tab");
-                        helpTabSelection.setTabName("about");
+                        window.open(window.location.pathname + window.location.search + "#/docs/about", "_blank");
                     },
                 },
                 {

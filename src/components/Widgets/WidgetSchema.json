@@ -95,9 +95,14 @@
                         "type": "number",
                         "default": 10
                     },
-                    "period": {
+                    "resolution": {
                         "type": "number",
-                        "default": 0.15
+                        "default": 0.1
+                    },
+                    "sendMode": {
+                        "type": "string",
+                        "enum": ["latest", "queue"],
+                        "default": "queue"
                     }
                 }
             },
@@ -139,9 +144,10 @@
                         "type": "number",
                         "default": 5
                     },
-                    "period": {
-                        "type": "number",
-                        "default": 0.2
+                    "sendMode": {
+                        "type": "string",
+                        "enum": ["latest", "queue"],
+                        "default": "latest"
                     }
                 }
             },
@@ -199,9 +205,14 @@
                         "type": "number",
                         "default": 30
                     },
-                    "period": {
+                    "resolution": {
                         "type": "number",
-                        "default": 0.1
+                        "default": 3
+                    },
+                    "sendMode": {
+                        "type": "string",
+                        "enum": ["latest", "queue"],
+                        "default": "latest"
                     }
                 }
             },

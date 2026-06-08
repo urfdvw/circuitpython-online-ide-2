@@ -2,7 +2,7 @@ import Button from "@mui/material/Button";
 
 import VariableBase from "./VariableBase";
 
-const VariableButton = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
+const VariableButton = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty, pending }) => {
     const variableName = getWidgetProperty("variableName");
     const buttonText = getWidgetProperty("buttonText");
 
@@ -12,6 +12,7 @@ const VariableButton = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
             widgetTitle="Button"
             getWidgetProperty={getWidgetProperty}
             setWidgetProperty={setWidgetProperty}
+            pending={pending}
         >
             <Button
                 size="large"

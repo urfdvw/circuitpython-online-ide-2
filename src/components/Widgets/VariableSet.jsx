@@ -8,7 +8,7 @@ import Button from "@mui/material/Button";
 
 import VariableBase from "./VariableBase";
 
-const VariableSet = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
+const VariableSet = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty, pending }) => {
     const variableName = getWidgetProperty("variableName");
     const type = getWidgetProperty("type");
     const setType = (type) => {
@@ -43,6 +43,7 @@ const VariableSet = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, 
             widgetTitle="Set Variable"
             getWidgetProperty={getWidgetProperty}
             setWidgetProperty={setWidgetProperty}
+            pending={pending}
         >
             <TextField
                 value={value}

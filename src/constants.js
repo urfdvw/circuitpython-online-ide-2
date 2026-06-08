@@ -10,6 +10,10 @@ export const LINE_END = "\x0D";
 export const CV_JSON_START = "<CV>"; // ConnectedVariableJson start
 export const CV_JSON_END = "</CV>";
 export const CV_SESSION_DIVIDER = "<CVSTART>";
+// read-acknowledgment: the board emits this when it dumps an IDE write from the serial buffer into
+// the variable (in exit_action). Used for the widget "pending/read" indicator and backpressure.
+export const CV_READ_START = "<CVR>";
+export const CV_READ_END = "</CVR>";
 export const RARE = "\x1F";
 export const SEPARATOR = RARE + "\n" + RARE;
 export const SOFT_REBOOT = "soft reboot";

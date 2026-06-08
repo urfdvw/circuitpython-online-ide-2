@@ -42,7 +42,7 @@ export default function Widgets() {
         rootFolderDirectoryReady,
     } = useContext(AppContext);
     // Connected Variables travel on the data channel (usb_cdc.data), not the REPL serial.
-    const { setVariableOnMcu, getVariableOnMcu, connectedVariables } = useConnectedVariables(
+    const { setVariableOnMcu, getVariableOnMcu, connectedVariables, isPending } = useConnectedVariables(
         dataSerialOutput,
         sendToDataSerialPort
     );
@@ -186,6 +186,8 @@ export default function Widgets() {
             connectedVariables: connectedVariables,
             getWidgetProperty: getProp,
             setWidgetProperty: setProp,
+            // read-ack status for this widget's variable (write widgets show the indicator)
+            pending: isPending(getProp("variableName")),
         };
         switch (w.widgetType) {
             case "Set":

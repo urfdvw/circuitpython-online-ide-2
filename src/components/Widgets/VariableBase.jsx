@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import { Autocomplete, TextField, Typography, Box } from "@mui/material";
+import { Autocomplete, TextField, Typography, Box, Tooltip } from "@mui/material";
 import { Rnd } from "react-rnd";
 import WidgetContext from "./WidgetsContext";
 
@@ -12,7 +12,7 @@ const style = {
     touchAction: "none",
 };
 
-const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setWidgetProperty, children }) => {
+const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setWidgetProperty, children, pending }) => {
     const variableName = getWidgetProperty("variableName");
     const setVariableName = (name) => setWidgetProperty("variableName", name);
     const description = getWidgetProperty("description");
@@ -51,9 +51,33 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
                     flexDirection: "column",
                 }}
             >
-                <Typography variant="h5" component="h2">
-                    {widgetTitle}
-                </Typography>
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Typography variant="h5" component="h2">
+                        {widgetTitle}
+                    </Typography>
+                    {/* read-ack indicator: only shown for write widgets (pending !== undefined) */}
+                    {pending !== undefined && (
+                        <Tooltip
+                            title={
+                                pending
+                                    ? "Waiting for the board to read this value"
+                                    : "In sync — last value read by the board"
+                            }
+                        >
+                            <Box
+                                sx={{
+                                    width: 12,
+                                    height: 12,
+                                    borderRadius: "50%",
+                                    flexShrink: 0,
+                                    bgcolor: pending ? "warning.main" : "success.main",
+                                    boxShadow: pending ? "0 0 6px 1px" : "none",
+                                    transition: "background-color 120ms",
+                                }}
+                            />
+                        </Tooltip>
+                    )}
+                </Box>
                 <Typography component="dir">{description}</Typography>
                 <br />
                 <Autocomplete

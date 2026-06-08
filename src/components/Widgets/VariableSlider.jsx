@@ -1,9 +1,7 @@
-import { useEffect } from "react";
 import Slider from "@mui/material/Slider";
 import VariableBase from "./VariableBase";
-import { useSlowChangeState } from "./utilities";
 
-const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty }) => {
+const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty, pending }) => {
     const rangeMin = getWidgetProperty("rangeMin");
     const rangeMax = getWidgetProperty("rangeMax");
     const step = getWidgetProperty("step");
@@ -12,13 +10,8 @@ const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
         setWidgetProperty("set", value);
     };
     const variableName = getWidgetProperty("variableName");
-    const period = getWidgetProperty("period") === null ? 0.2 : getWidgetProperty("period");
-
-    const slowValue = useSlowChangeState(value, period);
-
-    useEffect(() => {
-        setVariableOnMcu(variableName, value);
-    }, [slowValue]);
+    // slider defaults to "latest" (only the newest position matters)
+    const sendMode = getWidgetProperty("sendMode") || "latest";
 
     return (
         <VariableBase
@@ -26,6 +19,7 @@ const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
             widgetTitle="Slider"
             getWidgetProperty={getWidgetProperty}
             setWidgetProperty={setWidgetProperty}
+            pending={pending}
         >
             <Slider
                 sx={{ width: 300 }}
@@ -34,12 +28,12 @@ const VariableSlider = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
                 step={step != undefined ? step : 1}
                 value={value != undefined ? value : 0}
                 onChange={(event) => {
-                    setValue(event.target.value);
+                    // send every change; the hook paces by the board's read-ack per `sendMode`
+                    const v = event.target.value;
+                    setValue(v);
+                    setVariableOnMcu(variableName, v, sendMode);
                 }}
                 valueLabelDisplay="on"
-                onMouseUp={() => {
-                    setVariableOnMcu(variableName, value);
-                }}
             />
         </VariableBase>
     );

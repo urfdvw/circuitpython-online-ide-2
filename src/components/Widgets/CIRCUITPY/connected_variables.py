@@ -31,6 +31,8 @@ import json, time, usb_cdc
 CV_JSON_START = "<CV>"
 CV_JSON_END = "</CV>"
 CV_SESSION_DIVIDER = "<CVSTART>"
+CV_READ_START = "<CVR>"  # read-ack: a write was just dumped from the buffer into the variable
+CV_READ_END = "</CVR>"
 UPDATE_PERIOD = 0.5
 
 
@@ -283,6 +285,9 @@ class ConnectedVariables:
 
     def heart_beat(self):
         self._check_connection()
+        # ingest incoming writes every loop (not just on the throttled broadcast) so read-acks are
+        # prompt and backpressure keeps up with the loop rate
+        self.serial_read()
         if time.monotonic() - self.last_time_stamp > UPDATE_PERIOD:
             self.update()
             self.last_time_stamp = time.monotonic()
@@ -300,8 +305,11 @@ class ConnectedVariables:
                 serial_updates_dict[key] = type(self.vars[key])(value)
             # echo update
             self._send(CV_JSON_START + json.dumps(serial_updates_dict) + CV_JSON_END)
-            # update
+            # update (dump the values from the buffer into the variables)
             self.vars.update(serial_updates_dict)
+            # read-ack: tell the IDE these variables were just ingested (drives the widget
+            # indicator + backpressure — the IDE won't send the next value until this arrives)
+            self._send(CV_READ_START + json.dumps(list(serial_updates_dict)) + CV_READ_END)
         except Exception as e:
             print(e)
 

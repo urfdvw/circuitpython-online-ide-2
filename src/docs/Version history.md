@@ -1,3 +1,11 @@
+## Version 2.4.0
+Released on June 12th, 2026
+
+- **Connected Variable Widgets**: Show or change CircuitPython variable values with Widgets while the code is running.
+- **Data Serial** tool for CircuitPython's data serial on a separate serial device
+- Restructured and expanded documentation
+- Bug Fixes and Code Quality
+
 ## Version 2.3.1
 Released on May 22nd, 2026
 

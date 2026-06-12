@@ -1,7 +1,10 @@
 import { useEffect, useState } from "react";
 import { Box, List, ListItemButton, ListItemText, ListSubheader, Typography, Divider } from "@mui/material";
+import DarkTheme from "react-lazy-dark-theme";
 import MarkdownExtended from "../utilComponents/MarkdownExtended";
-import docs from "../docs";
+import docs, { docGroups } from "../docs";
+import { useConfig } from "../utilComponents/react-user-config";
+import schemas from "../configs";
 
 // Standalone, full documentation page rendered at the `#/docs` hash route.
 // Shows every doc (tool + reference) with a sidebar; the Help tab inside the IDE
@@ -15,6 +18,18 @@ function nameFromHash() {
 
 export default function DocsSite() {
     const [selected, setSelected] = useState(nameFromHash);
+
+    // Follow the same theme setting as the IDE (shared via localStorage). The page
+    // is light by default; <DarkTheme> inverts it to match the user's preference.
+    const appConfig = useConfig(schemas);
+    let dark = null; // null => follow the OS theme ("system")
+    if (appConfig.ready) {
+        if (appConfig.config.general.theme === "light") {
+            dark = false;
+        } else if (appConfig.config.general.theme === "dark") {
+            dark = true;
+        }
+    }
 
     // Keep the selection in sync with the hash (back/forward, deep links).
     useEffect(() => {
@@ -34,13 +49,13 @@ export default function DocsSite() {
         setSelected(name);
     }
 
-    const groups = [
-        { title: "Tools", items: docs.filter((doc) => doc.kind === "tool") },
-        { title: "Reference", items: docs.filter((doc) => doc.kind === "reference") },
-    ];
+    const groups = docGroups
+        .map((group) => ({ title: group.title, items: docs.filter((doc) => doc.group === group.key) }))
+        .filter((group) => group.items.length > 0);
 
     return (
         <Box sx={{ display: "flex", height: "100vh", overflow: "hidden", backgroundColor: "#fff" }}>
+            <DarkTheme dark={dark} />
             <Box
                 component="nav"
                 sx={{

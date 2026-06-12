@@ -1,4 +1,4 @@
-# Quick Start
+# Getting Started
 
 ## Overview
 
@@ -42,6 +42,7 @@ REPL (Read-Evaluate-Print Loop) is a coding mode where you can interact with the
 - Click on the `CTRL-C` button on the UI to start REPL mode.
     - You might need to click more than once. Stop when you see `>>>` in the terminal.
 - Write one or multiple lines of code in the bottom section of the "Serial Console" tab.
-    - When writing multiple lines, use `Shift-Enter` to create a new line.
-- Click on the "Send" button in the bottom right corner of the "Serial Console" tab, or hit `Enter` on the keyboard after typing to send the code snippet to the microcontroller.
+    - By default, press `Enter` to add another line.
+- Press `Shift-Enter`, or click the "Send" button in the bottom right corner of the "Serial Console" tab, to send the code snippet to the microcontroller.
+    - You can swap `Enter` and `Shift-Enter` in **Serial Console** settings.
 - When typing code, use the `Up` and `Down` arrow keys on the keyboard to recall command history.

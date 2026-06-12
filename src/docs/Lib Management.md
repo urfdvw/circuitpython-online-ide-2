@@ -24,7 +24,7 @@ This step is optional, but keeping the bundles updated is recommended.
 
 ### Auto Install
 
-Click the button in the top left corner of the list.
+Click the **Auto Install** button in the top left corner of the list.
 The tool will read your Python code on the microcontroller
 and automatically install the libraries it needs from the bundles.
 
@@ -58,10 +58,11 @@ Settings you can adjust:
 
 ### Menu Options
 
-- Refresh library list  
+- Refresh Library List  
     - If you add or remove files directly on the CIRCUITPY drive,  
       the library list won’t update right away.  
       Use this option to refresh it manually.  
+- Show Installation Log: open a window with the detailed log of install/upgrade/uninstall actions  
 - Settings: open the library management settings  
 - Help: open the help guide for library management  
 

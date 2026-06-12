@@ -32,7 +32,12 @@ REPL Mode Specific:
   - Cells are defined as multiple lines of code starting with `#%%`.
   - If there are no cell markers, the whole file is treated as a single cell.
 - [Shift-Enter]: Run the current line or selected lines of code.
-- [Alt-Enter] ([Option-Enter]): Run and remove the current line or selected lines of code.
+- [Alt-Enter]: Run and remove the current line or selected lines of code. (On MacOS, Alt is the Option key.)
+
+Editing:
+
+- [Ctrl-]] ([Cmd-]]): Indent the current line or selection.
+- [Ctrl-[] ([Cmd-[]): Outdent the current line or selection.
 
 ## Notes & Troubleshooting
 

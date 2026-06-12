@@ -10,8 +10,6 @@ click to set focus in the Serial Console window and type.
 
 ## How to Use
 
-Data received from the microcontroller will appear in the console. To send data, click to set focus in the Serial Console window and type.
-
 ### Toolbar Buttons
 
 - **CTRL-C**: Send a "Ctrl-C" signal to the microcontroller (BRK, Break execution)
@@ -19,6 +17,7 @@ Data received from the microcontroller will appear in the console. To send data,
 - Options in the Three Dots `≡` menu:
   - **Connect to Serial Port**: Connect to a new serial device.
   - **Clear**: Clear received serial data displayed in the console.
+  - **Raw Log**: Open a tab showing the raw, unprocessed serial data.
   - **Download Log**: Download all received data, including previously cleared data.
   - **Settings**: Open Serial Console Settings.
   - **Help**: Open Serial Console Help.
@@ -31,7 +30,7 @@ See Keyboard Shortcuts below for details.
 
 ### REPL
 
-For guidance on using the REPL, refer to Quick Start -> REPL.
+For guidance on using the REPL, refer to Getting Started -> REPL.
 
 ### Code Snippet Editor
 

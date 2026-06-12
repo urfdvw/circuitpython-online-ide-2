@@ -22,6 +22,9 @@ export default function Help() {
     return (
         <TabedPages
             pages={helpDocs.map((doc) => {
+                // Most tool docs show only their "How to Use" section; docs without one
+                // (e.g. Layout) fall back to the full body so the tab is never empty.
+                const howToUse = extractSection(doc.body, "How to Use", false);
                 return {
                     ...doc,
                     body: (
@@ -36,7 +39,7 @@ export default function Help() {
                                     Open full documentation
                                 </Button>
                             </Box>
-                            <MarkdownExtended>{extractSection(doc.body, "How to Use", false)}</MarkdownExtended>
+                            <MarkdownExtended>{howToUse || doc.body}</MarkdownExtended>
                         </>
                     ),
                 };

@@ -4,7 +4,7 @@
 
 This is an **AST-Based Auto-Instrumentation Debugger**. This tool uses structural code analysis to inject debugging logic directly into your script, enabling time-travel debugging and deep state inspection.
 
-* **Step & Continue:** "Step" moves forward exactly one logical instruction; "Continue" runs until the next breakpoint.
+* **Step & Continue:** "Step" moves forward exactly one logical instruction; "Continue" (either "Continue and Log" or "Continue Without Logging") runs until the next breakpoint.
 * **Watch Expressions:** Monitor specific variables or expressions.
 * **Breakpoints:** Halt execution at specific lines.
 * **Conditional Breakpoints:** Halt execution when a specific condition is met.

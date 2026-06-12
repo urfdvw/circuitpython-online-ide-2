@@ -100,11 +100,13 @@ const markdownComponents = {
                     component="code"
                     sx={{
                         px: "0.4em",
-                        py: "0.2em",
+                        py: "0.15em",
                         fontSize: "85%",
                         fontFamily: "monospace",
-                        bgcolor: "rgba(175, 184, 193, 0.2)",
+                        // light gray pill (the app inverts colors globally in dark mode)
+                        bgcolor: "rgba(175, 184, 193, 0.35)",
                         borderRadius: "6px",
+                        whiteSpace: "nowrap",
                     }}
                     {...props}
                 >

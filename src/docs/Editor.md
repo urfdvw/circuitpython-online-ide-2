@@ -22,22 +22,22 @@ Below are CircuitPython-related shortcuts. *MacOS shortcuts in parentheses.*
 
 System Related:
 
-- [Ctrl-S] ([Cmd-S]): Save the file.
-- [Ctrl-Shift-C] ([Ctrl-C]): Send a "Ctrl-C" (BRK, Break execution) signal to the microcontroller.
-- [Ctrl-Shift-D] ([Ctrl-D]): Send a "Ctrl-D" (EOF, Restart Execution) signal to the microcontroller.
+- `Ctrl-S` (`Cmd-S`): Save the file.
+- `Ctrl-Shift-C` (`Ctrl-C`): Send a "Ctrl-C" (BRK, Break execution) signal to the microcontroller.
+- `Ctrl-Shift-D` (`Ctrl-D`): Send a "Ctrl-D" (EOF, Restart Execution) signal to the microcontroller.
 
 REPL Mode Specific:
 
-- [Ctrl-Enter] ([Cmd-Enter]): Run the current cell.
+- `Ctrl-Enter` (`Cmd-Enter`): Run the current cell.
   - Cells are defined as multiple lines of code starting with `#%%`.
   - If there are no cell markers, the whole file is treated as a single cell.
-- [Shift-Enter]: Run the current line or selected lines of code.
-- [Alt-Enter]: Run and remove the current line or selected lines of code. (On MacOS, Alt is the Option key.)
+- `Shift-Enter`: Run the current line or selected lines of code.
+- `Alt-Enter`: Run and remove the current line or selected lines of code. (On MacOS, Alt is the Option key.)
 
 Editing:
 
-- [Ctrl-]] ([Cmd-]]): Indent the current line or selection.
-- [Ctrl-[] ([Cmd-[]): Outdent the current line or selection.
+- `Ctrl-]` (`Cmd-]`): Indent the current line or selection.
+- `Ctrl-[` (`Cmd-[`): Outdent the current line or selection.
 
 ## Notes & Troubleshooting
 

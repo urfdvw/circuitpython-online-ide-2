@@ -51,16 +51,16 @@ Pressing Shift-Enter (or the "SEND" button) will send the entire snippet to the 
 *MacOS shortcuts in parentheses if different.*
 
 **Serial Console Shortcuts**
-- [Ctrl-C]: Sends a "Ctrl-C" (BRK, Break execution) signal.
-- [Ctrl-D]: Sends a "Ctrl-D" (EOF, Restart Execution) signal.
-- [Up]: Recalls earlier command history.
-- [Down]: Recalls later command history.
+- `Ctrl-C`: Sends a "Ctrl-C" (BRK, Break execution) signal.
+- `Ctrl-D`: Sends a "Ctrl-D" (EOF, Restart Execution) signal.
+- `Up`: Recalls earlier command history.
+- `Down`: Recalls later command history.
 
 **Code Snippet Editor Shortcuts**
-- [Ctrl-Shift-C] ([Ctrl-C]): Sends a "Ctrl-C" (BRK, Break execution) signal.
-- [Ctrl-Shift-D] ([Ctrl-D]): Sends a "Ctrl-D" (EOF, Restart Execution) signal.
-- [Up] (when the cursor is at the first line in the editor): Recalls earlier command history.
-- [Down] (when the cursor is at the last line in the editor): Recalls later command history.
+- `Ctrl-Shift-C` (`Ctrl-C`): Sends a "Ctrl-C" (BRK, Break execution) signal.
+- `Ctrl-Shift-D` (`Ctrl-D`): Sends a "Ctrl-D" (EOF, Restart Execution) signal.
+- `Up` (when the cursor is at the first line in the editor): Recalls earlier command history.
+- `Down` (when the cursor is at the last line in the editor): Recalls later command history.
 
 ## Notes & Troubleshooting
 

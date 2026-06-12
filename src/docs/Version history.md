@@ -93,8 +93,8 @@ Released on January 15th, 2024.
 - Retains all features from 1.0 Beta with the exception of:
     - Reflowing serial output text to hide `exec(```Some Code```)`. This functionality is planned for future releases.
     - Serial history related Editor keyboard shortcuts, which are not often used.
-        - [Alt-Up] and [Alt-Down]
-        - [Alt-Shift-Enter]
+        - `Alt-Up` and `Alt-Down`
+        - `Alt-Shift-Enter`
 - Improvements in:
     - Reliability
     - User Interface interactions

@@ -41,7 +41,7 @@ This is the landing page when debugger tool is started.
 The interface will jump to the **Debugger Page** once debugging starts. The debugger head will stop before the first step once the session is initiated.
 
 **Stop/Restart** (First button in the toolbar):
-* **Stop:** Sends a `[Ctrl-C]` signal to the microcontroller to terminate debugging.
+* **Stop:** Sends a `Ctrl-C` signal to the microcontroller to terminate debugging.
     * You can still perform "time-traveling" after the session is stopped.
 * **Restart:** Restarts the debugging session from the beginning.
 

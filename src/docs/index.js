@@ -4,6 +4,7 @@ import layout from "./Layout.md";
 import folder_view from "./Folder View.md";
 import editor from "./Editor.md";
 import serial_console from "./Serial Console.md";
+import data_serial from "./Data Serial.md";
 import settings from "./Settings.md";
 import plot from "./Plot.md";
 import backup from "./Backup.md";
@@ -66,6 +67,13 @@ const docs = [
         name: "serial_console",
         title: "Serial Console",
         body: serial_console,
+        kind: "tool",
+        group: "tool",
+    },
+    {
+        name: "data_serial",
+        title: "Data Serial",
+        body: data_serial,
         kind: "tool",
         group: "tool",
     },

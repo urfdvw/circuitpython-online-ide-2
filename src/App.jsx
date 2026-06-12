@@ -139,6 +139,10 @@ function App() {
         document.title = "CPy: " + boardInfo.board_id.split("_").join(" ");
     }
 
+    // Baud rate for the Data Serial port (configurable in Serial Console settings).
+    // The REPL Serial Console stays fixed at 115200; only this channel is adjustable.
+    const dataSerialBaudRate = appConfig.config.serial_console.data_serial_baud_rate;
+
     // theme config
     let dark = null;
     let highContrast = false;
@@ -185,7 +189,7 @@ function App() {
                 sendCode,
                 codeHistory,
                 // data serial (Connected Variables channel)
-                connectToDataSerialPort,
+                connectToDataSerialPort: () => connectToDataSerialPort({ baudRate: dataSerialBaudRate }),
                 disconnectFromDataSerialPort,
                 sendToDataSerialPort,
                 clearDataSerialOutput,

@@ -53,8 +53,9 @@ export default function createSerialChannel({ readerId = "channel" } = {}) {
             }
         }, []);
 
-        // open the port (prompting the browser picker); returns whether it connected
-        const connect = useCallback(async () => {
+        // open the port (prompting the browser picker); returns whether it connected.
+        // `options.baudRate` overrides the default (used by the Data Serial channel).
+        const connect = useCallback(async (options) => {
             if (ready) {
                 if (confirm("Do you want to connect to a new device?")) {
                     await disconnect();
@@ -63,7 +64,7 @@ export default function createSerialChannel({ readerId = "channel" } = {}) {
                 }
             }
             try {
-                const status = await serial.open();
+                const status = await serial.open(undefined, options && options.baudRate);
                 setReady(status);
                 if (!status) {
                     serial.close();

@@ -12,12 +12,12 @@ import TabTemplate from "../utilComponents/TabTemplate";
 import XtermConsole from "./XtermConsole";
 import RawConsoleLog from "./RawConsoleLog";
 // layout
-import { openTab } from "../layout/layoutUtils";
+import { openTab, selectTabById } from "../layout/layoutUtils";
 
 /**
- * Display-only console for the Connected-Variables data channel (CircuitPython usb_cdc.data).
- * Unlike the REPL Serial Console it never sends typed input to the board. Keeps the familiar
- * connect / clear / raw log / download log features.
+ * Console for the data serial channel (CircuitPython usb_cdc.data or a separate USB serial
+ * device). Shows everything received on the channel and sends typed keystrokes back to it.
+ * Keeps the familiar connect / clear / raw log / download log features.
  */
 const DataSerialConsole = () => {
     const {
@@ -25,7 +25,9 @@ const DataSerialConsole = () => {
         dataSerialOutput,
         dataSerialReady,
         connectToDataSerialPort,
+        sendToDataSerialPort,
         flexModel,
+        helpTabSelection,
     } = useContext(AppContext);
     const [clearTrigger, setClearTrigger] = useState(0);
 
@@ -50,6 +52,13 @@ const DataSerialConsole = () => {
                     text: "Download Log",
                     handler: () => downloadAsFile("data serial log.txt", dataSerialOutput),
                 },
+                {
+                    text: "Help",
+                    handler: () => {
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("data_serial");
+                    },
+                },
             ],
         },
     ];
@@ -62,8 +71,8 @@ const DataSerialConsole = () => {
                         clearTrigger={clearTrigger}
                         serialInstance={dataSerial}
                         serialOutput={dataSerialOutput}
+                        sendData={sendToDataSerialPort}
                         readerId="dataTerminal"
-                        enableInput={false}
                     />
                 </Box>
             </Box>

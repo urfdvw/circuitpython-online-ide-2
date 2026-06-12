@@ -17,15 +17,18 @@ const XtermConsole = ({
     clearTrigger,
     serialInstance,
     serialOutput: serialOutputProp,
+    sendData: sendDataProp,
     readerId = "terminal",
     enableInput = true,
 }) => {
     const ctx = useContext(AppContext);
     const { appConfig, sendDataToSerialPort } = ctx;
     // Bind to a specific serial channel; default to the REPL serial from context. The data
-    // console passes its own instance/output and disables keyboard input (display-only).
+    // console passes its own instance/output and its own send function so typed input goes
+    // to that channel instead of the REPL.
     const serial = serialInstance ?? ctx.serial;
     const serialOutput = serialOutputProp ?? ctx.serialOutput;
+    const sendData = sendDataProp ?? sendDataToSerialPort;
 
     const terminalOptions = {
         convertEol: true,
@@ -61,10 +64,10 @@ const XtermConsole = ({
         if (!terminal.current.element) {
             terminal.current.open(terminalRef.current);
 
-            // data stream (REPL console types into the board; display-only consoles don't)
+            // typed keystrokes are written to this console's serial channel
             if (enableInput) {
                 terminal.current.onData((data) => {
-                    sendDataToSerialPort(data);
+                    sendData(data);
                     console.log("sent", data);
                 });
             }

@@ -6,6 +6,8 @@ export default class SerialCommunication {
         this.keepRunning = true;
         this.writeBuffer = [];
         this.readerCallbacks = {};
+        // baud rate of the current/last connection; reused on automatic reconnect
+        this._baudRate = 115200;
 
         // New state for reconnect support
         this._listening = false;
@@ -13,8 +15,9 @@ export default class SerialCommunication {
         this._reconnecting = false;
     }
 
-    async open(portOptions) {
+    async open(portOptions, baudRate = 115200) {
         console.log("trying to open serial communication");
+        this._baudRate = baudRate;
         if ("serial" in navigator) {
             try {
                 this.port = await navigator.serial.requestPort(portOptions);
@@ -43,7 +46,7 @@ export default class SerialCommunication {
                     );
                 }
 
-                await this.port.open({ baudRate: 115200 });
+                await this.port.open({ baudRate: this._baudRate });
 
                 this.reader = this.port.readable.getReader();
                 this.writer = this.port.writable.getWriter();
@@ -214,9 +217,9 @@ export default class SerialCommunication {
                         (last.usbVendorId == null || info.usbVendorId === last.usbVendorId) &&
                         (last.usbProductId == null || info.usbProductId === last.usbProductId)
                     ) {
-                        // attempt to re-open the port
+                        // attempt to re-open the port at the same baud rate as before
                         try {
-                            await p.open({ baudRate: 115200 });
+                            await p.open({ baudRate: this._baudRate });
                         } catch (openErr) {
                             console.warn("Reopen failed:", openErr);
                             continue;

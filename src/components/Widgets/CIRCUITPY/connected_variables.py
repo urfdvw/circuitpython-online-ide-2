@@ -226,6 +226,12 @@ class ConnectedVariables:
         self.last_time_stamp = time.monotonic()
         self._was_connected = False
 
+        # race-condition tracking: which variables have been written from each
+        # side, and which ones we've already warned about (warn only once each)
+        self._written_by_python = set()
+        self._written_by_serial = set()
+        self._race_warned = set()
+
         if usb_cdc.data is None:
             print(
                 "connected_variables: usb_cdc.data is not enabled. Add to boot.py:\n"
@@ -291,6 +297,24 @@ class ConnectedVariables:
             self.update()
             self.last_time_stamp = time.monotonic()
 
+    def _warn_if_racing(self, names):
+        """Warn (once per variable) when a variable is written from both sides.
+
+        A connected variable that is assigned in CircuitPython *and* updated
+        from the IDE widgets has two writers competing for it, which is a
+        race condition: whichever side wrote last silently wins.
+        """
+        for name in names:
+            if (
+                name in self._written_by_python
+                and name in self._written_by_serial
+                and name not in self._race_warned
+            ):
+                self._race_warned.add(name)
+                print(
+                    "\033[31mconnected_variables warning: variable '{}' is being changed by both CircuitPython and the IDE widgets. To avoid a race condition, consider splitting its role into two separate variables.\033[0m".format(name)
+                )
+
     def exit_action(self, text, branch):
         try:
             # parse
@@ -305,6 +329,9 @@ class ConnectedVariables:
             # echo the update back, then apply it
             self._send(CV_JSON_START + json.dumps(serial_updates_dict) + CV_JSON_END)
             self.vars.update(serial_updates_dict)
+            # track serial-side writes and flag any that also change in Python
+            self._written_by_serial.update(serial_updates_dict)
+            self._warn_if_racing(serial_updates_dict)
             # read-ack: these vars were just ingested (drives the widget indicator + backpressure)
             self._send(CV_READ_START + json.dumps(list(serial_updates_dict)) + CV_READ_END)
         except Exception as e:
@@ -360,6 +387,9 @@ class ConnectedVariables:
         updates_dict = {name: value for name, value in zip(var_names, var_values)}
         self.vars.update(updates_dict)
         self._send(CV_JSON_START + json.dumps(updates_dict) + CV_JSON_END)
+        # track Python-side writes and flag any that also change over serial
+        self._written_by_python.update(updates_dict)
+        self._warn_if_racing(updates_dict)
 
     # --- auto-define via attribute access (full builds only) ----------------
 

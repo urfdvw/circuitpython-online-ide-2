@@ -69,12 +69,12 @@
                 }
             },
             {
-                "title": "Cursor",
-                "description": "Sends a 3-element list [x, y, pressed] where pressed is 1 (down) or 0 (up).",
+                "title": "Button",
+                "description": "Sends boolean true while pressed and false on release.",
                 "properties": {
                     "widgetType": {
                         "type": "string",
-                        "default": "Cursor",
+                        "default": "Button",
                         "readOnly": true
                     },
                     "variableName": {
@@ -95,36 +95,10 @@
                         "default": 30,
                         "description": "Vertical position in pixels."
                     },
-                    "xMin": {
-                        "type": "number",
-                        "default": 0,
-                        "description": "Minimum value of the X axis."
-                    },
-                    "xMax": {
-                        "type": "number",
-                        "default": 10,
-                        "description": "Maximum value of the X axis."
-                    },
-                    "yMin": {
-                        "type": "number",
-                        "default": 0,
-                        "description": "Minimum value of the Y axis."
-                    },
-                    "yMax": {
-                        "type": "number",
-                        "default": 10,
-                        "description": "Maximum value of the Y axis."
-                    },
-                    "resolution": {
-                        "type": "number",
-                        "default": 0.1,
-                        "description": "Smallest step between reported values."
-                    },
-                    "sendMode": {
+                    "buttonText": {
                         "type": "string",
-                        "enum": ["latest", "queue"],
-                        "default": "queue",
-                        "description": "'latest' sends only the newest value; 'queue' sends every value in order."
+                        "default": "Button",
+                        "description": "Text displayed on the button."
                     }
                 }
             },
@@ -223,6 +197,66 @@
                 }
             },
             {
+                "title": "Cursor",
+                "description": "Sends a 3-element list [x, y, pressed] where pressed is 1 (down) or 0 (up).",
+                "properties": {
+                    "widgetType": {
+                        "type": "string",
+                        "default": "Cursor",
+                        "readOnly": true
+                    },
+                    "variableName": {
+                        "type": "string",
+                        "description": "Variable this widget writes to."
+                    },
+                    "description": {
+                        "type": "string",
+                        "description": "Label shown on the widget."
+                    },
+                    "x": {
+                        "type": "number",
+                        "default": 30,
+                        "description": "Horizontal position in pixels."
+                    },
+                    "y": {
+                        "type": "number",
+                        "default": 30,
+                        "description": "Vertical position in pixels."
+                    },
+                    "xMin": {
+                        "type": "number",
+                        "default": 0,
+                        "description": "Minimum value of the X axis."
+                    },
+                    "xMax": {
+                        "type": "number",
+                        "default": 10,
+                        "description": "Maximum value of the X axis."
+                    },
+                    "yMin": {
+                        "type": "number",
+                        "default": 0,
+                        "description": "Minimum value of the Y axis."
+                    },
+                    "yMax": {
+                        "type": "number",
+                        "default": 10,
+                        "description": "Maximum value of the Y axis."
+                    },
+                    "resolution": {
+                        "type": "number",
+                        "default": 0.1,
+                        "description": "Smallest step between reported values."
+                    },
+                    "sendMode": {
+                        "type": "string",
+                        "enum": ["latest", "queue"],
+                        "default": "queue",
+                        "description": "'latest' sends only the newest value; 'queue' sends every value in order."
+                    }
+                }
+            },
+            {
                 "title": "ColorPicker",
                 "description": "Sends a 3-element RGB list [r, g, b] with each channel from 0 to 255.",
                 "properties": {
@@ -259,40 +293,6 @@
                         "enum": ["latest", "queue"],
                         "default": "latest",
                         "description": "'latest' sends only the newest value; 'queue' sends every value in order."
-                    }
-                }
-            },
-            {
-                "title": "Button",
-                "description": "Sends boolean true while pressed and false on release.",
-                "properties": {
-                    "widgetType": {
-                        "type": "string",
-                        "default": "Button",
-                        "readOnly": true
-                    },
-                    "variableName": {
-                        "type": "string",
-                        "description": "Variable this widget writes to."
-                    },
-                    "description": {
-                        "type": "string",
-                        "description": "Label shown on the widget."
-                    },
-                    "x": {
-                        "type": "number",
-                        "default": 30,
-                        "description": "Horizontal position in pixels."
-                    },
-                    "y": {
-                        "type": "number",
-                        "default": 30,
-                        "description": "Vertical position in pixels."
-                    },
-                    "buttonText": {
-                        "type": "string",
-                        "default": "Button",
-                        "description": "Text displayed on the button."
                     }
                 }
             }

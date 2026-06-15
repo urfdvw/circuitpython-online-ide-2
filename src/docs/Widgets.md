@@ -46,8 +46,13 @@ Before each connected variable read, serial cache will be read to variable.
 After each connected variable assignment, its value will be sent to widget by serial.
 `heart_beat()` is to regularly du a full sync of read and write.
 
+To save typing, the toolbar has a **copy code** menu that copies common snippets to your clipboard so you can paste them straight into your code:
+- **import** copies `from connected_variables import connected_variables as cv`.
+- **define** copies `cv.define("", 0)  # variable_name, initial value`.
+- **heartbeat** copies `cv.heart_beat()`.
+
 ### 5. Add and arrange widgets
-Click Edit to open the form, add a widget, pick its Type, and set its Variable name to one of the names you defined in code, such as `brightness`. Click Back when you are done to return to the canvas, where you can drag the widgets around. Lock layout holds them in place.
+Click Edit to open the form, add a widget, pick its Type, and set its Variable name to one of the names you defined in code, such as `brightness`. Click Back when you are done to return to the canvas. To move a widget, drag it by the move handle (the ✥ icon at the top-right of each widget); the rest of the widget stays interactive so you can use its controls without accidentally moving it. Lock layout holds everything in place and hides the move handles.
 
 When you like the arrangement, save it from `≡` -> Save Widgets, which stores it as `/ide/widgets.json` on the board, and bring it back later with Load Widgets. The IDE also loads your saved layout automatically the next time.
 
@@ -61,6 +66,7 @@ When you like the arrangement, save it from `≡` -> Save Widgets, which stores 
 - **Button** sends `True` while you hold it down and `False` when you let go.
 
 ## Notes & Troubleshooting
+- The `≡` menu also has a Help item that opens this page anytime.
 - After you turn on the data channel, the board shows up as two serial ports. The Serial Console talks to the console one and the widgets talk to the data one, so connect whichever you need.
 - Turning on the data channel is a `boot.py` change, and `boot.py` only runs at power up, so you really do need to fully power-cycle the board. A soft reboot with Ctrl-D will not apply it.
 - The name in your code and the name in the widget have to match exactly. If they do not, the board just ignores the update.

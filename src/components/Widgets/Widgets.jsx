@@ -3,6 +3,7 @@ import { Box, Typography, Button } from "@mui/material";
 
 import AppContext from "../../AppContext";
 import TabTemplate from "../../utilComponents/TabTemplate";
+import { selectTabById } from "../../layout/layoutUtils";
 import {
     writeToPath,
     getFromPath,
@@ -20,7 +21,7 @@ import VariableSet from "./VariableSet";
 import VariableDisplay from "./VariableDisplay";
 import VariableCursor from "./VariableCursor";
 import VariableSlider from "./VariableSlider";
-import VariableSliderReadOnly from "./VariableSliderReadOnly";
+import VariableMeter from "./VariableMeter";
 import VariableColorPicker from "./VariableColorPicker";
 import VariableButton from "./VariableButton";
 
@@ -40,6 +41,8 @@ export default function Widgets() {
         openDirectory,
         rootDirHandle,
         rootFolderDirectoryReady,
+        flexModel,
+        helpTabSelection,
     } = useContext(AppContext);
     // Connected Variables travel on the data channel (usb_cdc.data), not the REPL serial.
     const { setVariableOnMcu, getVariableOnMcu, connectedVariables, isPending } = useConnectedVariables(
@@ -140,10 +143,36 @@ export default function Widgets() {
         await ensureDataSerialInBootPy();
     }
 
+    async function copyToClipboard(text) {
+        try {
+            await navigator.clipboard.writeText(text);
+        } catch (err) {
+            console.error("failed to copy to clipboard:", err);
+        }
+    }
+
     const menuStructure = [
         {
             text: showConfig ? "Back" : "Edit",
             handler: () => setShowConfig((state) => !state),
+        },
+        {
+            label: "copy code",
+            options: [
+                {
+                    text: "import",
+                    handler: () =>
+                        copyToClipboard("from connected_variables import connected_variables as cv"),
+                },
+                {
+                    text: "define",
+                    handler: () => copyToClipboard('cv.define("", 0)  # variable_name, initial value'),
+                },
+                {
+                    text: "heartbeat",
+                    handler: () => copyToClipboard("cv.heart_beat()"),
+                },
+            ],
         },
         {
             text: layoutIsLocked ? "Unlock layout" : "Lock layout",
@@ -173,6 +202,13 @@ export default function Widgets() {
                             return;
                         }
                         setVariableWidgets(JSON.parse(loadedText));
+                    },
+                },
+                {
+                    text: "Help",
+                    handler: () => {
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("widgets");
                     },
                 },
             ],
@@ -205,8 +241,8 @@ export default function Widgets() {
                         getVariableOnMcu={getVariableOnMcu}
                     />
                 );
-            case "SliderReadOnly":
-                return <VariableSliderReadOnly key={w.id} {...common} getVariableOnMcu={getVariableOnMcu} />;
+            case "Meter":
+                return <VariableMeter key={w.id} {...common} getVariableOnMcu={getVariableOnMcu} />;
             case "ColorPicker":
                 return <VariableColorPicker key={w.id} {...common} setVariableOnMcu={setVariableOnMcu} />;
             case "Button":

@@ -1,7 +1,10 @@
 import { useContext, useEffect, useState } from "react";
-import { Autocomplete, TextField, Typography, Box, Tooltip } from "@mui/material";
+import { Autocomplete, TextField, Typography, Box, Tooltip, IconButton } from "@mui/material";
+import OpenWithIcon from "@mui/icons-material/OpenWith";
 import { Rnd } from "react-rnd";
 import WidgetContext from "./WidgetsContext";
+
+const DRAG_HANDLE_CLASS = "widget-drag-handle";
 
 const style = {
     border: "solid 1px #ddd",
@@ -43,6 +46,7 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
                 setY(d.y);
             }}
             disableDragging={layoutIsLocked}
+            dragHandleClassName={DRAG_HANDLE_CLASS}
             enableResizing={false}
         >
             <Box
@@ -75,6 +79,17 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
                                     transition: "background-color 120ms",
                                 }}
                             />
+                        </Tooltip>
+                    )}
+                    {!layoutIsLocked && (
+                        <Tooltip title="Drag to move">
+                            <IconButton
+                                className={DRAG_HANDLE_CLASS}
+                                size="small"
+                                sx={{ ml: "auto", cursor: "move", touchAction: "none" }}
+                            >
+                                <OpenWithIcon fontSize="small" />
+                            </IconButton>
                         </Tooltip>
                     )}
                 </Box>

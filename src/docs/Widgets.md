@@ -55,7 +55,7 @@ When you like the arrangement, save it from `≡` -> Save Widgets, which stores 
 - **Display** just shows a variable's value, and you cannot edit it.
 - **Set** gives you a box to type a value and send it, and you pick whether it is an int, float, string, bool, or json.
 - **Slider** lets you drag a number within a range, and it both sends changes and follows the variable.
-- **SliderReadOnly** is the same idea but only shows where the value currently sits.
+- **Meter** is the same idea but only shows where the value currently sits.
 - **Cursor** is a 2D pad that sends an X and Y within the bounds you set. Value in the format `[x, y, buttondown]`
 - **ColorPicker** lets you pick a color and sends it as `[r, g, b]`.
 - **Button** sends `True` while you hold it down and `False` when you let go.

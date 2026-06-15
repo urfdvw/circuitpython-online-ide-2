@@ -6,6 +6,7 @@
         "anyOf": [
             {
                 "title": "Display",
+                "description": "Reads a variable of any type from the board and shows its value as formatted JSON (read only).",
                 "properties": {
                     "widgetType": {
                         "type": "string",
@@ -13,23 +14,28 @@
                         "readOnly": true
                     },
                     "variableName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Variable this widget reads from."
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Label shown on the widget."
                     },
                     "x": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Horizontal position in pixels."
                     },
                     "y": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Vertical position in pixels."
                     }
                 }
             },
             {
                 "title": "Set",
+                "description": "Sends a single typed value (int, float, string, bool, or json) to the board.",
                 "properties": {
                     "widgetType": {
                         "type": "string",
@@ -37,28 +43,34 @@
                         "readOnly": true
                     },
                     "variableName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Variable this widget writes to."
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Label shown on the widget."
                     },
                     "x": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Horizontal position in pixels."
                     },
                     "y": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Vertical position in pixels."
                     },
                     "type": {
                         "type": "string",
                         "enum": ["int", "float", "string", "bool", "json"],
-                        "default": "int"
+                        "default": "int",
+                        "description": "Data type of the value to send."
                     }
                 }
             },
             {
                 "title": "Cursor",
+                "description": "Sends a 3-element list [x, y, pressed] where pressed is 1 (down) or 0 (up).",
                 "properties": {
                     "widgetType": {
                         "type": "string",
@@ -66,48 +78,59 @@
                         "readOnly": true
                     },
                     "variableName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Variable this widget writes to."
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Label shown on the widget."
                     },
                     "x": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Horizontal position in pixels."
                     },
                     "y": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Vertical position in pixels."
                     },
                     "xMin": {
                         "type": "number",
-                        "default": 0
+                        "default": 0,
+                        "description": "Minimum value of the X axis."
                     },
                     "xMax": {
                         "type": "number",
-                        "default": 10
+                        "default": 10,
+                        "description": "Maximum value of the X axis."
                     },
                     "yMin": {
                         "type": "number",
-                        "default": 0
+                        "default": 0,
+                        "description": "Minimum value of the Y axis."
                     },
                     "yMax": {
                         "type": "number",
-                        "default": 10
+                        "default": 10,
+                        "description": "Maximum value of the Y axis."
                     },
                     "resolution": {
                         "type": "number",
-                        "default": 0.1
+                        "default": 0.1,
+                        "description": "Smallest step between reported values."
                     },
                     "sendMode": {
                         "type": "string",
                         "enum": ["latest", "queue"],
-                        "default": "queue"
+                        "default": "queue",
+                        "description": "'latest' sends only the newest value; 'queue' sends every value in order."
                     }
                 }
             },
             {
                 "title": "Slider",
+                "description": "Sends a single number within the configured range as the slider moves.",
                 "properties": {
                     "widgetType": {
                         "type": "string",
@@ -115,76 +138,93 @@
                         "readOnly": true
                     },
                     "variableName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Variable this widget writes to."
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Label shown on the widget."
                     },
                     "x": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Horizontal position in pixels."
                     },
                     "y": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Vertical position in pixels."
                     },
                     "rangeMin": {
                         "type": "number",
-                        "default": 0
+                        "default": 0,
+                        "description": "Minimum value of the slider."
                     },
                     "rangeMax": {
                         "type": "number",
-                        "default": 10
+                        "default": 10,
+                        "description": "Maximum value of the slider."
                     },
                     "step": {
                         "type": "number",
-                        "default": 1
+                        "default": 1,
+                        "description": "Increment between slider values."
                     },
                     "set": {
                         "type": "number",
-                        "default": 5
+                        "default": 5,
+                        "description": "Initial value of the slider."
                     },
                     "sendMode": {
                         "type": "string",
                         "enum": ["latest", "queue"],
-                        "default": "latest"
+                        "default": "latest",
+                        "description": "'latest' sends only the newest value; 'queue' sends every value in order."
                     }
                 }
             },
             {
-                "title": "SliderReadOnly",
+                "title": "Meter",
+                "description": "Reads a single number from the board and shows it on a linear meter (read only).",
                 "properties": {
                     "widgetType": {
                         "type": "string",
-                        "default": "SliderReadOnly",
+                        "default": "Meter",
                         "readOnly": true
                     },
                     "variableName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Variable this widget reads from."
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Label shown on the widget."
                     },
                     "x": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Horizontal position in pixels."
                     },
                     "y": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Vertical position in pixels."
                     },
                     "rangeMin": {
                         "type": "number",
-                        "default": 0
+                        "default": 0,
+                        "description": "Minimum value of the slider."
                     },
                     "rangeMax": {
                         "type": "number",
-                        "default": 10
+                        "default": 10,
+                        "description": "Maximum value of the slider."
                     }
                 }
             },
             {
                 "title": "ColorPicker",
+                "description": "Sends a 3-element RGB list [r, g, b] with each channel from 0 to 255.",
                 "properties": {
                     "widgetType": {
                         "type": "string",
@@ -192,32 +232,39 @@
                         "readOnly": true
                     },
                     "variableName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Variable this widget writes to."
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Label shown on the widget."
                     },
                     "x": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Horizontal position in pixels."
                     },
                     "y": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Vertical position in pixels."
                     },
                     "resolution": {
                         "type": "number",
-                        "default": 3
+                        "default": 3,
+                        "description": "Smallest step between reported values."
                     },
                     "sendMode": {
                         "type": "string",
                         "enum": ["latest", "queue"],
-                        "default": "latest"
+                        "default": "latest",
+                        "description": "'latest' sends only the newest value; 'queue' sends every value in order."
                     }
                 }
             },
             {
                 "title": "Button",
+                "description": "Sends boolean true while pressed and false on release.",
                 "properties": {
                     "widgetType": {
                         "type": "string",
@@ -225,22 +272,27 @@
                         "readOnly": true
                     },
                     "variableName": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Variable this widget writes to."
                     },
                     "description": {
-                        "type": "string"
+                        "type": "string",
+                        "description": "Label shown on the widget."
                     },
                     "x": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Horizontal position in pixels."
                     },
                     "y": {
                         "type": "number",
-                        "default": 30
+                        "default": 30,
+                        "description": "Vertical position in pixels."
                     },
                     "buttonText": {
                         "type": "string",
-                        "default": "Button"
+                        "default": "Button",
+                        "description": "Text displayed on the button."
                     }
                 }
             }

@@ -1,10 +1,14 @@
 # Library Management
 
+## Overview
+
 This tool makes it easy to install and update the libraries your microcontroller needs, right inside the IDE.
 
 [Video Tutorial](https://www.youtube.com/watch?v=pno0WYdwzSo)
 
-## Prepare bundles
+## How to Use
+
+### Prepare bundles
 
 *Make sure the CIRCUITPY drive is open in the IDE before you start.*
 
@@ -18,13 +22,9 @@ If a newer version of the bundles is available,
 you can click the "UPGRADE" button at the top right to get the latest one.
 This step is optional, but keeping the bundles updated is recommended.
 
-Note:
-1. Bundles are saved in your browser’s cache. If you clear the cache, the bundles will be removed.
-2. Once downloaded, you can use the bundles offline without internet.
+### Auto Install
 
-## Use case: Auto Install
-
-Click the button in the top left corner of the list.
+Click the **Auto Install** button in the top left corner of the list.
 The tool will read your Python code on the microcontroller
 and automatically install the libraries it needs from the bundles.
 
@@ -37,7 +37,7 @@ Settings you can adjust:
     - Off: faster, but unused libraries may stay  
     - On: removes all libraries first, then installs what’s needed  
 
-## Use case: Manual Install
+### Manual Install
 
 The tool can also show you a list of all libraries in the bundles,
 with the libraries you already have installed shown first.
@@ -53,18 +53,22 @@ Each entry shows the following information:
 - Bundle name  
 - Action buttons: install, upgrade, or uninstall the library  
 
-Note:
-- Installing or upgrading a library will also install or upgrade its dependencies.  
-- Uninstalling a library will only remove that single library.  
-
 Settings you can adjust:
 - Number of libraries per page
 
-## Menu Options
+### Menu Options
 
-- Refresh library list  
+- Refresh Library List  
     - If you add or remove files directly on the CIRCUITPY drive,  
       the library list won’t update right away.  
       Use this option to refresh it manually.  
+- Show Installation Log: open a window with the detailed log of install/upgrade/uninstall actions  
 - Settings: open the library management settings  
 - Help: open the help guide for library management  
+
+## Notes & Troubleshooting
+
+- Bundles are saved in your browser’s cache. If you clear the cache, the bundles will be removed.
+- Once downloaded, you can use the bundles offline without internet.
+- Installing or upgrading a library will also install or upgrade its dependencies.
+- Uninstalling a library will only remove that single library.

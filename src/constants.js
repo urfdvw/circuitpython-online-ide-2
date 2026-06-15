@@ -4,8 +4,16 @@ export const TITLE_END = "\x1B\\";
 export const CTRL_C = "\x03";
 export const CTRL_D = "\x04";
 export const LINE_END = "\x0D";
+// Connected Variables travel on a dedicated USB CDC "data" channel (usb_cdc.data), NOT the REPL,
+// so we use plain-text markers (no terminal escapes). The board emits CV_SESSION_DIVIDER on
+// (re)connect so the IDE always has a known, clean starting point for parsing.
 export const CV_JSON_START = "<CV>"; // ConnectedVariableJson start
 export const CV_JSON_END = "</CV>";
+export const CV_SESSION_DIVIDER = "<CVSTART>";
+// read-acknowledgment: the board emits this when it dumps an IDE write from the serial buffer into
+// the variable (in exit_action). Used for the widget "pending/read" indicator and backpressure.
+export const CV_READ_START = "<CVR>";
+export const CV_READ_END = "</CVR>";
 export const RARE = "\x1F";
 export const SEPARATOR = RARE + "\n" + RARE;
 export const SOFT_REBOOT = "soft reboot";

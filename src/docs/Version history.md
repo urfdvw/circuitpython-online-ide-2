@@ -1,3 +1,18 @@
+## Version 2.4.0
+Released on June 15th, 2026
+
+- **Connected Variable Widgets**: Show or change CircuitPython variable values via data serial with Widgets while the code is running. Supported Widgets:
+    - variable view/set
+    - button
+    - slider/meter
+    - cursor position
+    - color picker
+- **Data Serial Terminal** for
+    - CircuitPython's data serial
+    - separate serial devices
+- Optimized documentation
+- Bug Fixes and Code Quality
+
 ## Version 2.3.1
 Released on May 22nd, 2026
 
@@ -6,7 +21,7 @@ Released on May 22nd, 2026
 - Bug Fixes and Code Quality
 
 ## Version 2.3.0
-Released on December 31th, 2025
+Released on December 31st, 2025
 
 - **Debugger tool**!!!
     - Stepping Through
@@ -49,19 +64,19 @@ Released on September 16th, 2025
 
 - Lib Management tool!!!
     - One click auto installation
-    - Browser and search libs
+    - Browse and search libs
 
 ## Version 2.1.0
 Released on July 18th, 2025
 
-- Serial Console rewrote with Xterm
+- Serial Console rewritten with Xterm
 - Progressive Web App
 - Performance improvement and bug fixes
 
 ## Version 2.0.0 Beta.3
 Released on July 12th, 2025
 
-- major rewrite all code
+- major rewrite of all code
 - help and settings shortcuts in tabs
 - plot compatible with mu
 - refreshed backup tool
@@ -93,8 +108,8 @@ Released on January 15th, 2024.
 - Retains all features from 1.0 Beta with the exception of:
     - Reflowing serial output text to hide `exec(```Some Code```)`. This functionality is planned for future releases.
     - Serial history related Editor keyboard shortcuts, which are not often used.
-        - [Alt-Up] and [Alt-Down]
-        - [Alt-Shift-Enter]
+        - `Alt-Up` and `Alt-Down`
+        - `Alt-Shift-Enter`
 - Improvements in:
     - Reliability
     - User Interface interactions

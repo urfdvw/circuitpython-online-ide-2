@@ -9,7 +9,7 @@ import AppContext from "../AppContext";
 // Assuming MarkdownExtended is imported or available in your scope
 // import MarkdownExtended from './MarkdownExtended';
 
-const version_config = "whats_new_2_3_0"; // need to match the name in the config
+const version_config = "whats_new_2_4_0"; // need to match the name in the config
 
 const WhatSNew = () => {
     const { appConfig } = useContext(AppContext);

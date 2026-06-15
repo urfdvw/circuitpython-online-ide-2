@@ -6,7 +6,8 @@ import AppContext from "../AppContext";
 import { useContext } from "react";
 
 export default function AppMenu() {
-    const { flexModel, helpTabSelection, openDirectory, connectToSerialPort, appConfig } = useContext(AppContext);
+    const { flexModel, helpTabSelection, openDirectory, connectToSerialPort, connectToDataSerialPort, appConfig } =
+        useContext(AppContext);
     const DARK_PURPLE = deepPurple[500];
     const DARK_GREY = grey[900];
 
@@ -19,8 +20,7 @@ export default function AppMenu() {
                     text: "About",
                     handler: () => {
                         console.log("clicked on menu item `About`");
-                        selectTabById(flexModel, "help_tab");
-                        helpTabSelection.setTabName("about");
+                        window.open(window.location.pathname + window.location.search + "#/docs/about", "_blank");
                     },
                 },
                 {
@@ -67,6 +67,13 @@ export default function AppMenu() {
                         connectToSerialPort(appConfig.config.serial_console.fresh_start_serial);
                     },
                 },
+                {
+                    text: "Data Serial Port",
+                    handler: () => {
+                        console.log("clicked on menu item `Data Serial Port`");
+                        connectToDataSerialPort();
+                    },
+                },
             ],
         },
         {
@@ -94,6 +101,13 @@ export default function AppMenu() {
                         openTab(flexModel, "Debugger", "debugger");
                     },
                 },
+                // {
+                //     text: "AI Agent Bridge",
+                //     handler: () => {
+                //         console.log("clicked on menu item `AI Agent Bridge`");
+                //         openTab(flexModel, "AI Agent Bridge", "agent_bridge");
+                //     },
+                // },
                 {
                     text: "Camera",
                     handler: () => {
@@ -108,13 +122,20 @@ export default function AppMenu() {
                         openTab(flexModel, "Backup", "backup");
                     },
                 },
-                // {
-                //     text: "Widgets",
-                //     handler: () => {
-                //         console.log("clicked on menu item `Widgets`");
-                //         //   openTab("Widgets", "widgets");
-                //     },
-                // },
+                {
+                    text: "Widgets",
+                    handler: () => {
+                        console.log("clicked on menu item `Widgets`");
+                        openTab(flexModel, "Widgets", "widgets");
+                    },
+                },
+                {
+                    text: "Data Serial",
+                    handler: () => {
+                        console.log("clicked on menu item `Data Serial`");
+                        openTab(flexModel, "Data Serial", "data_serial_console");
+                    },
+                },
                 {
                     text: "Navigation",
                     handler: () => {

@@ -1,9 +1,9 @@
-## Backup
+# Backup
 
-When working directly with code files on the microcontroller,
-leveraging backup tools such as cloud storage or version control systems like Git proves challenging.
-Manual file copying isn't the optimal approach.
-The "Backup" feature within the CircuitPython Online IDE offers a convenient solution to this issue.
+## Overview
+
+When you edit code directly on the microcontroller, backing it up with cloud storage or Git is awkward, and copying files by hand is tedious.
+The "Backup" feature in the CircuitPython Online IDE solves this.
 
 Aside from the "CircuitPy" drive located on the microcontroller,
 users have the option to open an additional backup folder on their computer.
@@ -32,15 +32,15 @@ File path and rows edited will show below in the tab.
 - The timestamp of the most recent backup will be displayed.
 
 ### Periodic Backup
-- To enable periodic backup, navigate to **Backup** settings and check "Auto backup by period."
-- Adjust the backup period in **Backup** settings as required.
-- Periodic back up only happens when the **Backup** tab is open.
+- To enable periodic backup, navigate to **Backup** settings and check "Periodic automatic backup."
+- Adjust "Backup period length (minutes)" in **Backup** settings as required.
+- Periodic backup only happens when the **Backup** tab is open.
 
 ### Recover
 - Please make sure both Folders are opened, and view difference if necessary.
 - In the tab toolbar, click on **Sync** -> **Recover from Computer** to initiate the backup process.
 
-## Notes
+## Notes & Troubleshooting
 - It is strongly recommended to backup to a local folder with cloud synchronization or Git enabled.
 - Backup operations may consume a significant amount of computational resources on low-spec computers.
 - Files removed or overwritten by the backup or recover process are not recoverable.

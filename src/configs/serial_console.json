@@ -36,6 +36,13 @@
             "title": "Soft reboot after connected to serial.",
             "type": "boolean",
             "default": false
+        },
+        "data_serial_baud_rate": {
+            "title": "Data Serial Port baud rate",
+            "description": "Baud rate used when connecting to the Data Serial Port (usb_cdc.data or a separate USB serial device). The main Serial Console always uses 115200. Changing this only affects the next connection; reconnect the Data Serial Port to apply it.",
+            "type": "number",
+            "enum": [300, 1200, 2400, 4800, 9600, 14400, 19200, 28800, 38400, 57600, 74880, 115200, 230400, 250000, 460800, 500000, 921600, 1000000, 2000000],
+            "default": 115200
         }
     }
 }

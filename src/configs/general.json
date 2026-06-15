@@ -20,10 +20,16 @@
             "type": "boolean",
             "default": false
         },
-        "whats_new_2_3_0": {
+        "whats_new_2_4_0": {
             "title": "Show version change info",
             "type": "boolean",
             "default": true
+        },
+        "enable_agent_bridge": {
+            "title": "Enable agent bridge",
+            "description": "A BETA Feature",
+            "type": "boolean",
+            "default": false
         }
     }
 }

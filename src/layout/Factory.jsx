@@ -11,6 +11,9 @@ import SerialPlotter from "../components/SerialPlotter";
 import LibManagement from "../components/LibManagement";
 import Debugger from "../components/Debugger";
 import RawConsoleLog from "../components/RawConsoleLog";
+import Widgets from "../components/Widgets/Widgets";
+import DataSerialConsole, { DataSerialRawLog } from "../components/DataSerialConsole";
+import AgentBridgeTab from "../components/agentBridge/AgentBridgeTab";
 
 const fullSize = { height: "100%", width: "100%" };
 
@@ -92,6 +95,30 @@ const Factory = (node) => {
         return (
             <div className="tab_content" style={fullSize}>
                 <Debugger />
+            </div>
+        );
+    } else if (component === "widgets") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <Widgets />
+            </div>
+        );
+    } else if (component === "data_serial_console") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <DataSerialConsole />
+            </div>
+        );
+    } else if (component === "data_serial_raw_log") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <DataSerialRawLog />
+            </div>
+        );
+    } else if (component === "agent_bridge") {
+        return (
+            <div className="tab_content" style={fullSize}>
+                <AgentBridgeTab />
             </div>
         );
     }

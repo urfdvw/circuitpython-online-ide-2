@@ -84,9 +84,11 @@ export function useBundles({ cpyMajor, useCommunity }) {
                 }
             }
             setBundlesReady(lowBundle);
+            return lowBundle;
         } catch (e) {
             console.error("Failed to get bundle assets from GitHub", e);
             setBundlesError("Failed to reach GitHub. Please check your internet connection and retry.");
+            return undefined; // callers treat undefined as "couldn't reach GitHub"
         }
     }
 
@@ -158,5 +160,6 @@ export function useBundles({ cpyMajor, useCommunity }) {
         downloadBundles,
         downloadingBundleInfo,
         getBundleVersionDiff,
+        refreshBundleState,
     };
 }

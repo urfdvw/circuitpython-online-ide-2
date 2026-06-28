@@ -47,6 +47,10 @@ export const store = {
     // serial buffers maintained by AgentBridge.jsx via registerReaderCallback
     replBuf: "",
     dataBuf: "",
+    // library management — UI-agnostic functions pushed by AgentLibBridge.jsx
+    // (null when the bridge is disabled), plus a pollable progress event feed.
+    lib: null,
+    libLog: [],
 };
 
 const WINDOW_KEY = "__cpyAgent";
@@ -90,6 +94,13 @@ async function resolveParentAndHandle(root, rawPath) {
     return { parent, handle, name };
 }
 
+function getLib() {
+    if (!store.lib) {
+        throw new Error("Library management is not available. Enable the agent bridge in Settings.");
+    }
+    return store.lib;
+}
+
 // ---- the API ---------------------------------------------------------------
 
 function buildApi() {
@@ -127,6 +138,21 @@ function buildApi() {
                     "sendDataSerial(text)": "Write text to the data channel (usb_cdc.data).",
                     "clearDataSerialLog()": "Clear the data-channel buffer (and UI).",
                 },
+                libraries: {
+                    note: "Manage CircuitPython libraries for the connected board's CPy version. Typical flow: libsDownloaded() -> downloadLibs() -> searchLibs()/getLibInfo() -> installLib()/autoInstallLibs() -> getInstalledLibs().",
+                    "libsDownloaded()": "Whether bundles are cached for this board -> { version, downloaded, bundles }.",
+                    "libsUpToDate()": "Check GitHub for a newer bundle -> { upToDate, status }.",
+                    "downloadLibs()": "Download the bundle(s) for the board's CPy version.",
+                    "getAvailableLibs()": "Installable libs in the downloaded bundle -> [{ name, bundle }].",
+                    "getInstalledLibs()": "Libs currently on the board -> [{ name, version }].",
+                    "getLibInfo(name)": "Manifest details incl. gitLink -> { name, bundle, version, description, dependencies, gitLink }.",
+                    "searchLibs(query)": "Find libs by name/description -> [{ name, bundle, description }].",
+                    "installLib(name)": "Install a lib + deps -> { ok, installed, upgraded, skipped, failed }.",
+                    "uninstallLib(name)": "Remove a lib -> { ok, uninstalled }.",
+                    "autoInstallLibs()": "Install libs imported by the code -> { ok, installed, upgraded, skipped, failed }.",
+                    "getLibProgressSince(cursor)": "Incremental install/uninstall events -> { events, cursor }.",
+                    "clearLibProgress()": "Clear the library progress feed.",
+                },
             };
         },
 
@@ -136,6 +162,7 @@ function buildApi() {
                 serialReady: store.serialReady,
                 dataSerialReady: store.dataSerialReady,
                 boardInfo: store.boardInfo,
+                librariesAvailable: Boolean(store.lib),
             };
         },
 
@@ -281,6 +308,62 @@ function buildApi() {
         async clearDataSerialLog() {
             store.dataBuf = "";
             if (store.clearDataSerialOutput) store.clearDataSerialOutput();
+            return { ok: true };
+        },
+
+        // ---- libraries -----------------------------------------------------
+        // Manage CircuitPython libraries for the connected board's CPy version.
+        // Each method throws a clear error when no board is connected or bundles
+        // aren't downloaded yet.
+        async libsDownloaded() {
+            return await getLib().libsDownloaded();
+        },
+
+        async libsUpToDate() {
+            return await getLib().libsUpToDate();
+        },
+
+        async downloadLibs() {
+            return await getLib().downloadLibs();
+        },
+
+        async getAvailableLibs() {
+            return await getLib().getAvailableLibs();
+        },
+
+        async getInstalledLibs() {
+            return await getLib().getInstalledLibs();
+        },
+
+        async getLibInfo(name) {
+            return await getLib().getLibInfo(name);
+        },
+
+        async searchLibs(query) {
+            return await getLib().searchLibs(query);
+        },
+
+        async installLib(name) {
+            return await getLib().installLib(name);
+        },
+
+        async uninstallLib(name) {
+            return await getLib().uninstallLib(name);
+        },
+
+        async autoInstallLibs() {
+            return await getLib().autoInstallLibs();
+        },
+
+        // Incremental progress for long installs — same cursor pattern as the
+        // serial logs. Poll while install/autoInstall promises are pending.
+        async getLibProgressSince(cursor = 0) {
+            const c = Math.max(0, Number(cursor) || 0);
+            return { events: store.libLog.slice(c), cursor: store.libLog.length };
+        },
+
+        async clearLibProgress() {
+            store.libLog = [];
             return { ok: true };
         },
     };

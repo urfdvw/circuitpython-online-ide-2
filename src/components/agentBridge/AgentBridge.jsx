@@ -9,6 +9,7 @@ import { useContext, useEffect, useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import AppContext from "../../AppContext";
 import { store, attachAgentBridge, detachAgentBridge } from "./cpyAgentBridge";
+import AgentLibBridge from "./AgentLibBridge";
 import AGENT_SYSTEM_PROMPT from "./systemPrompt.md";
 
 const READER_ID = "agentBridge";
@@ -98,6 +99,8 @@ export default function AgentBridge() {
     // DOM, plus a small clickable indicator for the user.
     return (
         <>
+            {/* Instantiates the library-management hooks only while the bridge is on. */}
+            <AgentLibBridge />
             <div data-cpy-agent-bridge="active" hidden />
             <Tooltip
                 title={copied ? "Copied!" : "Click to copy the system prompt to clipboard"}

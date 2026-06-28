@@ -30,6 +30,11 @@ export function useLibInstaller({
     requireBoard,
     notify,
     appConfig,
+    // `interactive` (default true) gates the confirm() prompts so non-UI callers
+    // (the agent bridge) don't pop blocking dialogs. `onEvent` streams structured
+    // progress events; both default to UI-friendly no-ops.
+    interactive = true,
+    onEvent = () => {},
 }) {
     const [installationLog, setInstallationLog] = useState("");
     const [libChangeInfo, setLibChangeInfo] = useState("");
@@ -44,16 +49,17 @@ export function useLibInstaller({
     // undefined after prompting the user to fix a precondition.
     async function analyzeMcu() {
         if (bundlesReady === 0) {
-            confirm("Please download library bundles and retry");
+            if (interactive) confirm("Please download library bundles and retry");
             return;
         }
         if (!requireBoard()) {
             return;
         }
         if (!boardCpySupported) {
-            confirm(
-                "CircuitPython version not supported. Please install the latest version of CircuitPython on the microcontroller and retry."
-            );
+            if (interactive)
+                confirm(
+                    "CircuitPython version not supported. Please install the latest version of CircuitPython on the microcontroller and retry."
+                );
             return;
         }
         return await getInstalled();
@@ -82,16 +88,20 @@ export function useLibInstaller({
         }
 
         logLine(`uninstalled ${name}`);
+        onEvent({ type: "uninstall", name });
     }
 
     async function batchUninstallLib(pendingLibNames) {
         setLibChangeInfo("Uninstalling libs");
+        const uninstalled = [];
         for (const libName of pendingLibNames) {
             await uninstallLib(libName);
+            uninstalled.push(libName.split(".")[0]);
         }
         await sleep(1000); // let the drive settle before re-reading
         await refreshCards();
         setLibChangeInfo("");
+        return { ok: true, uninstalled };
     }
 
     /* ---- install ---- */
@@ -116,11 +126,12 @@ export function useLibInstaller({
 
     async function batchInstallLib(pendingLibs) {
         setLibChangeInfo("Installing Libs");
+        const summary = { ok: true, installed: [], upgraded: [], skipped: [], failed: [] };
         const installedLibs = await analyzeMcu();
         if (!installedLibs) {
-            // no board / unsupported / bundles missing — analyzeMcu already prompted
+            // no board / unsupported / bundles missing — analyzeMcu already prompted (UI)
             setLibChangeInfo("");
-            return;
+            return summary;
         }
 
         // resolve the full dependency closure across all active bundles' manifests
@@ -131,27 +142,43 @@ export function useLibInstaller({
             const needFromBundle = filterNamesInJsons([bundle.json.getText()], libsWithDependencies);
             for (const lib of needFromBundle) {
                 const installedLib = installedLibs.filter((il) => il.name.split(".")[0] === lib.name);
-                if (installedLib.length > 0) {
-                    if (compareVersions(installedLib[0].version, lib.version) === 0) {
-                        logLine(`version of ${lib.name} is the same in bundle and MCU: ${versionToString(lib.version)}`);
+                const version = versionToString(lib.version);
+                onEvent({ type: "start", name: lib.name });
+                try {
+                    if (installedLib.length > 0) {
+                        if (compareVersions(installedLib[0].version, lib.version) === 0) {
+                            logLine(`version of ${lib.name} is the same in bundle and MCU: ${version}`);
+                            summary.skipped.push({ name: lib.name, version });
+                            onEvent({ type: "skip", name: lib.name, version });
+                        } else {
+                            const from = versionToString(installedLib[0].version);
+                            logLine(
+                                `version of ${lib.name} is different in bundle and MCU. bundle: ${version}, MCU: ${from}`
+                            );
+                            await installLib(lib.name, bundle.zip);
+                            summary.upgraded.push({ name: lib.name, version, from });
+                            onEvent({ type: "upgrade", name: lib.name, version, from });
+                        }
                     } else {
-                        logLine(
-                            `version of ${lib.name} is different in bundle and MCU. bundle: ${versionToString(
-                                lib.version
-                            )}, MCU: ${versionToString(installedLib[0].version)}`
-                        );
+                        logLine(`${lib.name} is not installed yet`);
                         await installLib(lib.name, bundle.zip);
+                        summary.installed.push({ name: lib.name, version });
+                        onEvent({ type: "install", name: lib.name, version });
                     }
-                } else {
-                    logLine(`${lib.name} is not installed yet`);
-                    await installLib(lib.name, bundle.zip);
+                } catch (e) {
+                    const error = e?.message || String(e);
+                    logLine(`failed to install ${lib.name}: ${error}`);
+                    summary.failed.push({ name: lib.name, error });
+                    onEvent({ type: "error", name: lib.name, error });
                 }
             }
         }
 
+        summary.ok = summary.failed.length === 0;
         await sleep(1000); // let the drive settle before re-reading
         await refreshCards();
         setLibChangeInfo("");
+        return summary;
     }
 
     /* ---- cards ---- */
@@ -204,7 +231,7 @@ export function useLibInstaller({
 
     async function autoInstall() {
         if (!requireBoard()) {
-            return;
+            return { ok: false, installed: [], upgraded: [], skipped: [], failed: [] };
         }
         logLine("auto install started");
         if (appConfig.config.lib_management.clean_up_in_auto) {
@@ -212,9 +239,10 @@ export function useLibInstaller({
             await clearInstalledLibs();
         }
         const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
-        await batchInstallLib(scannedLibs);
+        const summary = await batchInstallLib(scannedLibs);
         notify("Auto install finished");
         logLine("auto install finished");
+        return summary;
     }
 
     return {
@@ -223,5 +251,8 @@ export function useLibInstaller({
         autoInstall,
         installationLog,
         libChangeInfo,
+        // exposed for non-UI callers (agent bridge); the UI uses card handlers
+        batchInstallLib,
+        batchUninstallLib,
     };
 }

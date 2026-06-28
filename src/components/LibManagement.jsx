@@ -27,6 +27,7 @@ import { Typography, Box, Divider, Button, Backdrop, CircularProgress, Slide } f
 import RowItem from "../utilComponents/RowItem";
 import { selectTabById } from "../layout/layoutUtils";
 import NewWindow from "react-new-window";
+import { useBoardGuard } from "../hooks/useBoardGuard";
 
 function useNotification() {
     const [notificationVisible, setNotificationVisible] = useState(false);
@@ -53,17 +54,11 @@ function useNotification() {
 }
 
 export default function LibManagement() {
-    const {
-        appConfig,
-        rootFolderDirectoryReady,
-        rootDirHandle,
-        boardInfo,
-        flexModel,
-        helpTabSelection,
-        configTabSelection,
-    } = useContext(AppContext);
+    const { appConfig, rootDirHandle, boardInfo, flexModel, helpTabSelection, configTabSelection } =
+        useContext(AppContext);
 
     const { notificationVisible, notificationText, notify } = useNotification();
+    const { requireBoard, boardGuardDialog } = useBoardGuard();
     const [installationLog, setInstallationLog] = useState("");
     const [popped, setPopped] = useState(false);
     const containerRef = useRef(null);
@@ -218,8 +213,9 @@ export default function LibManagement() {
             confirm("Please download library bundles and retry");
             return;
         }
-        if (!rootFolderDirectoryReady) {
-            confirm("Please connect microcontroller drive in the IDE and retry");
+        // boardInfo is null when no folder is open or boot_out.txt is missing/unparseable;
+        // requireBoard() pops the connect dialog with the right message in each case.
+        if (!requireBoard()) {
             return;
         }
         if (!boardCpySupported) {
@@ -302,6 +298,11 @@ export default function LibManagement() {
     async function batchInstallLib(pendingLibs) {
         setLibChangeInfo("Installing Libs");
         const installedLibs = await analyzeMcu();
+        if (!installedLibs) {
+            // no board / unsupported version — analyzeMcu already prompted the user
+            setLibChangeInfo("");
+            return;
+        }
         /* ---- dependencies ---- */
         const bundleZipsOfBoardVersion = bundles.map((bundle) => {
             return bundle.zips[boardInfo.cpy_version.major];
@@ -372,7 +373,7 @@ export default function LibManagement() {
     async function refreshCards() {
         const installedLibs = await analyzeMcu();
         const cards = [];
-        if (!boardCpySupported) {
+        if (!boardCpySupported || !installedLibs) {
             return cards;
         } else {
             for (const bundle of bundles) {
@@ -481,6 +482,9 @@ export default function LibManagement() {
     async function clearInstalledLibs() {
         // scan to get required libs
         const installedLibs = await analyzeMcu();
+        if (!installedLibs) {
+            return;
+        }
         console.log("---- Got required lib names ----");
         console.log(installedLibs);
         // uninstall
@@ -488,6 +492,9 @@ export default function LibManagement() {
     }
 
     async function autoInstall() {
+        if (!requireBoard()) {
+            return;
+        }
         let now = new Date().toLocaleTimeString();
         setInstallationLog((cur) => cur + `\n${now.toString()}: auto install started`);
         // clear
@@ -527,6 +534,7 @@ export default function LibManagement() {
 
     return (
         <TabTemplate menuStructure={menuStructure} title="Library Management">
+            {boardGuardDialog}
             <Slide in={notificationVisible} mountOnEnter unmountOnExit>
                 <Box sx={{ position: "absolute", top: "20%", left: "50%" }}>
                     <Box

@@ -28,13 +28,12 @@ import CameraPage from "./components/CameraPage";
 import DocsSite from "./components/DocsSite";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
-import { getFromPath } from "./utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import useEditorTabs from "./hooks/useEditorTabs";
 import useUnsavedGuards from "./hooks/useUnsavedGuards";
 // serial
 import { useSerial, useDataSerial, useSerialCommands } from "./hooks/useSerial";
 // Board info
-import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
+import useBoardInfo from "./hooks/useBoardInfo";
 // version info
 import WhatSNew from "./components/WhatSNew";
 // agent bridge (window.__cpyAgent)
@@ -113,21 +112,8 @@ function App() {
         dataSerialReady,
         dataSerial,
     } = useDataSerial();
-    // Board info
-    const [boardInfo, setBoardInfo] = useState(null);
-    useEffect(() => {
-        async function getBoardInfo() {
-            if (!rootFolderDirectoryReady) {
-                setBoardInfo(null);
-                return;
-            }
-            const boot_out_txt = await getFromPath(rootDirHandle, "boot_out.txt");
-            const board_info = parseCircuitPythonInfo(boot_out_txt);
-            console.log("board_info:", board_info);
-            setBoardInfo(board_info);
-        }
-        getBoardInfo();
-    }, [rootFolderDirectoryReady, rootDirHandle]);
+    // Board info (derived from the connected drive's boot_out.txt)
+    const boardInfo = useBoardInfo(rootFolderDirectoryReady, rootDirHandle);
     // Debugger
     const [instrumentationOutdated, setInstrumentationOutdated] = useState(true);
 

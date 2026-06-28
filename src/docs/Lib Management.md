@@ -55,6 +55,9 @@ Each entry shows the following information:
 
 Settings you can adjust:
 - Number of libraries per page
+- Also manage the CircuitPython Community Bundle
+    - Off (default): only the Adafruit bundle is used
+    - On: the Community Bundle is downloaded and its libraries are listed and installable too
 
 ### Menu Options
 
@@ -68,6 +71,7 @@ Settings you can adjust:
 
 ## Notes & Troubleshooting
 
+- Only the bundle matching your board’s CircuitPython version is downloaded, so make sure the CIRCUITPY drive is open before downloading.
 - Bundles are saved in your browser’s cache. If you clear the cache, the bundles will be removed.
 - Once downloaded, you can use the bundles offline without internet.
 - Installing or upgrading a library will also install or upgrade its dependencies.

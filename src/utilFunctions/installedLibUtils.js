@@ -1,3 +1,9 @@
+import { parseVersion, compareVersions, versionToString } from "./version";
+
+// Re-exported so existing import sites (LibCardMUI, Navigation, LibManagement, ...)
+// keep resolving these from installedLibUtils. The single source of truth is version.js.
+export { parseVersion, compareVersions, versionToString };
+
 /* ---- collectPythonTopLevelImports ---- */
 
 export async function collectPythonTopLevelImports(rootHandle) {
@@ -166,18 +172,6 @@ function findSemverNullTerminated(buf, td) {
     const text = td.decode(buf.slice(0, MAX_DECODE));
     const m = /(\d+\.\d+\.\d+)\x00/.exec(text);
     return m ? m[1] : null;
-}
-
-export function parseVersion(versionStr) {
-    const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(versionStr.trim());
-    if (!m) {
-        return { major: null, minor: null, patch: null, raw: versionStr };
-    }
-    return {
-        major: Number(m[1]),
-        minor: Number(m[2]),
-        patch: Number(m[3]),
-    };
 }
 
 /* ---- getInstalledLibVersions ----*/
@@ -366,31 +360,6 @@ export function filterNamesInJsons(dataJsonList, names) {
         }
     }
 
-    function parseVersion(v) {
-        // Accept both string "1.2.3" and object {major, minor, patch}
-        if (v && typeof v === "object") {
-            const { major = null, minor = null, patch = null } = v;
-            return {
-                major: Number.isFinite(+major) ? +major : null,
-                minor: Number.isFinite(+minor) ? +minor : null,
-                patch: Number.isFinite(+patch) ? +patch : null,
-            };
-        }
-        if (typeof v === "string") {
-            // match v1.2.3, 1.2.3, 1.2, 1
-            const m = v.trim().match(/^v?\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?/i);
-            if (m) {
-                return {
-                    major: parseInt(m[1], 10),
-                    minor: m[2] !== undefined ? parseInt(m[2], 10) : 0,
-                    patch: m[3] !== undefined ? parseInt(m[3], 10) : 0,
-                };
-            }
-        }
-        // Unparseable or missing
-        return { major: null, minor: null, patch: null };
-    }
-
     const results = [];
     for (const n of names || []) {
         if (n in merged) {
@@ -401,26 +370,6 @@ export function filterNamesInJsons(dataJsonList, names) {
         }
     }
     return results;
-}
-
-export function compareVersions(a, b) {
-    const toNums = (v) => [v?.major ?? 0, v?.minor ?? 0, v?.patch ?? 0];
-
-    const [aMaj, aMin, aPat] = toNums(a);
-    const [bMaj, bMin, bPat] = toNums(b);
-
-    if (aMaj !== bMaj) return aMaj < bMaj ? -100 : 100;
-    if (aMin !== bMin) return aMin < bMin ? -10 : 10;
-    if (aPat !== bPat) return aPat < bPat ? -1 : 1;
-    return 0;
-}
-
-export function versionToString(v) {
-    if (!v || typeof v !== "object") return "";
-    const major = v.major ?? 0;
-    const minor = v.minor ?? 0;
-    const patch = v.patch ?? 0;
-    return `${major}.${minor}.${patch}`;
 }
 
 export function isBundleJsonFileName(str) {

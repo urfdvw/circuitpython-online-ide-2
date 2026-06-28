@@ -17,7 +17,7 @@ import Paper from "@mui/material/Paper";
 import { NoTheme } from "react-lazy-dark-theme";
 // board info
 import { fetchLatestCircuitPythonInfo } from "../utilFunctions/baordInfoUtils";
-import { compareVersions, versionToString, parseVersion } from "../utilFunctions/installedLibUtils";
+import { compareVersions, versionToString } from "../utilFunctions/version";
 
 const video_parent_css = {
     position: "relative",

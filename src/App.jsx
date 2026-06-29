@@ -34,6 +34,8 @@ import useUnsavedGuards from "./hooks/useUnsavedGuards";
 import { useSerial, useDataSerial, useSerialCommands } from "./hooks/useSerial";
 // Board info
 import useBoardInfo from "./hooks/useBoardInfo";
+// Backup folder (remembered per board)
+import useBackupDirectory from "./hooks/useBackupDirectory";
 // version info
 import WhatSNew from "./components/WhatSNew";
 // agent bridge (window.__cpyAgent)
@@ -87,13 +89,6 @@ function App() {
         rootDirHandle,
     } = useFileSystem();
     const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
-    // backup folder
-    const {
-        openDirectory: openBackupDirectory,
-        directoryReady: backupFolderDirectoryReady,
-        statusText: backupFolderStatusText,
-        rootDirHandle: backupDirHandle,
-    } = useFileSystem();
     // serial
     const { connectToSerialPort, sendDataToSerialPort, addToSerialOutput, serialOutput, serialReady, serial } =
         useSerial();
@@ -114,6 +109,16 @@ function App() {
     } = useDataSerial();
     // Board info (derived from the connected drive's boot_out.txt)
     const boardInfo = useBoardInfo(rootFolderDirectoryReady, rootDirHandle);
+    // Backup "computer folder", remembered per board (keyed by the board UID).
+    const {
+        openBackupDirectory,
+        backupFolderDirectoryReady,
+        backupFolderStatusText,
+        backupDirHandle,
+        backupRestoreWarning,
+        backupReconnectName,
+        reconnectBackupDirectory,
+    } = useBackupDirectory(boardInfo);
     // Debugger
     const [instrumentationOutdated, setInstrumentationOutdated] = useState(true);
 
@@ -170,6 +175,9 @@ function App() {
                 backupFolderDirectoryReady,
                 backupFolderStatusText,
                 backupDirHandle,
+                backupRestoreWarning,
+                backupReconnectName,
+                reconnectBackupDirectory,
                 // serial
                 connectToSerialPort,
                 sendDataToSerialPort,

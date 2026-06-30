@@ -18,6 +18,7 @@ import related_projects from "./Related projects.md";
 import lib_management from "./Lib Management.md";
 import debugger_help from "./Debugger.md";
 import widgets from "./Widgets.md";
+import agent_bridge from "../components/agentBridge/Agent Bridge.md";
 import { version } from "../../package.json";
 
 // `kind` controls whether a doc appears in the Help tab:
@@ -124,6 +125,15 @@ const docs = [
         title: "Connected Variable Widgets",
         body: widgets,
         kind: "tool",
+        group: "tool",
+    },
+    {
+        // "reference" keeps this off the in-IDE Help tab (the Agent Bridge tab
+        // already shows it) while still listing it on the full documentation page.
+        name: "agent_bridge",
+        title: "AI Agent Bridge",
+        body: agent_bridge,
+        kind: "reference",
         group: "tool",
     },
     {

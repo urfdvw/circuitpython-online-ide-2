@@ -48,6 +48,9 @@ Libraries (CircuitPython bundle management):
 - Long installs: the result resolves when done, but to watch progress poll `getLibProgressSince(cursor)` (same cursor pattern as serial) while the install promise is pending.
 - After installing, verify the import works in the REPL (`ctrlC()` then `sendCode("import <module>")`) before relying on it in `code.py`.
 
+Plotting & animation:
+- The IDE can draw live plots and frame animations from data the code `print()`s. To write such code, FIRST call `getPlotHelp()` and follow its rules/usage/examples (markers like `startplot:`, `plotsettings:`, `startanimation:`/`startframe:`/`line:`/`dot:`/`drawframe:`). The Plot tab opens automatically when a plot command is printed.
+
 Documentation:
 - Read the project's *.md files in the CIRCUITPY dir before editing.
 - Board info: the `board_id` is in `boot_out.txt`; see https://circuitpython.org/board/<board_id> for board info.

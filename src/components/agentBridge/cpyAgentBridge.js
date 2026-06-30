@@ -23,6 +23,7 @@ import {
     removeEntry as fsRemoveEntry,
     checkEntryExists,
 } from "../../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+import PLOT_HELP from "../../docs/Plot.md";
 
 // Shared mutable state. AgentBridge.jsx writes the latest references here on
 // every render; the API methods below read from it at call time.
@@ -153,6 +154,9 @@ function buildApi() {
                     "getLibProgressSince(cursor)": "Incremental install/uninstall events -> { events, cursor }.",
                     "clearLibProgress()": "Clear the library progress feed.",
                 },
+                plot: {
+                    "getPlotHelp()": "Full Plot/Animation guide (rules, usage, examples) -> markdown string. Read it before writing code that draws plots or animations via print().",
+                },
             };
         },
 
@@ -164,6 +168,11 @@ function buildApi() {
                 boardInfo: store.boardInfo,
                 librariesAvailable: Boolean(store.lib),
             };
+        },
+
+        // Full Plot/Animation guide so the agent can author plotting code from code.
+        async getPlotHelp() {
+            return PLOT_HELP;
         },
 
         // ---- files ---------------------------------------------------------

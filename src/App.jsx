@@ -36,6 +36,8 @@ import { useSerial, useDataSerial, useSerialCommands } from "./hooks/useSerial";
 import useBoardInfo from "./hooks/useBoardInfo";
 // Backup folder (remembered per board)
 import useBackupDirectory from "./hooks/useBackupDirectory";
+// Auto-open the Plot tab on a plot/animation command
+import usePlotAutoOpen from "./hooks/usePlotAutoOpen";
 // version info
 import WhatSNew from "./components/WhatSNew";
 // agent bridge (window.__cpyAgent)
@@ -124,6 +126,9 @@ function App() {
 
     // unsaved-changes guards (tab close + page close) and the shared dirty-file registry
     const { setFileDirty, clearFileDirty, handleLayoutAction } = useUnsavedGuards(flexModel);
+
+    // auto-open the Plot tab when the board emits a plot/animation command
+    usePlotAutoOpen(serialOutput, flexModel);
 
     /**** main logic ****/
     if (!appConfig.ready) {

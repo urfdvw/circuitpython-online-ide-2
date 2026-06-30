@@ -1,124 +1,38 @@
 // react
-import { useContext, lazy, Suspense } from "react";
+import { useContext, lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 // plotly
 const Plot = lazy(() => import("react-plotly.js"));
 // context
 import AppContext from "../AppContext";
 
-import { removeInBetween } from "../hooks/useSerial/textProcessor";
-import * as constants from "../constants";
-
+import { parsePlotInput } from "../utilFunctions/plotParser";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { selectTabById } from "../layout/layoutUtils";
 import { Typography } from "@mui/material";
 
-function text_to_data(input) {
-    return input
-        .split("\n")
-        .map((line) => line.trim())
-        .filter(
-            (line) =>
-                /^-?\d+(\.\d+)?(\s+-?\d+(\.\d+)?)*$/.test(line) || // space-separated numbers
-                /^\((-?\d+(\.\d+)?\s*,\s*)*-?\d+(\.\d+)?\)$/.test(line) // comma-separated in parentheses
-        )
-        .map((line) => {
-            if (line.startsWith("(") && line.endsWith(")")) {
-                return line
-                    .slice(1, -1) // remove parentheses
-                    .split(",")
-                    .map((s) => Number(s.trim()));
-            } else {
-                return line.split(/\s+/).map(Number);
-            }
-        });
-}
-
-function transpose(array) {
-    return array[0].map((_, colIndex) => array.map((row) => parseFloat(row[colIndex])));
-}
-
 export default function SerialPlotter({ node }) {
     const { appConfig, flexModel, serialOutput, configTabSelection, helpTabSelection } = useContext(AppContext);
-    const config = appConfig.config;
 
     const height = node.getRect().height;
     const width = node.getRect().width;
 
-    var data = [];
-    var xLabel = "index";
-    var showlegend = config.plot.show_legend;
+    // Throttle: the serial output changes on every byte, but we only re-parse and
+    // re-plot ~10x/sec. Keep the latest output in a ref and snapshot it on an interval,
+    // so parse/Plotly work is decoupled from the per-byte re-render storm.
+    const latest = useRef(serialOutput);
+    latest.current = serialOutput;
+    const [snapshot, setSnapshot] = useState(serialOutput);
+    useEffect(() => {
+        const id = setInterval(() => setSnapshot(latest.current), 100);
+        return () => clearInterval(id);
+    }, []);
 
-    const output = removeInBetween(serialOutput, constants.CV_JSON_START, constants.CV_JSON_END);
-    if (output || output.trim() !== "") {
-        try {
-            const last_active_block = output.split("soft reboot").at(-1);
-            // console.log("SerialPlotter", "Last active block:", last_active_block);
-            const last_plot_text = last_active_block.split("startplot:").at(-1);
-            // console.log("SerialPlotter", "Last plot data:", last_plot_text);
-
-            var plot_labels = last_plot_text.split("\n").at(0).trim().split(" ");
-            // console.log("Plot labels:", plot_labels);
-
-            var plot_data_lines = text_to_data(last_plot_text);
-
-            if (plot_labels.length === 0 || plot_labels[0] === "") {
-                showlegend = false;
-                plot_labels = plot_data_lines[0].map((_, index) => `Curve ${index + 1}`);
-            }
-            // console.log("Plot labels:", plot_labels);
-
-            if (config.plot.truncate) {
-                plot_data_lines = plot_data_lines.slice(-config.plot.history_len);
-            }
-            var plot_data = transpose(plot_data_lines);
-
-            if (config.plot.x_axis & (plot_labels.length > 1)) {
-                xLabel = plot_labels[0];
-                for (var i = 1; i < plot_data.length; i++) {
-                    var curve = {};
-                    curve["x"] = plot_data[0];
-                    curve["y"] = plot_data[i];
-                    curve["name"] = plot_labels[i];
-                    curve["type"] = "scatter";
-                    data.push(curve);
-                }
-            } else {
-                for (var i = 0; i < plot_data.length; i++) {
-                    var curve = {};
-                    curve["x"] = i;
-                    curve["y"] = plot_data[i];
-                    curve["name"] = plot_labels[i];
-                    curve["type"] = "scatter";
-                    data.push(curve);
-                }
-            }
-            var layout = {
-                showlegend: showlegend,
-                xaxis: {
-                    title: xLabel,
-                },
-                height: height - 50,
-                width: width - 10,
-                padding: "0px",
-
-                margin: {
-                    l: 30, // left
-                    r: 10, // right
-                    t: 20, // top
-                    b: 20, // bottom
-                },
-            };
-
-            if (config.plot.enable_axis_limits) {
-                layout.yaxis = { range: [config.plot.y_min, config.plot.y_max] };
-                if (config.plot.x_axis) {
-                    layout.xaxis.range = [config.plot.x_min, config.plot.x_max];
-                }
-            }
-        } catch (e) {
-            console.error("Exception thrown", e.stack);
-        }
-    }
+    // Pure, guarded parse -> { data, layout, hasData }. Memoized so byte-level
+    // re-renders (from the serialOutput context) don't recompute it.
+    const { data, layout, hasData } = useMemo(
+        () => parsePlotInput(snapshot, appConfig.config.plot, { height, width }),
+        [snapshot, appConfig.config.plot, height, width]
+    );
 
     const menuStructure = [
         {
@@ -127,7 +41,6 @@ export default function SerialPlotter({ node }) {
                 {
                     text: "Settings",
                     handler: () => {
-                        console.log("Editor -> Settings");
                         selectTabById(flexModel, "settings_tab");
                         configTabSelection.setTabName("plot");
                     },
@@ -135,7 +48,6 @@ export default function SerialPlotter({ node }) {
                 {
                     text: "Help",
                     handler: () => {
-                        console.log("Editor -> Help");
                         selectTabById(flexModel, "help_tab");
                         helpTabSelection.setTabName("plot");
                     },
@@ -146,7 +58,7 @@ export default function SerialPlotter({ node }) {
 
     return (
         <TabTemplate title="Plot" menuStructure={menuStructure}>
-            {serialOutput && plot_data_lines.length > 0 ? (
+            {hasData ? (
                 <Suspense fallback={<div>Loading...</div>}>
                     <Plot data={data} layout={layout} />
                 </Suspense>

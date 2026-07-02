@@ -4,6 +4,7 @@ import { NoTheme } from "react-lazy-dark-theme";
 import FlipIcon from "@mui/icons-material/Flip";
 import RotateRightIcon from "@mui/icons-material/RotateRight";
 import RotateLeftIcon from "@mui/icons-material/RotateLeft";
+import FitScreenIcon from "@mui/icons-material/FitScreen";
 import EditIcon from "@mui/icons-material/Edit";
 import DeleteSweepIcon from "@mui/icons-material/DeleteSweep";
 import PauseIcon from "@mui/icons-material/Pause";
@@ -33,6 +34,7 @@ export default function CameraToolbar({
     onFlipV,
     onRotateCw,
     onRotateCcw,
+    onResetView,
     marking,
     onToggleMarking,
     onClearMarks,
@@ -81,6 +83,9 @@ export default function CameraToolbar({
                     </ToolButton>
                     <ToolButton title="Rotate 90° Clockwise" onClick={onRotateCw}>
                         <RotateRightIcon fontSize="small" />
+                    </ToolButton>
+                    <ToolButton title="Reset Zoom and Position" onClick={onResetView}>
+                        <FitScreenIcon fontSize="small" />
                     </ToolButton>
 
                     <GroupDivider />

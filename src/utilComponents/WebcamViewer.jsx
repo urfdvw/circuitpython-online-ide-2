@@ -11,6 +11,7 @@ const WebcamViewer = ({
     marking = false,
     markColor = "rgba(255, 50, 50, 0.9)",
     clearMarksTrigger = 0,
+    resetViewTrigger = 0,
     paused = false,
     captureTrigger = 0,
     onCaptureResult = () => {},
@@ -18,6 +19,7 @@ const WebcamViewer = ({
 }) => {
     const webcamRef = useRef(null);
     const canvasRef = useRef(null);
+    const transformRef = useRef(null);
     const containerRef = useRef(null);
     const externalVideoRef = useRef(null);
     const isDrawingRef = useRef(false);
@@ -84,6 +86,12 @@ const WebcamViewer = ({
         const ctx = canvas.getContext("2d");
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }, [clearMarksTrigger]);
+
+    // Reset zoom/pan so the video fits the tab area again
+    useEffect(() => {
+        if (resetViewTrigger === 0) return;
+        transformRef.current?.resetTransform();
+    }, [resetViewTrigger]);
 
     // Attach external stream to video element
     useEffect(() => {
@@ -242,6 +250,7 @@ const WebcamViewer = ({
 
     return (
         <TransformWrapper
+            ref={transformRef}
             wheel={{ step: 0.2 }}
             pinch={{ step: 5 }}
             doubleClick={{ disabled: true }}

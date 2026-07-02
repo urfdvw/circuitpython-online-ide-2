@@ -41,6 +41,7 @@ export default function DocCam() {
     const [marking, setMarking] = useState(false);
     const [markColor, setMarkColor] = useState(MARK_COLORS[0].value);
     const [clearMarksTrigger, setClearMarksTrigger] = useState(0);
+    const [resetViewTrigger, setResetViewTrigger] = useState(0);
     const [paused, setPaused] = useState(false);
     const [captureTrigger, setCaptureTrigger] = useState(0);
     const [captureMsg, setCaptureMsg] = useState(null);
@@ -188,6 +189,7 @@ export default function DocCam() {
                                     marking={marking}
                                     markColor={markColor}
                                     clearMarksTrigger={clearMarksTrigger}
+                                    resetViewTrigger={resetViewTrigger}
                                     paused={paused}
                                     captureTrigger={captureTrigger}
                                     onCaptureResult={(ok, text) =>
@@ -201,6 +203,7 @@ export default function DocCam() {
                                 onFlipV={() => setFlipV((prev) => !prev)}
                                 onRotateCw={() => setRotation((prev) => (prev + 90) % 360)}
                                 onRotateCcw={() => setRotation((prev) => (prev + 270) % 360)}
+                                onResetView={() => setResetViewTrigger((prev) => prev + 1)}
                                 marking={marking}
                                 onToggleMarking={() => setMarking((prev) => !prev)}
                                 onClearMarks={() => setClearMarksTrigger((prev) => prev + 1)}

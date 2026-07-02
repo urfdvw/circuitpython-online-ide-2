@@ -17,6 +17,7 @@ In the top menu bar:
 While the camera is running, a media-style control bar floats at the bottom of the video:
 
 - **Flip** buttons mirror the picture horizontally or vertically, and the **Rotate** buttons turn it 90 degrees at a time, to match how things sit on your desk.
+- **Reset Zoom and Position** (the fit-screen button) undoes any zooming and panning so the video fits the tab area again. Zoom in with the scroll wheel or a pinch gesture, and drag to pan around; when you are done inspecting, one click brings the whole picture back into view.
 - **Pause** freezes the video so you can look closely at a single frame. You can still zoom, pan, and mark while paused. Press again to return to live video.
 - **Capture** (the camera button) copies the current frame to your clipboard as an image, ready to paste into a document or chat. If you have drawn marks, they are included in the picture.
 - **Mark** (the pencil button) lets you draw on top of the video, which is great for pointing at a particular pin or wire. The sweep button clears your drawings, and the color dot opens a palette of pen colors (red, yellow, cyan, green, or magenta).

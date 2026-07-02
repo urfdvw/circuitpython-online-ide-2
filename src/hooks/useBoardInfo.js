@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { path2Handles, getFileText } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+import { getFromPathIfExists } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import { parseCircuitPythonInfo } from "../utilFunctions/dataProcessing";
 
 /**
@@ -25,15 +25,9 @@ export default function useBoardInfo(rootFolderDirectoryReady, rootDirHandle) {
                 setBoardInfo(null);
                 return;
             }
-            let board_info = null;
-            try {
-                const { fileHandle } = await path2Handles(rootDirHandle, "boot_out.txt", { create: false });
-                const boot_out_txt = await getFileText(fileHandle);
-                // parseCircuitPythonInfo returns null when the contents can't be parsed.
-                board_info = parseCircuitPythonInfo(boot_out_txt);
-            } catch {
-                board_info = null;
-            }
+            const boot_out_txt = await getFromPathIfExists(rootDirHandle, "boot_out.txt");
+            // parseCircuitPythonInfo returns null when the contents can't be parsed.
+            const board_info = boot_out_txt === null ? null : parseCircuitPythonInfo(boot_out_txt);
             console.log("board_info:", board_info);
             setBoardInfo(board_info);
         }

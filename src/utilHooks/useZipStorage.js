@@ -53,7 +53,9 @@ export function useZipStorage(dbName) {
     const recreateDB = useCallback(async () => {
         try {
             dbRef.current?.close?.();
-        } catch {}
+        } catch {
+            // ignore errors from closing an already-closed DB
+        }
         dbRef.current = null;
         await deleteDB(dbName);
         const db = await openDB(dbName, 1, {
@@ -416,7 +418,7 @@ export function useZipStorage(dbName) {
             },
 
             // FS Access API: getDirectoryHandle(name, {create})
-            async getDirectoryHandle(childName, opts = {}) {
+            async getDirectoryHandle(childName) {
                 const childPath = childPathJoin(pathNorm, String(childName || "").trim());
                 const st = await statPath(db, childPath);
                 // readonly semantics: ignore opts.create, never create
@@ -427,7 +429,7 @@ export function useZipStorage(dbName) {
             },
 
             // FS Access API: getFileHandle(name, {create})
-            async getFileHandle(childName, opts = {}) {
+            async getFileHandle(childName) {
                 const childPath = childPathJoin(pathNorm, String(childName || "").trim());
                 const st = await statPath(db, childPath);
                 if (!st) throw new DOMException(`NotFoundError: ${childPath}`, "NotFoundError");
@@ -461,7 +463,9 @@ export function useZipStorage(dbName) {
     const clearZipCache = useCallback(async () => {
         try {
             dbRef.current?.close?.();
-        } catch {}
+        } catch {
+            // ignore errors from closing an already-closed DB
+        }
         dbRef.current = null;
         await deleteDB(dbName);
         setZipContents([]);

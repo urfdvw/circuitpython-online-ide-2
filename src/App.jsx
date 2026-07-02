@@ -43,6 +43,8 @@ import WhatSNew from "./components/WhatSNew";
 // agent bridge (window.__cpyAgent)
 import AgentBridge from "./components/agentBridge/AgentBridge";
 
+// Routing shell: hash routes and unsupported-browser handling. It must stay
+// hook-free so the IDE's hooks (in <Ide/>) never run after a conditional return.
 function App() {
     if (window.location.hash.startsWith("#/camera")) {
         return <CameraPage />;
@@ -56,28 +58,27 @@ function App() {
         return <ProductPage />;
     }
 
+    return <Ide />;
+}
+
+// The IDE itself: wires together hooks, context, and layout (assembly only).
+function Ide() {
     useEffect(() => {
         document.body.style.overflow = "hidden";
     }, []);
 
-    // testing state
+    // testing state (consumed by the Placeholder tab)
     const [testCount, setTestCount] = useState(0);
     // layout
-    const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
+    const [flexModel] = useState(FlexLayout.Model.fromJson(layout));
     // config
     const configTabSelection = useTabValueName(schemas);
     const appConfig = useConfig(schemas);
-    // useEffect(() => {
-    //     console.log("config", appConfig);
-    // }, [appConfig]); // debug
     // help
     const helpTabSelection = useTabValueName(helpDocs);
-    // useEffect(() => {
-    //     console.log("helpTabSelection", helpTabSelection);
-    // }, [helpTabSelection]); // debug
     // hot keys
     useLayoutHotKeys(flexModel);
-    // channel
+    // release channel (?channel=dev|beta), logged once for diagnostics
     const { showDevFeatures, showBetaFeatures } = useChannel();
     useEffect(() => {
         console.log("[showDevFeatures, showBetaFeatures]", [showDevFeatures, showBetaFeatures]);

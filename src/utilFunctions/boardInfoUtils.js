@@ -1,10 +1,10 @@
-import { minor } from "@mui/material";
-import { version } from "jszip";
-
-export async function fetchLatestCircuitPythonInfo(repo) {
+/**
+ * Fetch the latest CircuitPython release from GitHub.
+ * Returns { datetime: "YYYY-MM-DD", version: {major, minor, patch}, name }.
+ */
+export async function fetchLatestCircuitPythonInfo() {
     const response = await fetch(`https://api.github.com/repos/adafruit/CircuitPython/releases/latest`);
     const data = await response.json();
-    console.log(data);
     return {
         datetime: data.published_at.split("T").at(0),
         version: {

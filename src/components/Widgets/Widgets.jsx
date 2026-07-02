@@ -6,7 +6,7 @@ import TabTemplate from "../../utilComponents/TabTemplate";
 import { selectTabById } from "../../layout/layoutUtils";
 import {
     writeToPath,
-    path2Handles,
+    getFromPathIfExists,
     getFileText,
     checkFileExists,
 } from "../../utilComponents/react-local-file-system";
@@ -59,7 +59,7 @@ export default function Widgets() {
                 return;
             }
             try {
-                const loadedText = await readFileIfExists(WIDGETS_PATH);
+                const loadedText = await getFromPathIfExists(rootDirHandle, WIDGETS_PATH);
                 if (loadedText) {
                     setVariableWidgets(JSON.parse(loadedText));
                 }
@@ -95,17 +95,6 @@ export default function Widgets() {
             return false;
         }
         return true;
-    }
-
-    // Read a file's text WITHOUT creating it (getFromPath/path2Handles default to create:true,
-    // which would otherwise create an empty file just by checking for it). Returns null if missing.
-    async function readFileIfExists(path) {
-        try {
-            const { fileHandle } = await path2Handles(rootDirHandle, path, { create: false });
-            return await getFileText(fileHandle);
-        } catch (e) {
-            return null;
-        }
     }
 
     // write the library to the board and make sure boot.py enables the data channel
@@ -179,7 +168,7 @@ export default function Widgets() {
                     text: "Load Widgets",
                     handler: async () => {
                         if (!requireDrive()) return;
-                        const loadedText = await readFileIfExists(WIDGETS_PATH);
+                        const loadedText = await getFromPathIfExists(rootDirHandle, WIDGETS_PATH);
                         if (!loadedText) {
                             alert("No saved widgets found at " + WIDGETS_PATH);
                             return;
@@ -245,7 +234,7 @@ export default function Widgets() {
                 ) : !rootFolderDirectoryReady ? (
                     <Box sx={{ p: 2 }}>
                         <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
-                            The CIRCUITPY drive isn't open. Open it to detect your board, install the library, and
+                            The CIRCUITPY drive isn&apos;t open. Open it to detect your board, install the library, and
                             save/load widget layouts.
                         </Typography>
                         <Button variant="contained" onClick={openDirectory}>
@@ -255,10 +244,10 @@ export default function Widgets() {
                 ) : libInstalled === false ? (
                     <Box sx={{ p: 2 }}>
                         <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
-                            The Connected Variables library isn't installed on this board yet. Installing it
+                            The Connected Variables library isn&apos;t installed on this board yet. Installing it
                             copies <code>connected_variables.py</code> to the CIRCUITPY drive and enables the data
-                            serial channel in <code>boot.py</code> (you'll be asked to reset the board). Open the
-                            CIRCUITPY drive first if you haven't.
+                            serial channel in <code>boot.py</code> (you&apos;ll be asked to reset the board). Open the
+                            CIRCUITPY drive first if you haven&apos;t.
                         </Typography>
                         <Button variant="contained" onClick={installLibrary}>
                             Install Library
@@ -267,7 +256,7 @@ export default function Widgets() {
                 ) : !dataSerialReady ? (
                     <Box sx={{ p: 2 }}>
                         <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
-                            Data Serial is not connected. Connect to the board's data port for the widgets to sync.
+                            Data Serial is not connected. Connect to the board&apos;s data port for the widgets to sync.
                         </Typography>
                         <Button variant="contained" onClick={() => connectToDataSerialPort()}>
                             Connect Data Serial

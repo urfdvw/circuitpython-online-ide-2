@@ -4,10 +4,7 @@ import { useState, useContext, useEffect, useRef } from "react";
 import AppContext from "../AppContext";
 // ---- Display ----
 // MUI
-import { Box, Button, Tooltip } from "@mui/material";
-import { grey } from "@mui/material/colors";
-
-const DARK_GREY = grey[300];
+import { Box, Button } from "@mui/material";
 // ACE
 import AceEditor from "react-ace";
 import "ace-builds/src-noconflict/mode-python";
@@ -75,6 +72,7 @@ const RawSerialWrite = ({
             aceEditorRef.current.editor.session.getLength() - 1
         ) {
             if (codeHistIndex == -1) {
+                // already at the live prompt; nothing newer to recall
             } else if (codeHistIndex == codeHistory.length - 1) {
                 aceEditorRef.current.editor.session.setValue(tempCode);
                 newCodeHistoryIndex = -1;

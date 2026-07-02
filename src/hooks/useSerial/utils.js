@@ -18,5 +18,5 @@ export function removeCommonIndentation(text) {
     return lines.map((line) => line.substring(commonIndent)).join("\n");
 }
 
-// https://sentry.io/answers/what-is-the-javascript-version-of-sleep/
-export const sleep = (ms = 0) => new Promise((resolve) => setTimeout(resolve, ms));
+// Re-exported for existing import sites; the single source of truth is utilFunctions/sleep.js.
+export { sleep } from "../../utilFunctions/sleep";

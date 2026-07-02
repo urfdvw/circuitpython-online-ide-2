@@ -1,6 +1,7 @@
-export function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
+import { sleep } from "../../../utilFunctions/sleep";
+
+// Re-exported for existing import sites; the single source of truth is utilFunctions/sleep.js.
+export { sleep };
 
 // path level ====================================
 
@@ -13,6 +14,13 @@ export function normalizePath(rawPath) {
         .filter(Boolean);
 }
 
+/**
+ * Walk `rawPath` from `directoryHandle` and return { dirHandle, fileHandle }.
+ * If the last segment looks like a file (or `treatLastAsFile` is set), fileHandle
+ * is set and dirHandle is its parent; otherwise dirHandle is the target folder.
+ * WARNING: `create` defaults to true — missing folders/files are created along
+ * the way. Pass { create: false } (or use getFromPathIfExists) for pure reads.
+ */
 export async function path2Handles(directoryHandle, rawPath, opt = {}) {
     const { create = true, treatLastAsFile = false } = opt;
 
@@ -48,8 +56,9 @@ export async function path2Handles(directoryHandle, rawPath, opt = {}) {
     }
 }
 
+/** Write `text` to the file at `path`, creating intermediate folders. Failures show a confirm() dialog. */
 export async function writeToPath(rootDirHandle, path, text) {
-    const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
+    const { fileHandle } = await path2Handles(rootDirHandle, path);
     await writeFileText(fileHandle, text);
 }
 
@@ -95,12 +104,26 @@ export async function checkPathExists(rootDirHandle, rawPath) {
     }
 }
 
+/** Read the text of the file at `path`. NOTE: creates the file if missing (create:true default). */
 export async function getFromPath(rootDirHandle, path) {
-    const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
+    const { fileHandle } = await path2Handles(rootDirHandle, path);
     return await getFileText(fileHandle);
+}
+
+// Read a file's text WITHOUT creating it (getFromPath defaults to create:true, so
+// merely probing for a missing file would drop an empty one into the folder).
+// Returns null when the file doesn't exist or can't be read.
+export async function getFromPathIfExists(rootDirHandle, path) {
+    try {
+        const { fileHandle } = await path2Handles(rootDirHandle, path, { create: false });
+        return await getFileText(fileHandle);
+    } catch {
+        return null;
+    }
 }
 // file level ====================================
 
+/** Write `text` into an existing file handle. Failures show a confirm() dialog instead of throwing. */
 export async function writeFileText(fileHandle, text) {
     try {
         // Create a FileSystemWritableFileStream to write to.
@@ -116,6 +139,7 @@ export async function writeFileText(fileHandle, text) {
     }
 }
 
+/** Read a file handle's full contents as a string. */
 export async function getFileText(fileHandle) {
     const file = await fileHandle.getFile();
     const contents = await file.text();
@@ -130,6 +154,7 @@ export function isFolder(entryHandle) {
     return entryHandle.kind === "directory";
 }
 
+/** Whether the handle is still readable (detects revoked/detached handles, e.g. after unplugging). */
 export async function isEntryHealthy(entryHandle) {
     if (entryHandle === null) {
         return false;
@@ -154,18 +179,10 @@ export async function isEntryHealthy(entryHandle) {
     }
 }
 
-export async function isfileSame(entryHandle, text) {
-    if (entryHandle === null) {
-        return false;
-    }
-    try {
-        const fileText = await getFileText(entryHandle);
-        return text === fileText;
-    } catch {
-        return false;
-    }
-}
-
+/**
+ * List a folder's direct children, annotating each handle with parent, isParent,
+ * fullPath, and extension. With `withParent`, the parent entry is prepended.
+ */
 export async function getFolderContent(folderHandle, withParent = false) {
     const layer = [];
     if (withParent && folderHandle.parent) {
@@ -174,7 +191,7 @@ export async function getFolderContent(folderHandle, withParent = false) {
         layer.push(parentEntry);
     }
     for await (const entry of await folderHandle.values()) {
-        const matchExtension = entry.name.match(/\.([^\.]+)$/i);
+        const matchExtension = entry.name.match(/\.([^.]+)$/i);
 
         entry.parent = folderHandle;
         entry.isParent = false;
@@ -186,6 +203,7 @@ export async function getFolderContent(folderHandle, withParent = false) {
     return layer;
 }
 
+/** Recursively build a sorted tree: [{ parent, handle, children | null }]. */
 export async function getFolderTree(folderHandle) {
     var out = [];
     for (const entry of await getFolderContent(folderHandle)) {
@@ -197,37 +215,6 @@ export async function getFolderTree(folderHandle) {
     }
     out.sort((a, b) => (a.handle.fullPath > b.handle.fullPath ? 1 : b.handle.fullPath > a.handle.fullPath ? -1 : 0));
     return out;
-}
-
-export function compareFolderTrees(tree1, tree2) {
-    // Check if both trees are empty/null
-    if (!tree1 && !tree2) return true;
-
-    // If one of them is null but not both, they are not the same
-    if (!tree1 || !tree2) return false;
-
-    // Check if the number of nodes at the current level is the same
-    if (tree1.length !== tree2.length) return false;
-
-    // Recursively compare each node in the tree
-    for (let i = 0; i < tree1.length; i++) {
-        // Compare current node's properties other than children
-        if (tree1[i].handle.fullPath !== tree2[i].handle.fullPath) {
-            console.log(tree1[i].handle.fullPath, tree2[i].handle.fullPath, "not eq");
-            return false;
-        }
-
-        // If both nodes have children, compare them recursively
-        if (tree1[i].children && tree2[i].children) {
-            if (!compareFolderTrees(tree1[i].children, tree2[i].children)) return false;
-        } else if (tree1[i].children || tree2[i].children) {
-            // If one has children but the other does not, they are not the same
-            return false;
-        }
-    }
-
-    // If all checks passed, the trees are the same
-    return true;
 }
 
 export async function checkFileExists(parentHandle, fileName) {
@@ -252,6 +239,7 @@ export async function checkEntryExists(parentHandle, entryName) {
     return (await checkFileExists(parentHandle, entryName)) || (await checkFolderExists(parentHandle, entryName));
 }
 
+/** Diff two folders by file text -> { newFiles, removedFiles, editedFiles } (paths + contents). */
 export async function compareFolders(sourceFolderHandle, targetFolderHandle, skipHidden = true) {
     const output = {
         newFiles: [],
@@ -330,28 +318,9 @@ export async function addNewFile(parentHandle, newFileName) {
     }
 }
 
-export async function addRandomFolderTree(folderHandle, numLayers, numEntries) {
-    // this function is mostly for testing
-    var layerFolders = [folderHandle];
-    for (let layerIndex = 0; layerIndex < numLayers; layerIndex++) {
-        const nextLayerFolder = [];
-        for (const curFolderHandle of layerFolders) {
-            for (let entryIndex = 0; entryIndex < numEntries; entryIndex++) {
-                const randomNumber = Math.random();
-                if (randomNumber < 0.7) {
-                    // make folder
-                    nextLayerFolder.push(await addNewFolder(curFolderHandle, String(randomNumber)));
-                } else {
-                    await addNewFile(curFolderHandle, String(randomNumber));
-                }
-            }
-        }
-        layerFolders = nextLayerFolder;
-    }
-}
-
 // Delete -----------------------------------------
 
+/** Delete a file or folder (recursively). Requires a secure context (https). */
 export async function removeEntry(parentHandle, entryHandle) {
     // Will not work without https
     if (isFolder(entryHandle)) {
@@ -398,6 +367,7 @@ export async function _removeFile(parentHandle, fileHandle) {
 
 // Copy --------------------------------------
 
+/** Copy a file or folder (recursively) into `targetFolderHandle` under `newName`. */
 export async function copyEntry(entryHandle, targetFolderHandle, newName) {
     if (isFolder(entryHandle)) {
         return await _copyFolder(entryHandle, targetFolderHandle, newName);
@@ -406,6 +376,7 @@ export async function copyEntry(entryHandle, targetFolderHandle, newName) {
     }
 }
 
+/** Copy a folder's contents into another folder, optionally emptying it first and skipping dotfiles. */
 export async function backupFolder(folderHandle, newFolderHandle, clean = false, skipHidden = true) {
     if (clean) {
         await cleanFolder(newFolderHandle);
@@ -455,6 +426,7 @@ export async function moveEntry(parentHandle, entryHandle, targetFolderHandle) {
 }
 
 // MISC
+/** Trigger a browser download of `data` as `filename`. */
 export function downloadAsFile(filename, data) {
     // Function to download data to a file
     var file = new Blob([data], { type: "text" });

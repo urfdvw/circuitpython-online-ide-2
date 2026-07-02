@@ -1,4 +1,3 @@
-import React from "react";
 import { diffLines } from "diff";
 import { Box, Typography } from "@mui/material";
 

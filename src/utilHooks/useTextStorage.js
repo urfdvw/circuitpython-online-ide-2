@@ -15,19 +15,6 @@ export function useTextStorage(textName) {
     const [preparingText, setPreparingText] = useState(false);
     const [textReady, setTextReady] = useState(typeof window !== "undefined" && !!localStorage.getItem(storageKey));
 
-    const isTextContentType = (ct = "") => {
-        const c = ct.toLowerCase();
-        return (
-            c.startsWith("text/") ||
-            c.includes("json") ||
-            c.includes("xml") ||
-            c.includes("csv") ||
-            c.includes("yaml") ||
-            c.includes("markdown") ||
-            c.includes("html")
-        );
-    };
-
     const isProbablyBinary = (bytes) => {
         if (!bytes || !bytes.length) return false;
         if (bytes.some((b) => b === 0)) return true;
@@ -57,7 +44,6 @@ export function useTextStorage(textName) {
             setPreparingText(true);
             try {
                 const res = await fetchWithProxy(url);
-                // console.log(res)
                 const text = await res.text();
                 const enc = new TextEncoder();
                 const bytes = enc.encode(text);

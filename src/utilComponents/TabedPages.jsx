@@ -1,7 +1,7 @@
 import PropTypes from "prop-types";
 import Box from "@mui/material/Box";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 // mui tab
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";

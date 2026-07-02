@@ -9,7 +9,7 @@ export default class SerialCommunication {
         // baud rate of the current/last connection; reused on automatic reconnect
         this._baudRate = 115200;
 
-        // New state for reconnect support
+        // reconnect support
         this._listening = false;
         this._lastPortInfo = null;
         this._reconnecting = false;
@@ -163,8 +163,6 @@ export default class SerialCommunication {
         const encoder = new TextEncoder();
         while (this.port && this.port.writable && this.keepRunning) {
             if (this.writeBuffer.length > 0) {
-                // const data = this.writeBuffer.join('');
-
                 while (this.writeBuffer.length > 0) {
                     const data = this.writeBuffer.shift();
 
@@ -182,7 +180,7 @@ export default class SerialCommunication {
         }
     }
 
-    // New: handle physical disconnect event
+    // Handle the physical disconnect event.
     _onDisconnect(event) {
         try {
             if (event && event.port && event.port.getInfo) {
@@ -198,8 +196,8 @@ export default class SerialCommunication {
         this.close();
     }
 
-    // New: handle physical connect event and try to re-open the previously used port
-    async _onConnect(event) {
+    // Handle the physical connect event and try to re-open the previously used port.
+    async _onConnect() {
         // only attempt reconnect if we have info about the last port and we're not already connected/reconnecting
         if (!this._lastPortInfo || this.port || this._reconnecting) {
             return;

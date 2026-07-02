@@ -23,7 +23,7 @@ import {
     checkEntryExists,
     isEntryHealthy,
 } from "../utilities/fileSystemUtils";
-import { promptUniqueName, getPathEntryLabel } from "../utilities/uiUtils";
+import { promptUniqueName } from "../utilities/uiUtils";
 
 function compareFolderContent(A, B) {
     if (A.length != B.length) {
@@ -49,7 +49,6 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement 
     const [path, setPath] = useState([rootFolder]);
     const [content, setContent] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    const [folderTree, setFolderTree] = useState(null);
     useEffect(() => {
         async function showRoot() {
             setCurrentFolderHandle(rootFolder);
@@ -61,7 +60,6 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement 
 
     useEffect(() => {
         const interval = setInterval(async () => {
-            // console.log("periodic refresh");
             await showFolderView(currentFolderHandle);
         }, 1000);
         return () => clearInterval(interval);

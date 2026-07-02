@@ -1,4 +1,4 @@
-import React, { useContext } from "react";
+import { useContext } from "react";
 import { Button } from "@mui/material";
 import ApplyDrop from "./ApplyDrop";
 import { getPathEntryLabel } from "../utilities/uiUtils";

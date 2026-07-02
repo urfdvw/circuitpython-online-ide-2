@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useContext } from "react";
+import { useState, useEffect, useRef, useContext } from "react";
 import AceEditor from "react-ace";
 
 import "ace-builds/src-noconflict/mode-python";
@@ -8,8 +8,7 @@ import "ace-builds/src-noconflict/ext-language_tools";
 import AppContext from "../AppContext";
 
 const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
-    const { appConfig, fileLookUp, helpTabSelection, configTabSelection, flexModel, sendCtrlC, sendCtrlD, sendCode } =
-        useContext(AppContext);
+    const { appConfig } = useContext(AppContext);
 
     const config = appConfig.config;
     const [content, setContent] = useState("");

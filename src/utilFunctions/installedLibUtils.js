@@ -42,7 +42,7 @@ export async function collectPythonTopLevelImports(rootHandle) {
                     .map((p) => p.split(" as ")[0].split(".")[0].trim())
                     .forEach((lib) => lib && set.add(lib));
             } else if (line.startsWith("from ")) {
-                const m = line.match(/^from\s+([a-zA-Z_][\w\.]*)\s+import/);
+                const m = line.match(/^from\s+([a-zA-Z_][\w.]*)\s+import/);
                 if (m) {
                     const top = m[1].split(".")[0];
                     if (top) set.add(top);
@@ -65,7 +65,6 @@ export async function extractLibFileMetadata(handle) {
     }
 
     const name = handle.name;
-    // console.log(name);
 
     const file = await handle.getFile();
     const result = {};
@@ -85,7 +84,6 @@ export async function extractLibFileMetadata(handle) {
                 result[key] = val;
             }
         }
-        console.log("Extracted metadata:", result);
         return result;
     }
 
@@ -170,6 +168,7 @@ function indexOfBytes(haystack, needle) {
 function findSemverNullTerminated(buf, td) {
     const MAX_DECODE = Math.min(buf.length, 2 * 1024 * 1024);
     const text = td.decode(buf.slice(0, MAX_DECODE));
+    // eslint-disable-next-line no-control-regex -- the NUL terminator is the marker we search for
     const m = /(\d+\.\d+\.\d+)\x00/.exec(text);
     return m ? m[1] : null;
 }
@@ -425,6 +424,5 @@ export function extractBundleUrls(assets) {
     return result;
 }
 
-export function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
+// Re-exported for existing import sites; the single source of truth is sleep.js.
+export { sleep } from "./sleep";

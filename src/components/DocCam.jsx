@@ -1,4 +1,5 @@
 import WebcamViewer from "../utilComponents/WebcamViewer";
+import CameraToolbar from "../utilComponents/CameraToolbar";
 import TabTemplate from "../utilComponents/TabTemplate";
 import { useState, useEffect, useRef, useContext } from "react";
 import { NoTheme } from "react-lazy-dark-theme";
@@ -20,6 +21,14 @@ import {
 import QRCode from "react-qr-code";
 import Peer from "peerjs";
 
+const MARK_COLORS = [
+    { name: "Red", value: "rgba(255, 50, 50, 0.9)" },
+    { name: "Yellow", value: "rgba(255, 220, 0, 0.9)" },
+    { name: "Cyan", value: "rgba(0, 220, 220, 0.9)" },
+    { name: "Green", value: "rgba(0, 200, 80, 0.9)" },
+    { name: "Magenta", value: "rgba(255, 0, 255, 0.9)" },
+];
+
 export default function DocCam() {
     const { flexModel, helpTabSelection } = useContext(AppContext);
 
@@ -30,7 +39,11 @@ export default function DocCam() {
     const [selectedId, setSelectedId] = useState();
     const [popped, setPopped] = useState(false);
     const [marking, setMarking] = useState(false);
+    const [markColor, setMarkColor] = useState(MARK_COLORS[0].value);
     const [clearMarksTrigger, setClearMarksTrigger] = useState(0);
+    const [paused, setPaused] = useState(false);
+    const [captureTrigger, setCaptureTrigger] = useState(0);
+    const [captureMsg, setCaptureMsg] = useState(null);
 
     // null | 'webcam' | 'phone'
     const [cameraSource, setCameraSource] = useState(null);
@@ -111,6 +124,7 @@ export default function DocCam() {
         setExternalStream(null);
         setCameraSource(null);
         setSelectedId(undefined);
+        setPaused(false);
     }
 
     const qrUrl = idePeerId
@@ -141,30 +155,6 @@ export default function DocCam() {
               ]
             : []),
         {
-            label: "Rotate",
-            options: [
-                { text: "0", handler: () => setRotation(0) },
-                { text: "90", handler: () => setRotation(90) },
-                { text: "-90", handler: () => setRotation(-90) },
-                { text: "180", handler: () => setRotation(180) },
-            ],
-        },
-        {
-            label: "Flip",
-            options: [
-                { text: "Horizontal", handler: () => setFlipH((prev) => !prev) },
-                { text: "Vertical", handler: () => setFlipV((prev) => !prev) },
-            ],
-        },
-        {
-            text: marking ? "Stop Marking" : "Mark",
-            handler: () => setMarking((prev) => !prev),
-        },
-        {
-            text: "Clear Marks",
-            handler: () => setClearMarksTrigger((prev) => prev + 1),
-        },
-        {
             label: "≡",
             options: [
                 {
@@ -187,18 +177,41 @@ export default function DocCam() {
             <PopUp popped={popped} setPopped={setPopped} title="Camera" parentStyle={{ width: "100%", height: "100%" }}>
                 <TabTemplate title="Camera" menuStructure={menuStructure}>
                     {cameraSource !== null ? (
-                        <NoTheme>
-                            <WebcamViewer
-                                rotation={rotation}
-                                flipH={flipH}
-                                flipV={flipV}
-                                setDeviceIdList={setDeviceIds}
-                                selectedDeviceId={selectedId}
+                        <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
+                            <NoTheme>
+                                <WebcamViewer
+                                    rotation={rotation}
+                                    flipH={flipH}
+                                    flipV={flipV}
+                                    setDeviceIdList={setDeviceIds}
+                                    selectedDeviceId={selectedId}
+                                    marking={marking}
+                                    markColor={markColor}
+                                    clearMarksTrigger={clearMarksTrigger}
+                                    paused={paused}
+                                    captureTrigger={captureTrigger}
+                                    onCaptureResult={(ok, text) =>
+                                        setCaptureMsg({ severity: ok ? "success" : "error", text })
+                                    }
+                                    externalStream={externalStream}
+                                />
+                            </NoTheme>
+                            <CameraToolbar
+                                onFlipH={() => setFlipH((prev) => !prev)}
+                                onFlipV={() => setFlipV((prev) => !prev)}
+                                onRotateCw={() => setRotation((prev) => (prev + 90) % 360)}
+                                onRotateCcw={() => setRotation((prev) => (prev + 270) % 360)}
                                 marking={marking}
-                                clearMarksTrigger={clearMarksTrigger}
-                                externalStream={externalStream}
+                                onToggleMarking={() => setMarking((prev) => !prev)}
+                                onClearMarks={() => setClearMarksTrigger((prev) => prev + 1)}
+                                markColor={markColor}
+                                markColors={MARK_COLORS}
+                                onSelectMarkColor={setMarkColor}
+                                paused={paused}
+                                onTogglePause={() => setPaused((prev) => !prev)}
+                                onCapture={() => setCaptureTrigger((prev) => prev + 1)}
                             />
-                        </NoTheme>
+                        </Box>
                     ) : (
                         <Box
                             sx={{
@@ -225,6 +238,17 @@ export default function DocCam() {
             >
                 <Alert severity="warning" onClose={() => setDisconnectMsg("")}>
                     {disconnectMsg}
+                </Alert>
+            </Snackbar>
+
+            <Snackbar
+                open={!!captureMsg}
+                autoHideDuration={3000}
+                onClose={() => setCaptureMsg(null)}
+                anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            >
+                <Alert severity={captureMsg?.severity || "info"} onClose={() => setCaptureMsg(null)}>
+                    {captureMsg?.text}
                 </Alert>
             </Snackbar>
 

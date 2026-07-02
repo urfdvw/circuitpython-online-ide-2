@@ -31,6 +31,9 @@ All methods are async — `await` them. File methods operate on the opened devic
 - `help()` — full list of methods and descriptions.
 - `status()` — which folders and serial channels are ready, board info, and whether the library tools are available.
 - `getPlotHelp()` — full Plot/Animation guide (rules, markers, examples) as markdown. The agent reads this before writing code that draws plots or animations via `print()`.
+- `getWidgetsHelp()` — full Connected Variable Widgets guide (setup, `connected_variables` usage, widget types) as markdown.
+- `getWidgetsSchema()` — JSON schema describing each entry in the board's `/ide/widgets.json` layout. The agent reads this before writing that file so the widget panel is valid.
+- `installWidgetsLib()` — install `connected_variables.py` on the board and enable `usb_cdc.data` in `boot.py`. The board must be hard-reset afterward for the `boot.py` change to take effect.
 
 **Files**
 - `listFiles(path)` — recursively list entries as `[{ path, kind }]`.

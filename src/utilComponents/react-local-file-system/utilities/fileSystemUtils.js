@@ -3,15 +3,21 @@ export function sleep(ms) {
 }
 
 // path level ====================================
+
+// 规范化路径：反斜杠 -> 斜杠，按 / 拆分并去掉空段
+export function normalizePath(rawPath) {
+    return String(rawPath || "")
+        .replace(/\\/g, "/")
+        .split("/")
+        .map((s) => s.trim())
+        .filter(Boolean);
+}
+
 export async function path2Handles(directoryHandle, rawPath, opt = {}) {
     const { create = true, treatLastAsFile = false } = opt;
 
-    // 1) 规范化路径：反斜杠 -> 斜杠，去掉多余的 /
-    let path = String(rawPath || "").replace(/\\/g, "/");
-    const levels = path
-        .split("/")
-        .map((s) => s.trim())
-        .filter(Boolean); // 去掉空段
+    // 1) 规范化路径
+    const levels = normalizePath(rawPath);
 
     // 边界：空路径，直接返回起点目录
     if (levels.length === 0) {
@@ -45,6 +51,48 @@ export async function path2Handles(directoryHandle, rawPath, opt = {}) {
 export async function writeToPath(rootDirHandle, path, text) {
     const { dirHandle, fileHandle } = await path2Handles(rootDirHandle, path);
     await writeFileText(fileHandle, text);
+}
+
+// Like writeToPath, but always treats the last segment as a file and lets failures
+// throw instead of popping a confirm() dialog. Creates intermediate folders.
+export async function writeToPathStrict(rootDirHandle, path, text) {
+    const { fileHandle } = await path2Handles(rootDirHandle, path, { create: true, treatLastAsFile: true });
+    const writable = await fileHandle.createWritable();
+    await writable.write(String(text));
+    await writable.close();
+}
+
+// Resolve the PARENT directory handle plus the target entry handle for a path.
+// Needed for delete / rename / move where the operation runs from the parent.
+export async function getParentAndHandleFromPath(rootDirHandle, rawPath) {
+    const levels = normalizePath(rawPath);
+    if (levels.length === 0) {
+        throw new Error("Empty path");
+    }
+    const name = levels[levels.length - 1];
+    const parentPath = levels.slice(0, -1).join("/");
+    const { dirHandle: parent } = await path2Handles(rootDirHandle, parentPath, { create: false });
+    let handle;
+    try {
+        handle = await parent.getFileHandle(name);
+    } catch {
+        handle = await parent.getDirectoryHandle(name);
+    }
+    return { parent, handle, name };
+}
+
+// Whether a path exists under the root. The empty path is the root itself.
+export async function checkPathExists(rootDirHandle, rawPath) {
+    const levels = normalizePath(rawPath);
+    if (levels.length === 0) return true;
+    const name = levels[levels.length - 1];
+    const parentPath = levels.slice(0, -1).join("/");
+    try {
+        const { dirHandle: parent } = await path2Handles(rootDirHandle, parentPath, { create: false });
+        return await checkEntryExists(parent, name);
+    } catch {
+        return false;
+    }
 }
 
 export async function getFromPath(rootDirHandle, path) {

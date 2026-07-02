@@ -57,6 +57,11 @@ Libraries (CircuitPython bundle management):
 Plotting & animation:
 - The IDE can draw live plots and frame animations from data the code `print()`s. To write such code, FIRST call `getPlotHelp()` and follow its rules/usage/examples (markers like `startplot:`, `plotsettings:`, `startanimation:`/`startframe:`/`line:`/`dot:`/`drawframe:`). The Plot tab opens automatically when a plot command is printed.
 
+Connected Variable widgets:
+- The IDE can show a control panel of widgets (sliders, buttons, color pickers, readouts) that sync live with variables in the code over the data serial channel (`usb_cdc.data`). To set this up, FIRST call `getWidgetsHelp()` for the full guide (installing `connected_variables.py`, defining connected variables, calling `heart_beat()`, the widget types).
+- Install the library with `installWidgetsLib()` — it writes `connected_variables.py` to the board and enables `usb_cdc.data` in `boot.py`. If it reports `bootUpdated: true`, tell the user to HARD-RESET the board (unplug/replug or press reset — `ctrlD()` will NOT apply `boot.py`), then connect the Data Serial port.
+- The panel layout lives in `/ide/widgets.json` on the board as an array of widget objects. Before writing that file, call `getWidgetsSchema()` and make each entry conform to it. Widget `variableName`s must exactly match the connected variables defined in the code.
+
 Documentation:
 - Read the project's *.md files in the CIRCUITPY dir before editing.
 - Board info: the `board_id` is in `boot_out.txt`; see https://circuitpython.org/board/<board_id> for board info.

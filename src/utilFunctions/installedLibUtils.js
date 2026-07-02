@@ -372,6 +372,27 @@ export function filterNamesInJsons(dataJsonList, names) {
     return results;
 }
 
+/* ---- bundle catalog ---- */
+
+// Iterate every (libName, manifestObj, bundle) entry across the downloaded bundle
+// catalogs (parsed bundle JSON). Skips bundles whose JSON isn't downloaded yet or
+// fails to parse.
+export function forEachCatalogEntry(bundles, fn) {
+    for (const bundle of bundles || []) {
+        const txt = bundle.json.getText();
+        if (!txt) continue;
+        let obj;
+        try {
+            obj = JSON.parse(txt);
+        } catch {
+            continue;
+        }
+        for (const name of Object.keys(obj)) {
+            fn(name, obj[name], bundle);
+        }
+    }
+}
+
 export function isBundleJsonFileName(str) {
     const pattern = /^.+-\d{8}\.json$/;
     return pattern.test(str);

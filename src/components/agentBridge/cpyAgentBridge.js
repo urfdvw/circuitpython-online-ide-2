@@ -21,9 +21,16 @@ import {
     renameEntry as fsRenameEntry,
     moveEntry as fsMoveEntry,
     removeEntry as fsRemoveEntry,
-    checkEntryExists,
+    // writeToPathStrict: failures throw a clean error for the agent instead of
+    // popping a blocking confirm() dialog. Creates intermediate folders.
+    writeToPathStrict,
+    getParentAndHandleFromPath,
+    checkPathExists,
 } from "../../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+import { writeConnectedVariablesLib, ensureDataSerialInBoot } from "../Widgets/installConnectedVariables";
 import PLOT_HELP from "../../docs/Plot.md";
+import WIDGETS_HELP from "../../docs/Widgets.md";
+import WIDGET_SCHEMA from "../Widgets/WidgetSchema.json";
 
 // Shared mutable state. AgentBridge.jsx writes the latest references here on
 // every render; the API methods below read from it at call time.
@@ -66,33 +73,6 @@ function getRoot() {
         );
     }
     return root;
-}
-
-function normalize(rawPath) {
-    return String(rawPath || "")
-        .replace(/\\/g, "/")
-        .split("/")
-        .map((s) => s.trim())
-        .filter(Boolean);
-}
-
-// Resolve the PARENT directory handle plus the target entry handle for a path.
-// Needed for delete / rename / move / exists where we must operate from the parent.
-async function resolveParentAndHandle(root, rawPath) {
-    const levels = normalize(rawPath);
-    if (levels.length === 0) {
-        throw new Error("Empty path");
-    }
-    const name = levels[levels.length - 1];
-    const parentPath = levels.slice(0, -1).join("/");
-    const { dirHandle: parent } = await path2Handles(root, parentPath, { create: false });
-    let handle;
-    try {
-        handle = await parent.getFileHandle(name);
-    } catch {
-        handle = await parent.getDirectoryHandle(name);
-    }
-    return { parent, handle, name };
 }
 
 function getLib() {
@@ -157,6 +137,12 @@ function buildApi() {
                 plot: {
                     "getPlotHelp()": "Full Plot/Animation guide (rules, usage, examples) -> markdown string. Read it before writing code that draws plots or animations via print().",
                 },
+                widgets: {
+                    note: "Connected Variable widgets form a control panel that syncs with the code over usb_cdc.data (the data serial channel). The layout is stored as /ide/widgets.json on the board — an array of widget objects validated by getWidgetsSchema().",
+                    "getWidgetsHelp()": "Full Connected Variable Widgets guide (setup, connected_variables usage, widget types) -> markdown string. Read it before setting up widgets or writing connected-variable code.",
+                    "getWidgetsSchema()": "JSON schema describing each entry in /ide/widgets.json -> object. Read it before writing that file so the layout is valid.",
+                    "installWidgetsLib()": "Install connected_variables.py on the board and enable usb_cdc.data in boot.py -> { ok, libInstalled, bootUpdated, note }. Board must be HARD-RESET afterward for boot.py to apply.",
+                },
             };
         },
 
@@ -173,6 +159,36 @@ function buildApi() {
         // Full Plot/Animation guide so the agent can author plotting code from code.
         async getPlotHelp() {
             return PLOT_HELP;
+        },
+
+        // Connected Variable Widgets guide + the JSON schema for a widgets.json
+        // layout, so the agent can build widget control panels from code.
+        async getWidgetsHelp() {
+            return WIDGETS_HELP;
+        },
+
+        async getWidgetsSchema() {
+            return WIDGET_SCHEMA;
+        },
+
+        // Install the Connected Variables library: write connected_variables.py to
+        // the board and make sure boot.py enables the usb_cdc.data channel. Same
+        // shared steps (installConnectedVariables.js) as the Widgets tool's
+        // "Install Library", but returns a result instead of showing dialogs.
+        // The board must be HARD-RESET afterward for boot.py to apply.
+        async installWidgetsLib() {
+            const root = getRoot();
+            await writeConnectedVariablesLib(root, writeToPathStrict);
+            const { updated: bootUpdated } = await ensureDataSerialInBoot(root, writeToPathStrict);
+
+            return {
+                ok: true,
+                libInstalled: true,
+                bootUpdated,
+                note: bootUpdated
+                    ? "connected_variables.py written and boot.py updated to enable usb_cdc.data. The board must be HARD-RESET (unplug/replug or press reset — a soft reboot via ctrlD() will NOT apply boot.py) before the data serial port appears. Then ask the user to connect the Data Serial port."
+                    : "connected_variables.py written. boot.py already enables usb_cdc.data.",
+            };
         },
 
         // ---- files ---------------------------------------------------------
@@ -199,15 +215,7 @@ function buildApi() {
         },
 
         async writeFile(path, text) {
-            // Direct write (instead of writeToPath) so failures throw a clean
-            // error for the agent rather than popping a blocking confirm() dialog.
-            const { fileHandle } = await path2Handles(getRoot(), path, {
-                create: true,
-                treatLastAsFile: true,
-            });
-            const writable = await fileHandle.createWritable();
-            await writable.write(String(text));
-            await writable.close();
+            await writeToPathStrict(getRoot(), path, text);
             return { ok: true, path };
         },
 
@@ -222,20 +230,20 @@ function buildApi() {
         },
 
         async deleteEntry(path) {
-            const { parent, handle } = await resolveParentAndHandle(getRoot(), path);
+            const { parent, handle } = await getParentAndHandleFromPath(getRoot(), path);
             await fsRemoveEntry(parent, handle);
             return { ok: true, path };
         },
 
         async renameEntry(path, newName) {
-            const { parent, handle } = await resolveParentAndHandle(getRoot(), path);
+            const { parent, handle } = await getParentAndHandleFromPath(getRoot(), path);
             await fsRenameEntry(parent, handle, newName);
             return { ok: true, path, newName };
         },
 
         async moveEntry(path, targetDirPath) {
             const root = getRoot();
-            const { parent, handle } = await resolveParentAndHandle(root, path);
+            const { parent, handle } = await getParentAndHandleFromPath(root, path);
             const { dirHandle: targetDir } = await path2Handles(root, targetDirPath, {
                 create: true,
                 treatLastAsFile: false,
@@ -245,16 +253,8 @@ function buildApi() {
         },
 
         async exists(path) {
-            const levels = normalize(path);
-            if (levels.length === 0) return true;
-            const name = levels[levels.length - 1];
-            const parentPath = levels.slice(0, -1).join("/");
-            try {
-                const { dirHandle: parent } = await path2Handles(getRoot(), parentPath, { create: false });
-                return await checkEntryExists(parent, name);
-            } catch {
-                return false;
-            }
+            // store.rootDirHandle (not getRoot) so a closed folder yields false, not a throw.
+            return await checkPathExists(store.rootDirHandle, path);
         },
 
         // ---- REPL serial ---------------------------------------------------

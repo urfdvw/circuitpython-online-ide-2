@@ -12,6 +12,7 @@ import { useBundles } from "../../hooks/useBundles";
 import { useInstalledLibs } from "../../hooks/useInstalledLibs";
 import { useLibInstaller } from "../../hooks/useLibInstaller";
 import { versionToString } from "../../utilFunctions/version";
+import { forEachCatalogEntry } from "../../utilFunctions/installedLibUtils";
 
 export default function AgentLibBridge() {
     const { appConfig, boardInfo, rootDirHandle } = useContext(AppContext);
@@ -67,23 +68,6 @@ export default function AgentLibBridge() {
         }
     }
 
-    // Iterate the downloaded catalog (parsed bundle JSON) of every active bundle.
-    function forEachCatalogEntry(fn) {
-        for (const b of bundles) {
-            const txt = b.json.getText();
-            if (!txt) continue;
-            let obj;
-            try {
-                obj = JSON.parse(txt);
-            } catch {
-                continue;
-            }
-            for (const name of Object.keys(obj)) {
-                fn(name, obj[name], b);
-            }
-        }
-    }
-
     // ---- the agent-facing library API ----
     // Rebuilt every render so the closures capture the latest hook state; the
     // window API reads store.lib at call time (same pattern as the serial callbacks).
@@ -115,7 +99,7 @@ export default function AgentLibBridge() {
         async getAvailableLibs() {
             requireDownloaded();
             const out = [];
-            forEachCatalogEntry((name, _obj, b) => out.push({ name, bundle: b.abbr }));
+            forEachCatalogEntry(bundles, (name, _obj, b) => out.push({ name, bundle: b.abbr }));
             return out;
         },
 
@@ -129,7 +113,7 @@ export default function AgentLibBridge() {
             requireDownloaded();
             const key = String(name || "");
             let found = null;
-            forEachCatalogEntry((libName, obj, b) => {
+            forEachCatalogEntry(bundles, (libName, obj, b) => {
                 if (!found && libName === key) {
                     found = {
                         name: libName,
@@ -151,7 +135,7 @@ export default function AgentLibBridge() {
             requireDownloaded();
             const q = String(query || "").toLowerCase();
             const out = [];
-            forEachCatalogEntry((name, obj, b) => {
+            forEachCatalogEntry(bundles, (name, obj, b) => {
                 const desc = obj.pypi_description ?? "";
                 if (name.toLowerCase().includes(q) || String(desc).toLowerCase().includes(q)) {
                     out.push({ name, bundle: b.abbr, description: desc || null });

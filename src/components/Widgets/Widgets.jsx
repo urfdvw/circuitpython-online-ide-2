@@ -6,7 +6,6 @@ import TabTemplate from "../../utilComponents/TabTemplate";
 import { selectTabById } from "../../layout/layoutUtils";
 import {
     writeToPath,
-    getFromPath,
     path2Handles,
     getFileText,
     checkFileExists,
@@ -25,12 +24,10 @@ import VariableMeter from "./VariableMeter";
 import VariableColorPicker from "./VariableColorPicker";
 import VariableButton from "./VariableButton";
 
-import connected_variables from "./CIRCUITPY/connected_variables.py";
+import { writeConnectedVariablesLib, ensureDataSerialInBoot } from "./installConnectedVariables";
 
 const WIDGETS_PATH = "/ide/widgets.json";
 const LIB_FILENAME = "connected_variables.py";
-const LIB_PATH = "/" + LIB_FILENAME;
-const BOOT_PATH = "/boot.py";
 
 export default function Widgets() {
     const {
@@ -111,36 +108,22 @@ export default function Widgets() {
         }
     }
 
-    // Make sure boot.py enables the secondary USB CDC data channel (usb_cdc.data) that
-    // Connected Variables uses. Appends the enable snippet if missing, then asks for a hard reset.
-    async function ensureDataSerialInBootPy() {
-        let boot = "";
-        try {
-            boot = await getFromPath(rootDirHandle, BOOT_PATH);
-        } catch (e) {
-            boot = ""; // boot.py doesn't exist yet
-        }
-        const dataEnabled = /usb_cdc\.enable\([^)]*\bdata\s*=\s*True/.test(boot);
-        if (dataEnabled) {
-            alert("connected_variables installed. The data serial channel is already enabled in boot.py.");
-            return;
-        }
-        const base = boot.replace(/\s*$/, "");
-        const newBoot = (base ? base + "\n\n" : "") + "import usb_cdc\nusb_cdc.enable(console=True, data=True)\n";
-        await writeToPath(rootDirHandle, BOOT_PATH, newBoot);
-        alert(
-            "connected_variables installed and the data serial channel was enabled in boot.py.\n\n" +
-                "Please HARD-RESET the board (unplug/replug, or press its reset button) for the change " +
-                "to take effect, then open Tools → Data Serial and connect to the new (data) port."
-        );
-    }
-
     // write the library to the board and make sure boot.py enables the data channel
+    // (shared steps in installConnectedVariables.js, also used by the agent bridge)
     async function installLibrary() {
         if (!requireDrive()) return;
-        await writeToPath(rootDirHandle, LIB_PATH, connected_variables);
+        await writeConnectedVariablesLib(rootDirHandle, writeToPath);
         setLibInstalled(true);
-        await ensureDataSerialInBootPy();
+        const { updated } = await ensureDataSerialInBoot(rootDirHandle, writeToPath);
+        if (updated) {
+            alert(
+                "connected_variables installed and the data serial channel was enabled in boot.py.\n\n" +
+                    "Please HARD-RESET the board (unplug/replug, or press its reset button) for the change " +
+                    "to take effect, then open Tools → Data Serial and connect to the new (data) port."
+            );
+        } else {
+            alert("connected_variables installed. The data serial channel is already enabled in boot.py.");
+        }
     }
 
     async function copyToClipboard(text) {

@@ -8,6 +8,7 @@ import {
     collectPythonTopLevelImports,
     resolveDependenciesFromJsonStrings,
     filterNamesInJsons,
+    forEachCatalogEntry,
     sleep,
 } from "../utilFunctions/installedLibUtils";
 import { compareVersions, versionToString } from "../utilFunctions/version";
@@ -187,33 +188,30 @@ export function useLibInstaller({
         const installedLibs = await analyzeMcu();
         const cards = [];
         if (boardCpySupported && installedLibs) {
-            for (const bundle of bundles) {
-                const bundleObj = JSON.parse(bundle.json.getText());
-                for (const bundleLibName in bundleObj) {
-                    let installedVersion = null;
-                    const installedBundleLib = installedLibs.filter(
-                        (lib) => lib.name.split(".")[0] === bundleLibName.split(".")[0]
-                    );
-                    if (installedBundleLib.length > 0) {
-                        installedVersion = installedBundleLib[0].version;
-                    }
-                    cards.push({
-                        repoName: bundle.repo,
-                        abbr: bundle.abbr,
-                        libObj: bundleObj[bundleLibName],
-                        libDisplayName: bundleLibName,
-                        installHandler: async () => {
-                            await batchInstallLib([bundleLibName]);
-                            notify(`Installed ${bundleLibName}`);
-                        },
-                        uninstallHandler: async () => {
-                            await batchUninstallLib([bundleLibName]);
-                            notify(`Uninstalled ${bundleLibName}`);
-                        },
-                        installedVersion,
-                    });
+            forEachCatalogEntry(bundles, (bundleLibName, libObj, bundle) => {
+                let installedVersion = null;
+                const installedBundleLib = installedLibs.filter(
+                    (lib) => lib.name.split(".")[0] === bundleLibName.split(".")[0]
+                );
+                if (installedBundleLib.length > 0) {
+                    installedVersion = installedBundleLib[0].version;
                 }
-            }
+                cards.push({
+                    repoName: bundle.repo,
+                    abbr: bundle.abbr,
+                    libObj,
+                    libDisplayName: bundleLibName,
+                    installHandler: async () => {
+                        await batchInstallLib([bundleLibName]);
+                        notify(`Installed ${bundleLibName}`);
+                    },
+                    uninstallHandler: async () => {
+                        await batchUninstallLib([bundleLibName]);
+                        notify(`Uninstalled ${bundleLibName}`);
+                    },
+                    installedVersion,
+                });
+            });
         }
         setLibCards(cards);
         return cards;

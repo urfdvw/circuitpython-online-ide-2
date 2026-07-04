@@ -99,16 +99,13 @@ export default function Debugger() {
             return;
         }
         const lastBlock = serialOutput.split(constants.DEBUG_START).at(-1);
-        // console.log("Last Debug Block:", lastBlock);
         const debugLines = lastBlock
             .split(constants.DEBUG_OUT_START)
             .slice(1)
             .map((line) => line.split(constants.DEBUG_OUT_END)[0]);
-        // console.log("Parsed Debug Lines:", debugLines);
         const debugLinesObjects = debugLines.map((line) => {
             return JSON.parse(line);
         });
-        // console.log("Parsed Debug Lines:", debugLinesObjects);
         setDebugHistory(debugLinesObjects);
         setHistoryIndex(debugLinesObjects.length - 1);
         setDebuggerHalted(debugLinesObjects.at(-1).h);

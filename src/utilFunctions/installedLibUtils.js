@@ -1,3 +1,9 @@
+import { parseVersion, compareVersions, versionToString } from "./version";
+
+// Re-exported so existing import sites (LibCardMUI, Navigation, LibManagement, ...)
+// keep resolving these from installedLibUtils. The single source of truth is version.js.
+export { parseVersion, compareVersions, versionToString };
+
 /* ---- collectPythonTopLevelImports ---- */
 
 export async function collectPythonTopLevelImports(rootHandle) {
@@ -36,7 +42,7 @@ export async function collectPythonTopLevelImports(rootHandle) {
                     .map((p) => p.split(" as ")[0].split(".")[0].trim())
                     .forEach((lib) => lib && set.add(lib));
             } else if (line.startsWith("from ")) {
-                const m = line.match(/^from\s+([a-zA-Z_][\w\.]*)\s+import/);
+                const m = line.match(/^from\s+([a-zA-Z_][\w.]*)\s+import/);
                 if (m) {
                     const top = m[1].split(".")[0];
                     if (top) set.add(top);
@@ -59,7 +65,6 @@ export async function extractLibFileMetadata(handle) {
     }
 
     const name = handle.name;
-    // console.log(name);
 
     const file = await handle.getFile();
     const result = {};
@@ -79,7 +84,6 @@ export async function extractLibFileMetadata(handle) {
                 result[key] = val;
             }
         }
-        console.log("Extracted metadata:", result);
         return result;
     }
 
@@ -164,20 +168,9 @@ function indexOfBytes(haystack, needle) {
 function findSemverNullTerminated(buf, td) {
     const MAX_DECODE = Math.min(buf.length, 2 * 1024 * 1024);
     const text = td.decode(buf.slice(0, MAX_DECODE));
+    // eslint-disable-next-line no-control-regex -- the NUL terminator is the marker we search for
     const m = /(\d+\.\d+\.\d+)\x00/.exec(text);
     return m ? m[1] : null;
-}
-
-export function parseVersion(versionStr) {
-    const m = /^(\d+)\.(\d+)\.(\d+)$/.exec(versionStr.trim());
-    if (!m) {
-        return { major: null, minor: null, patch: null, raw: versionStr };
-    }
-    return {
-        major: Number(m[1]),
-        minor: Number(m[2]),
-        patch: Number(m[3]),
-    };
 }
 
 /* ---- getInstalledLibVersions ----*/
@@ -366,31 +359,6 @@ export function filterNamesInJsons(dataJsonList, names) {
         }
     }
 
-    function parseVersion(v) {
-        // Accept both string "1.2.3" and object {major, minor, patch}
-        if (v && typeof v === "object") {
-            const { major = null, minor = null, patch = null } = v;
-            return {
-                major: Number.isFinite(+major) ? +major : null,
-                minor: Number.isFinite(+minor) ? +minor : null,
-                patch: Number.isFinite(+patch) ? +patch : null,
-            };
-        }
-        if (typeof v === "string") {
-            // match v1.2.3, 1.2.3, 1.2, 1
-            const m = v.trim().match(/^v?\s*(\d+)(?:\.(\d+))?(?:\.(\d+))?/i);
-            if (m) {
-                return {
-                    major: parseInt(m[1], 10),
-                    minor: m[2] !== undefined ? parseInt(m[2], 10) : 0,
-                    patch: m[3] !== undefined ? parseInt(m[3], 10) : 0,
-                };
-            }
-        }
-        // Unparseable or missing
-        return { major: null, minor: null, patch: null };
-    }
-
     const results = [];
     for (const n of names || []) {
         if (n in merged) {
@@ -403,24 +371,25 @@ export function filterNamesInJsons(dataJsonList, names) {
     return results;
 }
 
-export function compareVersions(a, b) {
-    const toNums = (v) => [v?.major ?? 0, v?.minor ?? 0, v?.patch ?? 0];
+/* ---- bundle catalog ---- */
 
-    const [aMaj, aMin, aPat] = toNums(a);
-    const [bMaj, bMin, bPat] = toNums(b);
-
-    if (aMaj !== bMaj) return aMaj < bMaj ? -100 : 100;
-    if (aMin !== bMin) return aMin < bMin ? -10 : 10;
-    if (aPat !== bPat) return aPat < bPat ? -1 : 1;
-    return 0;
-}
-
-export function versionToString(v) {
-    if (!v || typeof v !== "object") return "";
-    const major = v.major ?? 0;
-    const minor = v.minor ?? 0;
-    const patch = v.patch ?? 0;
-    return `${major}.${minor}.${patch}`;
+// Iterate every (libName, manifestObj, bundle) entry across the downloaded bundle
+// catalogs (parsed bundle JSON). Skips bundles whose JSON isn't downloaded yet or
+// fails to parse.
+export function forEachCatalogEntry(bundles, fn) {
+    for (const bundle of bundles || []) {
+        const txt = bundle.json.getText();
+        if (!txt) continue;
+        let obj;
+        try {
+            obj = JSON.parse(txt);
+        } catch {
+            continue;
+        }
+        for (const name of Object.keys(obj)) {
+            fn(name, obj[name], bundle);
+        }
+    }
 }
 
 export function isBundleJsonFileName(str) {
@@ -455,6 +424,5 @@ export function extractBundleUrls(assets) {
     return result;
 }
 
-export function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
+// Re-exported for existing import sites; the single source of truth is sleep.js.
+export { sleep } from "./sleep";

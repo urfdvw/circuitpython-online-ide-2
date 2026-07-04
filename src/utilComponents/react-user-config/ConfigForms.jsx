@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 // schema form
 import Form from "@rjsf/mui";
 import validator from "@rjsf/validator-ajv8";
@@ -42,7 +42,7 @@ export default function ConfigForms({ schemas, config, setConfig, tabValue, setT
         <TabedPages
             tabValue={tabValue}
             setTabValue={setTabValue}
-            pages={schemas.map((schema, index) => {
+            pages={schemas.map((schema) => {
                 return {
                     title: schema.title,
                     name: schema.name,

@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 // react
 import { useEffect, useState, useRef, useContext } from "react";
 // ace
@@ -14,7 +13,7 @@ import "ace-builds/src-noconflict/theme-tomorrow";
 import PopUp from "../utilComponents/PopUp";
 import { selectTabById } from "../layout/layoutUtils";
 // file utils
-import { getFileText, writeFileText, isEntryHealthy, isfileSame } from "../utilComponents/react-local-file-system";
+import { getFileText, writeFileText, isEntryHealthy } from "../utilComponents/react-local-file-system";
 // context
 import AppContext from "../AppContext";
 // constant
@@ -65,34 +64,70 @@ export default function IdeEditor({ node }) {
         sendCtrlD,
         sendCode,
         setInstrumentationOutdated,
+        setFileDirty,
+        clearFileDirty,
     } = useContext(AppContext);
     const config = appConfig.config;
-    const fileHandle = fileLookUp[node.getConfig().fileKey];
+    const fileKey = node.getConfig().fileKey;
+    const fileHandle = fileLookUp[fileKey];
     const aceEditorRef = useRef(null);
     const [text, setText] = useState("");
-    const [fileEdited, setFileEdited] = useState(false);
+    // last loaded-or-saved content; the editor is "dirty" iff text differs from this baseline
+    const [savedText, setSavedText] = useState("");
     const [popped, setPopped] = useState(false);
     const [fileExists, setFileExists] = useState(true);
+    // true when the file changed on disk while we hold unsaved local edits
+    const [conflict, setConflict] = useState(false);
     const [breakpoints, setBreakpoints] = useState(new Set());
-    // scheduled state checking
+    // instant, event-driven dirtiness: no disk read needed
+    const fileEdited = text !== savedText;
+
+    // Periodic disk watch: detect deletion and external changes (not keystroke dirtiness).
     useEffect(() => {
         const interval = setInterval(async () => {
-            setFileExists(await isEntryHealthy(fileHandle));
-            setFileEdited(!(await isfileSame(fileHandle, text)));
-        }, generateRandomNumber(1000));
+            const healthy = await isEntryHealthy(fileHandle);
+            setFileExists(healthy);
+            if (!healthy) return;
+            let diskText;
+            try {
+                diskText = await getFileText(fileHandle);
+            } catch {
+                return;
+            }
+            if (diskText === savedText) {
+                setConflict(false);
+            } else if (text === savedText) {
+                // file changed on disk but we have no local edits -> silently reload (VSCode-like)
+                aceEditorRef.current.editor.session.setValue(diskText);
+                setSavedText(diskText);
+                setConflict(false);
+            } else {
+                // file changed on disk AND we have unsaved edits -> conflict
+                setConflict(true);
+            }
+        }, generateRandomNumber(2000));
         return () => clearInterval(interval);
-    }, [fileHandle, text]);
+    }, [fileHandle, text, savedText]);
 
     useEffect(() => {
         const name = (fileEdited ? FILE_EDITED : "") + fileHandle.name;
         node.getModel().doAction(FlexLayout.Actions.renameTab(node.getId(), name));
     }, [fileEdited]);
 
+    // report dirty status to the shared registry used by the tab-close / page-close guards
+    useEffect(() => {
+        setFileDirty(fileKey, fileEdited);
+    }, [fileEdited]);
+    useEffect(() => {
+        return () => clearFileDirty(fileKey);
+    }, []);
+
     useEffect(() => {
         async function loadText() {
             const fileText = await getFileText(fileHandle);
             aceEditorRef.current.editor.session.setValue(fileText);
-            setFileEdited(false);
+            setSavedText(fileText);
+            setConflict(false);
         }
         loadText();
     }, [fileHandle]);
@@ -160,10 +195,26 @@ export default function IdeEditor({ node }) {
         mode = "json";
     }
 
-    function saveFile(text) {
-        writeFileText(fileHandle, text);
-        setFileEdited(false);
+    async function saveFile(text) {
+        await writeFileText(fileHandle, text);
+        // update the baseline only after the write resolves so the disk watch doesn't
+        // momentarily see disk != baseline and flag a false conflict
+        setSavedText(text);
+        setConflict(false);
         setInstrumentationOutdated(true);
+    }
+
+    // conflict resolution: keep the editor's version and overwrite disk
+    function resolveKeepMine() {
+        saveFile(text);
+    }
+
+    // conflict resolution: discard local edits and reload the on-disk version
+    async function resolveUseDisk() {
+        const diskText = await getFileText(fileHandle);
+        aceEditorRef.current.editor.session.setValue(diskText);
+        setSavedText(diskText);
+        setConflict(false);
     }
 
     // send code from editor
@@ -361,7 +412,10 @@ export default function IdeEditor({ node }) {
     }, []);
 
     const title =
-        "Editor: " + fileHandle.fullPath + (fileExists ? "" : " (deleted)") + (fileEdited ? " (unsaved changes)" : "");
+        "Editor: " +
+        fileHandle.fullPath +
+        (fileExists ? "" : " (deleted)") +
+        (conflict ? " (changed on disk)" : fileEdited ? " (unsaved changes)" : "");
 
     const menuStructure = [
         {
@@ -403,6 +457,25 @@ export default function IdeEditor({ node }) {
     return (
         <PopUp popped={popped} setPopped={setPopped} title={fileHandle.name} parentStyle={{ height: height + "px" }}>
             <TabTemplate title={title} menuStructure={menuStructure}>
+                {conflict && (
+                    <div
+                        style={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "8px",
+                            padding: "6px 10px",
+                            background: "#fff4e5",
+                            borderBottom: "1px solid #f0c36d",
+                            fontSize: "13px",
+                        }}
+                    >
+                        <span style={{ flex: 1 }}>
+                            This file changed on disk while you have unsaved edits.
+                        </span>
+                        <button onClick={resolveKeepMine}>Keep mine</button>
+                        <button onClick={resolveUseDisk}>Use disk</button>
+                    </div>
+                )}
                 <AceEditor
                     ref={aceEditorRef}
                     mode={mode}

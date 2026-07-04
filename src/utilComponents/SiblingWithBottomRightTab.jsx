@@ -1,4 +1,3 @@
-import React from "react";
 import { Box, Button, Tooltip } from "@mui/material";
 
 const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick = null }) => {

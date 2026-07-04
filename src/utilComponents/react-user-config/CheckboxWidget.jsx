@@ -1,12 +1,6 @@
 import Checkbox from "@mui/material/Checkbox";
 import FormControlLabel from "@mui/material/FormControlLabel";
-import {
-    ariaDescribedByIds,
-    getTemplate,
-    labelValue,
-    schemaRequiresTrueValue,
-    // Removed specific type imports that are TypeScript only
-} from "@rjsf/utils";
+import { ariaDescribedByIds, labelValue, schemaRequiresTrueValue } from "@rjsf/utils";
 import Typography from "@mui/material/Typography";
 
 /** The `CheckBoxWidget` is a widget for rendering boolean properties.
@@ -27,12 +21,8 @@ export default function CheckboxWidget(props) {
         onChange,
         onBlur,
         onFocus,
-        registry,
         options,
-        uiSchema,
     } = props;
-
-    const DescriptionFieldTemplate = getTemplate("DescriptionFieldTemplate", registry, options);
 
     // Because an unchecked checkbox will cause html5 validation to fail, only add
     // the "required" attribute if the field value must be "true", due to the

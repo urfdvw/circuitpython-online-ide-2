@@ -30,6 +30,11 @@ const FEATURES = [
         image: "./media/library_management.png",
     },
     {
+        heading: "AI Agent Bridge",
+        body: "Let an AI agent code with you, hands on your board",
+        image: "./media/agent_bridge.png",
+    },
+    {
         heading: "Plotter",
         body: "Visualize sensor data",
         image: "./media/plotter.png",
@@ -121,11 +126,15 @@ const ProductPage = () => {
                         onClick={() => {
                             if (isMobile) {
                                 alert("To use the IDE, visit circuitpy.dev on a desktop browser.");
-                            }
-                            if (isSafari || isFirefox) {
+                            } else if (isSafari || isFirefox) {
                                 alert(
                                     "To use the IDE, visit circuitpy.dev on a Chrome or Chromium-based browser, such as Edge and Opera."
                                 );
+                            } else {
+                                // Supported browser reached via the `#/product` route:
+                                // drop the hash so the routing shell renders the IDE.
+                                window.location.hash = "";
+                                window.location.reload();
                             }
                         }}
                     >

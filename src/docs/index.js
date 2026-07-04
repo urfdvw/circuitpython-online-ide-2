@@ -10,7 +10,6 @@ import plot from "./Plot.md";
 import backup from "./Backup.md";
 import camera from "./Camera.md";
 import use_without_internet from "./Use without Internet.md";
-import about from "./About.md";
 import feedback_and_code_contribution from "./Feedback and Code Contribution.md";
 import version_history from "./Version history.md";
 import troubleshooting from "./Troubleshooting.md";
@@ -18,6 +17,7 @@ import related_projects from "./Related projects.md";
 import lib_management from "./Lib Management.md";
 import debugger_help from "./Debugger.md";
 import widgets from "./Widgets.md";
+import agent_bridge from "../components/agentBridge/Agent Bridge.md";
 import { version } from "../../package.json";
 
 // `kind` controls whether a doc appears in the Help tab:
@@ -26,12 +26,13 @@ import { version } from "../../package.json";
 //   - "reference": shown only in the full documentation page (#/docs).
 // `group` controls which sidebar section the doc lands in on the full documentation
 // page, and the order of the array controls the order within each section. The
-// sidebar renders the groups in this order: "start", then "tool", then "reference".
+// sidebar renders the groups in `docGroups` order; the feature groups mirror the
+// grouping on the Home page.
 const docs = [
     {
         name: "home",
         title: "Home",
-        body: home,
+        body: home.replace("{{version}}", version),
         kind: "reference",
         group: "start",
     },
@@ -54,83 +55,85 @@ const docs = [
         title: "Folder View",
         body: folder_view,
         kind: "tool",
-        group: "tool",
+        group: "essential",
     },
     {
         name: "editor",
         title: "Editor",
         body: editor,
         kind: "tool",
-        group: "tool",
+        group: "essential",
     },
     {
         name: "serial_console",
         title: "Serial Console",
         body: serial_console,
         kind: "tool",
-        group: "tool",
-    },
-    {
-        name: "data_serial",
-        title: "Data Serial",
-        body: data_serial,
-        kind: "tool",
-        group: "tool",
-    },
-    {
-        name: "settings",
-        title: "Settings",
-        body: settings,
-        kind: "tool",
-        group: "tool",
-    },
-    {
-        name: "plot",
-        title: "Plot",
-        body: plot,
-        kind: "tool",
-        group: "tool",
+        group: "essential",
     },
     {
         name: "lib_management",
         title: "Library Management",
         body: lib_management,
         kind: "tool",
-        group: "tool",
+        group: "assist",
     },
     {
         name: "debugger",
         title: "Debugger",
         body: debugger_help,
         kind: "tool",
-        group: "tool",
+        group: "assist",
     },
     {
-        name: "camera",
-        title: "Camera",
-        body: camera,
-        kind: "tool",
-        group: "tool",
+        // "reference" keeps this off the in-IDE Help tab (the Agent Bridge tab
+        // already shows it) while still listing it on the full documentation page.
+        name: "agent_bridge",
+        title: "AI Agent Bridge",
+        body: agent_bridge,
+        kind: "reference",
+        group: "assist",
     },
     {
-        name: "backup",
-        title: "Backup",
-        body: backup,
+        name: "plot",
+        title: "Plot",
+        body: plot,
         kind: "tool",
-        group: "tool",
+        group: "helper",
+    },
+    {
+        name: "data_serial",
+        title: "Data Serial",
+        body: data_serial,
+        kind: "tool",
+        group: "helper",
     },
     {
         name: "widgets",
         title: "Connected Variable Widgets",
         body: widgets,
         kind: "tool",
-        group: "tool",
+        group: "helper",
     },
     {
-        name: "about",
-        title: "About",
-        body: about.replace("{{version}}", version),
-        kind: "reference",
+        name: "camera",
+        title: "Camera",
+        body: camera,
+        kind: "tool",
+        group: "helper",
+    },
+    {
+        name: "backup",
+        title: "Backup",
+        body: backup,
+        kind: "tool",
+        group: "helper",
+    },
+    {
+        name: "settings",
+        title: "Settings",
+        body: settings,
+        kind: "tool",
         group: "reference",
     },
     {
@@ -173,8 +176,10 @@ const docs = [
 // Sidebar sections for the full documentation page, rendered in this order. The
 // items within each section follow the order of the `docs` array above.
 export const docGroups = [
-    { key: "start", title: "Getting Started" },
-    { key: "tool", title: "Tools" },
+    { key: "start", title: "Introduction" },
+    { key: "essential", title: "Essential coding tools" },
+    { key: "assist", title: "Coding assistance" },
+    { key: "helper", title: "Helpful tools" },
     { key: "reference", title: "Reference" },
 ];
 

@@ -28,17 +28,23 @@ import CameraPage from "./components/CameraPage";
 import DocsSite from "./components/DocsSite";
 // file system
 import { useFileSystem } from "./utilComponents/react-local-file-system";
-import { getFromPath } from "./utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import useEditorTabs from "./hooks/useEditorTabs";
+import useUnsavedGuards from "./hooks/useUnsavedGuards";
 // serial
 import { useSerial, useDataSerial, useSerialCommands } from "./hooks/useSerial";
 // Board info
-import { parseCircuitPythonInfo } from "./utilFunctions/dataProcessing";
+import useBoardInfo from "./hooks/useBoardInfo";
+// Backup folder (remembered per board)
+import useBackupDirectory from "./hooks/useBackupDirectory";
+// Auto-open the Plot tab on a plot/animation command
+import usePlotAutoOpen from "./hooks/usePlotAutoOpen";
 // version info
 import WhatSNew from "./components/WhatSNew";
 // agent bridge (window.__cpyAgent)
 import AgentBridge from "./components/agentBridge/AgentBridge";
 
+// Routing shell: hash routes and unsupported-browser handling. It must stay
+// hook-free so the IDE's hooks (in <Ide/>) never run after a conditional return.
 function App() {
     if (window.location.hash.startsWith("#/camera")) {
         return <CameraPage />;
@@ -48,32 +54,35 @@ function App() {
         return <DocsSite />;
     }
 
+    if (window.location.hash.startsWith("#/product")) {
+        return <ProductPage />;
+    }
+
     if (isMobile || isSafari || isFirefox) {
         return <ProductPage />;
     }
 
+    return <Ide />;
+}
+
+// The IDE itself: wires together hooks, context, and layout (assembly only).
+function Ide() {
     useEffect(() => {
         document.body.style.overflow = "hidden";
     }, []);
 
-    // testing state
+    // testing state (consumed by the Placeholder tab)
     const [testCount, setTestCount] = useState(0);
     // layout
-    const [flexModel, setFlexModel] = useState(FlexLayout.Model.fromJson(layout));
+    const [flexModel] = useState(FlexLayout.Model.fromJson(layout));
     // config
     const configTabSelection = useTabValueName(schemas);
     const appConfig = useConfig(schemas);
-    // useEffect(() => {
-    //     console.log("config", appConfig);
-    // }, [appConfig]); // debug
     // help
     const helpTabSelection = useTabValueName(helpDocs);
-    // useEffect(() => {
-    //     console.log("helpTabSelection", helpTabSelection);
-    // }, [helpTabSelection]); // debug
     // hot keys
     useLayoutHotKeys(flexModel);
-    // channel
+    // release channel (?channel=dev|beta), logged once for diagnostics
     const { showDevFeatures, showBetaFeatures } = useChannel();
     useEffect(() => {
         console.log("[showDevFeatures, showBetaFeatures]", [showDevFeatures, showBetaFeatures]);
@@ -87,13 +96,6 @@ function App() {
         rootDirHandle,
     } = useFileSystem();
     const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
-    // backup folder
-    const {
-        openDirectory: openBackupDirectory,
-        directoryReady: backupFolderDirectoryReady,
-        statusText: backupFolderStatusText,
-        rootDirHandle: backupDirHandle,
-    } = useFileSystem();
     // serial
     const { connectToSerialPort, sendDataToSerialPort, addToSerialOutput, serialOutput, serialReady, serial } =
         useSerial();
@@ -112,30 +114,33 @@ function App() {
         dataSerialReady,
         dataSerial,
     } = useDataSerial();
-    // Board info
-    const [boardInfo, setBoardInfo] = useState(null);
-    useEffect(() => {
-        async function getBoardInfo() {
-            if (!rootFolderDirectoryReady) {
-                setBoardInfo(null);
-                return;
-            }
-            const boot_out_txt = await getFromPath(rootDirHandle, "boot_out.txt");
-            const board_info = parseCircuitPythonInfo(boot_out_txt);
-            console.log("board_info:", board_info);
-            setBoardInfo(board_info);
-        }
-        getBoardInfo();
-    }, [rootFolderDirectoryReady, rootDirHandle]);
+    // Board info (derived from the connected drive's boot_out.txt)
+    const boardInfo = useBoardInfo(rootFolderDirectoryReady, rootDirHandle);
+    // Backup "computer folder", remembered per board (keyed by the board UID).
+    const {
+        openBackupDirectory,
+        backupFolderDirectoryReady,
+        backupFolderStatusText,
+        backupDirHandle,
+        backupRestoreWarning,
+        backupReconnectName,
+        reconnectBackupDirectory,
+    } = useBackupDirectory(boardInfo);
     // Debugger
     const [instrumentationOutdated, setInstrumentationOutdated] = useState(true);
+
+    // unsaved-changes guards (tab close + page close) and the shared dirty-file registry
+    const { setFileDirty, clearFileDirty, handleLayoutAction } = useUnsavedGuards(flexModel);
+
+    // auto-open the Plot tab when the board emits a plot/animation command
+    usePlotAutoOpen(serialOutput, flexModel);
 
     /**** main logic ****/
     if (!appConfig.ready) {
         return;
     }
 
-    if (appConfig.config.general.show_board_id && boardInfo) {
+    if (appConfig.config.general.show_board_id && boardInfo && boardInfo.board_id) {
         document.title = "CPy: " + boardInfo.board_id.split("_").join(" ");
     }
 
@@ -172,11 +177,17 @@ function App() {
                 rootFolderStatusText,
                 onFileClick,
                 fileLookUp,
+                // shared dirty-file registry (per editor, keyed by fileKey)
+                setFileDirty,
+                clearFileDirty,
                 // backup folder
                 openBackupDirectory,
                 backupFolderDirectoryReady,
                 backupFolderStatusText,
                 backupDirHandle,
+                backupRestoreWarning,
+                backupReconnectName,
+                reconnectBackupDirectory,
                 // serial
                 connectToSerialPort,
                 sendDataToSerialPort,
@@ -211,7 +222,7 @@ function App() {
                     <AppMenu />
                 </div>
                 <div className="app-body">
-                    <FlexLayout.Layout model={flexModel} factory={Factory} />
+                    <FlexLayout.Layout model={flexModel} factory={Factory} onAction={handleLayoutAction} />
                 </div>
             </div>
         </AppContext.Provider>

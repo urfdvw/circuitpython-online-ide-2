@@ -5,7 +5,7 @@ import Button from "@mui/material/Button";
 import AppContext from "../AppContext";
 import { selectTabById } from "../layout/layoutUtils";
 
-export default function IdeFolderView({ node }) {
+export default function IdeFolderView() {
     const { openDirectory, rootFolderDirectoryReady, rootDirHandle, onFileClick, helpTabSelection, flexModel } =
         useContext(AppContext);
     // Show FolderView component only when its ready

@@ -1,6 +1,7 @@
 import { Parser, Language } from "web-tree-sitter";
 // Vite: import wasm as URL so dev server serves it with correct MIME type
 import wasmUrl from "web-tree-sitter/tree-sitter.wasm?url";
+import { sleep } from "./sleep";
 
 // Helper: Constants for file system operations
 const PREFIX = "ide_debug_";
@@ -130,7 +131,7 @@ async function identifyCodeRows(codeText) {
  * Removes all files/folders starting with 'ide_debug_' in the root directory.
  */
 async function cleanupDebugFiles(rootDir) {
-    for await (const [name, handle] of rootDir.entries()) {
+    for await (const [name] of rootDir.entries()) {
         if (name.startsWith(PREFIX)) {
             await rootDir.removeEntry(name, { recursive: true });
         }
@@ -168,7 +169,7 @@ async function getAllPythonFiles(rootDir) {
  */
 async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExpressions, conditionalBreakpoints) {
     // 1. & 5. Helper to generate debug blocks
-    const generateDebugBlock = (indent, isBreakpoint, fileName, lineNum, fileWatches) => {
+    const generateDebugBlock = (indent, isBreakpoint, fileName, lineNum) => {
         const globalWatches = watchExpressions[""] || [];
         const localWatches = watchExpressions[fileName] || [];
 
@@ -319,7 +320,7 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
                 // row is 0-indexed, but prompt display uses 1-indexed for "line": X
                 const displayLine = row + 1;
 
-                const debugBlock = generateDebugBlock(indent, isBreakpoint, fileName, displayLine, watchExpressions);
+                const debugBlock = generateDebugBlock(indent, isBreakpoint, fileName, displayLine);
 
                 insertions.set(row, debugBlock);
             }
@@ -336,7 +337,6 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         // Logic: If code.py exists, add to it. Else if main.py exists, add to it.
         // We need to know global existence.
         const hasCodePy = pythonFileNames.includes("code.py");
-        const hasMainPy = pythonFileNames.includes("main.py");
 
         let shouldAddInit = false;
         if (fileName === "code.py") shouldAddInit = true;
@@ -468,9 +468,6 @@ class DebugStates:
     }
 }
 
-function sleep(ms) {
-    return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 /**
  * Converts a number of bytes to a human-readable string.

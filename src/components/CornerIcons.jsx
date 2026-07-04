@@ -1,11 +1,11 @@
-import { Tooltip, Typography, Box } from "@mui/material";
+import { Tooltip, Box } from "@mui/material";
 import AppContext from "../AppContext";
-import { useState, useContext, useEffect } from "react";
+import { useContext } from "react";
 import DigitalClock from "../utilComponents/DigitalClock";
 // Icons
 import FolderOutlinedIcon from "@mui/icons-material/FolderOutlined";
 import DeveloperBoardOutlinedIcon from "@mui/icons-material/DeveloperBoardOutlined";
-import { grey, deepPurple, purple, blue, teal } from "@mui/material/colors";
+import { grey, purple, teal } from "@mui/material/colors";
 
 export default function CornerIcons() {
     const { appConfig, rootFolderDirectoryReady, rootFolderStatusText, serialReady } = useContext(AppContext);

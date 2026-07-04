@@ -1,6 +1,6 @@
 import { useState } from "react";
 import * as constants from "../../constants";
-import { removeCommonIndentation, sleep } from "./utils";
+import { removeCommonIndentation } from "./utils";
 
 export default function useSerialCommands(sendDataToSerialPort, serialOutput, serialReady) {
     const [codeHistory, setCodeHistory] = useState(['print("Hello CircuitPython!")']);

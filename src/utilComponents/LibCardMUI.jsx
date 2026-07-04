@@ -12,7 +12,7 @@ import {
 } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import GitHubIcon from "@mui/icons-material/GitHub";
-import { compareVersions, versionToString, parseVersion } from "../utilFunctions/installedLibUtils";
+import { compareVersions, versionToString, parseVersion } from "../utilFunctions/version";
 
 export default function LibCardMUI({
     libObj,

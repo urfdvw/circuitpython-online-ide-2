@@ -20,7 +20,7 @@
             "type": "boolean",
             "default": false
         },
-        "whats_new_2_4_0": {
+        "whats_new_2_5_0": {
             "title": "Show version change info",
             "type": "boolean",
             "default": true

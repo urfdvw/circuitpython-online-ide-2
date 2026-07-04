@@ -16,8 +16,8 @@ import Paper from "@mui/material/Paper";
 // theme
 import { NoTheme } from "react-lazy-dark-theme";
 // board info
-import { fetchLatestCircuitPythonInfo } from "../utilFunctions/baordInfoUtils";
-import { compareVersions, versionToString, parseVersion } from "../utilFunctions/installedLibUtils";
+import { fetchLatestCircuitPythonInfo } from "../utilFunctions/boardInfoUtils";
+import { compareVersions, versionToString } from "../utilFunctions/version";
 
 const video_parent_css = {
     position: "relative",
@@ -35,51 +35,6 @@ const video_css = {
     width: "100%",
     height: "100%",
 };
-
-function InstallCpy() {
-    const { boardInfo } = useContext(AppContext);
-    const [cpyInfo, setCpyInfo] = useState(null);
-    useEffect(() => {
-        const fetchCpyInfo = async () => {
-            const cpy_info = await fetchLatestCircuitPythonInfo();
-            setCpyInfo(cpy_info);
-        };
-        fetchCpyInfo();
-    }, []);
-
-    if (boardInfo && cpyInfo && compareVersions(cpyInfo.version, boardInfo.cpy_version) > 0) {
-        return (
-            <>
-                Step 0.
-                <Button
-                    onClick={() => {
-                        window.open(`https://circuitpython.org/board/${boardInfo.board_id}/`, "_blank");
-                    }}
-                >
-                    Update to {cpyInfo.name}
-                </Button>
-                (Optional)
-            </>
-        );
-    }
-
-    return (
-        <>
-            Step 0.
-            <Button
-                onClick={() => {
-                    window.open(
-                        "https://learn.adafruit.com/welcome-to-circuitpython/installing-circuitpython",
-                        "_blank"
-                    );
-                }}
-            >
-                Install CircuitPython
-            </Button>
-            (Skip if installed recently)
-        </>
-    );
-}
 
 export default function Navigation() {
     const { openDirectory, rootFolderDirectoryReady, serialReady, connectToSerialPort, appConfig, boardInfo } =
@@ -125,7 +80,7 @@ export default function Navigation() {
             </ul>
 
             {serialReady && rootFolderDirectoryReady && (
-                <p>🎉 Setup complete! Open your files and let's start coding!</p>
+                <p>🎉 Setup complete! Open your files and let&apos;s start coding!</p>
             )}
 
             <NoTheme style={{ width: "100%" }}>

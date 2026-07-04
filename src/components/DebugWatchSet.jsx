@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import {
     Box,
     Typography,
@@ -18,7 +18,6 @@ import {
     IconButton,
     Button,
     FormControl,
-    Divider,
     Tooltip,
 } from "@mui/material";
 import DeleteIcon from "@mui/icons-material/Delete";
@@ -282,7 +281,7 @@ function mergeObjectOfLists(obj1, obj2) {
     const result = { ...obj1 };
 
     for (const [key, value] of Object.entries(obj2)) {
-        if (result.hasOwnProperty(key)) {
+        if (Object.prototype.hasOwnProperty.call(result, key)) {
             // Concatenate and deduplicate
             result[key] = [...new Set([...result[key], ...value])];
         } else {

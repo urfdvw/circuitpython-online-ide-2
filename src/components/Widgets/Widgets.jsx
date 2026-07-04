@@ -6,8 +6,7 @@ import TabTemplate from "../../utilComponents/TabTemplate";
 import { selectTabById } from "../../layout/layoutUtils";
 import {
     writeToPath,
-    getFromPath,
-    path2Handles,
+    getFromPathIfExists,
     getFileText,
     checkFileExists,
 } from "../../utilComponents/react-local-file-system";
@@ -25,12 +24,10 @@ import VariableMeter from "./VariableMeter";
 import VariableColorPicker from "./VariableColorPicker";
 import VariableButton from "./VariableButton";
 
-import connected_variables from "./CIRCUITPY/connected_variables.py";
+import { writeConnectedVariablesLib, ensureDataSerialInBoot } from "./installConnectedVariables";
 
 const WIDGETS_PATH = "/ide/widgets.json";
 const LIB_FILENAME = "connected_variables.py";
-const LIB_PATH = "/" + LIB_FILENAME;
-const BOOT_PATH = "/boot.py";
 
 export default function Widgets() {
     const {
@@ -62,7 +59,7 @@ export default function Widgets() {
                 return;
             }
             try {
-                const loadedText = await readFileIfExists(WIDGETS_PATH);
+                const loadedText = await getFromPathIfExists(rootDirHandle, WIDGETS_PATH);
                 if (loadedText) {
                     setVariableWidgets(JSON.parse(loadedText));
                 }
@@ -100,47 +97,22 @@ export default function Widgets() {
         return true;
     }
 
-    // Read a file's text WITHOUT creating it (getFromPath/path2Handles default to create:true,
-    // which would otherwise create an empty file just by checking for it). Returns null if missing.
-    async function readFileIfExists(path) {
-        try {
-            const { fileHandle } = await path2Handles(rootDirHandle, path, { create: false });
-            return await getFileText(fileHandle);
-        } catch (e) {
-            return null;
-        }
-    }
-
-    // Make sure boot.py enables the secondary USB CDC data channel (usb_cdc.data) that
-    // Connected Variables uses. Appends the enable snippet if missing, then asks for a hard reset.
-    async function ensureDataSerialInBootPy() {
-        let boot = "";
-        try {
-            boot = await getFromPath(rootDirHandle, BOOT_PATH);
-        } catch (e) {
-            boot = ""; // boot.py doesn't exist yet
-        }
-        const dataEnabled = /usb_cdc\.enable\([^)]*\bdata\s*=\s*True/.test(boot);
-        if (dataEnabled) {
-            alert("connected_variables installed. The data serial channel is already enabled in boot.py.");
-            return;
-        }
-        const base = boot.replace(/\s*$/, "");
-        const newBoot = (base ? base + "\n\n" : "") + "import usb_cdc\nusb_cdc.enable(console=True, data=True)\n";
-        await writeToPath(rootDirHandle, BOOT_PATH, newBoot);
-        alert(
-            "connected_variables installed and the data serial channel was enabled in boot.py.\n\n" +
-                "Please HARD-RESET the board (unplug/replug, or press its reset button) for the change " +
-                "to take effect, then open Tools → Data Serial and connect to the new (data) port."
-        );
-    }
-
     // write the library to the board and make sure boot.py enables the data channel
+    // (shared steps in installConnectedVariables.js, also used by the agent bridge)
     async function installLibrary() {
         if (!requireDrive()) return;
-        await writeToPath(rootDirHandle, LIB_PATH, connected_variables);
+        await writeConnectedVariablesLib(rootDirHandle, writeToPath);
         setLibInstalled(true);
-        await ensureDataSerialInBootPy();
+        const { updated } = await ensureDataSerialInBoot(rootDirHandle, writeToPath);
+        if (updated) {
+            alert(
+                "connected_variables installed and the data serial channel was enabled in boot.py.\n\n" +
+                    "Please HARD-RESET the board (unplug/replug, or press its reset button) for the change " +
+                    "to take effect, then open Tools → Data Serial and connect to the new (data) port."
+            );
+        } else {
+            alert("connected_variables installed. The data serial channel is already enabled in boot.py.");
+        }
     }
 
     async function copyToClipboard(text) {
@@ -196,7 +168,7 @@ export default function Widgets() {
                     text: "Load Widgets",
                     handler: async () => {
                         if (!requireDrive()) return;
-                        const loadedText = await readFileIfExists(WIDGETS_PATH);
+                        const loadedText = await getFromPathIfExists(rootDirHandle, WIDGETS_PATH);
                         if (!loadedText) {
                             alert("No saved widgets found at " + WIDGETS_PATH);
                             return;
@@ -262,7 +234,7 @@ export default function Widgets() {
                 ) : !rootFolderDirectoryReady ? (
                     <Box sx={{ p: 2 }}>
                         <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
-                            The CIRCUITPY drive isn't open. Open it to detect your board, install the library, and
+                            The CIRCUITPY drive isn&apos;t open. Open it to detect your board, install the library, and
                             save/load widget layouts.
                         </Typography>
                         <Button variant="contained" onClick={openDirectory}>
@@ -272,10 +244,10 @@ export default function Widgets() {
                 ) : libInstalled === false ? (
                     <Box sx={{ p: 2 }}>
                         <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
-                            The Connected Variables library isn't installed on this board yet. Installing it
+                            The Connected Variables library isn&apos;t installed on this board yet. Installing it
                             copies <code>connected_variables.py</code> to the CIRCUITPY drive and enables the data
-                            serial channel in <code>boot.py</code> (you'll be asked to reset the board). Open the
-                            CIRCUITPY drive first if you haven't.
+                            serial channel in <code>boot.py</code> (you&apos;ll be asked to reset the board). Open the
+                            CIRCUITPY drive first if you haven&apos;t.
                         </Typography>
                         <Button variant="contained" onClick={installLibrary}>
                             Install Library
@@ -284,7 +256,7 @@ export default function Widgets() {
                 ) : !dataSerialReady ? (
                     <Box sx={{ p: 2 }}>
                         <Typography component="p" sx={{ mb: 2, color: "text.secondary" }}>
-                            Data Serial is not connected. Connect to the board's data port for the widgets to sync.
+                            Data Serial is not connected. Connect to the board&apos;s data port for the widgets to sync.
                         </Typography>
                         <Button variant="contained" onClick={() => connectToDataSerialPort()}>
                             Connect Data Serial

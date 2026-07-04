@@ -96,9 +96,7 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
                 <Typography component="dir">{description}</Typography>
                 <br />
                 <Autocomplete
-                    isOptionEqualToValue={(option, value) => {
-                        return true;
-                    }}
+                    isOptionEqualToValue={() => true}
                     freeSolo={true}
                     disableClearable
                     id="combo-box-demo"

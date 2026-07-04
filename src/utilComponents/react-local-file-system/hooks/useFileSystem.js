@@ -47,6 +47,16 @@ export default function useFileSystem() {
         }
     }
 
+    // Set/clear the directory handle programmatically (e.g. restore a remembered
+    // backup folder from IndexedDB without going through the picker).
+    function setDirectory(handle) {
+        setRootDirHandle(handle);
+    }
+
+    function clearDirectory() {
+        setRootDirHandle(null);
+    }
+
     // Get Handles under root
     async function path2FolderHandles(path = "", create = false) {
         // change windows path to the world standard
@@ -75,5 +85,7 @@ export default function useFileSystem() {
         statusText,
         rootDirHandle,
         path2FolderHandles,
+        setDirectory,
+        clearDirectory,
     };
 }

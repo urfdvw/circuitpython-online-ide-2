@@ -13,6 +13,11 @@
             "title": "Clean up installed libs at the beginning of auto installation",
             "type": "boolean",
             "default": false
+        },
+        "use_community_bundle": {
+            "title": "Also manage the CircuitPython Community Bundle",
+            "type": "boolean",
+            "default": false
         }
     }
 }

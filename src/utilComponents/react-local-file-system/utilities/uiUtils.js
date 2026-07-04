@@ -22,7 +22,7 @@ export async function getDuplicateName(parentHandle, entry) {
     let extensionPart = null;
 
     if (!isFolder(entry)) {
-        const fileNameParts = entry.name.match(/^(.*)(\.[^\.]+)$/);
+        const fileNameParts = entry.name.match(/^(.*)(\.[^.]+)$/);
         if (fileNameParts) {
             namePart = fileNameParts[1];
             extensionPart = fileNameParts[2];

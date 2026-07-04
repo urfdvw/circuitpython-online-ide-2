@@ -14,6 +14,9 @@ export default function Backup() {
         openBackupDirectory,
         backupFolderDirectoryReady,
         backupDirHandle,
+        backupRestoreWarning,
+        backupReconnectName,
+        reconnectBackupDirectory,
         openDirectory,
         rootFolderDirectoryReady,
         rootDirHandle,
@@ -187,6 +190,21 @@ export default function Backup() {
                     </Button>
                     {backupFolderDirectoryReady ? "✅" : ""}
                 </Typography>
+
+                {backupReconnectName && !backupFolderDirectoryReady ? (
+                    <Typography gutterBottom>
+                        This board has a saved backup folder &quot;{backupReconnectName}&quot;.{" "}
+                        <Button onClick={reconnectBackupDirectory}>Reconnect</Button>
+                    </Typography>
+                ) : null}
+
+                {backupRestoreWarning ? (
+                    <Typography gutterBottom color="warning.main">
+                        The saved backup folder &quot;{backupRestoreWarning}&quot; could not be opened (it may have been
+                        moved, deleted, or its drive disconnected). Please connect a new backup folder using
+                        &quot;Computer Folder&quot; above.
+                    </Typography>
+                ) : null}
 
                 {lastBackupTime || lastRecoverTime || lastRefreshTime ? <hr /> : null}
                 {lastBackupTime ? <Typography gutterBottom>Last Backup : {lastBackupTime}</Typography> : null}

@@ -30,6 +30,11 @@ const FEATURES = [
         image: "./media/library_management.png",
     },
     {
+        heading: "AI Agent Bridge",
+        body: "Let an AI agent code with you, hands on your board",
+        image: "./media/agent_bridge.png",
+    },
+    {
         heading: "Plotter",
         body: "Visualize sensor data",
         image: "./media/plotter.png",

@@ -24,15 +24,21 @@ The first-ever visual debugger for CircuitPython is here! Step through your code
 
 ![Debugger](/docs/media/debugger.png)
 
-### 📦 One-Click Library Manager
+### 📦 Library Manager
 
 Never worry about dependencies again! Just write your code, and the IDE will analyze your imports and install all required libraries with a single click. You can also search and browse the entire Adafruit and Community Bundle to discover available libraries.
 
 ![Library Manager Screenshot](/docs/media/library_management.png)
 
+### ✨ AI Agent Bridge
+
+The IDE can expose its tools to the AI agent, so it can write code, run it on your board, read the output, and install libraries — while you stay in control.
+
+![AI Agent Bridge](/docs/media/agent_bridge.png)
+
 ### 📈 Built-in Serial Plotter
 
-Visualizing sensor data? You don't need external tools. Plots numeric data from the serial output in real-time. Perfect for STEM experiments.
+Visualizing sensor data? You don't need external tools. Plots numeric data from the serial output in real-time. Perfect for sensor experiments.
 
 ![Serial Plotter Screenshot](/docs/media/plotter.png)
 

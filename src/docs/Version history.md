@@ -2,6 +2,8 @@
 Released on July 4th, 2026
 
 - **AI Agent Bridge**: Exposes the IDE's tools to the AI agent
+- Plot tool now supports animation
+- Camera tool UI upgrade
 - Optimized library download logic
 - Editor "unsaved changes" indicator
 - Backup directories are saved

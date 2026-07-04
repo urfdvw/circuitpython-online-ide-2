@@ -11,7 +11,7 @@ You are encouraged to read through **Troubleshooting** and [the GitHub Issues an
 In most cases, I will make changes to the code according to your feedback. However, contributions to the code by creating PRs are highly welcome. In such cases, please elaborate on what changes have been made and how to test them in the PR description. **All** PRs should be linked to existing issues. Code changes should focus on the issue, with very few exceptions on code quality improvements.
 
 ## Feedback Template Suggestion
-- **IDE Version:** Check this in the IDE under 'About'.
+- **IDE Version:** Check this in the "About" section at the bottom of the documentation Home page (Menu bar -> "About").
 - **Browser Name:** Include the version if known.
 - **Operating System Type:** Include the version if known.
 - **CircuitPython Version**

@@ -17,12 +17,6 @@ export default function AppMenu() {
             color: DARK_PURPLE,
             options: [
                 {
-                    text: "About",
-                    handler: () => {
-                        window.open(window.location.pathname + window.location.search + "#/docs/about", "_blank");
-                    },
-                },
-                {
                     text: "Download IDE",
                     handler: () => {
                         window.open("https://github.com/urfdvw/circuitpython-online-ide-2/releases/latest", "_blank");
@@ -130,12 +124,29 @@ export default function AppMenu() {
             ].filter((x) => x), // remove undefined
         },
         {
-            text: "Help",
+            label: "Help",
             color: DARK_GREY,
-            handler: () => {
-                selectTabById(flexModel, "help_tab");
-                helpTabSelection.setTabName("quick_start");
-            },
+            options: [
+                {
+                    text: "Getting Started",
+                    handler: () => {
+                        selectTabById(flexModel, "help_tab");
+                        helpTabSelection.setTabName("quick_start");
+                    },
+                },
+                {
+                    text: "Documentation",
+                    handler: () => {
+                        window.open(window.location.pathname + window.location.search + "#/docs", "_blank");
+                    },
+                },
+                {
+                    text: "Introduction",
+                    handler: () => {
+                        window.open(window.location.pathname + window.location.search + "#/product", "_blank");
+                    },
+                },
+            ],
         },
     ].filter((x) => x); // remove undefined;
     return <MenuBar menuStructure={menuStructure} additionalElement={<CornerIcons />} />;

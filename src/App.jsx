@@ -54,6 +54,10 @@ function App() {
         return <DocsSite />;
     }
 
+    if (window.location.hash.startsWith("#/product")) {
+        return <ProductPage />;
+    }
+
     if (isMobile || isSafari || isFirefox) {
         return <ProductPage />;
     }

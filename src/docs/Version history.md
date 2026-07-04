@@ -1,3 +1,13 @@
+## Version 2.5.0
+Released on July 4th, 2026
+
+- **AI Agent Bridge**: Exposes the IDE's tools to the AI agent
+- Optimized library download logic
+- Editor "unsaved changes" indicator
+- Backup directories are saved
+- Optimized documentation
+- Bug Fixes and Code Quality
+
 ## Version 2.4.0
 Released on June 15th, 2026
 

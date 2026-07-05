@@ -26,8 +26,7 @@
             "default": true
         },
         "enable_agent_bridge": {
-            "title": "Enable agent bridge",
-            "description": "A BETA Feature",
+            "title": "Enable AI Agent Bridge",
             "type": "boolean",
             "default": false
         }

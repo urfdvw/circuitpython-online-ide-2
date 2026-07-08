@@ -1,6 +1,6 @@
 # Coding CircuitPython with AI Agent: The Easiest Setup
 
-*A tutorial on full AI agent workflow with CircuitPython Online IDE*
+*A tutorial on full AI agent workflow with **CircuitPython Online IDE***
 
 ![Hero image: the IDE with the Agent Bridge on and Claude's side panel open next to a board on the desk](media/hero.png)
 <!-- IMAGE PLACEHOLDER: hero shot showing the browser with CircuitPython Online IDE and the Claude side panel, plus a physical board with LED lit on the desk -->
@@ -21,7 +21,7 @@ What people have been asking for is a way to get it at the effort level of the f
 - A **Claude subscription** that includes Claude in Chrome.
 - A CircuitPython-compatible board.
 
-Note that everything is running in the 
+Note that everything is running in the browser, so nothing to install and config on your local computer.
 
 ## Setup
 

@@ -116,9 +116,20 @@ Two layers, by design:
 ![Screenshot: the backup tool in the IDE](media/backup-tool.png)
 <!-- IMAGE PLACEHOLDER: IDE backup feature UI -->
 
+### Why Claude in Chrome? 
+
+I evaluated chrome extensions of AI agents in the following perspectives.
+- first party extension, for security reasons and also no dealing with auth tokens
+- can run JavaScript commands on the web site
+- good at programming 
+
+At the moment of writing, Claude in Chrome is the only one that satisfy these criterias. If you found any third party extensions or AI browser thet you trust, feel free to try it out: it will work in the same way.
+
+CircuitPython Online IDE has no control over the subscriptions. It goes through the ai model providers.
+
 ## Try it
 
-Open [circuitpy.dev](https://circuitpy.dev), plug in a board, flip on the Agent Bridge, and ask for something small, like a blink, a sensor readout, or a plot. The first time the agent quietly measures your actual sensor in the REPL before writing a single file, you'll understand why the loop has to include the hardware.
+[CircuitPython Online IDE](https://circuitpy.dev) is a powerful development tool for CircuitPython. In addition to the Agent Bridge feature it has a lot other powerful features such as Library Management and Debugger. The IDE itself is completely free and open source. Check it out at CircuitPy.dev.
 
 ---
 

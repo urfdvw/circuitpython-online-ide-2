@@ -89,8 +89,8 @@ After it reads this system prompt, the agent will confirm your setup and ask wha
 
 Time to build something real: **a night light**. 
 
-First prompt
-> "Build a nightlight that will turn on the LED when the photoresistor is in the dark. Turn it off when it is bright."
+Prompt:
+> Build a nightlight that will turn on the LED when the photoresistor is in the dark. Turn it off when it is bright.
 
 The agent then started to run some experiments in the REPL. 
 It is testing the LED connection, and also how the photoresistor reading looks like when it is in the normal brightness.
@@ -108,7 +108,9 @@ Then it asked me for help to cover the photoresistor to measure what is the read
 
 ![alt text](image-4.png)
 
-Then I covered the photoresistor and gave it another prompt.
+I covered the photoresistor and gave it another prompt.
+
+Follow-up prompt:
 > The photoresistor is covered. Can you read it again?
 
 It ran the experiment again 
@@ -123,7 +125,7 @@ led off
 Then it asks me for help to gather more data to set the threshold.
 ![alt text](image-5.png)
 
-Prompt
+Follow-up prompt:
 > It is uncovered now.
 
 ```
@@ -171,9 +173,8 @@ As I checked the code it writes, it used a relay mechanism that used two thresho
 
 ### Step 5: The agent plots your data, right in the IDE
 
-Then I asked:
-
-> "It is working now, and I want you to make a plot out of the sensor data and the two thresholds. Only keep 100 history data in this plot."
+Follow-up prompt:
+> It is working now, and I want you to make a plot out of the sensor data and the two thresholds. Only keep 100 history data in this plot.
 
 ![alt text](image-7.png)
 
@@ -194,18 +195,14 @@ M5Stack CardPuter is a fun development board that has a keyboard and screen. So 
 I started from a blank project and used the following prompt to build with the agent:
 
 Prompt:
-```text
-Make a calculator using the keyboard and screen on this board. The number keys are used for entering a number, and support plus, minus, multiply, and divide. Enter to submit.
-```
+> Make a calculator using the keyboard and screen on this board. The number keys are used for entering a number, and support plus, minus, multiply, and divide. Enter to submit.
 
 Follow-up prompt:
-```text
-I want to support additional keys for the operations:
-• A for add
-• M for minus
-• X for multiply
-• D for divide
-```
+> I want to support additional keys for the operations:
+> - A for add
+> - M for minus
+> - X for multiply
+> - D for divide
 
 The result is a fully functional, regular math calculator. The agent successfully found a way to capture keyboard input and also installed libraries to drive the screen. You can check the attachment for more details of the result.
 

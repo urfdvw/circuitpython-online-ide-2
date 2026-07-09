@@ -5,6 +5,8 @@
 ![Hero image: the IDE with the Agent Bridge on and Claude's side panel open next to a board on the desk](media/hero.png)
 <!-- IMAGE PLACEHOLDER: hero shot showing the browser with CircuitPython Online IDE and the Claude side panel, plus a physical board with LED lit on the desk -->
 
+*Disclosure: The author of this post is the developer of CircuitPython Online IDE.*
+
 ## Background: Current State of AI Agent workflow for CircuitPython
 
 The trend of AI-assisted coding is already affecting how we code for microcontrollers. [It is easy to ask LLM (Large Language Model) chatbots questions about CircuitPython and copy the code snippets to the microcontroller.](https://medium.com/@gene.arnold/%EF%B8%8F-building-a-simon-says-game-with-chatgpt-and-a-raspberry-pi-pico-1806f3314e8b) And if there are any errors, we naturally paste the error message from the REPL back to the chatbot. [Some chat environments went one step further and can interpret CircuitPython code](https://adafruit-playground.com/u/dexter_starboard/pages/circuitpython-and-chatgpt-code-interpreter), but they are still blind to real hardware such as sensors and motors.
@@ -175,7 +177,7 @@ CircuitPython Online IDE has no control over the subscriptions. It goes through 
 
 ## Try it out now
 
-Open [circuitpy.dev](https://circuitpy.dev), plug in a board, flip on the Agent Bridge, and ask for something small, like a blink, a sensor readout, or a plot. The first time the agent quietly measures your actual sensor in the REPL before writing a single file, you'll understand why the loop has to include the hardware.
+[CircuitPython Online IDE](https://circuitpy.dev) is a powerful development tool for CircuitPython. In addition to the Agent Bridge feature, it has a lot of other powerful features such as Library Management and a Debugger. The IDE itself is completely free and open source. Check it out at CircuitPy.dev.
 
 ---
 

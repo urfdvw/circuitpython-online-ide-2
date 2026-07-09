@@ -2,8 +2,7 @@
 
 *A tutorial on a full AI agent workflow with **CircuitPython Online IDE***
 
-![Hero image: the IDE with the Agent Bridge on and Claude's side panel open next to a board on the desk](media/hero.png)
-<!-- IMAGE PLACEHOLDER: hero shot showing the browser with CircuitPython Online IDE and the Claude side panel, plus a physical board with LED lit on the desk -->
+![Hero image.](image-10.png)
 
 *Disclosure: The author of this post is the developer of CircuitPython Online IDE.*
 
@@ -15,13 +14,13 @@ AI coding **agents**, on the other hand, have changed how software gets written.
 
 The **full agent workflow** Scott described isn't new. Experts have been giving agents real hardware access for a while ([ohararp-g's Reddit post](https://www.reddit.com/r/circuitpython/comments/1ollo56/comment/o1pzbz0/) is one example), typically through the Model Context Protocol (MCP). But that power comes with setup work: installing and configuring MCP servers for code, the REPL, libraries, and more. That's a fine trade for a professional dev environment. It's a steep ask for learners and hobbyists.
 
-What people have been asking for is a way to get it at the effort level of the first route with the hardware access of the second. That's the gap closed by the AI Agent Bridge feature of CircuitPython Online IDE (https://circuitpy.dev).
+What people have been asking for is an easy way to get access to the coding agent for CircuitPython in seconds. That's the gap closed by the AI Agent Bridge feature of CircuitPython Online IDE (https://circuitpy.dev).
 
 ## What is AI Agent Bridge?
 
-To be clear, the IDE itself doesn't contain any AI element. It exposes itself as a set of tools for the AI agent to use. And the tools are exposed as a set of JavaScript function handles. These functions serve as a bridge between the IDE and the agent.
+To be clear, the IDE itself doesn't contain any AI. Instead, it exposes a set of tools, implemented as JavaScript functions, that an AI agent can call. These functions serve as the bridge between the IDE and the agent.
 
-With that said, the agent also needs to live inside the browser. And the agent we're going to use is Claude in Chrome.
+This means the agent also needs to live inside the browser. The agent we're going to use is Claude in Chrome.
 
 ## Prerequisites
 
@@ -29,33 +28,33 @@ With that said, the agent also needs to live inside the browser. And the agent w
 - A **Claude subscription** that includes Claude in Chrome.
 - A CircuitPython-compatible board.
 
-Note that everything is running in the browser, so there's nothing to install or configure on your local computer.
+Note that everything runs in the browser, so there is nothing to install or configure on your local computer.
 
 ## Example 1: Night Light on Breadboard
 
-In this example, I'm going to show how to use the AI Agent Bridge feature from start to finish to build a simple nightlight project.
+In this example, I'm going to show how to use the AI Agent Bridge feature from start to finish to build a simple night light project.
 
 ![Photo of the breadboard of the nightlight.](image-9.png)
 
 ### Step 1: Set Up the IDE
 
-Suppose you already have the Claude in Chrome extension installed. We first need to open https://circuitpy.dev in Chrome. This will open the CircuitPython Online IDE as the website.
+With the Claude in Chrome extension already installed, we first open https://circuitpy.dev in Chrome. This loads the CircuitPython Online IDE as a website.
 
-Next, we will follow the instructions in the navigation tab, where the first step is to connect the CircuitPy drive, which is the mass storage of the microcontroller. The second step is to connect the serial console, and then you will see a greeting message. These are the setup steps every time you use the Online IDE.
+Next, we follow the instructions in the navigation tab. The first step is to connect the CircuitPy drive, which is the microcontroller's mass storage. The second step is to connect the serial console, after which you will see a greeting message. These are the same setup steps every time you use the Online IDE.
 
 ![Screenshot of CircuitPy and serial console are both connected.](image.png)
 
-To use the AI agent bridge, we need to open Tools -> AI Agent Bridge, and there is a button to turn it on. Click on that, and you are going to see an indicator on the bottom right corner saying the Agent Bridge is on.
+To use the AI Agent Bridge, open Tools -> AI Agent Bridge and click the button to turn it on. An indicator will appear in the bottom right corner showing that the Agent Bridge is on.
 
-The final step is to open the Claude Chrome extension so that you're going to see the chat interface on the right side.
+The final step is to open the Claude in Chrome extension, which brings up the chat interface on the right side.
 
 ![Screenshot of AI agent bridge is turned on, and the chat interface is ready.](image-2.png)
 
 ### Step 2: Document the pin connections
 
-Claude in Chrome is a generic agent, so it doesn't know what kind of hardware we are working with. So we need to tell the agent how we connect the circuit. Because the circuit doesn't change that much, we want to document that into a markdown file on the microcontroller.
+Claude in Chrome is a general-purpose agent, so it doesn't know what hardware we are working with. We need to tell it how the circuit is connected. Since the circuit rarely changes, the best place to document it is a markdown file stored on the microcontroller itself.
 
-In this project, we have a breadboard that has a microcontroller, a photoresistor, and an LED on the board.
+In this project, the breadboard holds a microcontroller, a photoresistor, and an LED.
 
 Let's create a file called `CIRCUIT.md` in the board's root:
 
@@ -77,7 +76,7 @@ Connection involves an LED:
 
 ### Step 3: Copy and run the system prompt
 
-Because the agent is a generic agent, we need to tell it what kind of project we are working on (CircuitPython). We need to tell it how to call the IDE's tools, to check its connection first, to experiment in the REPL before writing files, to install libraries from the board's CircuitPython bundle, and to read the plotting guide before drawing plots. All this information is the same every time you work with the AI Agent Bridge, so I already wrote a system prompt for you to copy.
+Besides the circuit, the agent also needs to know what kind of project we are working on (CircuitPython): how to call the IDE's tools, to check its connection first, to experiment in the REPL before writing files, to install libraries from the board's CircuitPython bundle, and to read the plotting guide before drawing plots. This information is the same every time you work with the AI Agent Bridge, so I have already written a system prompt for you to copy.
 
 Click **Copy System Prompt** in the Agent Bridge tab, and paste it into the Claude side panel in Chrome. You only do this once per conversation.
 
@@ -92,8 +91,7 @@ Time to build something real: **a night light**.
 Prompt:
 > Build a nightlight that will turn on the LED when the photoresistor is in the dark. Turn it off when it is bright.
 
-The agent then started to run some experiments in the REPL. 
-It is testing the LED connection, and also how the photoresistor reading looks like when it is in the normal brightness.
+The agent then started running experiments in the REPL. It tested the LED connection and checked what the photoresistor reading looks like at normal room brightness.
 
 ```text
 >>> exec("""import board, analogio, digitalio\nprint(hasattr(board,'D0'), hasattr(board,'D7'))""")
@@ -104,7 +102,7 @@ setup done
 LED ON 54989
 ```
 
-Then it asked me for help to cover the photoresistor to measure what is the reading in the dark.
+Then it asked me to cover the photoresistor so it could measure the reading in the dark.
 
 ![alt text](image-4.png)
 
@@ -113,7 +111,7 @@ I covered the photoresistor and gave it another prompt.
 Follow-up prompt:
 > The photoresistor is covered. Can you read it again?
 
-It ran the experiment again 
+It ran the experiment again:
 
 ```
 >>> exec("""print('dark reading', sensor.value)""")
@@ -122,7 +120,7 @@ dark reading 62436
 led off
 ```
 
-Then it asks me for help to gather more data to set the threshold.
+Then it asked me to help gather more data so it could set the thresholds.
 ![alt text](image-5.png)
 
 Follow-up prompt:
@@ -163,13 +161,12 @@ Auto-reload is on. Simply save files over USB to run them or enter REPL to disab
 code.py output:
 ```
 
-After gathering several data points, it went confidently to write code.py and then run the final code.
-It also wants me to confirm: Is the final code working?
+After gathering enough data points, it confidently wrote code.py and ran the final code. It then asked me to confirm that the code was working.
 
 ![alt text](image-6.png)
 
-As tested, the nightlight works as expected. When my hand is covering the photoresistor, the LED light is turned on. When I remove my hand, it turns off.
-As I checked the code it writes, it used a relay mechanism that used two thresholds to reduce the number of on and off cycles of the LED, which is smart.
+As tested, the night light works as expected. When my hand covers the photoresistor, the LED turns on; when I remove my hand, it turns off.
+Reading the code it wrote, I found it used hysteresis (two separate thresholds) to keep the LED from flickering on and off near the boundary, which is smart.
 
 ### Step 5: The agent plots your data, right in the IDE
 
@@ -182,17 +179,19 @@ The agent read the IDE's plotting guide through the bridge, then updated the cod
 
 ### Conclusion
 
-In this first example, we confirm that the agent has the ability to
-- check the latest CircuitPython document
-- do experiments in REPL
+This first example confirms that the agent can:
+- check the latest CircuitPython documentation
+- run experiments in the REPL
 - write CircuitPython code
-- use IDE tools and plotting tools.
+- use the IDE's tools, including the plotter
 
 ## Example 2: M5Stack CardPuter Calculator
 
-M5Stack CardPuter is a fun development board that has a keyboard and screen. So I didn't connect any external peripherals, just used the onboard keyboard and screen to make a calculator. The challenging part is I didn't tell the agent how those onboard peripherals are connected. The screen also needs a library to drive it.
+The M5Stack CardPuter is a fun development board with a built-in keyboard and screen, so this time I didn't connect any external peripherals. The goal was to turn it into a pocket calculator using only what's on the board.
 
-I started from a blank project and used the following prompt to build with the agent:
+This example is a harder test than it looks. Unlike Example 1, there was no `CIRCUIT.md` this time: I deliberately didn't tell the agent how the keyboard or the screen is connected, so it had to find the board's documentation on its own. On top of that, the screen doesn't work out of the box; it needs a display driver library that wasn't on the board yet.
+
+I started from a blank project and built the whole thing with just two prompts:
 
 Prompt:
 > Make a calculator using the keyboard and screen on this board. The number keys are used for entering a number, and support plus, minus, multiply, and divide. Enter to submit.
@@ -204,21 +203,21 @@ Follow-up prompt:
 > - X for multiply
 > - D for divide
 
-The result is a fully functional, regular math calculator. The agent successfully found a way to capture keyboard input and also installed libraries to drive the screen. You can check the attachment for more details of the result.
+The result is a fully functional calculator. Along the way, the agent looked up the CardPuter's documentation to learn how the onboard keyboard is wired, worked out how to capture keystrokes, picked the right display drivers (`adafruit_display_text`, `adafruit_bitmap_font`, `adafruit_ticks`), and installed it with the IDE's library management tool.
 
 ![Photo of the M5Stack CardPuter used as a calculator.](image-8.png)
 
-In this example, we confirm that the agent has the ability to
-- Check external documentation for a specific board regarding the peripheral connections.
-- Install the latest version of necessary libraries using the library management tool in the IDE.
+This example confirms that the agent can:
+- check external documentation for a specific board to learn its peripheral connections
+- install the latest versions of the necessary libraries using the IDE's library management tool
 
 ## You can also try
 
-In my personal projects, I also use agents to do the following kinds of tasks, which you can use as a reference.
-- Explain existing large CircuitPython project code to me.
-- Check the code of the existing project, find issues, and fix them.
-- Fix code issues caused by upgrading CircuitPython to a newer major version, and also fix all the library dependencies.
-- Make animations, not just plot, using the IDE plot tool according to sensor data change.
+In my personal projects, I have also used the agent for the following kinds of tasks, which you can use for inspiration:
+- Explain the code of a large existing CircuitPython project to me.
+- Review the code of an existing project, find issues, and fix them.
+- Fix code issues caused by upgrading CircuitPython to a newer major version, along with all the library dependencies.
+- Make animations, not just plots, using the IDE's plot tool driven by changing sensor data.
 
 
 ## Q&A
@@ -238,23 +237,20 @@ A chatbot **gives answers**; an agent **does work**. With a chatbot, *you* are t
 
 Two layers, by design:
 
-1. **Chrome's permission model guards the doors.** In the very first step of the IDE setup, we open the microcontroller's specific folder and connect to its specific serial port. When providing them to the agent through the bridge, those are the only things on your computer the agent can see. It never reaches the rest of your computer.
+1. **Chrome's permission model guards the doors.** In the very first step of the IDE setup, we open the microcontroller's specific folder and connect to its specific serial port. The bridge passes only these to the agent, so they are the only things on your computer the agent can see. It never reaches the rest of your computer.
 
 2. **The IDE's backup tool is your undo button.** Before an agent session, use the IDE's built-in backup to snapshot your board's files. If an experiment goes sideways, restore and try again. 
 
-![Screenshot: the backup tool in the IDE](media/backup-tool.png)
-<!-- IMAGE PLACEHOLDER: IDE backup feature UI -->
-
 ### Why Claude in Chrome?
 
-I evaluated Chrome extensions of AI agents based on the following criteria:
-- first-party extension, for security reasons and also no dealing with auth tokens
-- can run JavaScript commands on the website
+I evaluated AI agent Chrome extensions against the following criteria:
+- a first-party extension, for security and so there are no auth tokens to manage
+- able to run JavaScript commands on the website
 - good at programming
 
-At the moment of writing, Claude in Chrome is the only one that satisfies these criteria. If you find any third-party extensions or AI browsers that you trust, feel free to try them out: they will work in the same way.
+At the time of writing, Claude in Chrome is the only one that satisfies all three. If you find a third-party extension or AI browser that you trust, feel free to try it: it will work the same way.
 
-CircuitPython Online IDE has no control over the subscriptions. It goes through the AI model providers.
+CircuitPython Online IDE has no control over subscriptions; those go through the AI model providers.
 
 ## Try it out now
 
@@ -262,4 +258,4 @@ CircuitPython Online IDE has no control over the subscriptions. It goes through 
 
 ---
 
-*References: [Scott's #CircuitPython2026](https://blog.adafruit.com/2026/01/14/scotts-circuitpython2026) · [Espressif: Debugging Embedded Graphics with Wokwi and AI](https://developer.espressif.com/blog/2025/10/debugging-embedded-graphics-with-wokwi-and-ai/) · [Nearform: Implementing MCP, Tips, Tricks and Pitfalls](https://nearform.com/digital-community/implementing-model-context-protocol-mcp-tips-tricks-and-pitfalls/) · [Simplescraper: How to MCP](https://simplescraper.io/blog/how-to-mcp)*
+*References: [Gene Arnold: Building a Simon Says Game with ChatGPT and a Raspberry Pi Pico](https://medium.com/@gene.arnold/%EF%B8%8F-building-a-simon-says-game-with-chatgpt-and-a-raspberry-pi-pico-1806f3314e8b) · [Dexter Starboard: CircuitPython and ChatGPT Code Interpreter](https://adafruit-playground.com/u/dexter_starboard/pages/circuitpython-and-chatgpt-code-interpreter) · [Scott's #CircuitPython2026](https://blog.adafruit.com/2026/01/14/scotts-circuitpython2026) · [ohararp-g on r/circuitpython: agents with hardware access over MCP](https://www.reddit.com/r/circuitpython/comments/1ollo56/comment/o1pzbz0/)*

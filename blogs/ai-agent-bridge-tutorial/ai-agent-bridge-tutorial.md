@@ -35,18 +35,21 @@ Note that everything is running in the browser, so there's nothing to install or
 
 In this example, I'm going to show how to use the AI Agent Bridge feature from start to finish to build a simple nightlight project.
 
+![Photo of the breadboard of the nightlight.](image-9.png)
+
 ### Step 1: Set Up the IDE
 
-Suppose you already have the Claude in Chrome extension installed. We first need to open circuitpy.dev in Chrome. This will open the CircuitPython Online IDE as the website.
+Suppose you already have the Claude in Chrome extension installed. We first need to open https://circuitpy.dev in Chrome. This will open the CircuitPython Online IDE as the website.
 
 Next, we will follow the instructions in the navigation tab, where the first step is to connect the CircuitPy drive, which is the mass storage of the microcontroller. The second step is to connect the serial console, and then you will see a greeting message. These are the setup steps every time you use the Online IDE.
+
+![Screenshot of CircuitPy and serial console are both connected.](image.png)
 
 To use the AI agent bridge, we need to open Tools -> AI Agent Bridge, and there is a button to turn it on. Click on that, and you are going to see an indicator on the bottom right corner saying the Agent Bridge is on.
 
 The final step is to open the Claude Chrome extension so that you're going to see the chat interface on the right side.
 
-![Screenshot: Agent Bridge tab with the toggle ON, folder opened, serial connected](media/setup-bridge-on.png)
-<!-- IMAGE PLACEHOLDER: Agent Bridge tab, toggle in ON state, status showing folder + serial ready -->
+![Screenshot of AI agent bridge is turned on, and the chat interface is ready.](image-2.png)
 
 ### Step 2: Document the pin connections
 
@@ -57,13 +60,20 @@ In this project, we have a breadboard that has a microcontroller, a photoresisto
 Let's create a file called `CIRCUIT.md` in the board's root:
 
 ```markdown
-# Wiring
-- Photoresistor: voltage divider into A0 (10kΩ to GND)
-- LED: D5 through 220Ω resistor to GND
+Here is the circuit connection:
+
+Connection involves a Photoresistor:
+1. Ground to photoresistor
+2. Photoresistor to a reference resistor
+3. Reference resistor to VCC
+4. The shared node between the photoresistor and the reference resistor is connected to the microcontroller at D0.
+
+Connection involves an LED:
+1. From the microcontroller, it is connected to the LED on microcontroller pin D7.
+2. After the LED, there is a resistor, which is then connected to ground.
 ```
 
-![Screenshot: wiring.md open in the IDE editor](media/wiring-doc.png)
-<!-- IMAGE PLACEHOLDER: editor showing wiring.md with the pin table, folder tree visible on the left -->
+![Screenshot of editing circuit.md.](image-1.png)
 
 ### Step 3: Copy and run the system prompt
 
@@ -73,29 +83,101 @@ Click **Copy System Prompt** in the Agent Bridge tab, and paste it into the Clau
 
 After it reads this system prompt, the agent will confirm your setup and ask what you'd like to build.
 
-![Screenshot: Claude side panel after pasting the system prompt, agent confirming connection status](media/system-prompt.png)
-<!-- IMAGE PLACEHOLDER: Claude side panel showing the pasted prompt and the agent's "connected, what shall we build?" reply -->
+![Screenshot of system prompt is sent.](image-3.png)
 
 ### Step 4: Build the night light
 
-Time to build something real: **a night light**. When the room gets dark, the LED turns on.
+Time to build something real: **a night light**. 
 
-I typed:
+First prompt
+> "Build a nightlight that will turn on the LED when the photoresistor is in the dark. Turn it off when it is bright."
 
-> "Use the photoresistor to control the LED: the darker the room, the brighter the LED. Check my wiring doc for the pins."
+The agent then started to run some experiments in the REPL. 
+It is testing the LED connection, and also how the photoresistor reading looks like when it is in the normal brightness.
+
+```text
+>>> exec("""import board, analogio, digitalio\nprint(hasattr(board,'D0'), hasattr(board,'D7'))""")
+True True
+>>> exec("""sensor = analogio.AnalogIn(board.D0)\nled = digitalio.DigitalInOut(board.D7)\nled.direction = digitalio.Direction.OUTPUT\nprint('setup done')""")
+setup done
+>>> exec("""led.value = True\nprint('LED ON', sensor.value)""")
+LED ON 54989
+```
+
+Then it asked me for help to cover the photoresistor to measure what is the reading in the dark.
+
+![alt text](image-4.png)
+
+Then I covered the photoresistor and gave it another prompt.
+> The photoresistor is covered. Can you read it again?
+
+It ran the experiment again 
+
+```
+>>> exec("""print('dark reading', sensor.value)""")
+dark reading 62436
+>>> exec("""led.value = False\nprint('led off')""")
+led off
+```
+
+Then it asks me for help to gather more data to set the threshold.
+![alt text](image-5.png)
+
+Prompt
+> It is uncovered now.
+
+```
+>>> exec("""for i in range(5):\n    print('bright reading', sensor.value)""")
+bright reading 50859
+bright reading 51037
+bright reading 50720
+bright reading 50164
+bright reading 49886
+>>> exec("""import time\nDARK_ON = 58000\nBRIGHT_OFF = 55000\nstate = False\nfor i in range(20):\n    v = sensor.value\n    if v > DARK_ON:\n        state = True\n    elif v < BRIGHT_OFF:\n        state = False\n    led.value = state\n    print(v, state)\n    time.sleep(0.5)""")
+50739 False
+51276 False
+50819 False
+50064 False
+49866 False
+49687 False
+50303 False
+51018 False
+50938 False
+50958 False
+50183 False
+49786 False
+49866 False
+50461 False
+51315 False
+62258 True
+62337 True
+49032 False
+48634 False
+48773 False
+>>> 
+soft reboot
+
+Auto-reload is on. Simply save files over USB to run them or enter REPL to disable.
+code.py output:
+```
+
+After gathering several data points, it went confidently to write code.py and then run the final code.
+It also wants me to confirm: Is the final code working?
+
+![alt text](image-6.png)
+
+As tested, the nightlight works as expected. When my hand is covering the photoresistor, the LED light is turned on. When I remove my hand, it turns off.
+As I checked the code it writes, it used a relay mechanism that used two thresholds to reduce the number of on and off cycles of the LED, which is smart.
 
 ### Step 5: The agent plots your data, right in the IDE
 
 Then I asked:
 
-> "Plot the light level so I can see it."
+> "It is working now, and I want you to make a plot out of the sensor data and the two thresholds. Only keep 100 history data in this plot."
 
-The agent read the IDE's plotting guide through the bridge, then updated the code to print the sensor readings in the IDE's plot format. The IDE's built-in serial plotter picked it up immediately, showing a live, scrolling graph of the room's brightness, drawn by the agent and rendered by the IDE, with no external tool involved.
+![alt text](image-7.png)
 
-![Screenshot: the IDE plot tab showing the live light-level curve dipping when the sensor is covered](media/agent-plot.png)
-<!-- IMAGE PLACEHOLDER: IDE plotter showing the light level trace with a visible dip where the sensor was covered -->
-
-This is the point of packing the tools into the IDE: the agent isn't limited to writing files. It uses the same plotter, library manager, and serial channels you do.
+The agent read the IDE's plotting guide through the bridge, then updated the code to print the sensor readings in the IDE's plot format. The IDE's built-in serial plotter picked it up immediately, showing a live, scrolling graph of the room's brightness.
 
 ### Conclusion
 
@@ -126,6 +208,8 @@ I want to support additional keys for the operations:
 ```
 
 The result is a fully functional, regular math calculator. The agent successfully found a way to capture keyboard input and also installed libraries to drive the screen. You can check the attachment for more details of the result.
+
+![Photo of the M5Stack CardPuter used as a calculator.](image-8.png)
 
 In this example, we confirm that the agent has the ability to
 - Check external documentation for a specific board regarding the peripheral connections.

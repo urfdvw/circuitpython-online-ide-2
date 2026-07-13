@@ -6,6 +6,7 @@ import { NoTheme } from "react-lazy-dark-theme";
 import PopUp from "../utilComponents/PopUp";
 import { selectTabById } from "../layout/layoutUtils";
 import AppContext from "../AppContext";
+import { store } from "./agentBridge/cpyAgentBridge";
 import {
     Dialog,
     DialogTitle,
@@ -49,6 +50,22 @@ export default function DocCam() {
     // null | 'webcam' | 'phone'
     const [cameraSource, setCameraSource] = useState(null);
     const [externalStream, setExternalStream] = useState(null);
+
+    const viewerRef = useRef(null);
+
+    // Camera controller for the agent bridge. Rebuilt every render so the
+    // closures capture the latest state (same pattern as AgentLibBridge);
+    // nulled on unmount so a closed Camera tab reads as "not ready".
+    store.camera = {
+        isReady: () => cameraSource !== null && Boolean(viewerRef.current?.isReady()),
+        getCameraName: () => viewerRef.current?.getCameraName() ?? null,
+        resetView: () => viewerRef.current?.resetView(),
+    };
+    useEffect(() => {
+        return () => {
+            store.camera = null;
+        };
+    }, []);
 
     // Phone camera dialog state
     const [phoneCamOpen, setPhoneCamOpen] = useState(false);
@@ -181,6 +198,7 @@ export default function DocCam() {
                         <Box sx={{ position: "relative", width: "100%", height: "100%" }}>
                             <NoTheme>
                                 <WebcamViewer
+                                    ref={viewerRef}
                                     rotation={rotation}
                                     flipH={flipH}
                                     flipV={flipV}

@@ -1,3 +1,12 @@
+## Version 2.5.1
+Released on July 12th, 2026
+
+- **AI Agent Bridge vision**: the AI agent can now see for itself
+    - `showCamera()` / `showPlot()` bring the Camera or Plot tab to the front, maximized, so the agent can view them through page screenshots
+    - `ensureCameraReady()` asks you to start a camera with a small floating card that never blocks the IDE
+- Camera **Reset View** now centers the feed at the largest size that fits entirely in the tab, including rotated and low-resolution feeds
+- Bug Fixes and Code Quality
+
 ## Version 2.5.0
 Released on July 4th, 2026
 

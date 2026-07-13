@@ -10,6 +10,7 @@ import Tooltip from "@mui/material/Tooltip";
 import AppContext from "../../AppContext";
 import { store, attachAgentBridge, detachAgentBridge } from "./cpyAgentBridge";
 import AgentLibBridge from "./AgentLibBridge";
+import AgentDialog from "./AgentDialog";
 import AGENT_SYSTEM_PROMPT from "./systemPrompt.md";
 
 const READER_ID = "agentBridge";
@@ -17,6 +18,8 @@ const READER_ID = "agentBridge";
 export default function AgentBridge() {
     const {
         appConfig,
+        // layout (showCamera/showPlot bring tabs to front)
+        flexModel,
         // files
         rootDirHandle,
         rootFolderDirectoryReady,
@@ -50,6 +53,7 @@ export default function AgentBridge() {
     }
 
     // Keep the shared store pointing at the latest references on every render.
+    store.flexModel = flexModel;
     store.rootDirHandle = rootDirHandle;
     store.rootFolderReady = Boolean(rootFolderDirectoryReady);
     store.serial = serial;
@@ -101,6 +105,9 @@ export default function AgentBridge() {
         <>
             {/* Instantiates the library-management hooks only while the bridge is on. */}
             <AgentLibBridge />
+            {/* Floating card for user-consent requests (camera access etc.).
+                Unmounting it rejects any pending requests. */}
+            <AgentDialog />
             <div data-cpy-agent-bridge="active" hidden />
             <Tooltip
                 title={copied ? "Copied!" : "Click to copy the system prompt to clipboard"}

@@ -13,6 +13,15 @@ This IDE can expose its file, serial, and library tools to an AI agent (such as 
 
 When the bridge is on, the IDE attaches an API at `window.__cpyAgent` that wraps the same file, serial, and library tools the IDE uses itself. The agent runs JavaScript on the page to call those methods. The system prompt also steers the agent to experiment in the REPL before writing files, install libraries from the board's CircuitPython bundle, and read the Plot guide before drawing plots or animations.
 
+## Camera & Plot access
+
+The agent can look at the Camera tab and the Plot tab by bringing them to the front and taking its own screenshot of the page:
+
+- **Camera requests.** When the agent needs the camera (`ensureCameraReady()`), a small floating card appears near the bottom-right of the IDE. The IDE stays fully usable while the card is up — open the Camera tab and start a camera, then click **"I have opened the camera"**, or click **Reject** to deny the request.
+- **Bringing tabs to the front.** `showCamera()` and `showPlot()` make the Camera or Plot tab active and maximize it so the agent's screenshot shows the full view. `showCamera()` also resets the camera zoom/pan to a centered fit — the largest size at which the whole feed stays inside the tab. You can restore the layout at any time with the tabset's restore button.
+- **Paused camera.** If you pause the camera, the frozen frame stays on screen — useful for holding something steady in front of the lens while the agent looks.
+- **`usb_video` boards.** A CircuitPython board using the [`usb_video`](https://docs.circuitpython.org/en/latest/shared-bindings/usb_video/) module shows up as a regular webcam that the Camera tab can select — this is how the agent views a board's video output.
+
 ## Troubleshooting
 
 - **The agent says `window.__cpyAgent` is undefined** — the bridge is off. Click the **Agent Bridge** button at the top of this tab to turn it on.
@@ -21,7 +30,7 @@ When the bridge is on, the IDE attaches an API at `window.__cpyAgent` that wraps
 
 ## Privacy & safety
 
-The bridge is **off by default**. While it is on, any script running on this page can read and modify the files in the opened folder, write to the serial ports, and install or remove libraries on the board. Click the **Agent Bridge** button to turn it off when you are done.
+The bridge is **off by default**. While it is on, any script running on this page can read and modify the files in the opened folder, write to the serial ports, install or remove libraries on the board, and bring the Camera and Plot tabs to the front (the agent views them through its own page screenshots). Click the **Agent Bridge** button to turn it off when you are done.
 
 ## Appendix: Available methods (`window.__cpyAgent`)
 
@@ -58,6 +67,11 @@ All methods are async — `await` them. File methods operate on the opened devic
 - `getDataSerialSince(cursor)` — incremental output as `{ text, cursor }`.
 - `sendDataSerial(text)` — write text to the data channel.
 - `clearDataSerialLog()` — clear the data-channel buffer.
+
+**Camera & plot**
+- `ensureCameraReady()` — check that a camera is live in the Camera tab; if not, shows you a non-blocking request card until a camera is ready or you reject. Returns the camera name, or `false` on reject.
+- `showCamera()` — bring the Camera tab to the front, maximize it, and reset the view, so the agent can see the feed in its page screenshot.
+- `showPlot()` — bring the Plot tab to the front and maximize it, so the agent can see the chart in its page screenshot.
 
 **Libraries (CircuitPython bundle management)**
 

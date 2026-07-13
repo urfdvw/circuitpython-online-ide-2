@@ -27,7 +27,10 @@ import {
     getParentAndHandleFromPath,
     checkPathExists,
 } from "../../utilComponents/react-local-file-system/utilities/fileSystemUtils";
+import { Actions } from "flexlayout-react";
 import { writeConnectedVariablesLib, ensureDataSerialInBoot } from "../Widgets/installConnectedVariables";
+import { openTab, findTabByName } from "../../layout/layoutUtils";
+import { requestAgentDecision } from "./agentDecision";
 import PLOT_HELP from "../../docs/Plot.md";
 import WIDGETS_HELP from "../../docs/Widgets.md";
 import WIDGET_SCHEMA from "../Widgets/WidgetSchema.json";
@@ -59,6 +62,11 @@ export const store = {
     // (null when the bridge is disabled), plus a pollable progress event feed.
     lib: null,
     libLog: [],
+    // camera controller — registered by DocCam.jsx while the Camera tab is
+    // mounted; null when the tab is closed.
+    camera: null,
+    // flexlayout model — pushed by AgentBridge.jsx; used to bring tabs to front.
+    flexModel: null,
 };
 
 const WINDOW_KEY = "__cpyAgent";
@@ -80,6 +88,31 @@ function getLib() {
         throw new Error("Library management is not available. Enable the agent bridge in Settings.");
     }
     return store.lib;
+}
+
+// Select (opening if needed) the named tab and maximize its tabset, so the
+// whole tab is visible for a page screenshot. Idempotent: never un-maximizes
+// on repeat calls; restores another maximized tabset first if there is one.
+function bringTabToFront(name, component) {
+    const model = store.flexModel;
+    if (!model) {
+        throw new Error("The IDE layout is not ready yet. Retry in a moment.");
+    }
+    openTab(model, name, component);
+    const tabNode = findTabByName(model.getRoot(), name);
+    if (!tabNode) {
+        throw new Error(`Could not open the ${name} tab.`);
+    }
+    const tabset = tabNode.getParent();
+    if (tabset?.getType() === "tabset") {
+        const maximized = model.getMaximizedTabset();
+        if (maximized && maximized.getId() !== tabset.getId()) {
+            model.doAction(Actions.maximizeToggle(maximized.getId()));
+        }
+        if (model.getMaximizedTabset()?.getId() !== tabset.getId()) {
+            model.doAction(Actions.maximizeToggle(tabset.getId()));
+        }
+    }
 }
 
 // ---- the API ---------------------------------------------------------------
@@ -136,6 +169,15 @@ function buildApi() {
                 },
                 plot: {
                     "getPlotHelp()": "Full Plot/Animation guide (rules, usage, examples) -> markdown string. Read it before writing code that draws plots or animations via print().",
+                    "showPlot()":
+                        "Bring the Plot tab to the front and maximize it. Take a page SCREENSHOT afterward to inspect the plot.",
+                },
+                camera: {
+                    note: "The Camera tab shows a webcam or phone camera — including CircuitPython boards presenting a usb_video webcam. ensureCameraReady() shows a dialog to the USER inside the IDE and resolves only after the user responds; just await it (it can take a while), do not also ask in chat.",
+                    "ensureCameraReady()":
+                        "Check that a camera is live in the Camera tab; if not, asks the user via a non-blocking in-IDE dialog (looping until ready) -> camera name string, or false if the user rejects.",
+                    "showCamera()":
+                        "Bring the Camera tab to the front, maximize it, and reset the view to a centered fit (the whole feed visible). Take a page SCREENSHOT afterward to see the camera feed. Typical flow: ensureCameraReady() -> showCamera() -> screenshot.",
                 },
                 widgets: {
                     note: "Connected Variable widgets form a control panel that syncs with the code over usb_cdc.data (the data serial channel). The layout is stored as /ide/widgets.json on the board — an array of widget objects validated by getWidgetsSchema().",
@@ -153,6 +195,7 @@ function buildApi() {
                 dataSerialReady: store.dataSerialReady,
                 boardInfo: store.boardInfo,
                 librariesAvailable: Boolean(store.lib),
+                cameraReady: Boolean(store.camera?.isReady()),
             };
         },
 
@@ -318,6 +361,56 @@ function buildApi() {
             store.dataBuf = "";
             if (store.clearDataSerialOutput) store.clearDataSerialOutput();
             return { ok: true };
+        },
+
+        // ---- camera & plot ---------------------------------------------------
+        // The agent inspects the camera feed and the plot by bringing their tab
+        // to the front (showCamera/showPlot) and taking a page screenshot — no
+        // image data crosses the bridge.
+
+        // Loop until a camera is live in the Camera tab (the user confirms and
+        // we re-check) or the user rejects. Uses requestAgentDecision(): the
+        // function shows the USER a non-blocking dialog inside the IDE and the
+        // promise stays pending until they respond — the IDE remains fully
+        // usable meanwhile. -> camera name string | false.
+        async ensureCameraReady() {
+            for (let attempt = 0; ; attempt++) {
+                const cam = store.camera;
+                if (cam?.isReady()) return cam.getCameraName();
+                const ok = await requestAgentDecision({
+                    title: "AI agent needs the camera",
+                    message:
+                        attempt === 0
+                            ? "The AI agent wants to use the camera. Please open the Camera tab and start a camera, then confirm."
+                            : "The camera is still not ready. Start a camera in the Camera tab, then confirm.",
+                    confirmLabel: "I have opened the camera",
+                    rejectLabel: "Reject",
+                });
+                if (!ok) return false;
+            }
+        },
+
+        // Bring the Camera tab to the front, maximized, with the view reset so
+        // the full feed is visible for a page screenshot.
+        async showCamera() {
+            bringTabToFront("Camera", "doc_cam");
+            // Let the maximize re-layout settle before fitting the view to the
+            // (possibly resized) visible area.
+            await new Promise((resolve) => setTimeout(resolve, 300));
+            store.camera?.resetView();
+            return {
+                ok: true,
+                note: "Camera tab is now active and maximized with the view reset. Take a screenshot of the page to see the camera feed.",
+            };
+        },
+
+        // Bring the Plot tab to the front, maximized, for a page screenshot.
+        async showPlot() {
+            bringTabToFront("Plot", "plot");
+            return {
+                ok: true,
+                note: "Plot tab is now active and maximized. Take a screenshot of the page to inspect the plot.",
+            };
         },
 
         // ---- libraries -----------------------------------------------------

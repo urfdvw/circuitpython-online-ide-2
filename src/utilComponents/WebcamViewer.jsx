@@ -1,26 +1,30 @@
-import { useEffect, useRef, useState } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useRef, useState } from "react";
 import Webcam from "react-webcam";
 import { TransformWrapper, TransformComponent } from "react-zoom-pan-pinch";
 
-const WebcamViewer = ({
-    rotation = 0,
-    flipH = false,
-    flipV = false,
-    selectedDeviceId = undefined,
-    setDeviceIdList = () => {},
-    marking = false,
-    markColor = "rgba(255, 50, 50, 0.9)",
-    clearMarksTrigger = 0,
-    resetViewTrigger = 0,
-    paused = false,
-    captureTrigger = 0,
-    onCaptureResult = () => {},
-    externalStream = null,
-}) => {
+const WebcamViewer = forwardRef(function WebcamViewer(
+    {
+        rotation = 0,
+        flipH = false,
+        flipV = false,
+        selectedDeviceId = undefined,
+        setDeviceIdList = () => {},
+        marking = false,
+        markColor = "rgba(255, 50, 50, 0.9)",
+        clearMarksTrigger = 0,
+        resetViewTrigger = 0,
+        paused = false,
+        captureTrigger = 0,
+        onCaptureResult = () => {},
+        externalStream = null,
+    },
+    ref
+) {
     const webcamRef = useRef(null);
     const canvasRef = useRef(null);
     const transformRef = useRef(null);
     const containerRef = useRef(null);
+    const frameRef = useRef(null);
     const externalVideoRef = useRef(null);
     const isDrawingRef = useRef(false);
     const lastPosRef = useRef({ x: 0, y: 0 });
@@ -87,10 +91,40 @@ const WebcamViewer = ({
         ctx.clearRect(0, 0, canvas.width, canvas.height);
     }, [clearMarksTrigger]);
 
-    // Reset zoom/pan so the video fits the tab area again
+    // Reset zoom/pan to a centered "contain" fit: the largest scale at which
+    // the whole feed stays inside the visible area in BOTH dimensions.
+    // Measurement-based: the rendered feed can differ from the visible area
+    // when rotated 90°/270° (bounding box overflows one way) or when the
+    // feed's intrinsic resolution is small (renders undersized).
+    function fitView() {
+        const transform = transformRef.current;
+        const wrapper = transform?.instance?.wrapperComponent;
+        const content = transform?.instance?.contentComponent;
+        const frame = frameRef.current;
+        if (!transform || !wrapper || !content || !frame) return;
+        // Measure the feed element itself (not the frame div, whose layout can
+        // add whitespace). getBoundingClientRect includes the rotate/flip
+        // transform and the current zoom, so normalize by the zoom actually
+        // applied right now (read from the same style snapshot — no reset
+        // round-trip to race against).
+        const feed = frame.querySelector("video, img") || frame;
+        const wrapperRect = wrapper.getBoundingClientRect();
+        const feedRect = feed.getBoundingClientRect();
+        if (!feedRect.width || !feedRect.height) return;
+        const applied = getComputedStyle(content).transform;
+        const currentScale = applied === "none" ? 1 : new DOMMatrixReadOnly(applied).a || 1;
+        const scale = Math.min(
+            (wrapperRect.width / feedRect.width) * currentScale,
+            (wrapperRect.height / feedRect.height) * currentScale
+        );
+        if (Number.isFinite(scale) && scale > 0) {
+            transform.centerView(scale, 0);
+        }
+    }
+
     useEffect(() => {
         if (resetViewTrigger === 0) return;
-        transformRef.current?.resetTransform();
+        fitView();
     }, [resetViewTrigger]);
 
     // Attach external stream to video element
@@ -125,9 +159,9 @@ const WebcamViewer = ({
         }
     }, [paused, externalStream, videoDeviceId]);
 
-    // Capture the full frame (video + marks) to the clipboard when triggered
-    useEffect(() => {
-        if (captureTrigger === 0) return;
+    // Draw the visible frame (cover crop + rotation/flip + marks) to an
+    // offscreen canvas. Returns null when no frame is available yet.
+    function drawCaptureCanvas() {
         const video = externalStream ? externalVideoRef.current : webcamRef.current?.video;
         const container = containerRef.current;
         // While paused, draw from the snapshot taken at pause time (a paused
@@ -135,10 +169,7 @@ const WebcamViewer = ({
         const source = paused && pausedFrameRef.current ? pausedFrameRef.current : video;
         const srcWidth = source === video ? video?.videoWidth : source.width;
         const srcHeight = source === video ? video?.videoHeight : source.height;
-        if (!source || !container || !srcWidth || !srcHeight) {
-            onCaptureResult(false, "No video frame available to capture");
-            return;
-        }
+        if (!source || !container || !srcWidth || !srcHeight) return null;
 
         const w = container.clientWidth;
         const h = container.clientHeight;
@@ -173,6 +204,35 @@ const WebcamViewer = ({
         ctx.drawImage(source, sx, sy, sw, sh, -w / 2, -h / 2, w, h);
         ctx.drawImage(canvasRef.current, -w / 2, -h / 2, w, h);
         ctx.restore();
+
+        return capture;
+    }
+
+    // Imperative access for the agent bridge (via DocCam). Rebuilt every render
+    // so the closures always see the current props/refs.
+    useImperativeHandle(ref, () => ({
+        isReady() {
+            if (!containerRef.current) return false;
+            if (paused) return Boolean(pausedFrameRef.current);
+            const video = externalStream ? externalVideoRef.current : webcamRef.current?.video;
+            return Boolean(video && video.videoWidth > 0 && video.readyState >= 2);
+        },
+        getCameraName() {
+            if (externalStream) return "Phone camera";
+            const video = webcamRef.current?.video;
+            return video?.srcObject?.getVideoTracks?.()[0]?.label || "Webcam";
+        },
+        resetView: fitView,
+    }));
+
+    // Capture the full frame (video + marks) to the clipboard when triggered
+    useEffect(() => {
+        if (captureTrigger === 0) return;
+        const capture = drawCaptureCanvas();
+        if (!capture) {
+            onCaptureResult(false, "No video frame available to capture");
+            return;
+        }
 
         capture.toBlob((blob) => {
             if (!blob) {
@@ -251,6 +311,11 @@ const WebcamViewer = ({
     return (
         <TransformWrapper
             ref={transformRef}
+            // Wide scale range so fitView() can zoom small feeds (e.g. low-res
+            // usb_video) up to the tab, and shrink a rotated feed below 1 so
+            // it fits entirely inside the visible area.
+            minScale={0.1}
+            maxScale={20}
             wheel={{ step: 0.2 }}
             pinch={{ step: 5 }}
             doubleClick={{ disabled: true }}
@@ -261,6 +326,7 @@ const WebcamViewer = ({
                     {/* Shared wrapper so the video, frozen frame, and marks rotate/flip together.
                         Stays in normal flow: the video's intrinsic size drives the layout */}
                     <div
+                        ref={frameRef}
                         style={{
                             position: "relative",
                             width: "100%",
@@ -275,6 +341,9 @@ const WebcamViewer = ({
                                 playsInline
                                 muted
                                 style={{
+                                    // block: no inline line-height gap below the
+                                    // video, so the centered fit is exact
+                                    display: "block",
                                     width: "100%",
                                     height: "100%",
                                     objectFit: "cover",
@@ -300,6 +369,9 @@ const WebcamViewer = ({
                                     }
                                 }}
                                 style={{
+                                    // block: no inline line-height gap below the
+                                    // video, so the centered fit is exact
+                                    display: "block",
                                     width: "100%",
                                     height: "100%",
                                     objectFit: "cover",
@@ -343,6 +415,6 @@ const WebcamViewer = ({
             </TransformComponent>
         </TransformWrapper>
     );
-};
+});
 
 export default WebcamViewer;

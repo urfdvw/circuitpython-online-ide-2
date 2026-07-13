@@ -6,7 +6,7 @@ import MarkdownExtended from "../utilComponents/MarkdownExtended";
 import version_history from "../docs/Version history.md";
 import AppContext from "../AppContext";
 
-const version_config = "whats_new_2_5_0"; // need to match the name in the config
+const version_config = "whats_new_2_5_1"; // need to match the name in the config
 
 // Version-history sections, one per "## " header, newest first. The source is a
 // static import, so this is computed once at module load.

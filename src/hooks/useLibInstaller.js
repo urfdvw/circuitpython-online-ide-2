@@ -76,28 +76,53 @@ export function useLibInstaller({
 
     /* ---- uninstall ---- */
 
+    // A lib is on the board as either a folder (`lib/<name>/`) or a single file
+    // (`lib/<name>.mpy`), so both shapes are attempted and a missing one is normal.
+    // Removing NEITHER is not normal, though: it means the lib was not there, or the
+    // delete failed. Distinguish the two so the caller can report "removed nothing"
+    // instead of reporting a success that never happened.
+    // -> { removed: boolean }, throws if a delete itself failed.
     async function uninstallLib(name) {
         name = name.split(".")[0]; // strip extension if present
-        const { dirHandle: libDirHandle } = await path2Handles(rootDirHandle, `lib`);
 
-        // try as a folder lib (succeeds even if absent)
+        // NOTE: path2Handles CREATES by default. Every lookup here passes create:false —
+        // without it, asking for a lib that is not on the board would make an empty
+        // lib/<name>/ folder (or lib/<name>.mpy file) just to delete it again, and the
+        // uninstall would "succeed" for something that was never installed.
+        let libDirHandle;
         try {
-            const { dirHandle: folderLib } = await path2Handles(rootDirHandle, `lib/${name}`);
-            await removeEntry(libDirHandle, folderLib);
+            ({ dirHandle: libDirHandle } = await path2Handles(rootDirHandle, `lib`, { create: false }));
         } catch {
-            console.log(`failed uninstalled folder lib: ${name}`);
+            throw new Error(`The board has no lib folder, so ${name} is not installed.`);
         }
 
-        // try as a file lib (succeeds even if absent)
-        try {
-            const { fileHandle: fileLib } = await path2Handles(rootDirHandle, `lib/${name}.mpy`);
-            await removeEntry(libDirHandle, fileLib);
-        } catch {
-            console.log(`failed uninstalled file lib: ${name}`);
+        let removed = false;
+        const removeIfPresent = async (path, pick) => {
+            let entry;
+            try {
+                entry = pick(await path2Handles(rootDirHandle, path, { create: false }));
+            } catch {
+                return; // not present in this shape
+            }
+            if (!entry) return;
+            // A failed delete is a real failure and propagates, unlike a failed lookup.
+            await removeEntry(libDirHandle, entry);
+            removed = true;
+        };
+
+        // The three shapes getInstalledLibVersions() recognises as an installed lib:
+        // a package folder, a compiled .mpy, or a plain-source .py.
+        await removeIfPresent(`lib/${name}`, (h) => h.dirHandle);
+        await removeIfPresent(`lib/${name}.mpy`, (h) => h.fileHandle);
+        await removeIfPresent(`lib/${name}.py`, (h) => h.fileHandle);
+
+        if (!removed) {
+            throw new Error(`${name} is not installed on the board.`);
         }
 
         logLine(`uninstalled ${name}`);
         onEvent({ type: "uninstall", name });
+        return { removed };
     }
 
     async function batchUninstallLib(pendingLibNames) {

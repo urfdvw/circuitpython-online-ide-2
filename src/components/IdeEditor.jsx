@@ -2,8 +2,7 @@
 import { useEffect, useState, useRef, useContext } from "react";
 // ace
 import AceEditor from "react-ace";
-import { Range, config as aceConfig } from "ace-builds/src-noconflict/ace";
-import jsonWorkerSource from "ace-builds/src-noconflict/worker-json?raw";
+import { Range } from "ace-builds/src-noconflict/ace";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-noconflict/mode-python";
@@ -33,14 +32,7 @@ import TabTemplate from "../utilComponents/TabTemplate";
 import { identifyCodeRows } from "../utilFunctions/debuggerUtils";
 // syntax checking
 import useSyntaxCheck from "../hooks/useSyntaxCheck";
-
-// JSON files are syntax-checked by ACE's bundled json worker. A blob URL (rather
-// than a served file path) keeps the worker loadable in the single-file production
-// build, where every asset is inlined into the HTML.
-aceConfig.setModuleUrl(
-    "ace/mode/json_worker",
-    URL.createObjectURL(new Blob([jsonWorkerSource], { type: "application/javascript" }))
-);
+import { registerAceJsonWorker } from "../utilFunctions/aceJsonWorker";
 
 // CSS for breakpoint styling
 const breakpointStyles = `
@@ -212,7 +204,9 @@ export default function IdeEditor({ node }) {
         mode = "json";
     }
 
-    // live syntax-error annotations for python files (tree-sitter)
+    // live syntax-error annotations: python via tree-sitter, json via ACE's own worker
+    // (registered before the editor below mounts; the call is idempotent)
+    registerAceJsonWorker();
     useSyntaxCheck(aceEditorRef, text, mode);
 
     async function saveFile(text) {

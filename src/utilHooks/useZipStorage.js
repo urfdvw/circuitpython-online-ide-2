@@ -88,6 +88,9 @@ export function useZipStorage(dbName) {
             // Check existence first: openDB(name) with no version CREATES the db as a
             // side effect of probing, and the result has no object store — a state
             // ensureDB() (which opens at version 1) can never upgrade out of.
+            // indexedDB.databases() is not universal, but this IDE is Chromium-only
+            // anyway (it needs File System Access and Web Serial), so the fallback path
+            // below is unreachable in practice rather than a silent degradation.
             if (indexedDB.databases) {
                 const known = await indexedDB.databases();
                 if (!known.some((d) => d.name === dbName)) return null;
@@ -366,72 +369,77 @@ export function useZipStorage(dbName) {
     );
 
     // ---------- public: upload local zip (file picker) ----------
-    const uploadZipFromLocal = useCallback(async () => {
-        // Try the modern File System Access API first (nice UX in Chromium)
-        if (window.showOpenFilePicker) {
-            try {
+    // Takes the same `meta` as downloadZipFromWeb, and for the same reason: callers
+    // verify a cache by its stamp before using it, and an unstamped cache is treated as
+    // unusable. A locally picked zip must therefore say what it is too.
+    const uploadZipFromLocal = useCallback(
+        async (meta = null) => {
+            const begin = () => {
                 setPreparingZip(true);
                 setZipReady(false);
                 setZipContents([]);
-                const [handle] = await window.showOpenFilePicker({
-                    types: [{ description: "ZIP archives", accept: { "application/zip": [".zip"] } }],
-                    excludeAcceptAllOption: false,
-                    multiple: false,
-                });
-                if (!handle) {
-                    // user cancelled
-                    setPreparingZip(false);
-                    return false;
-                }
-                const file = await handle.getFile();
-                const buf = await file.arrayBuffer();
-                const ok = await processZipBuffer(buf);
-                return ok;
-            } catch (err) {
-                // If user cancelled, err.name can be "AbortError"
-                if (err && (err.name === "AbortError" || err.code === 20)) {
-                    setPreparingZip(false);
-                    return false;
-                }
-                setPreparingZip(false);
-                throw err;
-            }
-        }
-
-        // Fallback: create a hidden <input type="file">
-        return new Promise((resolve, reject) => {
-            const input = document.createElement("input");
-            input.type = "file";
-            input.accept = ".zip,application/zip";
-            input.style.display = "none";
-
-            const onChange = async () => {
-                input.removeEventListener("change", onChange);
-                document.body.removeChild(input);
-                const file = input.files && input.files[0];
-                if (!file) {
-                    resolve(false); // user cancelled
-                    return;
-                }
-                setPreparingZip(true);
-                setZipReady(false);
-                setZipContents([]);
-                try {
-                    const buf = await file.arrayBuffer();
-                    const ok = await processZipBuffer(buf);
-                    resolve(ok);
-                } catch (e) {
-                    reject(e);
-                } finally {
-                    setPreparingZip(false);
-                }
+                setCacheMeta(null);
             };
 
-            input.addEventListener("change", onChange);
-            document.body.appendChild(input);
-            input.click();
-        });
-    }, [processZipBuffer]);
+            // Try the modern File System Access API first (nice UX in Chromium)
+            if (window.showOpenFilePicker) {
+                try {
+                    begin();
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{ description: "ZIP archives", accept: { "application/zip": [".zip"] } }],
+                        excludeAcceptAllOption: false,
+                        multiple: false,
+                    });
+                    if (!handle) return false; // user cancelled
+                    const file = await handle.getFile();
+                    const buf = await file.arrayBuffer();
+                    return await processZipBuffer(buf, meta);
+                } catch (err) {
+                    // If user cancelled, err.name can be "AbortError"
+                    if (err && (err.name === "AbortError" || err.code === 20)) return false;
+                    throw err;
+                } finally {
+                    setPreparingZip(false);
+                    // Also on cancel/failure: begin() already cleared what we knew, so the
+                    // announce makes this instance re-read and recover the real state.
+                    announceCacheChanged(dbName);
+                }
+            }
+
+            // Fallback: create a hidden <input type="file">
+            return new Promise((resolve, reject) => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = ".zip,application/zip";
+                input.style.display = "none";
+
+                const onChange = async () => {
+                    input.removeEventListener("change", onChange);
+                    document.body.removeChild(input);
+                    const file = input.files && input.files[0];
+                    if (!file) {
+                        resolve(false); // user cancelled
+                        return;
+                    }
+                    begin();
+                    try {
+                        const buf = await file.arrayBuffer();
+                        resolve(await processZipBuffer(buf, meta));
+                    } catch (e) {
+                        reject(e);
+                    } finally {
+                        setPreparingZip(false);
+                        announceCacheChanged(dbName);
+                    }
+                };
+
+                input.addEventListener("change", onChange);
+                document.body.appendChild(input);
+                input.click();
+            });
+        },
+        [processZipBuffer, dbName]
+    );
 
     // ================== READONLY FILE-SYSTEM MIMIC ==================
 

@@ -35,11 +35,13 @@ The agent can look at the Camera tab and the Plot tab by bringing them to the fr
 
 ## Privacy & safety
 
-The bridge is **off by default**, and turning it on is deliberately something only you can do:
+The bridge is **off by default**, and turning it on is deliberately made into a decision you have to make yourself:
 
 - The switch is not a setting in the Settings tab. It is a browser-local flag for this site, and the only way to turn it on inside the IDE is the **Agent Bridge** button here.
-- Turning it **on** always asks you to confirm in a **native browser dialog** — a real browser prompt, not part of the page. A script or an AI agent driving this page cannot click or dismiss it, so the bridge cannot be enabled behind your back.
+- Turning it **on** always asks you to confirm in a **native browser dialog** — a real browser prompt, not part of the page, so it cannot be styled or faked by the page and an agent following its instructions will stop and ask you rather than answer it.
 - Turning it **off** takes effect immediately, with no confirmation.
+
+**What this does and does not protect against.** The confirmation is a guardrail against an agent switching the bridge on by itself, not a security barrier. Treat it the way you treat any page you have opened: code running in this tab's JavaScript context can reach the IDE's own buttons directly, so it is not something a determined hostile script is stopped by. What it does mean is that using the bridge is an explicit, visible choice on your part, and that the "Agent bridge: ON" badge in the corner tells you when it is live.
 
 While it is on, any script running on this page can read and modify the files in the opened folder, write to the serial ports, install or remove libraries on the board, and bring the Camera and Plot tabs to the front (the agent views them through its own page screenshots). Click the **Agent Bridge** button to turn it off when you are done.
 

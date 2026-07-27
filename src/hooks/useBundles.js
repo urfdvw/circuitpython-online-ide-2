@@ -21,6 +21,10 @@ import {
  *  - Version correctness is enforced in code, not by convention: downloads assert the
  *    chosen asset carries the board's major, the cache is stamped with it, and
  *    assertBundleForBoard() re-checks before anything is copied onto the board.
+ *  - EVERY piece of a bundle's cache is keyed by the board's major, not just the zip:
+ *    the JSON manifest and the release timestamp too. The manifest drives version numbers
+ *    and dependency closures, so pairing one version's manifest with another version's zip
+ *    would install the wrong libraries — keying them together makes that unrepresentable.
  *  - The Community bundle's storage hooks are always created (rules of hooks) but the
  *    bundle is only included in the active list when `useCommunity` is true.
  *
@@ -30,16 +34,26 @@ export function useBundles({ cpyMajor, useCommunity }) {
     const zipKey = cpyMajor ?? "none";
 
     // ---- Adafruit (always active) ----
-    const jsonAdafruit = useTextStorage("jsonAdafruit");
-    const updateDateTimeAdafruit = useTextStorage("updateDateTimeAdafruit");
+    const jsonAdafruit = useTextStorage(`jsonAdafruit-${zipKey}`);
+    const updateDateTimeAdafruit = useTextStorage(`updateDateTimeAdafruit-${zipKey}`);
     const zipAdafruit = useZipStorage(`zipAdafruit-${zipKey}`);
     const [assetsAdafruit, setAssetsAdafruit] = useState(null);
 
     // ---- Community (hooks always called; included only when enabled) ----
-    const jsonCommunity = useTextStorage("jsonCommunity");
-    const updateDateTimeCommunity = useTextStorage("updateDateTimeCommunity");
+    const jsonCommunity = useTextStorage(`jsonCommunity-${zipKey}`);
+    const updateDateTimeCommunity = useTextStorage(`updateDateTimeCommunity-${zipKey}`);
     const zipCommunity = useZipStorage(`zipCommunity-${zipKey}`);
     const [assetsCommunity, setAssetsCommunity] = useState(null);
+
+    // One-time cleanup of the pre-2.5.2 unversioned keys. Their zips are already gone
+    // (the zip cache has always been version-keyed, and an unstamped one is re-downloaded
+    // anyway), so these are dead weight — and the manifest is large enough to matter in
+    // a ~5MB localStorage budget.
+    useEffect(() => {
+        for (const legacy of ["jsonAdafruit", "updateDateTimeAdafruit", "jsonCommunity", "updateDateTimeCommunity"]) {
+            localStorage.removeItem(legacy);
+        }
+    }, []);
 
     const bundles = [
         {
@@ -72,9 +86,8 @@ export function useBundles({ cpyMajor, useCommunity }) {
     //   0   = nothing usable downloaded for this board's CPy version
     //   0.5 = cached but an upgrade is available
     //   1   = up to date
-    // The timestamp is stored per bundle while the zip is stored per CPy major, so a
-    // bundle counts as cached only when THIS board's zip is present — switching to a
-    // board with a different major re-offers the download instead of silently reusing
+    // Every input is keyed to THIS board's major (zip, manifest, timestamp), so switching
+    // to a board with a different major re-offers the download instead of silently reusing
     // the other version's cache.
     // The stamp is required, not merely checked when present: useZipStorage writes it
     // LAST, so its absence means either a cache from before stamping existed or one left
@@ -82,7 +95,7 @@ export function useBundles({ cpyMajor, useCommunity }) {
     // report 0 and are re-downloaded rather than installed from.
     function bundleReadiness(bundle, assets) {
         const cached = bundle.updateDateTime.getText();
-        if (!assets || !cached || !bundle.zip.zipReady) return 0;
+        if (!assets || !cached || !bundle.zip.zipReady || !bundle.json.textReady) return 0;
         if (bundle.zip.cacheMeta?.cpyMajor !== cpyMajor) return 0;
         return getBundleTimeStamp(assets) === cached ? 1 : 0.5;
     }
@@ -182,10 +195,25 @@ export function useBundles({ cpyMajor, useCommunity }) {
             }
             await bundle.zip.downloadZipFromWeb(match.url, { cpyMajor, url: match.url, ts: Date.now() });
 
+            // The manifest is half of the bundle: it supplies the version numbers and the
+            // dependency closure the installer works from. downloadTextFromWeb() reports
+            // failure by return value rather than throwing, so check it — letting a failure
+            // through here would leave a fresh zip next to no manifest and still mark the
+            // bundle downloaded.
             const jsonAsset = bundle.assets.filter((x) => isBundleJsonFileName(x.name)).at(0);
-            if (jsonAsset) {
-                await bundle.json.downloadTextFromWeb(jsonAsset.browser_download_url);
+            if (!jsonAsset) {
+                throw new Error(`The ${bundle.abbr} release has no library manifest to download.`);
             }
+            const jsonResult = await bundle.json.downloadTextFromWeb(jsonAsset.browser_download_url);
+            if (!jsonResult?.ok) {
+                throw new Error(
+                    `Downloaded the ${bundle.abbr} zip but not its library manifest ` +
+                        `(${jsonResult?.error || jsonResult?.reason || "unknown error"}). Try downloading again.`
+                );
+            }
+
+            // Written last, once both halves are cached: this timestamp is what marks the
+            // bundle as up to date.
             bundle.updateDateTime.setText(getBundleTimeStamp(bundle.assets));
         }
         await refreshBundleState();

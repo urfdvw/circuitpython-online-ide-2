@@ -10,10 +10,21 @@ async function fetchWithProxy(targetUrl) {
     return resp;
 }
 
+const hasStoredText = (key) => typeof window !== "undefined" && !!localStorage.getItem(key);
+
 export function useTextStorage(textName) {
     const storageKey = useMemo(() => String(textName), [textName]);
     const [preparingText, setPreparingText] = useState(false);
-    const [textReady, setTextReady] = useState(typeof window !== "undefined" && !!localStorage.getItem(storageKey));
+    const [textReady, setTextReady] = useState(() => hasStoredText(storageKey));
+
+    // Adjust state during render when the key changes: callers key by things that can
+    // change at runtime (e.g. the board's CPy major), and readiness of the previous
+    // key says nothing about the new one.
+    const [seenKey, setSeenKey] = useState(storageKey);
+    if (seenKey !== storageKey) {
+        setSeenKey(storageKey);
+        setTextReady(hasStoredText(storageKey));
+    }
 
     const isProbablyBinary = (bytes) => {
         if (!bytes || !bytes.length) return false;

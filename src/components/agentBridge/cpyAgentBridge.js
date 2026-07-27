@@ -5,6 +5,11 @@
 // Protocol) can read/modify files in the opened folder and read/write both
 // serial channels.
 //
+// The API object is always present on `window`, but only `isBridgeOn()` works
+// while the bridge switch is off — every other method throws (see
+// GATE_EXEMPT/requireBridgeOn below). That way an agent can always discover the
+// state and ask the user to turn the bridge on, instead of finding `undefined`.
+//
 // This file is plain JS (no React). A React component (AgentBridge.jsx) keeps
 // `store` pointing at the latest handles / serial instances and maintains the
 // serial buffers, then attaches/detaches the API on `window`.
@@ -31,6 +36,7 @@ import { Actions } from "flexlayout-react";
 import { writeConnectedVariablesLib, ensureDataSerialInBoot } from "../Widgets/installConnectedVariables";
 import { openTab, findTabByName } from "../../layout/layoutUtils";
 import { requestAgentDecision } from "./agentDecision";
+import { isAgentBridgeEnabled } from "./agentBridgeSwitch";
 import PLOT_HELP from "../../docs/Plot.md";
 import WIDGETS_HELP from "../../docs/Widgets.md";
 import WIDGET_SCHEMA from "../Widgets/WidgetSchema.json";
@@ -85,9 +91,24 @@ function getRoot() {
 
 function getLib() {
     if (!store.lib) {
-        throw new Error("Library management is not available. Enable the agent bridge in Settings.");
+        throw new Error(
+            "Library management is not available. Ask the user to turn the AI Agent Bridge ON in the IDE's Tools > AI Agent Bridge tab."
+        );
     }
     return store.lib;
+}
+
+// Methods that stay callable while the bridge is OFF. Everything else throws.
+const GATE_EXEMPT = new Set(["isBridgeOn"]);
+
+function requireBridgeOn() {
+    if (!isAgentBridgeEnabled()) {
+        throw new Error(
+            "The AI Agent Bridge is OFF, so this method is unavailable. Ask the user to open " +
+                "Tools > AI Agent Bridge in the IDE, click the 'Agent Bridge: OFF' button, and confirm the " +
+                "browser dialog that appears. You cannot turn it on yourself — it needs a real human click."
+        );
+    }
 }
 
 // Select (opening if needed) the named tab and maximize its tabset, so the
@@ -115,17 +136,55 @@ function bringTabToFront(name, component) {
     }
 }
 
+// Inverse of the maximize done by bringTabToFront: un-maximize whatever tabset is
+// currently maximized, so the IDE goes back to its normal multi-pane layout.
+// -> true if something was restored, false if nothing was maximized.
+function restoreMaximizedTabset() {
+    const model = store.flexModel;
+    if (!model) {
+        throw new Error("The IDE layout is not ready yet. Retry in a moment.");
+    }
+    const maximized = model.getMaximizedTabset();
+    if (!maximized) {
+        return false;
+    }
+    model.doAction(Actions.maximizeToggle(maximized.getId()));
+    return true;
+}
+
 // ---- the API ---------------------------------------------------------------
 
 function buildApi() {
     const api = {
         // ---- meta ----------------------------------------------------------
+
+        // The ONLY method that works while the bridge is off. Call it first: if
+        // the bridge is off, ask the user to turn it on rather than trying to do
+        // it yourself (the switch is behind a native browser dialog on purpose).
+        async isBridgeOn() {
+            const on = isAgentBridgeEnabled();
+            return {
+                on,
+                note: on
+                    ? "The AI Agent Bridge is ON. All window.__cpyAgent methods are available."
+                    : "The AI Agent Bridge is OFF — every other method will throw. Ask the user to open " +
+                      "Tools > AI Agent Bridge in the IDE, click the 'Agent Bridge: OFF' button, and confirm " +
+                      "the browser dialog that appears. You cannot turn it on yourself.",
+            };
+        },
+
         async help() {
             return {
                 note: "All methods are async — await them. File methods operate on the opened device folder.",
                 limitations: [
                     "Opening a folder and connecting a serial port require a real user gesture, so the agent cannot trigger them. The user must open the folder and connect serial manually first.",
+                    "Turning the bridge ON also requires a real user gesture (a native browser confirm). isBridgeOn() reports the state; ask the user to flip the switch when it is off.",
                 ],
+                meta: {
+                    "isBridgeOn()":
+                        "Whether the AI Agent Bridge switch is on -> { on, note }. Works even while it is off; every other method throws until it is on.",
+                    "status()": "What is ready (folder, serial, board, libraries, camera).",
+                },
                 files: {
                     'listFiles(path="")': "Recursively list entries -> [{ path, kind }].",
                     "readFile(path)": "Read a text file -> string.",
@@ -161,23 +220,29 @@ function buildApi() {
                     "getInstalledLibs()": "Libs currently on the board -> [{ name, version }].",
                     "getLibInfo(name)": "Manifest details incl. gitLink -> { name, bundle, version, description, dependencies, gitLink }.",
                     "searchLibs(query)": "Find libs by name/description -> [{ name, bundle, description }].",
-                    "installLib(name)": "Install a lib + deps -> { ok, installed, upgraded, skipped, failed }.",
-                    "uninstallLib(name)": "Remove a lib -> { ok, uninstalled }.",
-                    "autoInstallLibs()": "Install libs imported by the code -> { ok, installed, upgraded, skipped, failed }.",
+                    "installLib(name)":
+                        "Install a lib + deps -> { ok, version, installed, upgraded, skipped, failed }. Check ok/error before reporting success.",
+                    "uninstallLib(name)": "Remove a lib -> { ok, version, uninstalled, failed }.",
+                    "autoInstallLibs()":
+                        "Install libs imported by the code -> { ok, version, installed, upgraded, skipped, failed }. Check ok/error before reporting success.",
                     "getLibProgressSince(cursor)": "Incremental install/uninstall events -> { events, cursor }.",
                     "clearLibProgress()": "Clear the library progress feed.",
                 },
                 plot: {
                     "getPlotHelp()": "Full Plot/Animation guide (rules, usage, examples) -> markdown string. Read it before writing code that draws plots or animations via print().",
                     "showPlot()":
-                        "Bring the Plot tab to the front and maximize it. Take a page SCREENSHOT afterward to inspect the plot.",
+                        "Bring the Plot tab to the front and maximize it. Take a page SCREENSHOT afterward to inspect the plot, then call restoreLayout().",
+                    "restoreLayout()":
+                        "Un-maximize the tab that showPlot()/showCamera() maximized, putting the user's normal layout back -> { ok, restored }. ALWAYS call this once the screenshot is taken.",
                 },
                 camera: {
                     note: "The Camera tab shows a webcam or phone camera — including CircuitPython boards presenting a usb_video webcam. ensureCameraReady() shows a dialog to the USER inside the IDE and resolves only after the user responds; just await it (it can take a while), do not also ask in chat.",
                     "ensureCameraReady()":
                         "Check that a camera is live in the Camera tab; if not, asks the user via a non-blocking in-IDE dialog (looping until ready) -> camera name string, or false if the user rejects.",
                     "showCamera()":
-                        "Bring the Camera tab to the front, maximize it, and reset the view to a centered fit (the whole feed visible). Take a page SCREENSHOT afterward to see the camera feed. Typical flow: ensureCameraReady() -> showCamera() -> screenshot.",
+                        "Bring the Camera tab to the front, maximize it, and reset the view to a centered fit (the whole feed visible). Take a page SCREENSHOT afterward to see the camera feed. Typical flow: ensureCameraReady() -> showCamera() -> screenshot -> restoreLayout().",
+                    "restoreLayout()":
+                        "Leave the maximized state and restore the user's layout (also re-fits the camera view). Call it after every showCamera()/showPlot() screenshot.",
                 },
                 widgets: {
                     note: "Connected Variable widgets form a control panel that syncs with the code over usb_cdc.data (the data serial channel). The layout is stored as /ide/widgets.json on the board — an array of widget objects validated by getWidgetsSchema().",
@@ -190,6 +255,7 @@ function buildApi() {
 
         async status() {
             return {
+                bridgeOn: true, // gated: unreachable while the bridge is off
                 rootFolderReady: store.rootFolderReady,
                 serialReady: store.serialReady,
                 dataSerialReady: store.dataSerialReady,
@@ -409,7 +475,26 @@ function buildApi() {
             bringTabToFront("Plot", "plot");
             return {
                 ok: true,
-                note: "Plot tab is now active and maximized. Take a screenshot of the page to inspect the plot.",
+                note: "Plot tab is now active and maximized. Take a screenshot of the page to inspect the plot, then call restoreLayout() to give the user their layout back.",
+            };
+        },
+
+        // Undo the maximize done by showCamera()/showPlot(). Call it once the
+        // screenshot is taken: while a tabset is maximized the rest of the IDE is
+        // hidden from the user.
+        async restoreLayout() {
+            const restored = restoreMaximizedTabset();
+            if (restored) {
+                // Same settle-then-fit as showCamera: the visible area just changed.
+                await new Promise((resolve) => setTimeout(resolve, 300));
+                store.camera?.resetView();
+            }
+            return {
+                ok: true,
+                restored,
+                note: restored
+                    ? "The maximized tab was restored — the IDE is back to its normal layout."
+                    : "Nothing was maximized; the layout is unchanged.",
             };
         },
 
@@ -469,7 +554,22 @@ function buildApi() {
             return { ok: true };
         },
     };
-    return api;
+
+    // Wrap every method (except the exempt ones) with the switch check, so no
+    // method can be added later and accidentally escape the gate. Non-function
+    // entries pass through untouched, so adding a plain property later does not
+    // turn the whole object into something uncallable.
+    return Object.fromEntries(
+        Object.entries(api).map(([name, fn]) => [
+            name,
+            typeof fn !== "function" || GATE_EXEMPT.has(name)
+                ? fn
+                : async (...args) => {
+                      requireBridgeOn();
+                      return await fn(...args);
+                  },
+        ])
+    );
 }
 
 let attached = false;

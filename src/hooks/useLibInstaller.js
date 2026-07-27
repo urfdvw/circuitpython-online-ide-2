@@ -26,6 +26,11 @@ export function useLibInstaller({
     bundles,
     bundlesReady,
     boardCpySupported,
+    // Throws unless a bundle's cached zip is the one built for the board's current
+    // CircuitPython major (useBundles.assertBundleForBoard). Every path that copies
+    // a lib onto the board runs it, so a version mismatch can never reach the drive.
+    assertBundleForBoard,
+    cpyMajor = null,
     rootDirHandle,
     getInstalled,
     requireBoard,
@@ -46,24 +51,27 @@ export function useLibInstaller({
         setInstallationLog((cur) => cur + `\n${now}: ${msg}`);
     }
 
-    // Gatekeeper for every board-touching action. Returns the installed libs, or
-    // undefined after prompting the user to fix a precondition.
+    // Gatekeeper for every board-touching action. Returns `{ libs }` with the libs
+    // installed on the board, or `{ reason }` naming the precondition that failed so
+    // non-interactive callers (the agent bridge) can report it instead of an empty
+    // success. The reason is returned rather than stashed on the hook, so a UI card and
+    // the agent bridge running at the same time cannot read each other's.
     async function analyzeMcu() {
         if (bundlesReady === 0) {
             if (interactive) confirm("Please download library bundles and retry");
-            return;
+            return { reason: "Library bundles are not downloaded for this board's CircuitPython version." };
         }
         if (!requireBoard()) {
-            return;
+            return { reason: "No CircuitPython board connected (boot_out.txt not found)." };
         }
         if (!boardCpySupported) {
             if (interactive)
                 confirm(
                     "CircuitPython version not supported. Please install the latest version of CircuitPython on the microcontroller and retry."
                 );
-            return;
+            return { reason: `CircuitPython ${cpyMajor ?? "?"} is not offered by the library bundle.` };
         }
-        return await getInstalled();
+        return { libs: await getInstalled() };
     }
 
     /* ---- uninstall ---- */
@@ -94,21 +102,44 @@ export function useLibInstaller({
 
     async function batchUninstallLib(pendingLibNames) {
         setLibChangeInfo("Uninstalling libs");
-        const uninstalled = [];
-        for (const libName of pendingLibNames) {
-            await uninstallLib(libName);
-            uninstalled.push(libName.split(".")[0]);
+        const summary = { ok: true, version: cpyMajor, uninstalled: [], failed: [] };
+
+        // Uninstalling needs the board, but not the bundles, so it guards on its own
+        // instead of going through analyzeMcu(). Without this the first path2Handles()
+        // rejects into an unhandled rejection in the card's click handler.
+        if (!requireBoard()) {
+            setLibChangeInfo("");
+            return { ...summary, ok: false, error: "No CircuitPython board connected (boot_out.txt not found)." };
         }
+
+        for (const libName of pendingLibNames) {
+            const name = libName.split(".")[0];
+            try {
+                await uninstallLib(libName);
+                summary.uninstalled.push(name);
+            } catch (e) {
+                const error = e?.message || String(e);
+                logLine(`failed to uninstall ${name}: ${error}`);
+                summary.failed.push({ name, error });
+                onEvent({ type: "error", name, error });
+            }
+        }
+
+        summary.ok = summary.failed.length === 0;
         await sleep(1000); // let the drive settle before re-reading
         await refreshCards();
         setLibChangeInfo("");
-        return { ok: true, uninstalled };
+        return summary;
     }
 
     /* ---- install ---- */
 
-    async function installLib(name, zip) {
+    async function installLib(name, bundle) {
         name = name.split(".")[0]; // strip extension if present
+        // Re-check right before the copy: the board could have been swapped since
+        // the batch started.
+        assertBundleForBoard(bundle);
+        const zip = bundle.zip;
         setLibChangeInfo(`Installing ${name}`);
         const { dirHandle } = await path2Handles(rootDirHandle, "lib");
         try {
@@ -127,12 +158,23 @@ export function useLibInstaller({
 
     async function batchInstallLib(pendingLibs) {
         setLibChangeInfo("Installing Libs");
-        const summary = { ok: true, installed: [], upgraded: [], skipped: [], failed: [] };
-        const installedLibs = await analyzeMcu();
+        const summary = { ok: true, version: cpyMajor, installed: [], upgraded: [], skipped: [], failed: [] };
+        const { libs: installedLibs, reason } = await analyzeMcu();
         if (!installedLibs) {
-            // no board / unsupported / bundles missing — analyzeMcu already prompted (UI)
+            // no board / unsupported / bundles missing — analyzeMcu already prompted
+            // (UI); report the reason so non-interactive callers don't read this as
+            // a successful no-op.
             setLibChangeInfo("");
-            return summary;
+            return { ...summary, ok: false, error: reason || "Preconditions for installing libraries are not met." };
+        }
+
+        // Nothing is copied unless every active bundle's cache belongs to THIS board's
+        // CircuitPython major. Abort the whole batch rather than failing lib by lib.
+        try {
+            bundles.forEach(assertBundleForBoard);
+        } catch (e) {
+            setLibChangeInfo("");
+            return { ...summary, ok: false, error: e?.message || String(e) };
         }
 
         // resolve the full dependency closure across all active bundles' manifests
@@ -156,13 +198,13 @@ export function useLibInstaller({
                             logLine(
                                 `version of ${lib.name} is different in bundle and MCU. bundle: ${version}, MCU: ${from}`
                             );
-                            await installLib(lib.name, bundle.zip);
+                            await installLib(lib.name, bundle);
                             summary.upgraded.push({ name: lib.name, version, from });
                             onEvent({ type: "upgrade", name: lib.name, version, from });
                         }
                     } else {
                         logLine(`${lib.name} is not installed yet`);
-                        await installLib(lib.name, bundle.zip);
+                        await installLib(lib.name, bundle);
                         summary.installed.push({ name: lib.name, version });
                         onEvent({ type: "install", name: lib.name, version });
                     }
@@ -185,7 +227,7 @@ export function useLibInstaller({
     /* ---- cards ---- */
 
     async function refreshCards() {
-        const installedLibs = await analyzeMcu();
+        const { libs: installedLibs } = await analyzeMcu();
         const cards = [];
         if (boardCpySupported && installedLibs) {
             forEachCatalogEntry(bundles, (bundleLibName, libObj, bundle) => {
@@ -202,12 +244,18 @@ export function useLibInstaller({
                     libObj,
                     libDisplayName: bundleLibName,
                     installHandler: async () => {
-                        await batchInstallLib([bundleLibName]);
-                        notify(`Installed ${bundleLibName}`);
+                        const result = await batchInstallLib([bundleLibName]);
+                        // Report what actually happened: a blocked batch (e.g. a
+                        // bundle/board version mismatch) must not read as success.
+                        notify(result.ok ? `Installed ${bundleLibName}` : result.error || `Failed to install ${bundleLibName}`);
                     },
                     uninstallHandler: async () => {
-                        await batchUninstallLib([bundleLibName]);
-                        notify(`Uninstalled ${bundleLibName}`);
+                        const result = await batchUninstallLib([bundleLibName]);
+                        notify(
+                            result.ok
+                                ? `Uninstalled ${bundleLibName}`
+                                : result.error || result.failed[0]?.error || `Failed to uninstall ${bundleLibName}`
+                        );
                     },
                     installedVersion,
                 });
@@ -220,8 +268,9 @@ export function useLibInstaller({
     /* ---- auto install ---- */
 
     async function clearInstalledLibs() {
-        const installedLibs = await analyzeMcu();
+        const { libs: installedLibs } = await analyzeMcu();
         if (!installedLibs) {
+            // The batchInstallLib() that follows re-checks and reports the same reason.
             return;
         }
         await batchUninstallLib(installedLibs.map((lib) => lib.name));
@@ -229,7 +278,15 @@ export function useLibInstaller({
 
     async function autoInstall() {
         if (!requireBoard()) {
-            return { ok: false, installed: [], upgraded: [], skipped: [], failed: [] };
+            return {
+                ok: false,
+                version: cpyMajor,
+                error: "No CircuitPython board connected (boot_out.txt not found).",
+                installed: [],
+                upgraded: [],
+                skipped: [],
+                failed: [],
+            };
         }
         logLine("auto install started");
         if (appConfig.config.lib_management.clean_up_in_auto) {
@@ -238,8 +295,8 @@ export function useLibInstaller({
         }
         const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
         const summary = await batchInstallLib(scannedLibs);
-        notify("Auto install finished");
-        logLine("auto install finished");
+        notify(summary.ok ? "Auto install finished" : summary.error || "Auto install failed");
+        logLine(summary.ok ? "auto install finished" : `auto install failed: ${summary.error}`);
         return summary;
     }
 

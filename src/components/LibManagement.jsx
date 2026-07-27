@@ -61,6 +61,7 @@ export default function LibManagement() {
         bundlesReady,
         bundlesError,
         boardCpySupported,
+        assertBundleForBoard,
         downloadBundles,
         downloadingBundleInfo,
         getBundleVersionDiff,
@@ -72,6 +73,8 @@ export default function LibManagement() {
         bundles,
         bundlesReady,
         boardCpySupported,
+        assertBundleForBoard,
+        cpyMajor,
         rootDirHandle,
         getInstalled,
         requireBoard,
@@ -95,10 +98,17 @@ export default function LibManagement() {
     // uninstall/auto) do, via the Backdrop below.
     const downloadInfo = downloadingBundleInfo();
 
-    // Downloads need the board's CPy version, so guard before fetching.
-    function handleDownload() {
-        if (requireBoard()) {
-            downloadBundles();
+    // Downloads need the board's CPy version, so guard before fetching. A rejected
+    // download (no board version, wrong-version asset, network failure) is reported
+    // instead of becoming an unhandled rejection.
+    async function handleDownload() {
+        if (!requireBoard()) {
+            return;
+        }
+        try {
+            await downloadBundles();
+        } catch (e) {
+            notify(e?.message || "Failed to download the library bundles");
         }
     }
 

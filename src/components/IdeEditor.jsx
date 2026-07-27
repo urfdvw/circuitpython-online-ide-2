@@ -32,7 +32,8 @@ import TabTemplate from "../utilComponents/TabTemplate";
 import { identifyCodeRows } from "../utilFunctions/debuggerUtils";
 // syntax checking
 import useSyntaxCheck from "../hooks/useSyntaxCheck";
-import { registerAceJsonWorker } from "../utilFunctions/aceJsonWorker";
+// side effect only: points ACE at its bundled JSON worker (json syntax annotations)
+import "../utilFunctions/aceJsonWorker";
 
 // CSS for breakpoint styling
 const breakpointStyles = `
@@ -205,8 +206,7 @@ export default function IdeEditor({ node }) {
     }
 
     // live syntax-error annotations: python via tree-sitter, json via ACE's own worker
-    // (registered before the editor below mounts; the call is idempotent)
-    registerAceJsonWorker();
+    // (registered by the aceJsonWorker import above)
     useSyntaxCheck(aceEditorRef, text, mode);
 
     async function saveFile(text) {

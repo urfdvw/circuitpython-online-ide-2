@@ -12,7 +12,19 @@ async function fetchWithProxy(targetUrl) {
 
 const hasStoredText = (key) => typeof window !== "undefined" && !!localStorage.getItem(key);
 
-export function useTextStorage(textName) {
+const isQuotaError = (e) =>
+    e instanceof DOMException && (e.name === "QuotaExceededError" || e.code === 22 || e.code === 1014);
+
+/**
+ * Text cached in localStorage under `textName`.
+ *
+ * `evictPrefix` names the family this key belongs to (e.g. "jsonAdafruit" for
+ * "jsonAdafruit-9"). Callers version their keys, so copies for other versions pile up
+ * against the ~5MB origin budget; when a write runs out of room, the siblings are
+ * dropped and the write is retried. Evicting lazily rather than on every write keeps
+ * the other version's copy usable for as long as it fits.
+ */
+export function useTextStorage(textName, { evictPrefix = "" } = {}) {
     const storageKey = useMemo(() => String(textName), [textName]);
     const [preparingText, setPreparingText] = useState(false);
     const [textReady, setTextReady] = useState(() => hasStoredText(storageKey));
@@ -36,13 +48,48 @@ export function useTextStorage(textName) {
         return nonPrintable / bytes.length > 0.2;
     };
 
-    const setStoredText = useCallback(
+    // Drop the other versions of this key's family (never the key itself), returning
+    // whether anything was freed.
+    const evictSiblings = useCallback(() => {
+        if (!evictPrefix) return false;
+        const doomed = Object.keys(localStorage).filter(
+            (k) => k !== storageKey && k.startsWith(`${evictPrefix}-`)
+        );
+        doomed.forEach((k) => localStorage.removeItem(k));
+        return doomed.length > 0;
+    }, [storageKey, evictPrefix]);
+
+    // Single write path for both setters, so a full quota can never escape as a raw
+    // DOM exception that reads like a download failure.
+    const writeText = useCallback(
         (text) => {
             localStorage.removeItem(storageKey);
-            localStorage.setItem(storageKey, text);
+            try {
+                localStorage.setItem(storageKey, text);
+            } catch (e) {
+                if (!isQuotaError(e) || !evictSiblings()) {
+                    throw isQuotaError(e)
+                        ? new Error(`Browser storage is full — could not cache '${storageKey}'.`)
+                        : e;
+                }
+                try {
+                    localStorage.setItem(storageKey, text);
+                } catch (retryError) {
+                    throw isQuotaError(retryError)
+                        ? new Error(`Browser storage is full — could not cache '${storageKey}'.`)
+                        : retryError;
+                }
+            }
+        },
+        [storageKey, evictSiblings]
+    );
+
+    const setStoredText = useCallback(
+        (text) => {
+            writeText(text);
             setTextReady(true);
         },
-        [storageKey]
+        [writeText]
     );
 
     const clearTextCache = useCallback(() => {
@@ -145,7 +192,7 @@ export function useTextStorage(textName) {
     }
 
     function setText(text) {
-        localStorage.setItem(storageKey, text);
+        writeText(text);
     }
 
     return {

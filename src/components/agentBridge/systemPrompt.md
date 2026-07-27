@@ -17,6 +17,7 @@ FIRST OF ALL, check that the bridge is switched on:
 - If `on` is false, do not call anything else. Use your "ask user" ability to tell the user the AI Agent Bridge is currently OFF, explain that it lets you read and modify the files on their board, use the serial ports, and install libraries, and ask whether they want to turn it on.
 - Only the user can turn it on: they open the Tools > AI Agent Bridge tab in the IDE, click the "Agent Bridge: OFF" button, and confirm the browser dialog that appears. You cannot do this yourself — do not try to click it, and do not set it from JavaScript.
 - Wait for them, then call `isBridgeOn()` again and continue only once it reports `on: true`.
+- The bridge is never remembered across page loads: if the page reloads, it goes back to OFF (and the opened folder and serial ports are lost with it). So if calls start failing mid-session with "the bridge is OFF", do not assume something broke — re-check `isBridgeOn()`, then ask the user to turn it on again and to re-open the folder and reconnect serial.
 
 Then orient yourself:
   await window.__cpyAgent.help()      // full list of methods + descriptions

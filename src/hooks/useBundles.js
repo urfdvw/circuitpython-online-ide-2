@@ -34,14 +34,22 @@ export function useBundles({ cpyMajor, useCommunity }) {
     const zipKey = cpyMajor ?? "none";
 
     // ---- Adafruit (always active) ----
-    const jsonAdafruit = useTextStorage(`jsonAdafruit-${zipKey}`);
-    const updateDateTimeAdafruit = useTextStorage(`updateDateTimeAdafruit-${zipKey}`);
+    // evictPrefix: one manifest per CPy major accumulates in a ~5MB localStorage
+    // budget, and the manifests are large. If a write runs out of room, the other
+    // majors' copies are dropped to make space (that board re-downloads when it comes
+    // back), instead of failing with a raw quota exception.
+    const jsonAdafruit = useTextStorage(`jsonAdafruit-${zipKey}`, { evictPrefix: "jsonAdafruit" });
+    const updateDateTimeAdafruit = useTextStorage(`updateDateTimeAdafruit-${zipKey}`, {
+        evictPrefix: "updateDateTimeAdafruit",
+    });
     const zipAdafruit = useZipStorage(`zipAdafruit-${zipKey}`);
     const [assetsAdafruit, setAssetsAdafruit] = useState(null);
 
     // ---- Community (hooks always called; included only when enabled) ----
-    const jsonCommunity = useTextStorage(`jsonCommunity-${zipKey}`);
-    const updateDateTimeCommunity = useTextStorage(`updateDateTimeCommunity-${zipKey}`);
+    const jsonCommunity = useTextStorage(`jsonCommunity-${zipKey}`, { evictPrefix: "jsonCommunity" });
+    const updateDateTimeCommunity = useTextStorage(`updateDateTimeCommunity-${zipKey}`, {
+        evictPrefix: "updateDateTimeCommunity",
+    });
     const zipCommunity = useZipStorage(`zipCommunity-${zipKey}`);
     const [assetsCommunity, setAssetsCommunity] = useState(null);
 

@@ -4,7 +4,7 @@ Released on July 26th, 2026
 - **Syntax error highlight**
 - **AI Agent Bridge safety**: turning the bridge on is now a deliberate decision rather than a settings checkbox
     - turning it ON requires confirming a native browser dialog, so an agent stops and asks you instead of flipping the switch itself (a guardrail against an agent acting on its own, not a barrier against hostile page script — see the AI Agent Bridge tab for what it does and does not cover)
-    - the switch moved out of Settings into a browser-local flag, toggled from the AI Agent Bridge tab
+    - the switch left Settings and is no longer remembered: the bridge is off at every page load, so switching it on is always an explicit confirmation rather than a saved preference
     - new `isBridgeOn()` works even while the bridge is off, so an agent asks you to turn it on instead of failing; every other method refuses to run until then
 - **`restoreLayout()`**: the agent puts your layout back after `showCamera()` / `showPlot()` instead of leaving a tab maximized
 - Library installs are now version-locked to the board's `boot_out.txt` in code: the whole cache (zip, manifest, and release timestamp) is keyed to the board's version and verified before download and before anything is copied to the board, switching boards re-offers the right bundle, and blocked installs and uninstalls report why instead of reporting success

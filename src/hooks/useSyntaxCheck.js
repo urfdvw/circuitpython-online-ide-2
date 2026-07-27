@@ -17,7 +17,12 @@ const DEBOUNCE_MS = 400;
  */
 export default function useSyntaxCheck(aceEditorRef, text, mode) {
     useEffect(() => {
-        if (mode !== "python") return;
+        if (mode !== "python") {
+            // Drop anything an earlier python pass left on the session: ACE's json
+            // worker owns the annotations in json mode, and other modes show none.
+            aceEditorRef.current?.editor.session.clearAnnotations();
+            return;
+        }
         let cancelled = false;
         const timer = setTimeout(async () => {
             const annotations = await getPythonSyntaxAnnotations(text);

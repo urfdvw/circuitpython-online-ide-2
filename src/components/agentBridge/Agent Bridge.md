@@ -4,7 +4,7 @@ This IDE can expose its file, serial, and library tools to an AI agent (such as 
 
 ## Setup
 
-1. Click the **Agent Bridge** button at the top of this tab, then click **OK** in the browser dialog that appears, to turn the bridge **ON**.
+1. Click the **Agent Bridge** button at the top of this tab, then click **OK** in the browser dialog that appears, to turn the bridge **ON**. The bridge starts **off every time the page loads**, so this is a step you take at the start of each session, not once and for all.
 2. **Open your folder** and **connect your serial port** manually. This is required: the folder picker and serial connection need a real user click, so the agent cannot do them for you.
 3. Click **Copy System Prompt** and paste it into the agent's side panel. You only need to paste the system prompt once at the beginning of each conversation. The agent will check your connection and ask what you'd like to work on.
 4. Tell the agent what you want to do, then interact with it to refine your project.
@@ -27,7 +27,7 @@ The agent can look at the Camera tab and the Plot tab by bringing them to the fr
 
 ## Troubleshooting
 
-- **The agent says "The AI Agent Bridge is OFF"** — click the **Agent Bridge** button at the top of this tab and confirm the browser dialog. Everything except `isBridgeOn()` stays blocked until you do.
+- **The agent says "The AI Agent Bridge is OFF"** — click the **Agent Bridge** button at the top of this tab and confirm the browser dialog. Everything except `isBridgeOn()` stays blocked until you do. If it worked a moment ago, check whether the page reloaded: a reload always turns the bridge off (it also drops your opened folder and serial connection, which you will need to restore too).
 - **"Folder is not opened" / "Serial is not connected" errors** — open the folder and connect the serial port manually first. The agent cannot trigger these, because they need a user gesture.
 - **"Library management is not available" errors** — the library tools only attach while the bridge is on. Make sure the bridge is **ON**; `status()` reports `librariesAvailable`.
 - **"Refusing to install libraries from another version"** — the cached bundle belongs to a different CircuitPython version than the board you now have open. Open the Library Management tab and download the bundle again for this board.
@@ -35,9 +35,9 @@ The agent can look at the Camera tab and the Plot tab by bringing them to the fr
 
 ## Privacy & safety
 
-The bridge is **off by default**, and turning it on is deliberately made into a decision you have to make yourself:
+The bridge is **off at every page load**, and turning it on is deliberately made into a decision you have to make yourself:
 
-- The switch is not a setting in the Settings tab. It is a browser-local flag for this site, and the only way to turn it on inside the IDE is the **Agent Bridge** button here.
+- The switch is not a setting in the Settings tab, and it is not remembered anywhere. The only way to turn it on is the **Agent Bridge** button here, and it stays on until you turn it off or the page reloads. Nothing about the bridge is stored, so there is no saved "yes" for anything to reuse.
 - Turning it **on** always asks you to confirm in a **native browser dialog** — a real browser prompt, not part of the page, so it cannot be styled or faked by the page and an agent following its instructions will stop and ask you rather than answer it.
 - Turning it **off** takes effect immediately, with no confirmation.
 

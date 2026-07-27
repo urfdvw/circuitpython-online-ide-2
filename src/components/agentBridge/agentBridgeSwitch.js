@@ -1,27 +1,29 @@
 // agentBridgeSwitch.js
 //
-// The AI Agent Bridge on/off switch. Deliberately NOT a user config field: it is
-// a plain browser-local flag so it stays out of the Settings form, and turning it
-// ON goes through a NATIVE confirm() — a browser modal that lives outside the DOM,
-// so it cannot be styled, faked, or auto-dismissed by page content.
+// The AI Agent Bridge on/off switch. Deliberately NOT a user config field and NOT
+// persisted anywhere: the bridge is off at every page load, and the only way to turn
+// it on is a NATIVE confirm() — a browser modal that lives outside the DOM, so it
+// cannot be styled, faked, or auto-dismissed by page content.
+//
+// Nothing is stored, on purpose. A remembered "on" would mean one confirmation
+// authorises every later session, and the stored key would be a second way in
+// (write it, reload, the bridge comes up on). Keeping the flag in memory makes each
+// use of the bridge an explicit decision, and costs the user little: a reload drops
+// the opened folder and the serial ports too, so a session is being rebuilt anyway.
 //
 // SCOPE OF THE GUARANTEE. This is a guardrail against an agent enabling the bridge
 // on its own initiative, NOT a security boundary against hostile page script. Code
 // running in this page's JS context can reach the React click handler directly, and
 // could drive the IDE's own UI regardless of this switch. What the confirm buys is
 // that an agent following the system prompt (or improvising with plain DOM clicks)
-// hits a dialog only the human can answer. Two things raise that bar:
-//   - the native confirm is captured at module load, below, so a later
-//     `window.confirm = () => true` does not silently answer it;
-//   - the session's authority is the in-memory `enabled`, read from localStorage
-//     ONCE at page load, so writing the storage key changes nothing until a reload.
+// hits a dialog only the human can answer — and the native confirm is captured at
+// module load, below, so a later `window.confirm = () => true` cannot answer it.
 //
 // Reads are pull-based (isAgentBridgeEnabled) so the plain-JS bridge can check the
 // flag at call time. React components subscribe via useAgentBridgeEnabled().
 
 import { useSyncExternalStore } from "react";
 
-const STORAGE_KEY = "agentBridgeEnabled";
 const CHANGE_EVENT = "cpy-agent-bridge-change";
 
 // Captured at module load, before app code or an injected script gets a chance to
@@ -35,16 +37,8 @@ const CONFIRM_TEXT =
     "modify the files on your board, write to the serial ports, and install or remove libraries.\n\n" +
     "Only continue if you turned this on yourself.";
 
-function readStoredFlag() {
-    try {
-        return localStorage.getItem(STORAGE_KEY) === "true";
-    } catch {
-        // localStorage can throw in private/blocked contexts — fail closed.
-        return false;
-    }
-}
-
-let enabled = readStoredFlag();
+// The whole state: this page load, nothing else.
+let enabled = false;
 
 export function isAgentBridgeEnabled() {
     return enabled;
@@ -52,7 +46,8 @@ export function isAgentBridgeEnabled() {
 
 /**
  * Turn the bridge on or off. Turning ON asks the user to confirm in a native
- * browser dialog first; if they cancel, nothing changes.
+ * browser dialog first; if they cancel, nothing changes. The result lasts until the
+ * user turns it off or the page reloads.
  * @returns {boolean} the resulting state.
  */
 export function setAgentBridgeEnabled(next) {
@@ -62,12 +57,6 @@ export function setAgentBridgeEnabled(next) {
         return enabled;
     }
     enabled = wanted;
-    try {
-        localStorage.setItem(STORAGE_KEY, wanted ? "true" : "false");
-    } catch (err) {
-        // The session still honours the user's choice even if it cannot be stored.
-        console.error("[cpyAgent] failed to store the bridge switch:", err);
-    }
     window.dispatchEvent(new Event(CHANGE_EVENT));
     return wanted;
 }

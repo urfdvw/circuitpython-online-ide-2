@@ -2,13 +2,20 @@
 import { useEffect, useState, useRef, useContext } from "react";
 // ace
 import AceEditor from "react-ace";
-import { Range } from "ace-builds/src-noconflict/ace";
+import { Range, config as aceConfig } from "ace-builds/src-noconflict/ace";
+import jsonWorkerSource from "ace-builds/src-noconflict/worker-json?raw";
 import "ace-builds/src-min-noconflict/ext-searchbox";
 import "ace-builds/src-min-noconflict/ext-language_tools";
 import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-tomorrow";
+// register snippet modules for the modes above, else ext-language_tools
+// tries to fetch them from the server (404 -> console SyntaxError noise)
+import "ace-builds/src-noconflict/snippets/python";
+import "ace-builds/src-noconflict/snippets/json";
+import "ace-builds/src-noconflict/snippets/markdown";
+import "ace-builds/src-noconflict/snippets/text";
 // Layout
 import PopUp from "../utilComponents/PopUp";
 import { selectTabById } from "../layout/layoutUtils";
@@ -24,6 +31,16 @@ import * as FlexLayout from "flexlayout-react";
 import TabTemplate from "../utilComponents/TabTemplate";
 // breakpoints
 import { identifyCodeRows } from "../utilFunctions/debuggerUtils";
+// syntax checking
+import useSyntaxCheck from "../hooks/useSyntaxCheck";
+
+// JSON files are syntax-checked by ACE's bundled json worker. A blob URL (rather
+// than a served file path) keeps the worker loadable in the single-file production
+// build, where every asset is inlined into the HTML.
+aceConfig.setModuleUrl(
+    "ace/mode/json_worker",
+    URL.createObjectURL(new Blob([jsonWorkerSource], { type: "application/javascript" }))
+);
 
 // CSS for breakpoint styling
 const breakpointStyles = `
@@ -194,6 +211,9 @@ export default function IdeEditor({ node }) {
     if (fileHandle.name.toLowerCase().endsWith(".json")) {
         mode = "json";
     }
+
+    // live syntax-error annotations for python files (tree-sitter)
+    useSyntaxCheck(aceEditorRef, text, mode);
 
     async function saveFile(text) {
         await writeFileText(fileHandle, text);
@@ -496,6 +516,7 @@ export default function IdeEditor({ node }) {
                         enableSnippets: true,
                         showLineNumbers: true,
                         tabSize: 4,
+                        useWorker: true,
                     }}
                 />
             </TabTemplate>

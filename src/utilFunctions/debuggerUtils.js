@@ -1,50 +1,10 @@
-import { Parser, Language } from "web-tree-sitter";
-// Vite: import wasm as URL so dev server serves it with correct MIME type
-import wasmUrl from "web-tree-sitter/tree-sitter.wasm?url";
 import { sleep } from "./sleep";
+import { getParser } from "./astUtils";
 
 // Helper: Constants for file system operations
 const PREFIX = "ide_debug_";
 const STATE_FILENAME = "ide_debug_state.py";
 import * as constants from "../constants";
-
-async function getParser() {
-    // Initialize Tree-sitter, locate wasm via Vite-served URL to ensure correct MIME
-    await Parser.init({ locateFile: () => wasmUrl });
-    const parser = new Parser();
-
-    // Load the Python language grammar (tree-sitter compiled WASM).
-    // Provide the compiled language WASM in one of two ways:
-    // 1) Put `tree-sitter-python.wasm` in the `public/` folder so it's served at `/tree-sitter-python.wasm`.
-    // 2) Set `window.TREE_SITTER_PYTHON_WASM_URL` to the URL where the wasm is hosted.
-    // The code below will try (2) first, then (1). If neither is available it throws a helpful error.
-    let Python;
-    const globalWasmUrl = typeof window !== "undefined" && window.TREE_SITTER_PYTHON_WASM_URL;
-    if (globalWasmUrl) {
-        Python = await Language.load(globalWasmUrl);
-    } else {
-        // Try to detect a wasm file served from the app public folder
-        const defaultPath = "./tree-sitter-python.wasm";
-        try {
-            const head = await fetch(defaultPath, { method: "HEAD" });
-            if (head.ok) {
-                Python = await Language.load(defaultPath);
-            } else {
-                throw new Error("no-wasm");
-            }
-        } catch (e) {
-            // Don't throw here; log a helpful message and gracefully return so the UI does not crash.
-            // The calling code (UI) can show an error to the user if desired.
-            console.warn(
-                "Tree-sitter Python language WASM not found. To enable Python AST parsing, add a compiled `tree-sitter-python.wasm` to the `public/` folder (served at `/tree-sitter-python.wasm`), or set `window.TREE_SITTER_PYTHON_WASM_URL` to a hosted copy. Instrumentation will be skipped."
-            );
-            return; // abort instrumentation when language is unavailable
-        }
-    }
-
-    parser.setLanguage(Python);
-    return parser;
-}
 
 /**
  * AST Logic: Identifies rows that should be instrumented.

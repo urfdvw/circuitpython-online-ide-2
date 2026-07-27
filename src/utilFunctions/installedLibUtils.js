@@ -408,16 +408,21 @@ export function getBundleTimeStamp(assets) {
     return assets.at(0).updated_at;
 }
 
+// The CircuitPython major a bundle zip is built for, read from its file name
+// (e.g. "adafruit-circuitpython-bundle-9.x-mpy-20260712.zip" -> 9), or null when
+// the name is not a versioned bundle zip.
+export function parseBundleZipVersion(fileName) {
+    const match = String(fileName || "").match(/^.+-(\d+)\.x-mpy-.*\.zip$/);
+    return match ? parseInt(match[1], 10) : null;
+}
+
 export function extractBundleUrls(assets) {
     const result = [];
 
     for (const asset of assets) {
-        const name = asset.name;
-        const match = name.match(/^.+-(\d+)\.x-mpy-.*\.zip$/);
-        if (match) {
-            const version = parseInt(match[1], 10);
-            const url = asset.browser_download_url;
-            result.push({ version, url });
+        const version = parseBundleZipVersion(asset.name);
+        if (version !== null) {
+            result.push({ version, url: asset.browser_download_url });
         }
     }
 

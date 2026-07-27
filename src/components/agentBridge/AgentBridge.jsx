@@ -2,13 +2,20 @@
 //
 // Mounts inside <AppContext.Provider>. Keeps the shared `store` in
 // cpyAgentBridge.js pointing at the latest handles / serial instances, maintains
-// the two serial buffers via registerReaderCallback, and attaches/detaches the
-// window.__cpyAgent API based on the `enable_agent_bridge` General config flag.
+// the two serial buffers via registerReaderCallback, and attaches the
+// window.__cpyAgent API.
+//
+// The API object is attached for the whole app lifetime so that isBridgeOn() can
+// always answer; every other method checks the switch (agentBridgeSwitch.js) at
+// call time and throws while it is off. The switch additionally gates the parts
+// that cost something to run: the serial reader callbacks, the library hooks, and
+// the user-consent dialog.
 
 import { useContext, useEffect, useState } from "react";
 import Tooltip from "@mui/material/Tooltip";
 import AppContext from "../../AppContext";
 import { store, attachAgentBridge, detachAgentBridge } from "./cpyAgentBridge";
+import { useAgentBridgeEnabled } from "./agentBridgeSwitch";
 import AgentLibBridge from "./AgentLibBridge";
 import AgentDialog from "./AgentDialog";
 import AGENT_SYSTEM_PROMPT from "./systemPrompt.md";
@@ -17,7 +24,6 @@ const READER_ID = "agentBridge";
 
 export default function AgentBridge() {
     const {
-        appConfig,
         // layout (showCamera/showPlot bring tabs to front)
         flexModel,
         // files
@@ -39,7 +45,7 @@ export default function AgentBridge() {
         boardInfo,
     } = useContext(AppContext);
 
-    const enabled = Boolean(appConfig?.config?.general?.enable_agent_bridge);
+    const enabled = useAgentBridgeEnabled();
     const [copied, setCopied] = useState(false);
 
     async function copyPrompt() {
@@ -68,15 +74,14 @@ export default function AgentBridge() {
     store.clearDataSerialOutput = clearDataSerialOutput;
     store.boardInfo = boardInfo;
 
-    // Attach / detach window.__cpyAgent based on the config flag.
+    // Attach window.__cpyAgent for the whole app lifetime: isBridgeOn() must be
+    // answerable even while the bridge is off, so an agent can discover the state
+    // instead of hitting `undefined`. The per-method switch check lives in
+    // cpyAgentBridge.js.
     useEffect(() => {
-        if (enabled) {
-            attachAgentBridge();
-        } else {
-            detachAgentBridge();
-        }
+        attachAgentBridge();
         return () => detachAgentBridge();
-    }, [enabled]);
+    }, []);
 
     // Maintain the REPL serial buffer independently of React render timing, so
     // the agent can see every byte via getSerialSince(cursor).

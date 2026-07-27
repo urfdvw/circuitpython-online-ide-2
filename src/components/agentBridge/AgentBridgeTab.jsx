@@ -4,7 +4,7 @@
 // info, a button to toggle the bridge on/off, and a button to copy the system
 // prompt (single source of truth) to the clipboard.
 
-import { useContext, useState } from "react";
+import { useState } from "react";
 import Button from "@mui/material/Button";
 import Tooltip from "@mui/material/Tooltip";
 import Typography from "@mui/material/Typography";
@@ -12,8 +12,8 @@ import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
-import AppContext from "../../AppContext";
 import MarkdownExtended from "../../utilComponents/MarkdownExtended";
+import { useAgentBridgeEnabled, setAgentBridgeEnabled } from "./agentBridgeSwitch";
 import agentBridgeDoc from "./Agent Bridge.md";
 import AGENT_SYSTEM_PROMPT from "./systemPrompt.md";
 
@@ -27,13 +27,14 @@ const APPENDIX_BODY =
     APPENDIX_INDEX === -1 ? "" : agentBridgeDoc.slice(APPENDIX_INDEX).split("\n").slice(1).join("\n").trim();
 
 export default function AgentBridgeTab() {
-    const { appConfig } = useContext(AppContext);
     const [copied, setCopied] = useState(false);
 
-    const enabled = Boolean(appConfig?.config?.general?.enable_agent_bridge);
+    const enabled = useAgentBridgeEnabled();
 
+    // Turning ON pops a native browser confirm (agentBridgeSwitch.js), which a
+    // script driving the page cannot dismiss. Turning OFF is immediate.
     function toggleBridge() {
-        appConfig.setConfigField("general", "enable_agent_bridge", !enabled);
+        setAgentBridgeEnabled(!enabled);
     }
 
     async function copyPrompt() {

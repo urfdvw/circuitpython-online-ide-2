@@ -23,7 +23,9 @@ function notify() {
  */
 export function requestAgentDecision({ title, message, confirmLabel, rejectLabel }) {
     if (!subscriber) {
-        throw new Error("Agent dialog UI is not available. Enable the agent bridge in Settings.");
+        throw new Error(
+            "Agent dialog UI is not available. Ask the user to turn the AI Agent Bridge ON in the IDE's Tools > AI Agent Bridge tab."
+        );
     }
     return new Promise((resolve) => {
         queue.push({ title, message, confirmLabel, rejectLabel, resolve });

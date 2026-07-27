@@ -24,6 +24,7 @@ export default function AgentLibBridge() {
         bundles,
         bundlesReady,
         boardCpySupported,
+        assertBundleForBoard,
         downloadBundles,
         refreshBundleState,
     } = useBundles({ cpyMajor, useCommunity });
@@ -34,6 +35,8 @@ export default function AgentLibBridge() {
         bundles,
         bundlesReady,
         boardCpySupported,
+        assertBundleForBoard,
+        cpyMajor,
         rootDirHandle,
         getInstalled,
         // Silent, non-UI guard + notifier for the agent path.
@@ -56,16 +59,25 @@ export default function AgentLibBridge() {
         return cpyMajor;
     }
 
-    // True only when the bundle(s) for the board's version are locally cached.
+    // True only when the bundle(s) for the board's version are locally cached AND
+    // complete. The stamp is written last, so an unstamped cache is a partial download
+    // and must report false here rather than passing and failing later at install time.
     function isDownloaded() {
-        return bundles.length > 0 && bundles.every((b) => b.zip.zipReady && b.json.textReady);
+        return (
+            bundles.length > 0 &&
+            bundles.every((b) => b.zip.zipReady && b.json.textReady && b.zip.cacheMeta?.cpyMajor === cpyMajor)
+        );
     }
 
+    // Staged rather than a single isDownloaded() check, so the error names the actual
+    // problem: nothing fetched yet, versus a cache that is present but incomplete or
+    // built for another CircuitPython (assertBundleForBoard says which).
     function requireDownloaded() {
         requireBoardVersion();
-        if (!isDownloaded()) {
+        if (bundles.length === 0 || !bundles.every((b) => b.zip.zipReady && b.json.textReady)) {
             throw new Error("Library bundles are not downloaded for this board. Call downloadLibs() first.");
         }
+        bundles.forEach(assertBundleForBoard);
     }
 
     // ---- the agent-facing library API ----
@@ -76,13 +88,15 @@ export default function AgentLibBridge() {
             requireBoardVersion();
             const perBundle = bundles.map((b) => ({
                 abbr: b.abbr,
-                downloaded: Boolean(b.zip.zipReady && b.json.textReady),
+                downloaded: Boolean(b.zip.zipReady && b.json.textReady && b.zip.cacheMeta?.cpyMajor === cpyMajor),
             }));
             return { version: cpyMajor, downloaded: isDownloaded(), bundles: perBundle };
         },
 
         async libsUpToDate() {
             requireBoardVersion();
+            // Reflects the bundle cached for THIS board's version: a board switch
+            // reports "not up to date" rather than the previous board's state.
             const status = await refreshBundleState();
             if (status === undefined) {
                 throw new Error("Could not reach GitHub to check for updates. Check the internet connection.");

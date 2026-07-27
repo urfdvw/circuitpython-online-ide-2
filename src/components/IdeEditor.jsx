@@ -9,6 +9,12 @@ import "ace-builds/src-noconflict/mode-python";
 import "ace-builds/src-noconflict/mode-json";
 import "ace-builds/src-noconflict/mode-markdown";
 import "ace-builds/src-noconflict/theme-tomorrow";
+// register snippet modules for the modes above, else ext-language_tools
+// tries to fetch them from the server (404 -> console SyntaxError noise)
+import "ace-builds/src-noconflict/snippets/python";
+import "ace-builds/src-noconflict/snippets/json";
+import "ace-builds/src-noconflict/snippets/markdown";
+import "ace-builds/src-noconflict/snippets/text";
 // Layout
 import PopUp from "../utilComponents/PopUp";
 import { selectTabById } from "../layout/layoutUtils";
@@ -24,6 +30,10 @@ import * as FlexLayout from "flexlayout-react";
 import TabTemplate from "../utilComponents/TabTemplate";
 // breakpoints
 import { identifyCodeRows } from "../utilFunctions/debuggerUtils";
+// syntax checking
+import useSyntaxCheck from "../hooks/useSyntaxCheck";
+// side effect only: points ACE at its bundled JSON worker (json syntax annotations)
+import "../utilFunctions/aceJsonWorker";
 
 // CSS for breakpoint styling
 const breakpointStyles = `
@@ -194,6 +204,10 @@ export default function IdeEditor({ node }) {
     if (fileHandle.name.toLowerCase().endsWith(".json")) {
         mode = "json";
     }
+
+    // live syntax-error annotations: python via tree-sitter, json via ACE's own worker
+    // (registered by the aceJsonWorker import above)
+    useSyntaxCheck(aceEditorRef, text, mode);
 
     async function saveFile(text) {
         await writeFileText(fileHandle, text);
@@ -496,6 +510,7 @@ export default function IdeEditor({ node }) {
                         enableSnippets: true,
                         showLineNumbers: true,
                         tabSize: 4,
+                        useWorker: true,
                     }}
                 />
             </TabTemplate>

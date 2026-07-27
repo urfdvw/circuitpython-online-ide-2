@@ -12,11 +12,44 @@ async function fetchWithProxy(targetUrl) {
     return resp;
 }
 
+// Reserved key holding the cache's provenance (see downloadZipFromWeb meta). It is
+// not part of the cached file tree, so it is filtered out of every listing. Exactly
+// one key is reserved — a prefix match would also swallow real bundle paths.
+const META_KEY = "__meta__";
+const isMetaKey = (key) => key === META_KEY;
+
+// The same db is read by more than one hook instance at a time: useBundles is
+// mounted by both the Library Management tab and the agent bridge. Announced after
+// a cache is written or cleared so the other instances re-read it instead of
+// holding a view that no longer matches what is stored.
+const CACHE_CHANGED_EVENT = "cpy-zip-cache-changed";
+
+function announceCacheChanged(dbName) {
+    window.dispatchEvent(new CustomEvent(CACHE_CHANGED_EVENT, { detail: { dbName } }));
+}
+
 export function useZipStorage(dbName) {
+    // The open connection is tagged with the db it belongs to: `dbName` encodes the
+    // CircuitPython major, so reusing a connection across a name change would read
+    // the wrong version's libraries.
     const dbRef = useRef(null);
     const [preparingZip, setPreparingZip] = useState(false);
     const [zipReady, setZipReady] = useState(false);
     const [zipContents, setZipContents] = useState([]);
+    const [cacheMeta, setCacheMeta] = useState(null);
+    // Bumped to re-read the cache: another instance announced that it rewrote this
+    // db, or we closed our connection to let its rewrite through.
+    const [probeTick, setProbeTick] = useState(0);
+
+    // Adjust state during render when the db changes: nothing about the previous
+    // cache is true of the new one, and the probe effect below runs asynchronously.
+    const [seenDbName, setSeenDbName] = useState(dbName);
+    if (seenDbName !== dbName) {
+        setSeenDbName(dbName);
+        setZipReady(false);
+        setZipContents([]);
+        setCacheMeta(null);
+    }
 
     // ---------- utils ----------
     const normalizePath = (p) => {
@@ -27,17 +60,52 @@ export function useZipStorage(dbName) {
         return s;
     };
 
+    // Stable across renders (it only touches the ref), so the callbacks below can list
+    // it as a dependency without churning.
+    const closeCurrentDB = useCallback(() => {
+        try {
+            dbRef.current?.db?.close?.();
+        } catch {
+            // ignore errors from closing an already-closed DB
+        }
+        dbRef.current = null;
+    }, []);
+
+    // idb calls this when THIS connection is blocking another one's versionchange —
+    // i.e. another instance of this hook is deleting the db to write a fresh bundle.
+    // Step aside at once: holding the connection stalls its deleteDB() indefinitely,
+    // which would hang the download with no error. What we knew about the cache is
+    // void until that instance announces the rewrite is done.
+    const stepAside = useCallback(() => {
+        closeCurrentDB();
+        setZipReady(false);
+        setZipContents([]);
+        setCacheMeta(null);
+    }, [closeCurrentDB]);
+
     const tryOpenExistingDB = useCallback(async () => {
         try {
-            const db = await openDB(dbName);
+            // Check existence first: openDB(name) with no version CREATES the db as a
+            // side effect of probing, and the result has no object store — a state
+            // ensureDB() (which opens at version 1) can never upgrade out of.
+            // indexedDB.databases() is not universal, but this IDE is Chromium-only
+            // anyway (it needs File System Access and Web Serial), so the fallback path
+            // below is unreachable in practice rather than a silent degradation.
+            if (indexedDB.databases) {
+                const known = await indexedDB.databases();
+                if (!known.some((d) => d.name === dbName)) return null;
+            }
+            const db = await openDB(dbName, undefined, { blocking: stepAside });
             return db;
         } catch {
             return null;
         }
-    }, [dbName]);
+    }, [dbName, stepAside]);
 
     const ensureDB = useCallback(async () => {
-        if (dbRef.current) return dbRef.current;
+        // Only reuse the connection when it belongs to the db we are asked for.
+        if (dbRef.current?.name === dbName) return dbRef.current.db;
+        closeCurrentDB();
         const db = await openDB(dbName, 1, {
             upgrade(d) {
                 if (!d.objectStoreNames.contains("entries")) {
@@ -45,28 +113,27 @@ export function useZipStorage(dbName) {
                     store.createIndex("type", "type", { unique: false });
                 }
             },
+            blocking: stepAside,
         });
-        dbRef.current = db;
+        dbRef.current = { name: dbName, db };
         return db;
-    }, [dbName]);
+    }, [dbName, closeCurrentDB, stepAside]);
 
     const recreateDB = useCallback(async () => {
-        try {
-            dbRef.current?.close?.();
-        } catch {
-            // ignore errors from closing an already-closed DB
-        }
-        dbRef.current = null;
-        await deleteDB(dbName);
+        closeCurrentDB();
+        await deleteDB(dbName, {
+            blocked: () => console.warn(`[zipStorage] waiting for another connection to close ${dbName}`),
+        });
         const db = await openDB(dbName, 1, {
             upgrade(d) {
                 const store = d.createObjectStore("entries", { keyPath: "path" });
                 store.createIndex("type", "type", { unique: false });
             },
+            blocking: stepAside,
         });
-        dbRef.current = db;
+        dbRef.current = { name: dbName, db };
         return db;
-    }, [dbName]);
+    }, [dbName, closeCurrentDB, stepAside]);
 
     const putEntry = async (db, entry) => db.put("entries", entry);
 
@@ -127,43 +194,83 @@ export function useZipStorage(dbName) {
         return map[ext] || "application/octet-stream";
     };
 
-    // ---------- cache check on mount ----------
+    // ---------- cache check: on mount, on dbName change, and on probeTick ----------
     useEffect(() => {
         let cancelled = false;
+        const name = dbName;
+
+        const clear = () => {
+            if (cancelled) return;
+            setZipReady(false);
+            setZipContents([]);
+            setCacheMeta(null);
+        };
+
+        const readInto = async (db) => {
+            const keys = (await db.getAllKeys("entries")).filter((k) => !isMetaKey(k));
+            const meta = (await db.get("entries", META_KEY))?.meta ?? null;
+            if (cancelled) return;
+            setZipContents(keys);
+            setZipReady(keys.length > 0);
+            setCacheMeta(meta);
+        };
+
         (async () => {
+            // Re-read through the connection we already hold when there is one, so a
+            // re-probe never swaps the connection out from under an in-flight read.
+            if (dbRef.current?.name === name) {
+                try {
+                    await readInto(dbRef.current.db);
+                    return;
+                } catch {
+                    // the connection was closed under us — reopen below
+                    closeCurrentDB();
+                }
+            }
             const existing = await tryOpenExistingDB();
-            if (!existing) {
-                if (!cancelled) {
-                    setZipReady(false);
-                    setZipContents([]);
-                }
+            if (!existing || !existing.objectStoreNames.contains("entries")) {
+                existing?.close();
+                clear();
                 return;
             }
-            if (!existing.objectStoreNames.contains("entries")) {
+            try {
+                await readInto(existing);
+            } catch {
                 existing.close();
-                if (!cancelled) {
-                    setZipReady(false);
-                    setZipContents([]);
-                }
+                clear();
                 return;
             }
-            const keys = await existing.getAllKeys("entries");
-            if (!cancelled) {
-                setZipContents(keys);
-                setZipReady(keys.length > 0);
-                dbRef.current = existing;
-            } else {
+            if (cancelled) {
                 existing.close();
+                return;
             }
+            closeCurrentDB();
+            dbRef.current = { name, db: existing };
         })();
+
         return () => {
             cancelled = true;
         };
-    }, [tryOpenExistingDB]);
+    }, [tryOpenExistingDB, dbName, closeCurrentDB, probeTick]);
+
+    // Another instance rewrote this db: re-read rather than keep a stale view.
+    useEffect(() => {
+        const onChanged = (e) => {
+            if (e.detail?.dbName === dbName) setProbeTick((n) => n + 1);
+        };
+        window.addEventListener(CACHE_CHANGED_EVENT, onChanged);
+        return () => window.removeEventListener(CACHE_CHANGED_EVENT, onChanged);
+    }, [dbName]);
+
+    // Close on unmount: a closed tab or a switched-off agent bridge must not keep
+    // holding the db open and blocking another instance's rewrite.
+    useEffect(() => closeCurrentDB, [closeCurrentDB]);
 
     // ---------- shared zip processor (buffer → IDB) ----------
+    // `meta` records where the cache came from (e.g. the CircuitPython major it was
+    // built for), so callers can verify the cache before using it.
     const processZipBuffer = useCallback(
-        async (buf) => {
+        async (buf, meta = null) => {
             const db = await recreateDB();
             const zip = await JSZip.loadAsync(buf);
             const stripPrefix = computeStripPrefix(zip);
@@ -223,10 +330,14 @@ export function useZipStorage(dbName) {
                 });
             }
 
-            // refresh listing
-            const allKeys = await db.getAllKeys("entries");
+            // stamp provenance before announcing readiness
+            await putEntry(db, { path: META_KEY, type: "meta", meta, lastModified: Date.now() });
+
+            // refresh listing (the meta record is not part of the file tree)
+            const allKeys = (await db.getAllKeys("entries")).filter((k) => !isMetaKey(k));
             setZipContents(allKeys);
             setZipReady(allKeys.length > 0);
+            setCacheMeta(meta);
             return true;
         },
         [recreateDB]
@@ -234,91 +345,101 @@ export function useZipStorage(dbName) {
 
     // ---------- public: download from proxy ----------
     const downloadZipFromWeb = useCallback(
-        async (zipUrl) => {
+        async (zipUrl, meta = null) => {
             if (!zipUrl) throw new Error("zipUrl is required.");
             setPreparingZip(true);
             setZipReady(false);
             setZipContents([]);
+            setCacheMeta(null);
 
             try {
                 const res = await fetchWithProxy(zipUrl);
                 const buf = await res.arrayBuffer();
-                const ok = await processZipBuffer(buf);
+                const ok = await processZipBuffer(buf, meta);
                 return ok;
             } finally {
                 setPreparingZip(false);
+                // Also on failure: the other instances stepped aside for the delete,
+                // so tell them to re-read — a half-written cache reads as unstamped,
+                // which is exactly what they should now see.
+                announceCacheChanged(dbName);
             }
         },
-        [processZipBuffer]
+        [processZipBuffer, dbName]
     );
 
     // ---------- public: upload local zip (file picker) ----------
-    const uploadZipFromLocal = useCallback(async () => {
-        // Try the modern File System Access API first (nice UX in Chromium)
-        if (window.showOpenFilePicker) {
-            try {
+    // Takes the same `meta` as downloadZipFromWeb, and for the same reason: callers
+    // verify a cache by its stamp before using it, and an unstamped cache is treated as
+    // unusable. A locally picked zip must therefore say what it is too.
+    const uploadZipFromLocal = useCallback(
+        async (meta = null) => {
+            const begin = () => {
                 setPreparingZip(true);
                 setZipReady(false);
                 setZipContents([]);
-                const [handle] = await window.showOpenFilePicker({
-                    types: [{ description: "ZIP archives", accept: { "application/zip": [".zip"] } }],
-                    excludeAcceptAllOption: false,
-                    multiple: false,
-                });
-                if (!handle) {
-                    // user cancelled
-                    setPreparingZip(false);
-                    return false;
-                }
-                const file = await handle.getFile();
-                const buf = await file.arrayBuffer();
-                const ok = await processZipBuffer(buf);
-                return ok;
-            } catch (err) {
-                // If user cancelled, err.name can be "AbortError"
-                if (err && (err.name === "AbortError" || err.code === 20)) {
-                    setPreparingZip(false);
-                    return false;
-                }
-                setPreparingZip(false);
-                throw err;
-            }
-        }
-
-        // Fallback: create a hidden <input type="file">
-        return new Promise((resolve, reject) => {
-            const input = document.createElement("input");
-            input.type = "file";
-            input.accept = ".zip,application/zip";
-            input.style.display = "none";
-
-            const onChange = async () => {
-                input.removeEventListener("change", onChange);
-                document.body.removeChild(input);
-                const file = input.files && input.files[0];
-                if (!file) {
-                    resolve(false); // user cancelled
-                    return;
-                }
-                setPreparingZip(true);
-                setZipReady(false);
-                setZipContents([]);
-                try {
-                    const buf = await file.arrayBuffer();
-                    const ok = await processZipBuffer(buf);
-                    resolve(ok);
-                } catch (e) {
-                    reject(e);
-                } finally {
-                    setPreparingZip(false);
-                }
+                setCacheMeta(null);
             };
 
-            input.addEventListener("change", onChange);
-            document.body.appendChild(input);
-            input.click();
-        });
-    }, [processZipBuffer]);
+            // Try the modern File System Access API first (nice UX in Chromium)
+            if (window.showOpenFilePicker) {
+                try {
+                    begin();
+                    const [handle] = await window.showOpenFilePicker({
+                        types: [{ description: "ZIP archives", accept: { "application/zip": [".zip"] } }],
+                        excludeAcceptAllOption: false,
+                        multiple: false,
+                    });
+                    if (!handle) return false; // user cancelled
+                    const file = await handle.getFile();
+                    const buf = await file.arrayBuffer();
+                    return await processZipBuffer(buf, meta);
+                } catch (err) {
+                    // If user cancelled, err.name can be "AbortError"
+                    if (err && (err.name === "AbortError" || err.code === 20)) return false;
+                    throw err;
+                } finally {
+                    setPreparingZip(false);
+                    // Also on cancel/failure: begin() already cleared what we knew, so the
+                    // announce makes this instance re-read and recover the real state.
+                    announceCacheChanged(dbName);
+                }
+            }
+
+            // Fallback: create a hidden <input type="file">
+            return new Promise((resolve, reject) => {
+                const input = document.createElement("input");
+                input.type = "file";
+                input.accept = ".zip,application/zip";
+                input.style.display = "none";
+
+                const onChange = async () => {
+                    input.removeEventListener("change", onChange);
+                    document.body.removeChild(input);
+                    const file = input.files && input.files[0];
+                    if (!file) {
+                        resolve(false); // user cancelled
+                        return;
+                    }
+                    begin();
+                    try {
+                        const buf = await file.arrayBuffer();
+                        resolve(await processZipBuffer(buf, meta));
+                    } catch (e) {
+                        reject(e);
+                    } finally {
+                        setPreparingZip(false);
+                        announceCacheChanged(dbName);
+                    }
+                };
+
+                input.addEventListener("change", onChange);
+                document.body.appendChild(input);
+                input.click();
+            });
+        },
+        [processZipBuffer, dbName]
+    );
 
     // ================== READONLY FILE-SYSTEM MIMIC ==================
 
@@ -327,6 +448,7 @@ export function useZipStorage(dbName) {
 
     const statPath = async (db, pathNorm) => {
         // returns: { type: 'file'|'directory', rec?: entry } or null
+        if (isMetaKey(pathNorm)) return null; // the provenance record is not a cached file
         const direct = await db.get("entries", pathNorm);
         if (direct) return { type: direct.type, rec: direct };
         // check if there are any descendants -> treat as directory
@@ -372,7 +494,7 @@ export function useZipStorage(dbName) {
 
     const listDirectChildren = async (db, dirPath /* normalized, no trailing slash */) => {
         const prefix = dirPath ? dirPath + "/" : "";
-        const keys = await db.getAllKeys("entries");
+        const keys = (await db.getAllKeys("entries")).filter((k) => !isMetaKey(k));
         const seen = new Set();
         const out = [];
         for (const key of keys) {
@@ -446,6 +568,7 @@ export function useZipStorage(dbName) {
             const db = await ensureDB();
             const p = normalizePath(inputPath || "");
             if (!p) return makeDirectoryHandle(db, ""); // root directory
+            if (isMetaKey(p)) throw new DOMException(`NotFoundError: ${p} not found`, "NotFoundError");
             const direct = await db.get("entries", p);
             if (direct) {
                 return direct.type === "file" ? makeFileHandle(direct) : makeDirectoryHandle(db, p);
@@ -461,16 +584,15 @@ export function useZipStorage(dbName) {
 
     // ---------- public: clearZipCache ----------
     const clearZipCache = useCallback(async () => {
-        try {
-            dbRef.current?.close?.();
-        } catch {
-            // ignore errors from closing an already-closed DB
-        }
-        dbRef.current = null;
-        await deleteDB(dbName);
+        closeCurrentDB();
+        await deleteDB(dbName, {
+            blocked: () => console.warn(`[zipStorage] waiting for another connection to close ${dbName}`),
+        });
         setZipContents([]);
         setZipReady(false);
-    }, [dbName]);
+        setCacheMeta(null);
+        announceCacheChanged(dbName);
+    }, [dbName, closeCurrentDB]);
 
     return {
         downloadZipFromWeb,
@@ -480,5 +602,11 @@ export function useZipStorage(dbName) {
         preparingZip,
         zipReady,
         zipContents,
+        // Identity of the cache this hook instance reads from: the db it is bound to
+        // and the provenance stamped once the write finished. `cacheMeta` is null for
+        // a cache written before stamping existed OR one left partial by an
+        // interrupted download — callers must treat null as "do not use".
+        cacheName: dbName,
+        cacheMeta,
     };
 }

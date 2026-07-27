@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run build:docs && npm run build:portable",
+    "build:docs": "vite build",
+    "build:portable": "vite build --mode portable",
     "lint": "eslint .",
     "preview": "vite preview"
   },

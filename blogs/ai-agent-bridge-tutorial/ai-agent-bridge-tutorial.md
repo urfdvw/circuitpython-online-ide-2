@@ -211,6 +211,87 @@ This example confirms that the agent can:
 - check external documentation for a specific board to learn its peripheral connections
 - install the latest versions of the necessary libraries using the IDE's library management tool
 
+<<<<<<< Updated upstream
+=======
+## Example 3: Maintain previous Project
+
+I have a macropad project that is running on a previous version of CircuitPython.
+After upgrading to the recent version, it breaks immediately
+
+![alt text](image-11.png)
+
+Prompt
+> This project is upgraded to the latest version of CircuitPython, so many things are broken. I want you to do the following things:
+> First, GamePad is no longer an Adafruit library, so please remove everything related to GamePad.
+> Second, upgrade all the libraries to the latest version.
+> Third, if any part of the code is broken in this major version upgrade, please fix it.
+
+Agent's response
+
+Here's what I did:
+
+**1\. Removed GamePad entirely**
+
+-   `boot.py`: deleted the custom `GAMEPAD_REPORT_DESCRIPTOR` and the `gamepad` USB HID device, leaving only keyboard/mouse/consumer-control enabled.
+-   `macropad.py`: removed the `from adafruit_hid.gamepad import Gamepad` import, the `Limit` helper class (only used for joystick clamping), `self.gamepad`/`self.gamepad_states`, and all the `GAMEPAD_BUTTON`/`JOY_ALTER`/`JOY_SET`/`JOY_CENTER` branches in `press_code`/`release_code`/`__call__`.
+-   Checked `settings.json` --- none of your configured macros actually used any gamepad/joystick codes, so nothing in your key layout is lost.
+
+**2\. Upgraded libraries** to the latest versions for CircuitPython 10.2.1 (via `installLib`, no failures):\
+adafruit_bitmap_font 2.3.1→2.4.2, adafruit_display_text 3.3.3→5.0.4, adafruit_displayio_ssd1306 3.0.3→3.0.6, adafruit_hid 6.1.7→6.1.10, adafruit_ticks 1.1.4→1.1.7 (pulled in as a dependency).
+
+**3\. Fixed breakage from the CircuitPython major-version upgrade**, verified each fix live in the REPL before writing to files:
+
+-   `boot.py` was actually already crashing at boot (per `boot_out.txt`): `supervisor.disable_autoreload()` no longer exists --- replaced with `supervisor.runtime.autoreload = False`.
+-   `displayio.I2CDisplay` was removed --- replaced with `i2cdisplaybus.I2CDisplayBus`.
+-   `display.show(group)` now raises `.show(x) removed. Use .root_group = x` --- replaced with `display.root_group = self.splash`.
+-   Along the way I also caught and fixed a pre-existing bug of my own: I initially mis-transcribed a multi-line expression in `macropad.py` and dropped a closing parenthesis, causing a `SyntaxError`. Caught it immediately when testing and corrected it.
+
+I then ran `code.py` on the board (`ctrlD()`), and it booted cleanly with no exceptions --- printed `Hello!` and settled into the main loop with no errors on serial since.
+
+Since serial only shows program output, not the physical hardware, could you confirm on the device itself: is the OLED display showing the layer text (not blank/frozen), and do the keys/encoder respond as expected when you press them or turn the knob?
+
+Prompt
+> OLED working well and I can tested macrokeys working well. Now please inspect the code, and write a CIRCUIT.md to document the PIN connections.
+
+Great to hear the display and macro keys are working. I've written `CIRCUIT.md` to the CIRCUITPY drive, documenting the wiring based on what's actually in `code.py`/`macropad.py`, cross-checked against the XIAO RP2040's real pin aliases (I confirmed these live via the REPL, e.g. `D9` maps to silkscreen `MISO`, `D6` to `TX`, etc.):
+
+-   **OLED (SSD1306 128x32, I2C @ 0x3C):** SDA→`board.SDA`, SCL→`board.SCL`, plus 3.3V/GND.
+-   **7 macro key switches** (each wired pin-to-GND, using internal pull-ups, active-low): key 0→D10 (MOSI), key 1→D6 (TX) --- these two are the momentary layer-select buttons --- key 2→D3 (A3), key 3→D2 (A2), key 4→D1 (A1), key 5→D0 (A0), and key 6→D9 (MISO), which is the rotary encoder's push button.
+-   **Rotary encoder:** A→D8 (SCK), B→D7 (RX), with rotation producing virtual key numbers 7/8 in software (no extra pins).
+-   **USB** for power and the keyboard/mouse/consumer-control HID interface.
+
+One caveat I noted in the doc: the "lower row"/"upper row" grouping is based on the inline comments in `code.py` rather than something I could verify physically, so it's worth double-checking against your actual enclosure if it seems off.
+
+Let me know if you'd like anything else --- for example, a wiring diagram image, or further cleanup/documentation of `configure.py`'s macro format.
+
+Prompt
+> There is module called usb_video. I want you to stream OLED content through usb_video
+
+I found the module and its docs. Here's how it works: `usb_video.enable_framebuffer(width, height)` must be called in `boot.py` (framebuffer allocation happens at boot, and it can't be changed at runtime --- I confirmed this by getting `'Cannot change USB devices now'` when trying it from the REPL). Then in `code.py` you wrap `usb_video.USBFramebuffer()` in a `framebufferio.FramebufferDisplay`, and use ordinary `displayio` Groups/Labels with it, exactly like the OLED.
+
+Given that, my plan to mirror the OLED content is:
+
+-   Add `usb_video.enable_framebuffer(128, 32)` to `boot.py` (matching the OLED's own 128×32 resolution, so it's a genuine mirror, not a rescale).
+-   Add a small `MultiDisplay` helper in `macropad.py` that forwards `show_layer_text`/`show_macro_text`/`show_layer`/`show_macro` calls to a list of display wrappers --- so I can drive two independent `MONO_128x32` instances (one on the physical OLED, one on the USB video framebuffer) with identical content, without needing to hack displayio internals.
+-   Update `code.py` to build the USB video display and combine it with the OLED display via `MultiDisplay`.
+
+One important catch: `boot.py` changes only take effect after a **hard reset** (unplug/replug the board, or press its physical reset button) --- `ctrlD()`/soft-reload won't apply it, and afterward you'll need to manually reconnect the serial port in the IDE, since I can't do that myself.
+
+Shall I proceed with these changes? I'll make the edits now, then let you know when it's time to hard-reset and reconnect.
+
+> proceed
+
+All three files are updated and saved:
+
+-   **`boot.py`** --- added `usb_video.enable_framebuffer(128, 32)` to allocate the UVC framebuffer at boot, matching the OLED's resolution.
+-   **`macropad.py`** --- added a `MultiDisplay` helper class that forwards `show_layer_text`/`show_macro_text`/`show_layer`/`show_macro` calls to a list of display wrappers.
+-   **`code.py`** --- now creates a second `MONO_128x32` instance backed by `framebufferio.FramebufferDisplay(usb_video.USBFramebuffer())`, and combines it with the OLED's display wrapper via `MultiDisplay`, so both get identical content.
+
+Since `boot.py` only takes effect on a hard reset, could you please **unplug and replug the board (or press its physical reset button)**, then **reconnect the serial port in the IDE**? Once you let me know it's reconnected, I'll check `boot_out.txt` for any errors (like a memory or USB-endpoint problem) and verify the video framebuffer initializes correctly before we test the mirrored output.
+
+> hard reset done
+
+>>>>>>> Stashed changes
 ## You can also try
 
 In my personal projects, I have also used the agent for the following kinds of tasks, which you can use for inspiration:

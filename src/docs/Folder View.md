@@ -29,9 +29,23 @@ For both files and folders:
 - New
     - File: Add a new file
     - Folder: Add a new folder
+- `⟳` Refresh: Re-read the file list from the board. Only shown in USB serial mode, where the list does not refresh on its own.
 - `≡`
     - Open CircuitPy Drive: Open another folder
     - Help: Open Folder View Help
 
 ### Drag and Drop
 - Drag and drop files or folders onto another folder to move them.
+
+## Where the files come from
+
+**Folder View** can read your board two different ways. Choose in **Navigation**, or in Settings -> General -> "Board file access".
+
+- **USB mass storage** (default): files are read through the CIRCUITPY drive mounted on your computer. This is the fastest option and the file list updates on its own. Use it whenever the drive shows up.
+- **USB serial**: files are read and written over the REPL instead. Use this when the CIRCUITPY drive is not available. Three differences to expect:
+    - Every file operation briefly interrupts the program running on the board.
+    - The file list does **not** update on its own. Press `⟳` after changing files from elsewhere.
+    - Open editors do not watch the file on the board, so an outside change is not detected while the tab is open. In practice this rarely matters: the only thing that can change a file behind your back is code running on the board itself. The unsaved marker works normally either way. Close and reopen the tab to pick up an outside change.
+    - Scheduled backup and scheduled backup-refresh are disabled, because both read every file on the board. The manual Backup buttons still work.
+    - Saving may fail with a read-only error, because while the CIRCUITPY drive is mounted your computer owns write access. Use "Filesystem write access" in the **Navigation** tab: eject the CIRCUITPY drive on your computer, then press "Give write access to CircuitPython".
+    - If that is not available on your firmware, the fallback that always works is to put `import storage` and `storage.remount("/", readonly=False)` in `boot.py` and hard-reset the board. Note this stops you editing files by dragging them onto the drive, until you remove those lines.

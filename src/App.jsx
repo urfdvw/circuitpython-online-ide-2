@@ -27,7 +27,7 @@ import ProductPage from "./components/ProductPage";
 import CameraPage from "./components/CameraPage";
 import DocsSite from "./components/DocsSite";
 // file system
-import { useFileSystem } from "./utilComponents/react-local-file-system";
+import useFileSource from "./hooks/useFileSource";
 import useEditorTabs from "./hooks/useEditorTabs";
 import useUnsavedGuards from "./hooks/useUnsavedGuards";
 // serial
@@ -87,14 +87,6 @@ function Ide() {
     useEffect(() => {
         console.log("[showDevFeatures, showBetaFeatures]", [showDevFeatures, showBetaFeatures]);
     }, [showDevFeatures, showBetaFeatures]);
-    // file system
-    // main directory for folderView
-    const {
-        openDirectory,
-        directoryReady: rootFolderDirectoryReady,
-        statusText: rootFolderStatusText,
-        rootDirHandle,
-    } = useFileSystem();
     const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
     // serial
     const { connectToSerialPort, sendDataToSerialPort, addToSerialOutput, serialOutput, serialReady, serial } =
@@ -104,6 +96,18 @@ function Ide() {
         serialOutput,
         serialReady
     );
+    // file system
+    // Which source backs rootDirHandle: the mounted CIRCUITPY drive, or the board
+    // over serial. Both are real file sources; the setting just picks one.
+    const {
+        openDirectory,
+        directoryReady: rootFolderDirectoryReady,
+        statusText: rootFolderStatusText,
+        rootDirHandle,
+        fileSource,
+        autoWatchFiles,
+        refresh: refreshFileSource,
+    } = useFileSource(serial, serialReady, appConfig.config?.general?.file_source);
     // data serial (Connected Variables channel, usb_cdc.data)
     const {
         connectToDataSerialPort,
@@ -175,6 +179,9 @@ function Ide() {
                 rootFolderDirectoryReady,
                 rootDirHandle,
                 rootFolderStatusText,
+                fileSource,
+                autoWatchFiles,
+                refreshFileSource,
                 onFileClick,
                 fileLookUp,
                 // shared dirty-file registry (per editor, keyed by fileKey)

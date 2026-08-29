@@ -22,6 +22,7 @@ export default function Backup() {
         rootDirHandle,
         helpTabSelection,
         configTabSelection,
+        autoWatchFiles,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
     const [lastRecoverTime, setLastRecoverTime] = useState(null);
@@ -71,7 +72,13 @@ export default function Backup() {
         [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean]
     );
 
+    // Scheduled backup copies every file on the board. Over serial that is a raw
+    // REPL read per file, so the schedules are limited to the mass-storage source.
+    // The manual buttons still work in either mode, because the user asked for it.
     useEffect(() => {
+        if (!autoWatchFiles) {
+            return undefined;
+        }
         const interval = setInterval(async () => {
             if (!(appConfig.ready && appConfig.config.backup.enable_backup_schedule)) {
                 return;
@@ -81,12 +88,18 @@ export default function Backup() {
         return () => clearInterval(interval);
     }, [
         backup,
+        autoWatchFiles,
         appConfig.ready,
         appConfig.config.backup.enable_backup_schedule,
         appConfig.config.backup.backup_period,
     ]);
 
+    // Same reasoning: refresh() runs compareFolders, which reads every file in
+    // both trees to diff them by content.
     useEffect(() => {
+        if (!autoWatchFiles) {
+            return undefined;
+        }
         const interval = setInterval(async () => {
             if (!(appConfig.ready && appConfig.config.backup.enable_refresh_schedule)) {
                 return;
@@ -96,6 +109,7 @@ export default function Backup() {
         return () => clearInterval(interval);
     }, [
         refresh,
+        autoWatchFiles,
         appConfig.ready,
         appConfig.config.backup.enable_refresh_schedule,
         appConfig.config.backup.refresh_period,

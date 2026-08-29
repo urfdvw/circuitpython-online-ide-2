@@ -13,6 +13,16 @@ export default class SerialCommunication {
         this._listening = false;
         this._lastPortInfo = null;
         this._reconnecting = false;
+
+        // Exclusive-access support, used by the serial file system.
+        // While a transaction is held, readLoop routes bytes into _exclusive
+        // instead of broadcasting them, so a file transfer's hex payloads never
+        // reach the console UI. See src/serialFs/.
+        this._txTail = Promise.resolve();
+        this._exclusive = null;
+        // True only while writeLoop is awaiting an actual port write, so a
+        // starting transaction can wait for that write to land.
+        this._writing = false;
     }
 
     async open(portOptions, baudRate = 115200) {
@@ -149,6 +159,13 @@ export default class SerialCommunication {
                     break;
                 }
                 const decoded = decoder.decode(value);
+                if (this._exclusive) {
+                    this._exclusive.buffer += decoded;
+                    if (this._exclusive.notify) {
+                        this._exclusive.notify();
+                    }
+                    continue;
+                }
                 for (const id in this.readerCallbacks) {
                     this.readerCallbacks[id](decoded);
                 }
@@ -162,22 +179,164 @@ export default class SerialCommunication {
     async writeLoop() {
         const encoder = new TextEncoder();
         while (this.port && this.port.writable && this.keepRunning) {
-            if (this.writeBuffer.length > 0) {
-                while (this.writeBuffer.length > 0) {
+            // Hold everything back while a transaction owns the port. Console
+            // keystrokes, Ctrl-C from the stop button, the debugger and the agent
+            // bridge all push here, and letting any of them through mid-transfer
+            // would inject bytes straight into the raw REPL command stream: at
+            // best the transfer fails, at worst the injected text is written into
+            // the file on the board.
+            //
+            // They queue rather than being dropped, so they replay on release.
+            // A Ctrl-C pressed during a transfer therefore lands after it, which
+            // is worth it to keep the transfer intact.
+            if (!this._exclusive && this.writeBuffer.length > 0) {
+                while (this.writeBuffer.length > 0 && !this._exclusive) {
                     const data = this.writeBuffer.shift();
 
+                    this._writing = true;
                     try {
                         await this.writer.write(encoder.encode(data));
                     } catch (error) {
                         console.error("Error writing to serial port:", error);
                         this.keepRunning = false;
+                    } finally {
+                        this._writing = false;
                     }
                 }
-
-                this.writeBuffer = [];
+                // NOTE: deliberately no `this.writeBuffer = []` here. The loop
+                // above already drained it, so that assignment only ever threw
+                // away entries pushed while it was running.
             }
             await new Promise((resolve) => setTimeout(resolve, 1)); // Small delay to prevent high CPU usage
         }
+    }
+
+    // ===================== exclusive access =====================
+    // The REPL console already owns this port and a USB CDC console endpoint
+    // cannot be opened twice, so the file system has to borrow this same
+    // connection rather than open its own.
+
+    /**
+     * Take exclusive use of the port. Resolves once any earlier transaction has
+     * finished; call the returned function to release.
+     *
+     * @returns {Promise<() => void>} release
+     */
+    async startTransaction() {
+        let release;
+        const finished = new Promise((resolve) => {
+            release = resolve;
+        });
+        const previous = this._txTail;
+        this._txTail = previous.then(() => finished);
+        await previous;
+
+        // Claim the port first so writeLoop stops taking new entries...
+        this._exclusive = { buffer: "", notify: null };
+
+        // ...then wait out the one write that may already be in flight. Without
+        // this, a chunk that writeLoop was mid-`await` on would still land inside
+        // our command stream. Bounded so a wedged port cannot hang the caller.
+        const deadline = Date.now() + 1000;
+        while (this._writing && Date.now() < deadline) {
+            await new Promise((resolve) => setTimeout(resolve, 1));
+        }
+
+        // Anything queued before we claimed the port is console traffic that
+        // belongs to the previous prompt; it would be misread as our own output.
+        this.drainExclusive();
+        let released = false;
+        return () => {
+            if (released) {
+                return;
+            }
+            released = true;
+            this._exclusive = null;
+            release();
+        };
+    }
+
+    /** Write immediately rather than via writeLoop, which polls every 1ms. */
+    async writeNow(data) {
+        if (!this.writer) {
+            throw new Error("Serial port is not open");
+        }
+        await this.writer.write(new TextEncoder().encode(data));
+    }
+
+    /** Discard anything buffered for the current transaction. */
+    drainExclusive() {
+        if (this._exclusive) {
+            this._exclusive.buffer = "";
+        }
+    }
+
+    /**
+     * Core of readUntil/readExactly.
+     *
+     * The timeout restarts on every byte received, so a board that is slow but
+     * still talking is never cut off. ViperIDE does the same; a fixed deadline
+     * would spuriously fail large transfers.
+     */
+    _readMatching(matcher, timeout, description) {
+        return new Promise((resolve, reject) => {
+            const exclusive = this._exclusive;
+            if (!exclusive) {
+                reject(new Error("Serial read attempted outside a transaction"));
+                return;
+            }
+            let timer = null;
+            const settle = () => {
+                clearTimeout(timer);
+                exclusive.notify = null;
+            };
+            const tryMatch = () => {
+                const cut = matcher(exclusive.buffer);
+                if (cut < 0) {
+                    return false;
+                }
+                settle();
+                const taken = exclusive.buffer.slice(0, cut);
+                exclusive.buffer = exclusive.buffer.slice(cut);
+                resolve(taken);
+                return true;
+            };
+            const armTimeout = () => {
+                clearTimeout(timer);
+                timer = setTimeout(() => {
+                    settle();
+                    const error = new Error(`Timed out waiting for ${description} from the board`);
+                    // rawRepl uses this to tell a wedged board from a silent one.
+                    error.seen = exclusive.buffer;
+                    reject(error);
+                }, timeout);
+            };
+            exclusive.notify = () => {
+                if (!tryMatch()) {
+                    armTimeout();
+                }
+            };
+            if (!tryMatch()) {
+                armTimeout();
+            }
+        });
+    }
+
+    /** Read until `match` appears; resolves with everything read, including it. */
+    readUntil(match, timeout = 5000) {
+        return this._readMatching(
+            (buffer) => {
+                const index = buffer.indexOf(match);
+                return index < 0 ? -1 : index + match.length;
+            },
+            timeout,
+            JSON.stringify(match)
+        );
+    }
+
+    /** Read exactly `count` characters. */
+    readExactly(count, timeout = 5000) {
+        return this._readMatching((buffer) => (buffer.length >= count ? count : -1), timeout, `${count} characters`);
     }
 
     // Handle the physical disconnect event.

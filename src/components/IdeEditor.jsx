@@ -76,6 +76,7 @@ export default function IdeEditor({ node }) {
         setInstrumentationOutdated,
         setFileDirty,
         clearFileDirty,
+        autoWatchFiles,
     } = useContext(AppContext);
     const config = appConfig.config;
     const fileKey = node.getConfig().fileKey;
@@ -93,7 +94,19 @@ export default function IdeEditor({ node }) {
     const fileEdited = text !== savedText;
 
     // Periodic disk watch: detect deletion and external changes (not keystroke dirtiness).
+    //
+    // Only for sources that are cheap to read. Against a mounted drive this is
+    // free, but over serial each pass is two full file reads (isEntryHealthy on a
+    // file IS a read) inside a raw REPL session, per open tab, every two seconds.
+    // That saturates the port and Ctrl-Cs the running program continuously.
+    //
+    // Dirtiness never needed this: `fileEdited` compares against the in-memory
+    // savedText baseline. Only conflict/deletion detection did, and over serial
+    // those are traded away rather than paid for.
     useEffect(() => {
+        if (!autoWatchFiles) {
+            return undefined;
+        }
         const interval = setInterval(async () => {
             const healthy = await isEntryHealthy(fileHandle);
             setFileExists(healthy);
@@ -117,7 +130,7 @@ export default function IdeEditor({ node }) {
             }
         }, generateRandomNumber(2000));
         return () => clearInterval(interval);
-    }, [fileHandle, text, savedText]);
+    }, [fileHandle, text, savedText, autoWatchFiles]);
 
     useEffect(() => {
         const name = (fileEdited ? FILE_EDITED : "") + fileHandle.name;

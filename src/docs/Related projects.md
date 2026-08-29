@@ -1,4 +1,6 @@
-This project is dedicated to the USB workflow of CircuitPython. For those interested in more diverse workflows, explore [code.circuitpython.org](https://code.circuitpython.org/) and the associated [Adafruit tutorial](https://blog.adafruit.com/2022/09/07/new-guide-circuitpython-web-workflow-code-editor-quick-start-adafruitlearningsystem-adafruit-circuitpython-makermelissa/) for **BLE**, **WIFI**, and USB workflows.
+This project focuses on the USB workflows of CircuitPython. It can reach your board two ways: through the **CIRCUITPY drive** (USB mass storage), or over **USB serial** using the REPL, which works even when the drive is unavailable. You pick between them in the **Navigation** tab.
+
+**BLE** and **WIFI** workflows are not supported here. For those, explore [code.circuitpython.org](https://code.circuitpython.org/) and the associated [Adafruit tutorial](https://blog.adafruit.com/2022/09/07/new-guide-circuitpython-web-workflow-code-editor-quick-start-adafruitlearningsystem-adafruit-circuitpython-makermelissa/).
 
 [Viper IDE](https://viper-ide.org/) is also great in many ways as it
 - **Supports MicroPython**!!

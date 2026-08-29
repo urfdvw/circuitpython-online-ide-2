@@ -96,6 +96,11 @@ export default class RawReplSession {
                 return;
             } catch (err) {
                 lastSeen = String(err?.seen || lastSeen);
+                // Yield to the event loop before retrying. An attempt can reject
+                // synchronously (a closed port makes write() throw at once), and
+                // without a real timer this loop would spin on microtasks and
+                // freeze the tab for the whole timeout instead of retrying.
+                await new Promise((resolve) => setTimeout(resolve, 50));
                 if (Date.now() >= deadline) {
                     const hint = lastSeen.includes(PRE_PROMPT)
                         ? " The board is at the \"Press any key to enter the REPL\" prompt and did not respond to Ctrl-C."
@@ -137,15 +142,28 @@ export default class RawReplSession {
         return stdout;
     }
 
-    /** Ctrl-B: back to the friendly REPL, so the console tab behaves normally again. */
-    async exitRawRepl() {
+    /**
+     * Leave raw REPL.
+     *
+     * With `restart`, send Ctrl-D so the board soft-reboots and runs code.py
+     * again. Entering raw REPL always Ctrl-C's whatever was running, and serial
+     * writes do not trigger CircuitPython's autoreload, so without this a save
+     * would leave the board parked at `>>>` running nothing: the opposite of the
+     * drive workflow, where saving reloads the program.
+     */
+    async exitRawRepl(restart = false) {
         if (!this.inRawRepl) {
             return;
         }
         this.inRawRepl = false;
         try {
-            await this.io.write("\r" + CTRL_B);
-            await this.io.readUntil(NORMAL_PROMPT, 2000);
+            if (restart) {
+                // Ctrl-D from inside raw REPL soft-reboots directly.
+                await this.io.write(CTRL_D);
+            } else {
+                await this.io.write("\r" + CTRL_B);
+                await this.io.readUntil(NORMAL_PROMPT, 2000);
+            }
         } catch {
             // Leaving raw mode is best-effort. If the board went away mid-session,
             // failing here would mask the real error from the caller's operation.
@@ -156,15 +174,18 @@ export default class RawReplSession {
      * Enter raw REPL, run `fn`, and always leave raw REPL again.
      *
      * @param {(session: RawReplSession) => Promise<T>} fn
+     * @param {object} [opts]
+     * @param {boolean} [opts.restart]  soft-reboot on the way out
+     * @param {number} [opts.timeout]
      * @returns {Promise<T>}
      * @template T
      */
-    async run(fn, timeout) {
-        await this.enterRawRepl(timeout);
+    async run(fn, opts = {}) {
+        await this.enterRawRepl(opts.timeout);
         try {
             return await fn(this);
         } finally {
-            await this.exitRawRepl();
+            await this.exitRawRepl(Boolean(opts.restart));
         }
     }
 }

@@ -9,7 +9,7 @@ import {
     CircularProgress,
     Box,
 } from "@mui/material";
-import RawReplSession from "../serialFs/rawRepl";
+import runRawRepl from "../serialFs/runRawRepl";
 import {
     queryStorageState,
     giveWriteAccessToBoard,
@@ -17,7 +17,6 @@ import {
     giveWriteAccessToHost,
     DriveStillMountedError,
     BOOT_PY_FALLBACK,
-    STATE,
 } from "../serialFs/storageControl";
 
 /**
@@ -38,23 +37,8 @@ export default function useStorageControl(serial, serialReady) {
     const [dialog, setDialog] = useState(null);
     const [busy, setBusy] = useState(false);
 
-    const run = useCallback(
-        async (fn) => {
-            const release = await serial.startTransaction();
-            try {
-                const session = new RawReplSession({
-                    write: (data) => serial.writeNow(data),
-                    readUntil: (match, timeout) => serial.readUntil(match, timeout),
-                    readExactly: (count, timeout) => serial.readExactly(count, timeout),
-                    drain: () => serial.drainExclusive(),
-                });
-                return await session.run(fn);
-            } finally {
-                release();
-            }
-        },
-        [serial]
-    );
+    // Shared with the file system, so the port guard cannot drift between the two.
+    const run = useCallback((fn) => runRawRepl(serial, fn), [serial]);
 
     const needsSerial = useCallback(() => {
         if (serialReady) {
@@ -211,5 +195,5 @@ export default function useStorageControl(serial, serialReady) {
         </Dialog>
     );
 
-    return { queryState, switchToBoard, switchToHost, busy, storageControlDialog, STATE };
+    return { queryState, switchToBoard, switchToHost, busy, storageControlDialog };
 }

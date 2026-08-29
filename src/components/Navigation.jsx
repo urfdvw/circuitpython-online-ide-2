@@ -52,6 +52,7 @@ export default function Navigation() {
         boardInfo,
         serial,
         fileSource,
+        anyDirty,
     } = useContext(AppContext);
     const { queryState, switchToBoard, switchToHost, busy, storageControlDialog } = useStorageControl(
         serial,
@@ -89,9 +90,24 @@ export default function Navigation() {
                 size="small"
                 value={usingSerial ? FILE_SOURCE.SERIAL : FILE_SOURCE.MASS_STORAGE}
                 onChange={(event, value) => {
-                    if (value) {
-                        appConfig.setConfigField("general", "file_source", value);
+                    if (!value || value === (usingSerial ? FILE_SOURCE.SERIAL : FILE_SOURCE.MASS_STORAGE)) {
+                        return;
                     }
+                    // Open editors are closed by the switch, since a tab keeps the
+                    // handle it was opened with and would otherwise keep reading
+                    // and writing through the source you just left. Confirm here,
+                    // while the change can still be cancelled.
+                    if (anyDirty && anyDirty()) {
+                        const ok = window.confirm(
+                            "Some open files have unsaved changes.\n\n" +
+                                "Switching how board files are accessed closes all editor tabs. " +
+                                "Unsaved changes will be lost.\n\nSwitch anyway?"
+                        );
+                        if (!ok) {
+                            return;
+                        }
+                    }
+                    appConfig.setConfigField("general", "file_source", value);
                 }}
                 sx={{ marginBottom: "8px" }}
             >
@@ -106,8 +122,9 @@ export default function Navigation() {
                 {usingSerial ? (
                     <small>
                         Files are read and written over the REPL. Use this when the CIRCUITPY drive is not
-                        available. It is slower, it interrupts a running program, and the file list does not
-                        refresh on its own, so use the ⟳ button in Folder View.
+                        available. It is slower and it interrupts a running program: saving restarts your code
+                        afterwards, while browsing leaves the board at the REPL. The file list does not refresh
+                        on its own, so use the ⟳ button in Folder View.
                     </small>
                 ) : (
                     <small>
@@ -138,27 +155,44 @@ export default function Navigation() {
 
             {setupComplete && <p>🎉 Setup complete! Open your files and let&apos;s start coding!</p>}
 
-            <h4 style={{ marginBottom: "4px" }}>Filesystem write access</h4>
-            <p style={{ marginTop: 0 }}>
-                <small>
-                    Only one side can write to the board at a time. While the CIRCUITPY drive is mounted here,
-                    this computer owns write access and saving over serial fails. These are manual tools: each
-                    one talks to the board and interrupts a running program, so nothing runs until you press a
-                    button.
-                </small>
-            </p>
-            <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
-                <Button variant="outlined" size="small" disabled={busy} onClick={queryState}>
-                    Query current state
-                </Button>
-                <Button variant="outlined" size="small" color="warning" disabled={busy} onClick={switchToBoard}>
-                    Give write access to CircuitPython
-                </Button>
-                <Button variant="outlined" size="small" disabled={busy} onClick={switchToHost}>
-                    Return write access to this computer
-                </Button>
-            </Stack>
-            {storageControlDialog}
+            {/*
+                Serial mode only. In mass-storage mode the IDE reads files through
+                the mounted drive, so handing write access to the board would make
+                CIRCUITPY vanish from this computer and kill rootDirHandle,
+                taking Folder View, every open editor tab, Backup and the Debugger
+                with it. The explanation below only makes sense for serial anyway.
+            */}
+            {usingSerial && (
+                <>
+                    <h4 style={{ marginBottom: "4px" }}>Filesystem write access</h4>
+                    <p style={{ marginTop: 0 }}>
+                        <small>
+                            Only one side can write to the board at a time. While the CIRCUITPY drive is
+                            mounted here, this computer owns write access and saving over serial fails. These
+                            are manual tools: each one talks to the board and interrupts a running program, so
+                            nothing runs until you press a button.
+                        </small>
+                    </p>
+                    <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 1 }}>
+                        <Button variant="outlined" size="small" disabled={busy} onClick={queryState}>
+                            Query current state
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            size="small"
+                            color="warning"
+                            disabled={busy}
+                            onClick={switchToBoard}
+                        >
+                            Give write access to CircuitPython
+                        </Button>
+                        <Button variant="outlined" size="small" disabled={busy} onClick={switchToHost}>
+                            Return write access to this computer
+                        </Button>
+                    </Stack>
+                    {storageControlDialog}
+                </>
+            )}
 
             <NoTheme style={{ width: "100%" }}>
                 <div style={video_parent_css}>

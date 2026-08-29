@@ -61,7 +61,11 @@ export function joinPath(parent, name) {
  * @returns {Promise<Array<{type: "f"|"d", path: string, size: number}>>}
  */
 export async function walk(session) {
-    const code = `import os
+    // The path is hex-encoded rather than printed raw. A filename may legally
+    // contain a space, a newline, or the separator itself, and any of those
+    // would corrupt or split a plain-text line. Hex contains no whitespace, so
+    // trimming line endings stays safe.
+    const code = `${HEXLIFY_PREAMBLE}import os
 def w(p):
  try: es=os.listdir(p if p else '/')
  except: return
@@ -70,26 +74,26 @@ def w(p):
   try: s=os.stat(fn)
   except: continue
   if s[0] & 0x4000:
-   print('d|'+fn+'|0')
+   print('d|0|'+h(fn.encode()))
    w(fn)
   else:
-   print('f|'+fn+'|'+str(s[6]))
+   print('f|'+str(s[6])+'|'+h(fn.encode()))
 w('')`;
     const out = await session.exec(code, 30000);
+    const decoder = new TextDecoder();
     const entries = [];
     for (const line of out.split("\n")) {
         const trimmed = line.trim();
         if (!trimmed) continue;
-        // Split on the first two bars only; a filename may itself contain one.
-        const first = trimmed.indexOf("|");
-        const last = trimmed.lastIndexOf("|");
-        if (first < 1 || last <= first) continue;
-        const type = trimmed.slice(0, first);
+        const parts = trimmed.split("|");
+        if (parts.length !== 3) continue;
+        const [type, size, hexPath] = parts;
         if (type !== "f" && type !== "d") continue;
+        if (!/^[0-9a-fA-F]*$/.test(hexPath)) continue;
         entries.push({
             type,
-            path: trimmed.slice(first + 1, last),
-            size: parseInt(trimmed.slice(last + 1), 10) || 0,
+            path: decoder.decode(fromHex(hexPath)),
+            size: parseInt(size, 10) || 0,
         });
     }
     return entries;
@@ -196,39 +200,23 @@ def r(p):
 r(${reprStr(p)})`, 30000, p);
 }
 
-/** Rename, refusing to clobber an existing entry (os.rename semantics vary by port). */
-export async function rename(session, from, to) {
-    const src = devicePath(from);
-    const dst = devicePath(to);
-    await session.exec(`import os
-try:
- os.stat(${reprStr(dst)})
- x=1
-except OSError:
- x=0
-if x: raise OSError(17)
-os.rename(${reprStr(src)},${reprStr(dst)})`, 15000, dst);
-}
-
-/** stat one path, or null when it does not exist. */
-export async function stat(session, path) {
-    const p = devicePath(path);
-    if (!p) return { isDir: true, size: 0 };
-    const out = await session.exec(`import os
-try:
- s=os.stat(${reprStr(p)})
- print(s[0],s[6])
-except OSError:
- print('none')`, 15000, p);
-    const text = out.trim();
-    if (!text || text === "none") return null;
-    const [mode, size] = text.split(/\s+/).map((n) => parseInt(n, 10));
-    return { isDir: (mode & 0x4000) !== 0, size: size || 0 };
-}
-
-/** Create an empty file, truncating any existing one. */
+/**
+ * Ensure a file exists, WITHOUT touching one that already does.
+ *
+ * Append mode is load-bearing here. `'wb'` would truncate, and the File System
+ * Access API requires getFileHandle({create:true}) to be non-destructive for an
+ * existing file. Callers rely on that: path2Handles() defaults to create:true,
+ * so a plain read of boot.py would otherwise zero it. pyboard.py's fs_touch uses
+ * append for the same reason.
+ */
 export async function touch(session, path) {
     const p = devicePath(path);
-    await session.exec(`f=open(${reprStr(p)},'wb')
-f.close()`, 15000, p);
+    // Report the resulting size in the same round trip, so a caller that hit a
+    // cache miss on a file the board already had records its real size rather
+    // than assuming 0.
+    const out = await session.exec(`import os
+f=open(${reprStr(p)},'ab')
+f.close()
+print(os.stat(${reprStr(p)})[6])`, 15000, p);
+    return parseInt(out.trim(), 10) || 0;
 }

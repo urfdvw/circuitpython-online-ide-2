@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from "react";
-import RawReplSession from "../serialFs/rawRepl";
+import runRawRepl from "../serialFs/runRawRepl";
 import { createFsCache } from "../serialFs/fsCache";
 import { makeSerialDirectoryHandle } from "../serialFs/serialHandles";
 import * as ops from "../serialFs/deviceOps";
@@ -23,27 +23,10 @@ import * as ops from "../serialFs/deviceOps";
 export default function useSerialFileSystem(serial, serialReady) {
     const cacheRef = useRef(null);
 
-    // Run `fn` inside one exclusive raw REPL session on the shared port.
-    const run = useCallback(
-        async (fn) => {
-            if (!serial || !serial.port) {
-                throw new Error("Connect the serial port before using board files.");
-            }
-            const release = await serial.startTransaction();
-            try {
-                const session = new RawReplSession({
-                    write: (data) => serial.writeNow(data),
-                    readUntil: (match, timeout) => serial.readUntil(match, timeout),
-                    readExactly: (count, timeout) => serial.readExactly(count, timeout),
-                    drain: () => serial.drainExclusive(),
-                });
-                return await session.run(fn);
-            } finally {
-                release();
-            }
-        },
-        [serial]
-    );
+    // `opts.restart` soft-reboots the board afterwards; the handles pass it for
+    // operations that change files, so a save leaves the board running the new
+    // code rather than parked at the REPL.
+    const run = useCallback((fn, opts) => runRawRepl(serial, fn, opts), [serial]);
 
     // One cache per connection. Recreated when the port reopens so a swapped
     // board never shows the previous board's tree.
@@ -81,9 +64,16 @@ export default function useSerialFileSystem(serial, serialReady) {
         ? "Connect the serial port to browse board files"
         : "Board files over serial";
 
-    // In serial mode there is no folder to pick; refreshing is the useful action
-    // behind the existing "Open CircuitPy Drive" buttons.
-    const openDirectory = refresh;
+    // There is no folder to pick in serial mode. Rather than silently aliasing
+    // this to refresh (which made "Open CircuitPy Drive" look broken), say what
+    // is actually going on and point at the setting that switches sources.
+    const openDirectory = useCallback(() => {
+        alert(
+            "Board files are currently loaded over USB serial, so there is no folder to open.\n\n" +
+                'To use the CIRCUITPY drive instead, switch "Board file access" to USB mass storage ' +
+                "in the Navigation tab, or in Settings under General."
+        );
+    }, []);
 
     return { openDirectory, directoryReady, statusText, rootDirHandle, refresh };
 }

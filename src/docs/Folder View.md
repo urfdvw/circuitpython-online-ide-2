@@ -43,7 +43,7 @@ For both files and folders:
 
 - **USB mass storage** (default): files are read through the CIRCUITPY drive mounted on your computer. This is the fastest option and the file list updates on its own. Use it whenever the drive shows up.
 - **USB serial**: files are read and written over the REPL instead. Use this when the CIRCUITPY drive is not available. Three differences to expect:
-    - Every file operation briefly interrupts the program running on the board.
+    - Every file operation briefly interrupts the program running on the board. After a save the board soft-reboots and runs your code again, the same as the drive workflow's auto-reload; after a plain read it stays at the REPL.
     - The file list does **not** update on its own. Press `⟳` after changing files from elsewhere.
     - Open editors do not watch the file on the board, so an outside change is not detected while the tab is open. In practice this rarely matters: the only thing that can change a file behind your back is code running on the board itself. The unsaved marker works normally either way. Close and reopen the tab to pick up an outside change.
     - Scheduled backup and scheduled backup-refresh are disabled, because both read every file on the board. The manual Backup buttons still work.

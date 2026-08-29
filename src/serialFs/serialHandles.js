@@ -81,7 +81,10 @@ export function makeSerialFileHandle(ctx, path, size = 0) {
                         joined.set(p, at);
                         at += p.length;
                     }
-                    await ctx.run((session) => ops.writeFile(session, path, joined));
+                    // restart: saving should leave the board running the new code,
+                    // the way the drive workflow's autoreload does. Serial writes
+                    // do not trigger autoreload, so we soft-reboot explicitly.
+                    await ctx.run((session) => ops.writeFile(session, path, joined), { restart: true });
                     ctx.cache.noteFile(path, joined.length);
                 },
                 async abort() {
@@ -113,20 +116,25 @@ export function makeSerialDirectoryHandle(ctx, path) {
             return !!other && other.kind === "directory" && other.devicePath === path;
         },
 
+        // isEntryHealthy() decides a directory is dead by letting entries()
+        // throw. cache.list() filters a map, so a deleted folder would come back
+        // as an empty listing and read as healthy: FolderView would then show an
+        // empty view of a folder that no longer exists instead of falling back to
+        // the root. So check existence first.
         async *entries() {
-            for (const child of await ctx.cache.list(path)) {
+            for (const child of await listChecked(ctx, path)) {
                 yield [child.name, childHandle(ctx, child)];
             }
         },
 
         async *values() {
-            for (const child of await ctx.cache.list(path)) {
+            for (const child of await listChecked(ctx, path)) {
                 yield childHandle(ctx, child);
             }
         },
 
         async *keys() {
-            for (const child of await ctx.cache.list(path)) {
+            for (const child of await listChecked(ctx, path)) {
                 yield child.name;
             }
         },
@@ -143,9 +151,11 @@ export function makeSerialDirectoryHandle(ctx, path) {
             if (!opts.create) {
                 throw notFound(childPath);
             }
-            await ctx.run((session) => ops.touch(session, childPath));
-            ctx.cache.noteFile(childPath, 0);
-            return makeSerialFileHandle(ctx, childPath, 0);
+            // touch() is append-mode, so this cannot clobber a file the board
+            // already had but the cache had not seen; it returns the real size.
+            const size = await ctx.run((session) => ops.touch(session, childPath), { restart: true });
+            ctx.cache.noteFile(childPath, size);
+            return makeSerialFileHandle(ctx, childPath, size);
         },
 
         async getDirectoryHandle(name, opts = {}) {
@@ -160,7 +170,7 @@ export function makeSerialDirectoryHandle(ctx, path) {
             if (!opts.create) {
                 throw notFound(childPath);
             }
-            await ctx.run((session) => ops.mkdirp(session, childPath));
+            await ctx.run((session) => ops.mkdirp(session, childPath), { restart: true });
             ctx.cache.noteDir(childPath);
             return makeSerialDirectoryHandle(ctx, childPath);
         },
@@ -177,7 +187,7 @@ export function makeSerialDirectoryHandle(ctx, path) {
                     throw new DOMException(`${childPath} is not empty`, "InvalidModificationError");
                 }
             }
-            await ctx.run((session) => ops.remove(session, childPath));
+            await ctx.run((session) => ops.remove(session, childPath), { restart: true });
             ctx.cache.noteRemoved(childPath);
         },
 
@@ -198,6 +208,20 @@ export function makeSerialDirectoryHandle(ctx, path) {
         },
     };
     return handle;
+}
+
+/** List a directory, throwing if it no longer exists. The root always exists. */
+async function listChecked(ctx, path) {
+    if (path) {
+        const meta = await ctx.cache.stat(path);
+        if (!meta) {
+            throw notFound(path);
+        }
+        if (meta.type !== "d") {
+            throw new DOMException(`${path} is a file`, "TypeMismatchError");
+        }
+    }
+    return ctx.cache.list(path);
 }
 
 function childHandle(ctx, child) {

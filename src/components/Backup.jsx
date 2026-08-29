@@ -5,7 +5,7 @@ import { Typography, Box, Button } from "@mui/material";
 import TextDiffViewer from "../utilComponents/TextDiffViewer";
 import { selectTabById } from "../layout/layoutUtils";
 
-import { backupFolder, compareFolders } from "../utilComponents/react-local-file-system";
+import { backupFolder, compareFolders, isSameEntrySafe } from "../utilComponents/react-local-file-system";
 
 export default function Backup() {
     const {
@@ -48,7 +48,7 @@ export default function Backup() {
 
     const backup = useCallback(
         async (toPC) => {
-            if (await backupDirHandle.isSameEntry(rootDirHandle)) {
+            if (await isSameEntrySafe(backupDirHandle, rootDirHandle)) {
                 console.log(backupDirHandle.name);
                 console.log(rootDirHandle.name);
                 console.error("Cannot backup to the folder itself.");

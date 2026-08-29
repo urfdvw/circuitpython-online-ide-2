@@ -154,6 +154,25 @@ export function isFolder(entryHandle) {
     return entryHandle.kind === "directory";
 }
 
+/**
+ * isSameEntry() that tolerates handles from different sources.
+ *
+ * A real FileSystemHandle's isSameEntry() is WebIDL-typed, so handing it the
+ * duck-typed handle the serial file source produces rejects with a TypeError.
+ * That case is also trivially answerable: a file on the board and a folder on
+ * this computer are never the same entry.
+ */
+export async function isSameEntrySafe(a, b) {
+    if (!a || !b) {
+        return false;
+    }
+    try {
+        return await a.isSameEntry(b);
+    } catch {
+        return false;
+    }
+}
+
 /** Whether the handle is still readable (detects revoked/detached handles, e.g. after unplugging). */
 export async function isEntryHealthy(entryHandle) {
     if (entryHandle === null) {

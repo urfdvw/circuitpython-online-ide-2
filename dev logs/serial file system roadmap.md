@@ -98,6 +98,24 @@ programs never write to the filesystem. Saving is last-writer-wins. Resist addin
 a pre-save conflict check to compensate: it would turn every save into an extra
 round trip to guard against a rare case.
 
+## Two things that are easy to get wrong here
+
+**getFileHandle({create:true}) must not truncate.** The File System Access API
+requires it to be non-destructive for a file that already exists, and callers
+lean on that: `path2Handles()` defaults to `create:true`, so merely *reading*
+boot.py goes down the create path. Combined with a cache that never
+auto-invalidates, any file the board wrote since the last walk is a cache miss.
+`touch()` therefore opens `'ab'`, not `'wb'`. pyboard.py's `fs_touch` uses append
+for the same reason.
+
+**Entering raw REPL kills the running program, so writes must restart it.**
+Serial writes do not trigger CircuitPython's autoreload (only USB MSC, web and
+BLE workflow writes do), so without an explicit Ctrl-D on the way out a save
+leaves the board parked at `>>>` running nothing, which is the opposite of what
+the drive workflow does. `runRawRepl(serial, fn, {restart: true})` handles this;
+`serialHandles` passes it for every mutating operation and omits it for reads, so
+browsing does not reboot the board over and over.
+
 ## Architecture note for the follow-ups
 
 ViperIDE runs *one* file protocol over *five* transports: `MpRawMode` is

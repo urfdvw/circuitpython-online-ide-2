@@ -63,5 +63,5 @@ export default function useUnsavedGuards(flexModel) {
         [flexModel, isFileDirty, clearFileDirty]
     );
 
-    return { setFileDirty, clearFileDirty, handleLayoutAction };
+    return { setFileDirty, clearFileDirty, handleLayoutAction, anyDirty };
 }

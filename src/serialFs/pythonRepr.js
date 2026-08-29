@@ -8,6 +8,16 @@
 // Everything is escaped down to 7-bit ASCII on purpose: the raw REPL carries the
 // command as source text, and we never want to depend on the device decoding
 // UTF-8 in a source line.
+//
+// This is therefore NOT byte-identical to CPython's repr(), which leaves
+// printable non-ASCII alone. The escapes it produces are the same ones, just
+// applied more aggressively.
+//
+// The \u / \U forms need MICROPY_PY_BUILTINS_STR_UNICODE. CircuitPython sets it
+// unconditionally (py/circuitpy_mpconfig.h), so this is safe on every board the
+// IDE supports today. MicroPython makes it depend on the build's ROM level, so a
+// minimal MicroPython port could take these literally and open the wrong path.
+// Revisit when MicroPython support lands; see dev logs/serial file system roadmap.md.
 
 const SIMPLE_ESCAPES = {
     "\\": "\\\\",

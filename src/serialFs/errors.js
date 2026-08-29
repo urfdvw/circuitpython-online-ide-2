@@ -104,8 +104,3 @@ export function deviceError(traceback, path) {
     const summary = lines[lines.length - 1] || "Unknown device error";
     return new DeviceOperationError(summary.trim(), errno, path);
 }
-
-/** Whether an error means "the board's filesystem is read-only right now". */
-export function isReadOnlyError(error) {
-    return error instanceof ReadOnlyFilesystemError || error?.errno === 30;
-}

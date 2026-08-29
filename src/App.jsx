@@ -30,6 +30,7 @@ import DocsSite from "./components/DocsSite";
 import useFileSource from "./hooks/useFileSource";
 import useEditorTabs from "./hooks/useEditorTabs";
 import useUnsavedGuards from "./hooks/useUnsavedGuards";
+import useFileSourceTabs from "./hooks/useFileSourceTabs";
 // serial
 import { useSerial, useDataSerial, useSerialCommands } from "./hooks/useSerial";
 // Board info
@@ -134,7 +135,11 @@ function Ide() {
     const [instrumentationOutdated, setInstrumentationOutdated] = useState(true);
 
     // unsaved-changes guards (tab close + page close) and the shared dirty-file registry
-    const { setFileDirty, clearFileDirty, handleLayoutAction } = useUnsavedGuards(flexModel);
+    const { setFileDirty, clearFileDirty, handleLayoutAction, anyDirty } = useUnsavedGuards(flexModel);
+
+    // Editor tabs hold the handle they were opened with, so they cannot survive a
+    // change of file source.
+    useFileSourceTabs(flexModel, fileSource);
 
     // auto-open the Plot tab when the board emits a plot/animation command
     usePlotAutoOpen(serialOutput, flexModel);
@@ -180,6 +185,7 @@ function Ide() {
                 rootDirHandle,
                 rootFolderStatusText,
                 fileSource,
+                anyDirty,
                 autoWatchFiles,
                 refreshFileSource,
                 onFileClick,

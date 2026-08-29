@@ -1,3 +1,9 @@
+// A read's absolute cap, as a multiple of its idle timeout. Generous, because
+// the idle timeout is what should normally fire; this only exists so a board
+// that never stops talking cannot wedge a transaction forever.
+const ABSOLUTE_TIMEOUT_FACTOR = 10;
+const MIN_ABSOLUTE_TIMEOUT = 30000;
+
 export default class SerialCommunication {
     constructor() {
         this.port = null;
@@ -88,6 +94,21 @@ export default class SerialCommunication {
         console.log("trying to close serial communication");
         this.keepRunning = false;
         this.writeBuffer = [];
+
+        // Tear down any transaction the closing port was in the middle of.
+        // Left set, _exclusive would survive an auto-reconnect and readLoop would
+        // keep routing every byte into a dead transaction's buffer, so the
+        // console would stay silent until the orphaned read finally timed out.
+        if (this._exclusive) {
+            const stranded = this._exclusive;
+            this._exclusive = null;
+            // Fail whoever is blocked on a read now, rather than making them wait
+            // out a timeout against a port that is already gone.
+            if (stranded.abort) {
+                stranded.abort();
+            }
+        }
+        this._writing = false;
 
         // preserve last port info so we can attempt reconnect later
         if (this.port && this.port.getInfo) {
@@ -232,7 +253,7 @@ export default class SerialCommunication {
         await previous;
 
         // Claim the port first so writeLoop stops taking new entries...
-        this._exclusive = { buffer: "", notify: null };
+        this._exclusive = { buffer: "", notify: null, abort: null };
 
         // ...then wait out the one write that may already be in flight. Without
         // this, a chunk that writeLoop was mid-`await` on would still land inside
@@ -274,9 +295,16 @@ export default class SerialCommunication {
     /**
      * Core of readUntil/readExactly.
      *
-     * The timeout restarts on every byte received, so a board that is slow but
-     * still talking is never cut off. ViperIDE does the same; a fixed deadline
-     * would spuriously fail large transfers.
+     * The idle timeout restarts on every byte received, so a board that is slow
+     * but still talking is never cut off. ViperIDE does the same; a fixed
+     * deadline would spuriously fail large transfers.
+     *
+     * On top of that there is an absolute deadline, because the per-byte restart
+     * alone is not an upper bound: a board printing in a loop that Ctrl-C does
+     * not stop would re-arm the idle timer forever, the read would never reject,
+     * and the transaction would never be released. Since startTransaction chains
+     * on _txTail, that would wedge every later file operation behind a promise
+     * that can never settle.
      */
     _readMatching(matcher, timeout, description) {
         return new Promise((resolve, reject) => {
@@ -286,10 +314,29 @@ export default class SerialCommunication {
                 return;
             }
             let timer = null;
+            let hardTimer = null;
             const settle = () => {
                 clearTimeout(timer);
+                clearTimeout(hardTimer);
                 exclusive.notify = null;
+                exclusive.abort = null;
             };
+            // Lets close() fail this read immediately when the port goes away.
+            exclusive.abort = () => {
+                settle();
+                reject(new Error("Serial port closed while waiting for the board"));
+            };
+            hardTimer = setTimeout(
+                () => {
+                    settle();
+                    const error = new Error(
+                        `The board kept sending data without producing ${description}; giving up.`
+                    );
+                    error.seen = exclusive.buffer;
+                    reject(error);
+                },
+                Math.max(timeout * ABSOLUTE_TIMEOUT_FACTOR, MIN_ABSOLUTE_TIMEOUT)
+            );
             const tryMatch = () => {
                 const cut = matcher(exclusive.buffer);
                 if (cut < 0) {

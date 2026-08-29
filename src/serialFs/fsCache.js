@@ -77,10 +77,6 @@ export function createFsCache(loadTree) {
             generation += 1;
         },
 
-        get loaded() {
-            return entries !== null;
-        },
-
         /** Direct children of a directory, as [{name, type, size, path}]. */
         async list(dirPath) {
             const map = await ensure();
@@ -98,12 +94,6 @@ export function createFsCache(loadTree) {
             if (!path) return { type: "d", size: 0 };
             const map = await ensure();
             return map.get(path) || null;
-        },
-
-        async exists(path) {
-            if (!path) return true;
-            const map = await ensure();
-            return map.has(path);
         },
 
         // --- in-place updates, applied after a device operation succeeded ---
@@ -134,18 +124,5 @@ export function createFsCache(loadTree) {
             }
         },
 
-        noteRenamed(from, to) {
-            if (noteDuringLoad()) return;
-            const moved = [];
-            const prefix = from + "/";
-            for (const [key, meta] of entries) {
-                if (key === from) moved.push([key, to, meta]);
-                else if (key.startsWith(prefix)) moved.push([key, to + key.slice(from.length), meta]);
-            }
-            for (const [oldKey, newKey, meta] of moved) {
-                entries.delete(oldKey);
-                entries.set(newKey, meta);
-            }
-        },
     };
 }

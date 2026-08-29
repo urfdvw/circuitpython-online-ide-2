@@ -123,7 +123,18 @@ export async function getFromPathIfExists(rootDirHandle, path) {
 }
 // file level ====================================
 
-/** Write `text` into an existing file handle. Failures show a confirm() dialog instead of throwing. */
+/**
+ * Write `text` into an existing file handle.
+ *
+ * Failures show a confirm() dialog instead of throwing, but they are also
+ * REPORTED: returns true only when the bytes actually reached the file. Callers
+ * that track saved state must check this. Treating a failure as a save clears
+ * the dirty marker and the close warning while the file on disk is unchanged,
+ * which loses the user's work silently. Over serial that is not an edge case:
+ * every save fails with errno 30 while CIRCUITPY is mounted on the host.
+ *
+ * @returns {Promise<boolean>} whether the write succeeded
+ */
 export async function writeFileText(fileHandle, text) {
     try {
         // Create a FileSystemWritableFileStream to write to.
@@ -134,8 +145,10 @@ export async function writeFileText(fileHandle, text) {
         await writable.close();
         console.log("Successfully wrote to", fileHandle.name);
         await sleep(200); // chill down
+        return true;
     } catch (error) {
         confirm("Write to file failed. " + error.message);
+        return false;
     }
 }
 

@@ -223,7 +223,16 @@ export default function IdeEditor({ node }) {
     useSyntaxCheck(aceEditorRef, text, mode);
 
     async function saveFile(text) {
-        await writeFileText(fileHandle, text);
+        const saved = await writeFileText(fileHandle, text);
+        // Only move the baseline when the bytes actually landed. Otherwise a
+        // failed save would clear the dirty marker and the close warning while
+        // the file is unchanged, and the edits would be lost with no sign. Over
+        // serial this is the common path: writes fail with errno 30 whenever
+        // CIRCUITPY is mounted on this computer. writeFileText has already told
+        // the user what went wrong, so the tab just stays dirty.
+        if (!saved) {
+            return;
+        }
         // update the baseline only after the write resolves so the disk watch doesn't
         // momentarily see disk != baseline and flag a false conflict
         setSavedText(text);

@@ -31,8 +31,9 @@ export { BOOT_PY_FALLBACK };
 /** Read-only state, classified. */
 export const STATE = {
     WRITABLE: "writable",
-    USB_CLAIM: "usb-claim",
-    BOOT_PY: "boot-py",
+    // One state, not two. Telling "the host holds the drive" apart from "boot.py
+    // did not remount" would need a signal we do not have; see classify().
+    READ_ONLY: "read-only",
     NOT_CIRCUITPYTHON: "not-circuitpython",
     UNKNOWN: "unknown",
 };
@@ -46,11 +47,12 @@ function parsePyValue(token) {
 }
 
 /**
- * Ask the board who currently owns write access, and whether it can switch.
+ * Ask the board whether it can write to its own filesystem, and whether it has
+ * the no-eject override.
  *
- * One exec returns all three values. Two dimensions are needed because
- * `readonly` alone says we cannot write but not why, and the two reasons lead to
- * different advice.
+ * `usbConnected` comes back too, but only as a diagnostic: it reports USB
+ * enumeration (tud_ready()), not whether the host holds the drive, so it is not
+ * used to classify anything. See classify().
  *
  * @returns {Promise<{state: string, readonly: boolean|null, usbConnected: boolean|null,
  *                    canForce: boolean, summary: string, detail: string}>}
@@ -91,7 +93,7 @@ print("${MARKER}",_ro,_usb,_cap)`);
     // Whether the board also has the no-eject override. remount() is always there.
     const canForce = parsePyValue(capToken) === true;
 
-    return { readonly, usbConnected, canForce, ...classify(readonly, usbConnected) };
+    return { readonly, usbConnected, canForce, ...classify(readonly) };
 }
 
 const EJECT_ADVICE =
@@ -100,7 +102,7 @@ const EJECT_ADVICE =
     "because it guarantees your computer has finished writing.\n\n" +
     "If that does not work, use the boot.py method below.";
 
-function classify(readonly, usbConnected) {
+function classify(readonly) {
     if (readonly === null) {
         return {
             state: STATE.NOT_CIRCUITPYTHON,
@@ -119,26 +121,25 @@ function classify(readonly, usbConnected) {
                 "computer, or write access has already been handed to the board.",
         };
     }
-    if (usbConnected === true) {
-        return {
-            state: STATE.USB_CLAIM,
-            summary: "Your computer currently has write access.",
-            detail:
-                "This is the normal state: while CIRCUITPY is mounted here, the computer owns write " +
-                "access and the board does not, so saving over serial fails. Only one side can write at " +
-                "a time, because the filesystem has no locking between them." +
-                EJECT_ADVICE +
-                "\n\n---\n\n" +
-                BOOT_PY_FALLBACK,
-        };
-    }
+    // readonly === true. We deliberately do NOT claim to know why.
+    //
+    // The obvious signal, supervisor.runtime.usb_connected, does not mean what it
+    // looks like: it returns tud_ready(), i.e. whether USB is enumerated at all.
+    // Ejecting the CIRCUITPY drive leaves the USB serial interface up, so it stays
+    // true and we would keep telling someone who has already ejected to go eject.
+    // There is no read-only way to ask whether the host still holds the drive
+    // (remount() answers it, but by changing the state), so report the fact we do
+    // know and give both remedies.
     return {
-        state: STATE.BOOT_PY,
-        summary: "Neither side has write access.",
+        state: STATE.READ_ONLY,
+        summary: "CircuitPython cannot write to its filesystem right now.",
         detail:
-            "The CIRCUITPY drive is not mounted here, but the board is still read-only to itself, which " +
-            "usually means boot.py did not remount it. Pressing \"Give write access to CircuitPython\" " +
-            "should work now, since your computer has already let go of the drive.\n\n---\n\n" +
+            "Saving files over serial will fail until this changes. Only one side can write at a time, " +
+            "because the filesystem has no locking between the board and this computer." +
+            EJECT_ADVICE +
+            "\n\nIf you have already ejected the drive, press that button anyway: it will succeed once " +
+            "this computer has let go." +
+            "\n\n---\n\n" +
             BOOT_PY_FALLBACK,
     };
 }

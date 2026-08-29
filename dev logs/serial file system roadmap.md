@@ -116,6 +116,29 @@ the drive workflow does. `runRawRepl(serial, fn, {restart: true})` handles this;
 `serialHandles` passes it for every mutating operation and omits it for reads, so
 browsing does not reboot the board over and over.
 
+## supervisor.runtime.usb_connected does not mean what it looks like
+
+It returns `tud_ready()` (`shared-bindings/supervisor/Runtime.c`), i.e. whether
+USB is *enumerated*, and the docstring says so: "Returns the USB enumeration
+status". It is NOT "the host has CIRCUITPY mounted". Safely ejecting the drive
+leaves the USB serial interface up, so it stays true.
+
+We used it to split read-only into "the host holds the drive" versus "boot.py did
+not remount", and that told people who had already ejected to go and eject. There
+is no read-only way to ask the real question; `remount()` answers it, but by
+changing the state. So the query now reports the one fact it can stand behind,
+`storage.getmount("/").readonly`, and offers both remedies without guessing.
+`usbConnected` is still returned, but only as a diagnostic.
+
+## Failed writes must not look like saves
+
+`writeFileText()` swallows errors into a `confirm()` dialog rather than throwing,
+which was harmless while the only source was a mounted drive. Over serial every
+save fails with errno 30 whenever CIRCUITPY is mounted, so the editor was clearing
+its dirty marker and its close warning on writes that never reached the board.
+It now returns a boolean and `IdeEditor.saveFile` only moves the baseline on
+success. Any new caller that tracks saved state must check that return value.
+
 ## Architecture note for the follow-ups
 
 ViperIDE runs *one* file protocol over *five* transports: `MpRawMode` is

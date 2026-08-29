@@ -108,7 +108,8 @@ function Ide() {
         fileSource,
         autoWatchFiles,
         refresh: refreshFileSource,
-    } = useFileSource(serial, serialReady, appConfig.config?.general?.file_source);
+        setFileSource,
+    } = useFileSource(serial, serialReady, appConfig);
     // data serial (Connected Variables channel, usb_cdc.data)
     const {
         connectToDataSerialPort,
@@ -138,8 +139,9 @@ function Ide() {
     const { setFileDirty, clearFileDirty, handleLayoutAction, anyDirty } = useUnsavedGuards(flexModel);
 
     // Editor tabs hold the handle they were opened with, so they cannot survive a
-    // change of file source.
-    useFileSourceTabs(flexModel, fileSource);
+    // change of file source. This also owns the unsaved-work confirmation, since
+    // the setting can be changed from Navigation or from the settings form.
+    useFileSourceTabs(flexModel, fileSource, anyDirty, setFileSource);
 
     // auto-open the Plot tab when the board emits a plot/animation command
     usePlotAutoOpen(serialOutput, flexModel);
@@ -185,7 +187,7 @@ function Ide() {
                 rootDirHandle,
                 rootFolderStatusText,
                 fileSource,
-                anyDirty,
+                setFileSource,
                 autoWatchFiles,
                 refreshFileSource,
                 onFileClick,

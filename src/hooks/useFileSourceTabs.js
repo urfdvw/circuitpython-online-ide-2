@@ -2,7 +2,8 @@ import { useEffect, useRef } from "react";
 import * as FlexLayout from "flexlayout-react";
 
 /**
- * Close open editor tabs when the board file source changes.
+ * Close open editor tabs when the board file source changes, confirming first if
+ * that would discard unsaved work.
  *
  * An editor tab holds the handle it was opened with, not whatever rootDirHandle
  * currently points at. Left alone across a source switch, a tab opened from the
@@ -15,14 +16,19 @@ import * as FlexLayout from "flexlayout-react";
  * Closing them is the honest resolution: the file is still one click away in
  * Folder View, now backed by the source the user actually chose.
  *
- * Unsaved work is confirmed *before* the switch (see Navigation), because by the
- * time this effect runs the setting has already changed and there is nothing to
- * cancel.
+ * The guard lives HERE rather than on the Navigation toggle because the setting
+ * has more than one way in: the General settings form writes `file_source`
+ * directly, which would otherwise bypass the confirmation entirely. This effect
+ * is the one place every path funnels through, so it also owns the revert when
+ * the user declines. FlexLayout's own close guard does not help either, since
+ * these deletions are applied to the model rather than raised through onAction.
  *
  * @param {object} flexModel
- * @param {string} fileSource  current value of the general `file_source` setting
+ * @param {string} fileSource            current `file_source` setting
+ * @param {() => boolean} anyDirty       whether any open editor has unsaved edits
+ * @param {(value: string) => void} setFileSource  used to undo a declined switch
  */
-export default function useFileSourceTabs(flexModel, fileSource) {
+export default function useFileSourceTabs(flexModel, fileSource, anyDirty, setFileSource) {
     const previousSource = useRef(fileSource);
 
     useEffect(() => {
@@ -30,9 +36,9 @@ export default function useFileSourceTabs(flexModel, fileSource) {
         if (from === fileSource) {
             return;
         }
-        previousSource.current = fileSource;
         // The config settles asynchronously on first load; that is not a switch.
         if (from === undefined || fileSource === undefined) {
+            previousSource.current = fileSource;
             return;
         }
 
@@ -42,8 +48,26 @@ export default function useFileSourceTabs(flexModel, fileSource) {
                 editorTabs.push(node.getId());
             }
         });
+
+        if (editorTabs.length && anyDirty && anyDirty()) {
+            const ok = window.confirm(
+                "Some open files have unsaved changes.\n\n" +
+                    "Switching how board files are accessed closes all editor tabs. " +
+                    "Unsaved changes will be lost.\n\nSwitch anyway?"
+            );
+            if (!ok) {
+                // Put the setting back. previousSource stays on `from`, so the
+                // run triggered by that revert sees no change and stops.
+                if (setFileSource) {
+                    setFileSource(from);
+                }
+                return;
+            }
+        }
+
+        previousSource.current = fileSource;
         for (const id of editorTabs) {
             flexModel.doAction(FlexLayout.Actions.deleteTab(id));
         }
-    }, [fileSource, flexModel]);
+    }, [fileSource, flexModel, anyDirty, setFileSource]);
 }

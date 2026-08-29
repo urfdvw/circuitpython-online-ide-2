@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { useFileSystem } from "../utilComponents/react-local-file-system";
 import useSerialFileSystem from "./useSerialFileSystem";
 
@@ -18,11 +19,17 @@ export const FILE_SOURCE = {
  * The inactive one is inert: useFileSystem with no directory picked does no
  * work, and useSerialFileSystem does nothing until the port is open.
  *
+ * Takes the whole appConfig so it can both read the setting and own the setter.
+ * Changing the source has consequences beyond the value itself (open editor tabs
+ * hold handles from the old source), so everything that changes it needs to go
+ * through one place; see useFileSourceTabs.
+ *
  * @param {object} serial        shared SerialCommunication instance
  * @param {boolean} serialReady  whether the port is open
- * @param {string} fileSource    FILE_SOURCE value from the general config
+ * @param {object} appConfig     from useConfig()
  */
-export default function useFileSource(serial, serialReady, fileSource) {
+export default function useFileSource(serial, serialReady, appConfig) {
+    const fileSource = appConfig?.config?.general?.file_source;
     const driveSource = useFileSystem();
     const serialSource = useSerialFileSystem(serial, serialReady);
 
@@ -42,6 +49,13 @@ export default function useFileSource(serial, serialReady, fileSource) {
     // where there is no cached tree to drop.
     const refresh = serialSource.refresh;
 
+    const setFileSource = useCallback(
+        (value) => {
+            appConfig?.setConfigField?.("general", "file_source", value);
+        },
+        [appConfig]
+    );
+
     // Not memoized: useFileSystem() returns a fresh object every render, so any
     // dependency array containing it would invalidate every time anyway. Callers
     // must not assume a stable identity here.
@@ -53,5 +67,6 @@ export default function useFileSource(serial, serialReady, fileSource) {
         fileSource,
         autoWatchFiles,
         refresh,
+        setFileSource,
     };
 }

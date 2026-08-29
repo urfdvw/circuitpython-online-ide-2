@@ -52,7 +52,7 @@ export default function Navigation() {
         boardInfo,
         serial,
         fileSource,
-        anyDirty,
+        setFileSource,
     } = useContext(AppContext);
     const { queryState, switchToBoard, switchToHost, busy, storageControlDialog } = useStorageControl(
         serial,
@@ -90,24 +90,13 @@ export default function Navigation() {
                 size="small"
                 value={usingSerial ? FILE_SOURCE.SERIAL : FILE_SOURCE.MASS_STORAGE}
                 onChange={(event, value) => {
-                    if (!value || value === (usingSerial ? FILE_SOURCE.SERIAL : FILE_SOURCE.MASS_STORAGE)) {
-                        return;
+                    // Switching closes open editor tabs, and useFileSourceTabs owns
+                    // both that and the unsaved-work confirmation: the same setting
+                    // can also be changed from the settings form, so the guard has
+                    // to live where every path meets rather than on this button.
+                    if (value) {
+                        setFileSource(value);
                     }
-                    // Open editors are closed by the switch, since a tab keeps the
-                    // handle it was opened with and would otherwise keep reading
-                    // and writing through the source you just left. Confirm here,
-                    // while the change can still be cancelled.
-                    if (anyDirty && anyDirty()) {
-                        const ok = window.confirm(
-                            "Some open files have unsaved changes.\n\n" +
-                                "Switching how board files are accessed closes all editor tabs. " +
-                                "Unsaved changes will be lost.\n\nSwitch anyway?"
-                        );
-                        if (!ok) {
-                            return;
-                        }
-                    }
-                    appConfig.setConfigField("general", "file_source", value);
                 }}
                 sx={{ marginBottom: "8px" }}
             >

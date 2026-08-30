@@ -43,7 +43,11 @@ function compareFolderContent(A, B) {
     return true;
 }
 
-export default function FolderView({ rootFolder, onFileClick, additionalElement }) {
+// `autoRefresh` polls the current folder once a second. That is free against a
+// mounted drive, but every other source (serial today, BLE/WiFi later) pays a
+// device round trip per poll that interrupts the running program, so those pass
+// autoRefresh={false} and get a visible refresh button instead.
+export default function FolderView({ rootFolder, onFileClick, additionalElement, autoRefresh = true, onRefresh }) {
     const [currentFolderHandle, setCurrentFolderHandle] = useState(rootFolder);
     const [entryOnDrag, setEntryOnDrag] = useState();
     const [path, setPath] = useState([rootFolder]);
@@ -59,11 +63,14 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement 
     }, [rootFolder]);
 
     useEffect(() => {
+        if (!autoRefresh) {
+            return undefined;
+        }
         const interval = setInterval(async () => {
             await showFolderView(currentFolderHandle);
         }, 1000);
         return () => clearInterval(interval);
-    }, [content, currentFolderHandle]);
+    }, [content, currentFolderHandle, autoRefresh]);
 
     async function showFolderView(folderHandle) {
         const healthy = await isEntryHealthy(folderHandle);
@@ -149,6 +156,21 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement 
                 },
             ],
         },
+        ...(autoRefresh
+            ? []
+            : [
+                  {
+                      text: "\u27F3",
+                      handler: async () => {
+                          setIsLoading(true);
+                          if (onRefresh) {
+                              onRefresh();
+                          }
+                          await showFolderView(currentFolderHandle);
+                          setIsLoading(false);
+                      },
+                  },
+              ]),
         ...additionalElement,
     ];
 

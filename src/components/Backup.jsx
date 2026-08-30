@@ -5,7 +5,7 @@ import { Typography, Box, Button } from "@mui/material";
 import TextDiffViewer from "../utilComponents/TextDiffViewer";
 import { selectTabById } from "../layout/layoutUtils";
 
-import { backupFolder, compareFolders } from "../utilComponents/react-local-file-system";
+import { backupFolder, compareFolders, isSameEntrySafe } from "../utilComponents/react-local-file-system";
 
 export default function Backup() {
     const {
@@ -22,6 +22,9 @@ export default function Backup() {
         rootDirHandle,
         helpTabSelection,
         configTabSelection,
+        autoWatchFiles,
+        batchFileOps,
+        fileSource,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
     const [lastRecoverTime, setLastRecoverTime] = useState(null);
@@ -37,17 +40,22 @@ export default function Backup() {
         if (!(backupDirHandle && rootDirHandle)) {
             return;
         }
-        const diff = await compareFolders(rootDirHandle, backupDirHandle);
+        // compareFolders reads every file in both trees. Over serial that is a
+        // round trip each; batching keeps it to one interruption of the board.
+        const diff = await batchFileOps(
+            () => compareFolders(rootDirHandle, backupDirHandle),
+            { label: "compared board with backup folder" }
+        );
         setCodeDiff(diff);
 
         const now = new Date().toLocaleTimeString();
         setLastRefreshTime(now);
         console.log("Last refresh at: " + now);
-    }, [backupDirHandle, rootDirHandle]);
+    }, [backupDirHandle, rootDirHandle, batchFileOps]);
 
     const backup = useCallback(
         async (toPC) => {
-            if (await backupDirHandle.isSameEntry(rootDirHandle)) {
+            if (await isSameEntrySafe(backupDirHandle, rootDirHandle)) {
                 console.log(backupDirHandle.name);
                 console.log(rootDirHandle.name);
                 console.error("Cannot backup to the folder itself.");
@@ -58,20 +66,34 @@ export default function Backup() {
                 return;
             }
             const now = new Date().toLocaleTimeString();
+            const clean = appConfig.ready && appConfig.config.backup.clean;
+            // Copying a whole board is one round trip per file over serial, so
+            // the copy runs as a single session rather than interrupting the
+            // board once per file.
             if (toPC) {
-                await backupFolder(rootDirHandle, backupDirHandle, appConfig.ready && appConfig.config.backup.clean);
+                await batchFileOps(() => backupFolder(rootDirHandle, backupDirHandle, clean), {
+                    label: "copied board to the backup folder",
+                });
                 setLastBackupTime(now);
                 console.log("Last backup at: " + now);
             } else {
-                await backupFolder(backupDirHandle, rootDirHandle, appConfig.ready && appConfig.config.backup.clean);
+                await batchFileOps(() => backupFolder(backupDirHandle, rootDirHandle, clean), {
+                    label: "restored board from the backup folder",
+                });
                 setLastRecoverTime(now);
                 console.log("Last recover at: " + now);
             }
         },
-        [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean]
+        [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean, batchFileOps]
     );
 
+    // Scheduled backup copies every file on the board. Over serial that is a raw
+    // REPL read per file, so the schedules are limited to the mass-storage source.
+    // The manual buttons still work in either mode, because the user asked for it.
     useEffect(() => {
+        if (!autoWatchFiles) {
+            return undefined;
+        }
         const interval = setInterval(async () => {
             if (!(appConfig.ready && appConfig.config.backup.enable_backup_schedule)) {
                 return;
@@ -81,12 +103,18 @@ export default function Backup() {
         return () => clearInterval(interval);
     }, [
         backup,
+        autoWatchFiles,
         appConfig.ready,
         appConfig.config.backup.enable_backup_schedule,
         appConfig.config.backup.backup_period,
     ]);
 
+    // Same reasoning: refresh() runs compareFolders, which reads every file in
+    // both trees to diff them by content.
     useEffect(() => {
+        if (!autoWatchFiles) {
+            return undefined;
+        }
         const interval = setInterval(async () => {
             if (!(appConfig.ready && appConfig.config.backup.enable_refresh_schedule)) {
                 return;
@@ -96,6 +124,7 @@ export default function Backup() {
         return () => clearInterval(interval);
     }, [
         refresh,
+        autoWatchFiles,
         appConfig.ready,
         appConfig.config.backup.enable_refresh_schedule,
         appConfig.config.backup.refresh_period,
@@ -175,6 +204,11 @@ export default function Backup() {
 
     return (
         <TabTemplate title="Backup" menuStructure={menuStructure}>
+            {fileSource === "usb_serial" && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", p: 1 }}>
+                    Board files are loaded over USB serial, so this reads and writes them through the REPL. It is much slower than the CIRCUITPY drive and briefly interrupts the running program. Switch “Board file access” in the Navigation tab if you would rather use the drive.
+                </Typography>
+            )}
             <Box sx={{ width: "100%", height: "100%", padding: "0px", margin: "0px" }}>
                 <Typography gutterBottom>
                     Microcontroller Folder:{" "}

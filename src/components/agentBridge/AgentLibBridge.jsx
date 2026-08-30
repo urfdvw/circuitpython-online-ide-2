@@ -15,7 +15,7 @@ import { versionToString } from "../../utilFunctions/version";
 import { forEachCatalogEntry } from "../../utilFunctions/installedLibUtils";
 
 export default function AgentLibBridge() {
-    const { appConfig, boardInfo, rootDirHandle } = useContext(AppContext);
+    const { appConfig, boardInfo, rootDirHandle, batchFileOps } = useContext(AppContext);
 
     const cpyMajor = boardInfo?.cpy_version?.major ?? null;
     const useCommunity = Boolean(appConfig?.config?.lib_management?.use_community_bundle);
@@ -29,7 +29,7 @@ export default function AgentLibBridge() {
         refreshBundleState,
     } = useBundles({ cpyMajor, useCommunity });
 
-    const { getInstalled } = useInstalledLibs(rootDirHandle);
+    const { getInstalled } = useInstalledLibs(rootDirHandle, batchFileOps);
 
     const installer = useLibInstaller({
         bundles,
@@ -39,6 +39,7 @@ export default function AgentLibBridge() {
         cpyMajor,
         rootDirHandle,
         getInstalled,
+        batchFileOps,
         // Silent, non-UI guard + notifier for the agent path.
         requireBoard: () => cpyMajor != null,
         notify: () => {},

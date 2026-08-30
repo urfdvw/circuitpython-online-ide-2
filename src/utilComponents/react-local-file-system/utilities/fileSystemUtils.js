@@ -123,7 +123,18 @@ export async function getFromPathIfExists(rootDirHandle, path) {
 }
 // file level ====================================
 
-/** Write `text` into an existing file handle. Failures show a confirm() dialog instead of throwing. */
+/**
+ * Write `text` into an existing file handle.
+ *
+ * Failures show a confirm() dialog instead of throwing, but they are also
+ * REPORTED: returns true only when the bytes actually reached the file. Callers
+ * that track saved state must check this. Treating a failure as a save clears
+ * the dirty marker and the close warning while the file on disk is unchanged,
+ * which loses the user's work silently. Over serial that is not an edge case:
+ * every save fails with errno 30 while CIRCUITPY is mounted on the host.
+ *
+ * @returns {Promise<boolean>} whether the write succeeded
+ */
 export async function writeFileText(fileHandle, text) {
     try {
         // Create a FileSystemWritableFileStream to write to.
@@ -134,8 +145,10 @@ export async function writeFileText(fileHandle, text) {
         await writable.close();
         console.log("Successfully wrote to", fileHandle.name);
         await sleep(200); // chill down
+        return true;
     } catch (error) {
         confirm("Write to file failed. " + error.message);
+        return false;
     }
 }
 
@@ -152,6 +165,25 @@ export async function getFileText(fileHandle) {
 
 export function isFolder(entryHandle) {
     return entryHandle.kind === "directory";
+}
+
+/**
+ * isSameEntry() that tolerates handles from different sources.
+ *
+ * A real FileSystemHandle's isSameEntry() is WebIDL-typed, so handing it the
+ * duck-typed handle the serial file source produces rejects with a TypeError.
+ * That case is also trivially answerable: a file on the board and a folder on
+ * this computer are never the same entry.
+ */
+export async function isSameEntrySafe(a, b) {
+    if (!a || !b) {
+        return false;
+    }
+    try {
+        return await a.isSameEntry(b);
+    } catch {
+        return false;
+    }
 }
 
 /** Whether the handle is still readable (detects revoked/detached handles, e.g. after unplugging). */

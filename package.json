@@ -9,6 +9,7 @@
     "build:docs": "vite build",
     "build:portable": "vite build --mode portable",
     "lint": "eslint .",
+    "test": "node test/run.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

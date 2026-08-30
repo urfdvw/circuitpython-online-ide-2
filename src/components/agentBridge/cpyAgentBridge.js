@@ -46,6 +46,8 @@ import WIDGET_SCHEMA from "../Widgets/WidgetSchema.json";
 export const store = {
     // file system
     rootDirHandle: null,
+    fileSource: null,
+    refreshFileSource: null,
     rootFolderReady: false,
     // serial — REPL channel
     serial: null,
@@ -79,12 +81,44 @@ const WINDOW_KEY = "__cpyAgent";
 
 // ---- helpers ---------------------------------------------------------------
 
+/**
+ * Describe where board files come from right now, and what is missing.
+ *
+ * Both status() and the "not ready" error read from here, so the agent can never
+ * be told to open a folder picker that does not exist in serial mode. Getting
+ * this wrong is worse than unhelpful: the agent relays the instruction to the
+ * user, who then cannot follow it.
+ */
+function describeFileAccess() {
+    const serial = store.fileSource === "usb_serial";
+    const ready = Boolean(store.rootFolderReady);
+    return {
+        source: store.fileSource || "usb_mass_storage",
+        ready,
+        // What the user has to do, phrased so it can be relayed verbatim.
+        needs: ready
+            ? null
+            : serial
+              ? "Board files are set to load over USB serial, so there is no folder to open. The serial port needs to be connected in the IDE's Navigation tab."
+              : "The CIRCUITPY drive is not open. It has to be opened in the IDE's Folder View; the folder picker needs a real user gesture, so the agent cannot do it.",
+        notes: serial
+            ? [
+                  "Files are read and written over the REPL, not through a mounted drive.",
+                  "Each file operation briefly interrupts the program running on the board; saving restarts it afterwards.",
+                  "Listings come from a cache. Your own changes show up automatically, but call refreshFiles() to see files the board itself wrote.",
+              ]
+            : [
+                  "Files are read and written through the CIRCUITPY drive mounted on the user's computer.",
+                  "The listing is live; no refresh is needed.",
+              ],
+    };
+}
+
 function getRoot() {
     const root = store.rootDirHandle;
     if (!root) {
-        throw new Error(
-            "Folder is not opened. The user must open it manually first (folder picker needs a user gesture)."
-        );
+        const access = describeFileAccess();
+        throw new Error(`Board files are not available. ${access.needs} (file source: ${access.source})`);
     }
     return root;
 }
@@ -175,15 +209,18 @@ function buildApi() {
 
         async help() {
             return {
-                note: "All methods are async — await them. File methods operate on the opened device folder.",
+                note:
+                    "All methods are async — await them. File methods operate on the board's files; " +
+                    "call status() and read fileAccess to see which source backs them and what it implies.",
                 limitations: [
-                    "Opening a folder and connecting a serial port require a real user gesture, so the agent cannot trigger them. The user must open the folder and connect serial manually first.",
+                    "Opening a folder and connecting a serial port require a real user gesture, so the agent cannot trigger them. Which one is needed depends on the file source: check status().fileAccess and relay its `needs` message to the user.",
                     "Turning the bridge ON also requires a real user gesture (a native browser confirm). isBridgeOn() reports the state; ask the user to flip the switch when it is off.",
                 ],
                 meta: {
                     "isBridgeOn()":
                         "Whether the AI Agent Bridge switch is on -> { on, note }. Works even while it is off; every other method throws until it is on.",
-                    "status()": "What is ready (folder, serial, board, libraries, camera).",
+                    "status()":
+                        "What is ready (folder, serial, board, libraries, camera), plus fileSource: which source backs the file methods.",
                 },
                 files: {
                     'listFiles(path="")': "Recursively list entries -> [{ path, kind }].",
@@ -195,6 +232,8 @@ function buildApi() {
                     "renameEntry(path, newName)": "Rename an entry.",
                     "moveEntry(path, targetDirPath)": "Move an entry into another folder.",
                     "exists(path)": "Whether a path exists -> boolean.",
+                    "refreshFiles()":
+                        "Re-read the board's file listing. Needed only when fileSource is 'usb_serial', where listings come from a cache: files the board itself wrote stay invisible until you call this.",
                 },
                 replSerial: {
                     "getSerialLog()": "Full REPL serial history -> string.",
@@ -259,10 +298,31 @@ function buildApi() {
                 rootFolderReady: store.rootFolderReady,
                 serialReady: store.serialReady,
                 dataSerialReady: store.dataSerialReady,
+                // Where board files come from, and what is missing if they are not
+                // ready. Read fileAccess.needs rather than inferring advice from
+                // rootFolderReady: in serial mode there is no folder to open, so
+                // the usual "open your CIRCUITPY drive" answer is wrong.
+                fileSource: store.fileSource,
+                fileAccess: describeFileAccess(),
                 boardInfo: store.boardInfo,
                 librariesAvailable: Boolean(store.lib),
                 cameraReady: Boolean(store.camera?.isReady()),
             };
+        },
+
+        /**
+         * Re-read the board's file listing.
+         *
+         * Only meaningful for the serial source, which serves listings from a
+         * cache that is never invalidated on its own: a file the board itself
+         * wrote (a data logger, say) stays invisible until this is called. On the
+         * mass-storage source the listing is already live and this is a no-op.
+         */
+        async refreshFiles() {
+            if (typeof store.refreshFileSource === "function") {
+                store.refreshFileSource();
+            }
+            return { ok: true, fileSource: store.fileSource };
         },
 
         // Full Plot/Animation guide so the agent can author plotting code from code.

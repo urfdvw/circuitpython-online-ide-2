@@ -27,9 +27,10 @@ import ProductPage from "./components/ProductPage";
 import CameraPage from "./components/CameraPage";
 import DocsSite from "./components/DocsSite";
 // file system
-import { useFileSystem } from "./utilComponents/react-local-file-system";
+import useFileSource from "./hooks/useFileSource";
 import useEditorTabs from "./hooks/useEditorTabs";
 import useUnsavedGuards from "./hooks/useUnsavedGuards";
+import useFileSourceTabs from "./hooks/useFileSourceTabs";
 // serial
 import { useSerial, useDataSerial, useSerialCommands } from "./hooks/useSerial";
 // Board info
@@ -87,14 +88,6 @@ function Ide() {
     useEffect(() => {
         console.log("[showDevFeatures, showBetaFeatures]", [showDevFeatures, showBetaFeatures]);
     }, [showDevFeatures, showBetaFeatures]);
-    // file system
-    // main directory for folderView
-    const {
-        openDirectory,
-        directoryReady: rootFolderDirectoryReady,
-        statusText: rootFolderStatusText,
-        rootDirHandle,
-    } = useFileSystem();
     const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
     // serial
     const { connectToSerialPort, sendDataToSerialPort, addToSerialOutput, serialOutput, serialReady, serial } =
@@ -104,6 +97,22 @@ function Ide() {
         serialOutput,
         serialReady
     );
+    // file system
+    // Which source backs rootDirHandle: the mounted CIRCUITPY drive, or the board
+    // over serial. Both are real file sources; the setting just picks one.
+    const {
+        openDirectory,
+        directoryReady: rootFolderDirectoryReady,
+        statusText: rootFolderStatusText,
+        rootDirHandle,
+        fileSource,
+        fileSourceName,
+        fileSourceNeeds,
+        autoWatchFiles,
+        refresh: refreshFileSource,
+        batchFileOps,
+        setFileSource,
+    } = useFileSource(serial, serialReady, appConfig);
     // data serial (Connected Variables channel, usb_cdc.data)
     const {
         connectToDataSerialPort,
@@ -130,7 +139,12 @@ function Ide() {
     const [instrumentationOutdated, setInstrumentationOutdated] = useState(true);
 
     // unsaved-changes guards (tab close + page close) and the shared dirty-file registry
-    const { setFileDirty, clearFileDirty, handleLayoutAction } = useUnsavedGuards(flexModel);
+    const { setFileDirty, clearFileDirty, handleLayoutAction, anyDirty } = useUnsavedGuards(flexModel);
+
+    // Editor tabs hold the handle they were opened with, so they cannot survive a
+    // change of file source. This also owns the unsaved-work confirmation, since
+    // the setting can be changed from Navigation or from the settings form.
+    useFileSourceTabs(flexModel, fileSource, anyDirty, setFileSource);
 
     // auto-open the Plot tab when the board emits a plot/animation command
     usePlotAutoOpen(serialOutput, flexModel);
@@ -175,6 +189,13 @@ function Ide() {
                 rootFolderDirectoryReady,
                 rootDirHandle,
                 rootFolderStatusText,
+                fileSource,
+                fileSourceName,
+                fileSourceNeeds,
+                setFileSource,
+                autoWatchFiles,
+                refreshFileSource,
+                batchFileOps,
                 onFileClick,
                 fileLookUp,
                 // shared dirty-file registry (per editor, keyed by fileKey)

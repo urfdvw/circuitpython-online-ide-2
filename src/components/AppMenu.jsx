@@ -6,8 +6,15 @@ import AppContext from "../AppContext";
 import { useContext } from "react";
 
 export default function AppMenu() {
-    const { flexModel, helpTabSelection, openDirectory, connectToSerialPort, connectToDataSerialPort, appConfig } =
-        useContext(AppContext);
+    const {
+        flexModel,
+        helpTabSelection,
+        openDirectory,
+        connectToSerialPort,
+        connectToDataSerialPort,
+        appConfig,
+        fileSourceName,
+    } = useContext(AppContext);
     const DARK_PURPLE = deepPurple[500];
     const DARK_GREY = grey[900];
 
@@ -44,7 +51,7 @@ export default function AppMenu() {
             color: DARK_GREY,
             options: [
                 {
-                    text: "CircuitPy Drive",
+                    text: fileSourceName,
                     handler: () => {
                         openDirectory();
                     },

@@ -41,6 +41,7 @@ export function useLibInstaller({
     // progress events; both default to UI-friendly no-ops.
     interactive = true,
     onEvent = () => {},
+    batchFileOps,
 }) {
     const [installationLog, setInstallationLog] = useState("");
     const [libChangeInfo, setLibChangeInfo] = useState("");
@@ -126,6 +127,12 @@ export function useLibInstaller({
     }
 
     async function batchUninstallLib(pendingLibNames) {
+        return batchFileOps
+            ? await batchFileOps(() => uninstallLibsInSession(pendingLibNames), { label: "uninstalled libraries" })
+            : await uninstallLibsInSession(pendingLibNames);
+    }
+
+    async function uninstallLibsInSession(pendingLibNames) {
         setLibChangeInfo("Uninstalling libs");
         const summary = { ok: true, version: cpyMajor, uninstalled: [], failed: [] };
 
@@ -181,7 +188,16 @@ export function useLibInstaller({
         setLibChangeInfo("");
     }
 
+    // One session for the whole install: analyzeMcu() scans every installed lib
+    // and each installLib() copies a whole folder, so unbatched this is dozens of
+    // separate interruptions of the running program.
     async function batchInstallLib(pendingLibs) {
+        return batchFileOps
+            ? await batchFileOps(() => installLibsInSession(pendingLibs), { label: "installed libraries" })
+            : await installLibsInSession(pendingLibs);
+    }
+
+    async function installLibsInSession(pendingLibs) {
         setLibChangeInfo("Installing Libs");
         const summary = { ok: true, version: cpyMajor, installed: [], upgraded: [], skipped: [], failed: [] };
         const { libs: installedLibs, reason } = await analyzeMcu();
@@ -318,7 +334,13 @@ export function useLibInstaller({
             logLine("clean up before installation");
             await clearInstalledLibs();
         }
-        const scannedLibs = await collectPythonTopLevelImports(rootDirHandle);
+        // Reads every .py file on the board to extract imports; one round trip
+        // each over serial, so scan inside a single session.
+        const scannedLibs = batchFileOps
+            ? await batchFileOps(() => collectPythonTopLevelImports(rootDirHandle), {
+                  label: "scanned project imports",
+              })
+            : await collectPythonTopLevelImports(rootDirHandle);
         const summary = await batchInstallLib(scannedLibs);
         notify(summary.ok ? "Auto install finished" : summary.error || "Auto install failed");
         logLine(summary.ok ? "auto install finished" : `auto install failed: ${summary.error}`);

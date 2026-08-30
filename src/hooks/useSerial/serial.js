@@ -293,6 +293,22 @@ export default class SerialCommunication {
     }
 
     /**
+     * Broadcast an IDE-generated line to every listener.
+     *
+     * Deliberately bypasses the exclusive tap: this is the IDE talking, not
+     * device bytes, so it belongs in the console even while a transaction holds
+     * the port. Going through readerCallbacks (rather than a channel's
+     * addToOutput) is what keeps the console and the agent's buffer in step,
+     * since both are fed from here.
+     */
+    announce(text) {
+        const line = `\n${text}\n`;
+        for (const id in this.readerCallbacks) {
+            this.readerCallbacks[id](line);
+        }
+    }
+
+    /**
      * Core of readUntil/readExactly.
      *
      * The idle timeout restarts on every byte received, so a board that is slow

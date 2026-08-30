@@ -16,6 +16,7 @@
 
 import * as ops from "./deviceOps";
 import { joinPath } from "./deviceOps";
+import { displayPath } from "./runRawRepl";
 
 /** Coerce whatever createWritable().write() was handed into bytes. */
 async function toBytes(data) {
@@ -56,7 +57,7 @@ export function makeSerialFileHandle(ctx, path, size = 0) {
         },
 
         async getFile() {
-            const bytes = await ctx.run((session) => ops.readFile(session, path));
+            const bytes = await ctx.run((session) => ops.readFile(session, path), { label: `read ${displayPath(path)}` });
             // The device mtime is unreliable on small builds (pinned to 2000-01-01),
             // so we report now rather than something misleading. Nothing in the app
             // compares mtimes; see the roadmap note.
@@ -84,7 +85,10 @@ export function makeSerialFileHandle(ctx, path, size = 0) {
                     // restart: saving should leave the board running the new code,
                     // the way the drive workflow's autoreload does. Serial writes
                     // do not trigger autoreload, so we soft-reboot explicitly.
-                    await ctx.run((session) => ops.writeFile(session, path, joined), { restart: true });
+                    await ctx.run((session) => ops.writeFile(session, path, joined), {
+                        restart: true,
+                        label: `wrote ${displayPath(path)}`,
+                    });
                     ctx.cache.noteFile(path, joined.length);
                 },
                 async abort() {
@@ -153,7 +157,10 @@ export function makeSerialDirectoryHandle(ctx, path) {
             }
             // touch() is append-mode, so this cannot clobber a file the board
             // already had but the cache had not seen; it returns the real size.
-            const size = await ctx.run((session) => ops.touch(session, childPath), { restart: true });
+            const size = await ctx.run((session) => ops.touch(session, childPath), {
+                restart: true,
+                label: `created ${displayPath(childPath)}`,
+            });
             ctx.cache.noteFile(childPath, size);
             return makeSerialFileHandle(ctx, childPath, size);
         },
@@ -170,7 +177,10 @@ export function makeSerialDirectoryHandle(ctx, path) {
             if (!opts.create) {
                 throw notFound(childPath);
             }
-            await ctx.run((session) => ops.mkdirp(session, childPath), { restart: true });
+            await ctx.run((session) => ops.mkdirp(session, childPath), {
+                restart: true,
+                label: `created folder ${displayPath(childPath)}`,
+            });
             ctx.cache.noteDir(childPath);
             return makeSerialDirectoryHandle(ctx, childPath);
         },
@@ -187,7 +197,10 @@ export function makeSerialDirectoryHandle(ctx, path) {
                     throw new DOMException(`${childPath} is not empty`, "InvalidModificationError");
                 }
             }
-            await ctx.run((session) => ops.remove(session, childPath), { restart: true });
+            await ctx.run((session) => ops.remove(session, childPath), {
+                restart: true,
+                label: `deleted ${displayPath(childPath)}`,
+            });
             ctx.cache.noteRemoved(childPath);
         },
 

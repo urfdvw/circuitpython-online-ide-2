@@ -31,7 +31,7 @@ export default function useSerialFileSystem(serial, serialReady) {
     // One cache per connection. Recreated when the port reopens so a swapped
     // board never shows the previous board's tree.
     const cache = useMemo(() => {
-        const created = createFsCache(() => run((session) => ops.walk(session)));
+        const created = createFsCache(() => run((session) => ops.walk(session), { label: "listed files" }));
         cacheRef.current = created;
         return created;
         // eslint-disable-next-line react-hooks/exhaustive-deps

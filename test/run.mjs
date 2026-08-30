@@ -60,8 +60,20 @@ for (const file of files) {
     const bundle = join(outDir, `${name}.mjs`);
     const build = spawnSync(
         "npx",
-        ["esbuild", join(HERE, file), "--bundle", "--platform=node", "--format=esm", `--outfile=${bundle}`,
-         "--log-level=error"],
+        [
+            "esbuild",
+            join(HERE, file),
+            "--bundle",
+            "--platform=node",
+            "--format=esm",
+            `--outfile=${bundle}`,
+            "--log-level=error",
+            // vite.config.js serves .md and .py as raw strings (assetsInclude), so
+            // esbuild needs the same treatment for any test that reaches a module
+            // importing them.
+            "--loader:.md=text",
+            "--loader:.py=text",
+        ],
         { encoding: "utf8" }
     );
     if (build.status !== 0) {

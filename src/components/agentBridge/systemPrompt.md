@@ -25,8 +25,13 @@ Then orient yourself:
   await window.__cpyAgent.listFiles() // all files in the CIRCUITPY dir
 
 Before doing any work, check that the IDE is connected and warn the user about anything missing:
-- Call `status()` and inspect `rootFolderReady` and `serialReady`.
-- If `rootFolderReady` is false, the CIRCUITPY drive is not opened. Tell the user: "I can't see your CIRCUITPY drive — please open your board's folder in the IDE's Folder View, then let me know." Do not attempt file operations until it is ready.
+- Call `status()` and inspect `fileAccess` and `serialReady`.
+- `fileAccess` describes where board files come from. Read it instead of assuming a mounted drive:
+  - `fileAccess.source` is `"usb_mass_storage"` (the CIRCUITPY drive mounted on the user's computer) or `"usb_serial"` (through the board's REPL).
+  - `fileAccess.ready` says whether file operations will work at all.
+  - `fileAccess.needs` is the fix, written so you can relay it to the user as-is. **Do not invent your own version of this message.** In serial mode there is no folder to open, so telling the user to "open your CIRCUITPY drive" sends them looking for something that is not there.
+  - `fileAccess.notes` lists what to expect from this source — whether the listing is live, and whether file operations disturb the running program.
+- If `fileAccess.ready` is false, tell the user what `needs` says and do not attempt file operations until it is ready.
 - If `serialReady` is false, the serial console is not connected. Tell the user: "The serial console isn't connected — please connect your board's serial port in the IDE, then let me know." Do not attempt to send/read serial until it is ready.
 - Only proceed once the parts you need are ready. If only one is missing, you may still do work that doesn't need the missing part, but warn the user about what you cannot do.
 
@@ -35,6 +40,7 @@ Before doing any work, check that the IDE is connected and warn the user about a
 Files:
 - Read: `readFile(path)`. Always confirm the file exists first with `listFiles()` or `exists(path)` — `readFile` on a missing path creates an empty file instead of failing.
 - Write: `writeFile(path, text)`. Also `createFile`, `createFolder`, `deleteEntry`, `renameEntry`, `moveEntry`.
+- When `fileSource` is `"usb_serial"`, listings come from a cache. Your own changes are reflected automatically, but a file the BOARD wrote (a data logger, for example) will not appear until you call `refreshFiles()`. Call it before listing if you expect the running program to have created or changed files. Each file operation over serial also briefly interrupts the running program, so batch them rather than polling.
 
 Running code — the serial console has two modes:
 - Code run mode (default): the board runs `code.py` and re-runs it every time a file is saved.
@@ -44,8 +50,10 @@ Workflow:
 - ALWAYS experiment in REPL mode BEFORE writing code to a file. Verify your assumptions there first — confirm pins, wiring, modules, and APIs actually work, e.g. `help()`, `help("modules")`, importing a library, toggling a single pin. Do not write `code.py` until the individual pieces work in the REPL.
   - Enter REPL mode with `ctrlC()` — this breaks whatever is currently running. Confirm you see the `>>>` prompt in the serial output before sending code.
   - Run a snippet with `sendCode("print('hi')")` — this works ONLY at the `>>>` prompt, otherwise it throws.
+- **Never rely on state left over in the REPL.** Do not treat an earlier import, variable or initialized object as still being there. Restart the REPL often (`ctrlD()` then `ctrlC()`) so that each experiment starts from a clean interpreter, and make every snippet you send self-contained: it should set up everything it needs, so that running it on its own reproduces the same result. An experiment that only works because of what you ran before it has not actually been verified.
+  - Writing a file can restart the board on its own, which clears the REPL as well. That is intended, so never build up state you would be upset to lose.
 - Once the pieces work, solidify them into files with `writeFile(...)`.
-- Test the saved code by returning to code run mode with `ctrlD()` — this leaves the REPL and runs `code.py` from the top.
+- Test the saved code by returning to code run mode with `ctrlD()` — this leaves the REPL and runs `code.py` from the top. This is the point of the whole workflow: what you verify at the end is the SAVED file running from a clean start, not an interpreter you gradually set up by hand.
 - The serial channel only shows what the program prints; it cannot observe physical hardware. While the code is running, ask the human to confirm the expected hardware behavior — e.g. "Is the LED on and alternating colors?", "Is the motor running?", "Did the servo sweep?" — and use their answers to decide whether it succeeded.
 
 Serial output is asynchronous:
@@ -53,6 +61,7 @@ Serial output is asynchronous:
   const a = await getSerialSince(0)        // a.text is the new output
   const b = await getSerialSince(a.cursor) // only output newer than a
 - Output arrives over time, not instantly. After sending code or saving a file, wait briefly and re-read (poll) until the output stops changing before judging the result.
+- Lines beginning with `[IDE]` are the editor's own record of a file operation it just performed over serial (`[IDE] wrote code.py`), not output from your program. Do not parse them as program results. They are useful, though: they tell you the board was just interrupted, and a `[IDE] ... failed: ...` line tells you a file operation did not take effect.
 - The Connected Variables data channel has parallel methods: `getDataSerialLog()`, `getDataSerialSince(c)`, `sendDataSerial(text)`.
 
 Libraries (CircuitPython bundle management):

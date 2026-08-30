@@ -38,7 +38,10 @@ export default function useStorageControl(serial, serialReady) {
     const [busy, setBusy] = useState(false);
 
     // Shared with the file system, so the port guard cannot drift between the two.
-    const run = useCallback((fn) => runRawRepl(serial, fn), [serial]);
+    // `opts.label` is announced in the serial console: these actions can make the
+    // CIRCUITPY drive disappear from the computer, so leaving a record of what
+    // happened is worth the line.
+    const run = useCallback((fn, opts) => runRawRepl(serial, fn, opts), [serial]);
 
     const needsSerial = useCallback(() => {
         if (serialReady) {
@@ -78,7 +81,9 @@ export default function useStorageControl(serial, serialReady) {
     const queryState = useCallback(async () => {
         if (needsSerial()) return;
         await withBusy("Checking filesystem state", async () => {
-            const info = await run((session) => queryStorageState(session));
+            const info = await run((session) => queryStorageState(session), {
+                label: "checked filesystem state",
+            });
             setDialog({ title: info.summary, body: info.detail });
         });
     }, [needsSerial, withBusy, run]);
@@ -95,7 +100,9 @@ export default function useStorageControl(serial, serialReady) {
         if (needsSerial()) return;
         await withBusy("Giving write access to CircuitPython", async () => {
             try {
-                await run((session) => giveWriteAccessToBoard(session));
+                await run((session) => giveWriteAccessToBoard(session), {
+                    label: "gave write access to CircuitPython",
+                });
                 setDialog({
                     title: "CircuitPython now has write access",
                     body:
@@ -108,7 +115,9 @@ export default function useStorageControl(serial, serialReady) {
                     throw error;
                 }
                 // Ask the board whether it even has the override before offering it.
-                const info = await run((session) => queryStorageState(session));
+                const info = await run((session) => queryStorageState(session), {
+                    label: "checked filesystem state",
+                });
                 setDialog({
                     title: "Eject the CIRCUITPY drive first",
                     body: error.message,
@@ -127,7 +136,9 @@ export default function useStorageControl(serial, serialReady) {
                                       confirmLabel: "I understand, take it anyway",
                                       onConfirm: () =>
                                           withBusy("Taking write access", async () => {
-                                              await run((session) => forceWriteAccessToBoard(session));
+                                              await run((session) => forceWriteAccessToBoard(session), {
+                                                  label: "took write access (no eject)",
+                                              });
                                               setDialog({
                                                   title: "CircuitPython now has write access",
                                                   body:
@@ -147,7 +158,9 @@ export default function useStorageControl(serial, serialReady) {
     const switchToHost = useCallback(async () => {
         if (needsSerial()) return;
         await withBusy("Returning write access", async () => {
-            await run((session) => giveWriteAccessToHost(session));
+            await run((session) => giveWriteAccessToHost(session), {
+                label: "returned write access to this computer",
+            });
             setDialog({
                 title: "Write access returned to this computer",
                 body:

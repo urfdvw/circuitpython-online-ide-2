@@ -143,27 +143,28 @@ export default class RawReplSession {
     }
 
     /**
-     * Leave raw REPL.
+     * Leave raw REPL, back to the friendly `>>>` prompt.
      *
-     * With `restart`, send Ctrl-D so the board soft-reboots and runs code.py
-     * again. Entering raw REPL always Ctrl-C's whatever was running, and serial
-     * writes do not trigger CircuitPython's autoreload, so without this a save
-     * would leave the board parked at `>>>` running nothing: the opposite of the
-     * drive workflow, where saving reloads the program.
+     * Restarting the board is deliberately NOT done here. Ctrl-D means different
+     * things in the two REPLs:
+     *
+     *   - at `>>>` it soft-reboots and runs code.py, which is what a save wants;
+     *   - at raw REPL's `>` it soft-reboots and lands back in raw REPL. That is
+     *     the trick pyboard.py's enter_raw_repl(soft_reset=True) relies on, and
+     *     sending it here left the board sitting at `>` running nothing.
+     *
+     * So the caller sends Ctrl-D after this returns and after the transaction is
+     * released, which also lets the reboot banner and the program's own output
+     * reach the console instead of being swallowed by the exclusive tap.
      */
-    async exitRawRepl(restart = false) {
+    async exitRawRepl() {
         if (!this.inRawRepl) {
             return;
         }
         this.inRawRepl = false;
         try {
-            if (restart) {
-                // Ctrl-D from inside raw REPL soft-reboots directly.
-                await this.io.write(CTRL_D);
-            } else {
-                await this.io.write("\r" + CTRL_B);
-                await this.io.readUntil(NORMAL_PROMPT, 2000);
-            }
+            await this.io.write("\r" + CTRL_B);
+            await this.io.readUntil(NORMAL_PROMPT, 2000);
         } catch {
             // Leaving raw mode is best-effort. If the board went away mid-session,
             // failing here would mask the real error from the caller's operation.
@@ -175,7 +176,6 @@ export default class RawReplSession {
      *
      * @param {(session: RawReplSession) => Promise<T>} fn
      * @param {object} [opts]
-     * @param {boolean} [opts.restart]  soft-reboot on the way out
      * @param {number} [opts.timeout]
      * @returns {Promise<T>}
      * @template T
@@ -185,7 +185,7 @@ export default class RawReplSession {
         try {
             return await fn(this);
         } finally {
-            await this.exitRawRepl(Boolean(opts.restart));
+            await this.exitRawRepl();
         }
     }
 }

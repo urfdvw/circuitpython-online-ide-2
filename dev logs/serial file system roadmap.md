@@ -130,6 +130,31 @@ changing the state. So the query now reports the one fact it can stand behind,
 `storage.getmount("/").readonly`, and offers both remedies without guessing.
 `usbConnected` is still returned, but only as a diagnostic.
 
+## Ctrl-D means two different things
+
+At the friendly `>>>` prompt it soft-reboots and runs `code.py`. At raw REPL's
+`>` prompt it soft-reboots and lands **back in raw REPL** — that is precisely
+the trick `pyboard.py`'s `enter_raw_repl(soft_reset=True)` relies on.
+
+Sending it from inside raw REPL to "restart after a save" therefore left the
+board parked at `>` running nothing, with `OK` / `soft reboot` / the raw-REPL
+banner leaking into the console because the transaction had been released before
+those bytes arrived. On a real board it looked like:
+
+```
+>>>
+[IDE] wrote code.py
+OK
+soft reboot
+raw REPL; CTRL-B to exit
+>
+```
+
+So: leave raw REPL with Ctrl-B first, release the transaction, then send Ctrl-D
+through the ordinary buffered write. Releasing first is not incidental — it is
+what lets the reboot banner and the program's own output reach the console
+instead of being swallowed by the exclusive tap.
+
 ## Failed writes must not look like saves
 
 `writeFileText()` swallows errors into a `confirm()` dialog rather than throwing,

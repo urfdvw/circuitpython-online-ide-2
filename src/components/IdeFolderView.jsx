@@ -16,6 +16,7 @@ export default function IdeFolderView() {
         helpTabSelection,
         flexModel,
         fileSource,
+        fileSourceName,
         autoWatchFiles,
         refreshFileSource,
     } = useContext(AppContext);
@@ -26,7 +27,7 @@ export default function IdeFolderView() {
             label: "≡",
             options: [
                 {
-                    text: "Open CircuitPy Drive",
+                    text: `Open ${fileSourceName}`,
                     handler: openDirectory,
                 },
                 {
@@ -69,7 +70,7 @@ export default function IdeFolderView() {
 
     return (
         <>
-            <Button onClick={openDirectory}>Open CircuitPy Drive</Button>
+            <Button onClick={openDirectory}>Open {fileSourceName}</Button>
         </>
     );
 }

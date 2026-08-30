@@ -47,7 +47,11 @@ export default function Debugger() {
         helpTabSelection,
         instrumentationOutdated,
         setInstrumentationOutdated,
+        fileSource,
+        fileSourceNeeds,
+        batchFileOps,
     } = useContext(AppContext);
+    const usingSerialFiles = fileSource === "usb_serial";
 
     const [pythonFileNames, setPythonFileNames] = useState([]);
     const [debugFileNames, setDebugFileNames] = useState([]);
@@ -128,7 +132,7 @@ export default function Debugger() {
 
     async function handleStartConfigPage() {
         if (!rootFolderDirectoryReady) {
-            alert("Please open CIRCUITPY drive first.");
+            alert(fileSourceNeeds);
             return;
         }
 
@@ -149,7 +153,7 @@ export default function Debugger() {
 
     async function instrumentCodeProcess() {
         if (!rootFolderDirectoryReady) {
-            alert("Please open CIRCUITPY drive first.");
+            alert(fileSourceNeeds);
             return;
         }
 
@@ -160,12 +164,19 @@ export default function Debugger() {
             filteredWatchExpressions[key] = filteredWatchExpressions[key].filter((expr) => expr.trim() !== "");
         }
         console.log("Watch Expressions:", filteredWatchExpressions);
-        await instrumentCode(
-            rootDirHandle,
-            pythonFileNames,
-            debugFileNames,
-            filteredWatchExpressions,
-            conditionalBreakpoints
+        // Reads every project .py and writes an instrumented copy of each, so
+        // over serial this is a round trip per file in both directions. One
+        // session keeps it to a single interruption.
+        await batchFileOps(
+            () =>
+                instrumentCode(
+                    rootDirHandle,
+                    pythonFileNames,
+                    debugFileNames,
+                    filteredWatchExpressions,
+                    conditionalBreakpoints
+                ),
+            { label: "instrumented code for debugging" }
         );
 
         sleep(1000); //chill down
@@ -183,7 +194,7 @@ export default function Debugger() {
             return;
         }
         if (!rootFolderDirectoryReady) {
-            alert("Please open CIRCUITPY drive first.");
+            alert(fileSourceNeeds);
             return;
         }
 
@@ -283,9 +294,18 @@ export default function Debugger() {
                 </Button>
                 <hr />
                 <Typography component="p" paragraph>
-                    Please connect to CIRCUITPY drive and Serial Console before starting the debugger. It is suggested
-                    to start a fresh REPL session before starting the debugger.
+                    {usingSerialFiles
+                        ? "Please connect the Serial Port before starting the debugger. It is suggested to start a fresh REPL session first."
+                        : "Please connect to CIRCUITPY drive and Serial Console before starting the debugger. It is suggested to start a fresh REPL session before starting the debugger."}
                 </Typography>
+                {usingSerialFiles && (
+                    <Typography component="p" paragraph sx={{ color: "warning.main" }}>
+                        <b>Heads up:</b> board files are currently loaded over USB serial, which shares this same
+                        connection. While you are debugging, saving a file or refreshing Folder View will interrupt
+                        the program being debugged and end the session. Avoid file operations mid-debug, or switch
+                        &quot;Board file access&quot; to USB mass storage in the Navigation tab.
+                    </Typography>
+                )}
                 <Typography component="p" paragraph>
                     To set a breakpoint, click on the gutter (row number area) of the code editor.
                 </Typography>

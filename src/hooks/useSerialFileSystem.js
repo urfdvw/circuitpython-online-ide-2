@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useRef } from "react";
-import runRawRepl from "../serialFs/runRawRepl";
+import runRawRepl, { withSerialSession } from "../serialFs/runRawRepl";
 import { createFsCache } from "../serialFs/fsCache";
 import { makeSerialDirectoryHandle } from "../serialFs/serialHandles";
 import * as ops from "../serialFs/deviceOps";
@@ -27,6 +27,11 @@ export default function useSerialFileSystem(serial, serialReady) {
     // operations that change files, so a save leaves the board running the new
     // code rather than parked at the REPL.
     const run = useCallback((fn, opts) => runRawRepl(serial, fn, opts), [serial]);
+
+    // Hold one raw REPL session open across a whole batch of file operations, so
+    // scanning or copying many files interrupts the board once instead of once
+    // per file. Anything `fn` calls reuses the open session automatically.
+    const batch = useCallback((fn, opts) => withSerialSession(serial, fn, opts), [serial]);
 
     // One cache per connection. Recreated when the port reopens so a swapped
     // board never shows the previous board's tree.
@@ -75,5 +80,5 @@ export default function useSerialFileSystem(serial, serialReady) {
         );
     }, []);
 
-    return { openDirectory, directoryReady, statusText, rootDirHandle, refresh };
+    return { openDirectory, directoryReady, statusText, rootDirHandle, refresh, batch };
 }

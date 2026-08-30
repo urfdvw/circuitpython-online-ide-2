@@ -46,7 +46,7 @@ function useNotification() {
 }
 
 export default function LibManagement() {
-    const { appConfig, rootDirHandle, boardInfo, flexModel, helpTabSelection, configTabSelection } =
+    const { appConfig, rootDirHandle, boardInfo, flexModel, helpTabSelection, configTabSelection, batchFileOps, fileSourceNeeds, fileSource } =
         useContext(AppContext);
 
     const { notificationVisible, notificationText, notify } = useNotification();
@@ -68,7 +68,7 @@ export default function LibManagement() {
     } = useBundles({ cpyMajor, useCommunity });
 
     // Installed-lib reader + install/uninstall orchestration (logic in the hooks)
-    const { getInstalled } = useInstalledLibs(rootDirHandle);
+    const { getInstalled } = useInstalledLibs(rootDirHandle, batchFileOps);
     const { libCards, refreshCards, autoInstall, installationLog, libChangeInfo } = useLibInstaller({
         bundles,
         bundlesReady,
@@ -77,6 +77,7 @@ export default function LibManagement() {
         cpyMajor,
         rootDirHandle,
         getInstalled,
+        batchFileOps,
         requireBoard,
         notify,
         appConfig,
@@ -207,6 +208,11 @@ export default function LibManagement() {
                 <Box sx={{ display: "flex", flexDirection: "row", gap: "10px" }}>
                     <CircularProgress color="inherit" />
                     <Typography component="p">{libChangeInfo}</Typography>
+                    {fileSource === "usb_serial" && (
+                        <Typography variant="caption" color="text.secondary" sx={{ display: "block", px: 1 }}>
+                            Board files are loaded over USB serial, so this reads and writes them through the REPL. It is much slower than the CIRCUITPY drive and briefly interrupts the running program. Switch “Board file access” in the Navigation tab if you would rather use the drive.
+                        </Typography>
+                    )}
                 </Box>
             </Backdrop>
             <Box
@@ -253,7 +259,7 @@ export default function LibManagement() {
                     <>
                         <Divider />
                         {libCards.length === 0 ? (
-                            <Typography>Please open CIRCUITPY drive</Typography>
+                            <Typography>{fileSourceNeeds}</Typography>
                         ) : (
                             <Box
                                 sx={{

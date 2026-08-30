@@ -106,8 +106,11 @@ function Ide() {
         statusText: rootFolderStatusText,
         rootDirHandle,
         fileSource,
+        fileSourceName,
+        fileSourceNeeds,
         autoWatchFiles,
         refresh: refreshFileSource,
+        batchFileOps,
         setFileSource,
     } = useFileSource(serial, serialReady, appConfig);
     // data serial (Connected Variables channel, usb_cdc.data)
@@ -187,9 +190,12 @@ function Ide() {
                 rootDirHandle,
                 rootFolderStatusText,
                 fileSource,
+                fileSourceName,
+                fileSourceNeeds,
                 setFileSource,
                 autoWatchFiles,
                 refreshFileSource,
+                batchFileOps,
                 onFileClick,
                 fileLookUp,
                 // shared dirty-file registry (per editor, keyed by fileKey)

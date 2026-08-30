@@ -23,6 +23,8 @@ export default function Backup() {
         helpTabSelection,
         configTabSelection,
         autoWatchFiles,
+        batchFileOps,
+        fileSource,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
     const [lastRecoverTime, setLastRecoverTime] = useState(null);
@@ -38,13 +40,18 @@ export default function Backup() {
         if (!(backupDirHandle && rootDirHandle)) {
             return;
         }
-        const diff = await compareFolders(rootDirHandle, backupDirHandle);
+        // compareFolders reads every file in both trees. Over serial that is a
+        // round trip each; batching keeps it to one interruption of the board.
+        const diff = await batchFileOps(
+            () => compareFolders(rootDirHandle, backupDirHandle),
+            { label: "compared board with backup folder" }
+        );
         setCodeDiff(diff);
 
         const now = new Date().toLocaleTimeString();
         setLastRefreshTime(now);
         console.log("Last refresh at: " + now);
-    }, [backupDirHandle, rootDirHandle]);
+    }, [backupDirHandle, rootDirHandle, batchFileOps]);
 
     const backup = useCallback(
         async (toPC) => {
@@ -59,17 +66,25 @@ export default function Backup() {
                 return;
             }
             const now = new Date().toLocaleTimeString();
+            const clean = appConfig.ready && appConfig.config.backup.clean;
+            // Copying a whole board is one round trip per file over serial, so
+            // the copy runs as a single session rather than interrupting the
+            // board once per file.
             if (toPC) {
-                await backupFolder(rootDirHandle, backupDirHandle, appConfig.ready && appConfig.config.backup.clean);
+                await batchFileOps(() => backupFolder(rootDirHandle, backupDirHandle, clean), {
+                    label: "copied board to the backup folder",
+                });
                 setLastBackupTime(now);
                 console.log("Last backup at: " + now);
             } else {
-                await backupFolder(backupDirHandle, rootDirHandle, appConfig.ready && appConfig.config.backup.clean);
+                await batchFileOps(() => backupFolder(backupDirHandle, rootDirHandle, clean), {
+                    label: "restored board from the backup folder",
+                });
                 setLastRecoverTime(now);
                 console.log("Last recover at: " + now);
             }
         },
-        [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean]
+        [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean, batchFileOps]
     );
 
     // Scheduled backup copies every file on the board. Over serial that is a raw
@@ -189,6 +204,11 @@ export default function Backup() {
 
     return (
         <TabTemplate title="Backup" menuStructure={menuStructure}>
+            {fileSource === "usb_serial" && (
+                <Typography variant="caption" color="text.secondary" sx={{ display: "block", p: 1 }}>
+                    Board files are loaded over USB serial, so this reads and writes them through the REPL. It is much slower than the CIRCUITPY drive and briefly interrupts the running program. Switch “Board file access” in the Navigation tab if you would rather use the drive.
+                </Typography>
+            )}
             <Box sx={{ width: "100%", height: "100%", padding: "0px", margin: "0px" }}>
                 <Typography gutterBottom>
                     Microcontroller Folder:{" "}

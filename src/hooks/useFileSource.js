@@ -49,6 +49,27 @@ export default function useFileSource(serial, serialReady, appConfig) {
     // where there is no cached tree to drop.
     const refresh = serialSource.refresh;
 
+    /**
+     * Run a batch of file operations as one unit.
+     *
+     * On the serial source this holds a single raw REPL session open for the
+     * whole batch, so reading twenty files interrupts the running program once
+     * rather than twenty times. On the drive source there is nothing to batch,
+     * so it just runs. Callers do not need to know which source is active.
+     */
+    const batchFileOps = useCallback(
+        (fn, opts) => (useSerialSource ? serialSource.batch(fn, opts) : fn()),
+        [useSerialSource, serialSource]
+    );
+
+    // Ready-made wording so the six places that used to hardcode "CIRCUITPY
+    // drive" do not each have to branch, and so adding BLE or WiFi later means
+    // touching one file.
+    const fileSourceName = useSerialSource ? "USB serial" : "CIRCUITPY drive";
+    const fileSourceNeeds = useSerialSource
+        ? "Connect the serial port in the Navigation tab."
+        : "Open the CIRCUITPY drive in Folder View.";
+
     const setFileSource = useCallback(
         (value) => {
             appConfig?.setConfigField?.("general", "file_source", value);
@@ -65,8 +86,11 @@ export default function useFileSource(serial, serialReady, appConfig) {
         statusText: active.statusText,
         rootDirHandle: active.rootDirHandle,
         fileSource,
+        fileSourceName,
+        fileSourceNeeds,
         autoWatchFiles,
         refresh,
+        batchFileOps,
         setFileSource,
     };
 }

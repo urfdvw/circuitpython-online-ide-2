@@ -12,9 +12,9 @@
 /**
  * @param {() => Promise<Array<{type: "f"|"d", path: string, size: number}>>} loadTree
  */
-export function createFsCache(loadTree) {
+export function createFsCache(loadTree, { initialEntries = null, parent = null } = {}) {
     /** @type {Map<string, {type: "f"|"d", size: number}> | null} */
-    let entries = null;
+    let entries = initialEntries;
     let inFlight = null;
     // Bumped by anything that makes an in-flight walk obsolete. A walk that
     // finishes on an old generation discards its result instead of publishing it.
@@ -67,8 +67,18 @@ export function createFsCache(loadTree) {
         return cut <= 0 ? "" : path.slice(0, cut);
     }
 
-    return {
+    const cache = {
         ensure,
+
+        // A batch gets its own snapshot and loader, so a concurrent refresh
+        // cannot make it await a tree read queued behind its own transaction.
+        // Its successful writes also update the ordinary handles' cache.
+        fork(load) {
+            return createFsCache(load, {
+                initialEntries: entries ? new Map(entries) : null,
+                parent: cache,
+            });
+        },
 
         /** Drop everything; the next read re-reads the device. */
         invalidate() {
@@ -99,11 +109,13 @@ export function createFsCache(loadTree) {
         // --- in-place updates, applied after a device operation succeeded ---
 
         noteFile(path, size) {
+            parent?.noteFile(path, size);
             if (noteDuringLoad()) return;
             entries.set(path, { type: "f", size: size || 0 });
         },
 
         noteDir(path) {
+            parent?.noteDir(path);
             if (noteDuringLoad()) return;
             // Record every level, so mkdir -p leaves a consistent tree.
             const parts = path.split("/").filter(Boolean);
@@ -115,6 +127,7 @@ export function createFsCache(loadTree) {
         },
 
         noteRemoved(path) {
+            parent?.noteRemoved(path);
             if (noteDuringLoad()) return;
             entries.delete(path);
             // A removed directory takes its whole subtree with it.
@@ -125,4 +138,5 @@ export function createFsCache(loadTree) {
         },
 
     };
+    return cache;
 }

@@ -22,8 +22,8 @@ import DarkTheme from "react-lazy-dark-theme";
 // channel
 import useChannel from "./utilHooks/useChannel";
 // device support
-import { isMobile } from "react-device-detect";
-import { canReachBoardFiles } from "./utilFunctions/browserCapabilities";
+import { isMobile, isSafari, isFirefox, browserVersion } from "react-device-detect";
+import { isBrowserSupported } from "./utilFunctions/browserSupport";
 import ProductPage from "./components/ProductPage";
 import CameraPage from "./components/CameraPage";
 import DocsSite from "./components/DocsSite";
@@ -60,12 +60,8 @@ function App() {
         return <ProductPage />;
     }
 
-    // Gate on what the browser can do, not on which browser it is. Firefox 151+
-    // has Web Serial and can reach board files that way, even though it will
-    // never have the File System Access API needed for the CIRCUITPY drive.
-    // Older Firefox and Safari have neither, so they still land on the product
-    // page, where "Open IDE" explains what would fix it.
-    if (isMobile || !canReachBoardFiles()) {
+    // Desktop Firefox 151+ uses serial; Safari and older Firefox remain unsupported.
+    if (!isBrowserSupported({ isMobile, isSafari, isFirefox, browserVersion })) {
         return <ProductPage />;
     }
 

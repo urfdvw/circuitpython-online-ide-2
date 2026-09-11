@@ -1,8 +1,5 @@
 import { useCallback, useMemo, useRef } from "react";
-import runRawRepl, { withSerialSession } from "../serialFs/runRawRepl";
-import { createFsCache } from "../serialFs/fsCache";
-import { makeSerialDirectoryHandle } from "../serialFs/serialHandles";
-import * as ops from "../serialFs/deviceOps";
+import { createSerialFileSystem } from "../serialFs/fileSystem";
 
 /**
  * The serial file source: board files over raw REPL, shaped like the File System
@@ -21,46 +18,24 @@ import * as ops from "../serialFs/deviceOps";
  * @param {boolean} serialReady whether that port is currently open
  */
 export default function useSerialFileSystem(serial, serialReady) {
-    const cacheRef = useRef(null);
-
-    // `opts.restart` soft-reboots the board afterwards; the handles pass it for
-    // operations that change files, so a save leaves the board running the new
-    // code rather than parked at the REPL.
-    const run = useCallback((fn, opts) => runRawRepl(serial, fn, opts), [serial]);
-
-    // Hold one raw REPL session open across a whole batch of file operations, so
-    // scanning or copying many files interrupts the board once instead of once
-    // per file. Anything `fn` calls reuses the open session automatically.
-    const batch = useCallback((fn, opts) => withSerialSession(serial, fn, opts), [serial]);
-
-    // One cache per connection. Recreated when the port reopens so a swapped
-    // board never shows the previous board's tree.
-    const cache = useMemo(() => {
-        const created = createFsCache(() => run((session) => ops.walk(session), { label: "listed files" }));
-        cacheRef.current = created;
-        return created;
+    const source = useMemo(
+        () => {
+            if (!serialReady || !serial?.port || !serial?.writer ||
+                serial.keepRunning === false || serial.port.connected === false) return null;
+            return createSerialFileSystem(serial);
+        },
+        // The writer changes even when reconnecting to the same SerialPort.
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [run, serialReady]);
-
-    const rootDirHandle = useMemo(() => {
-        if (!serialReady) {
-            return null;
-        }
-        // The handle identity stays stable across refreshes on purpose: changing
-        // it would send FolderView back to the root every time the user refreshes.
-        return makeSerialDirectoryHandle({ run, cache }, "");
-    }, [run, cache, serialReady]);
-
-    // No teardown effect for serialReady: the useMemo above is already keyed on
-    // it, so a disconnect hands back a brand new empty cache. Invalidating that
-    // one would be a no-op.
-
-    // Drops the cached tree; the caller re-lists, which re-reads the device.
-    const refresh = useCallback(() => {
-        if (cacheRef.current) {
-            cacheRef.current.invalidate();
-        }
-    }, []);
+        [serial, serialReady, serial?.port, serial?.writer, serial?.keepRunning, serial?.port?.connected]
+    );
+    const sourceRef = useRef(source);
+    sourceRef.current = source;
+    const rootDirHandle = source?.rootDirHandle ?? null;
+    const batch = useCallback((fn, opts) => {
+        if (!source) throw new Error("Connect the serial port before talking to the board.");
+        return source.batch(fn, opts);
+    }, [source]);
+    const refresh = useCallback(() => sourceRef.current?.refresh(), []);
 
     // No health polling: the port being open is the health signal.
     const directoryReady = Boolean(serialReady && rootDirHandle);

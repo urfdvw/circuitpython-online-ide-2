@@ -1,5 +1,6 @@
 // React
 import { useContext, useEffect, useState } from "react";
+import { isFirefox } from "react-device-detect";
 import Typography from "@mui/material/Typography";
 //context
 import AppContext from "../AppContext";
@@ -53,7 +54,6 @@ export default function Navigation() {
         serial,
         fileSource,
         setFileSource,
-        massStorageAvailable,
     } = useContext(AppContext);
     const { queryState, switchToBoard, switchToHost, busy, storageControlDialog } = useStorageControl(
         serial,
@@ -103,7 +103,7 @@ export default function Navigation() {
             >
                 <ToggleButton
                     value={FILE_SOURCE.MASS_STORAGE}
-                    disabled={!massStorageAvailable}
+                    disabled={isFirefox}
                     sx={{ textTransform: "none" }}
                 >
                     USB mass storage
@@ -112,7 +112,7 @@ export default function Navigation() {
                     USB serial
                 </ToggleButton>
             </ToggleButtonGroup>
-            {!massStorageAvailable && (
+            {isFirefox && (
                 <p style={{ marginTop: 0 }}>
                     <small>
                         <b>USB mass storage is unavailable in this browser.</b> Opening a folder needs the File

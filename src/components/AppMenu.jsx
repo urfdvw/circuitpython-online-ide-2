@@ -4,6 +4,7 @@ import CornerIcons from "./CornerIcons";
 import { openTab, selectTabById } from "../layout/layoutUtils";
 import AppContext from "../AppContext";
 import { useContext } from "react";
+import { isFirefox } from "react-device-detect";
 
 export default function AppMenu() {
     const {
@@ -104,7 +105,7 @@ export default function AppMenu() {
                         openTab(flexModel, "Camera", "doc_cam");
                     },
                 },
-                {
+                !isFirefox && {
                     text: "Backup",
                     handler: () => {
                         openTab(flexModel, "Backup", "backup");

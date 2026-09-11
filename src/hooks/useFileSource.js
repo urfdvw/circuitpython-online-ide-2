@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef } from "react";
 import { useFileSystem } from "../utilComponents/react-local-file-system";
-import { hasFileSystemAccess } from "../utilFunctions/browserCapabilities";
+import { isFirefox } from "react-device-detect";
 import useSerialFileSystem from "./useSerialFileSystem";
 
 export const FILE_SOURCE = {
@@ -34,11 +34,8 @@ export default function useFileSource(serial, serialReady, appConfig) {
     const driveSource = useFileSystem();
     const serialSource = useSerialFileSystem(serial, serialReady);
 
-    // Firefox has Web Serial but will never have the File System Access API, so
-    // the drive is simply not reachable there. Force serial rather than leaving
-    // the user on a source that cannot work, whatever the stored setting says.
-    const massStorageAvailable = hasFileSystemAccess();
-    const useSerialSource = fileSource === FILE_SOURCE.SERIAL || !massStorageAvailable;
+    // Firefox uses serial for board files, regardless of the stored setting.
+    const useSerialSource = fileSource === FILE_SOURCE.SERIAL || isFirefox;
     const active = useSerialSource ? serialSource : driveSource;
 
     // Whether this source is cheap enough to watch on a timer. Mass storage is,
@@ -60,11 +57,14 @@ export default function useFileSource(serial, serialReady, appConfig) {
      * On the serial source this holds a single raw REPL session open for the
      * whole batch, so reading twenty files interrupts the running program once
      * rather than twenty times. On the drive source there is nothing to batch,
-     * so it just runs. Callers do not need to know which source is active.
+     * so it just runs. The callback must use its supplied root handle: on
+     * serial that handle explicitly owns the session for this batch.
      */
+    const serialBatch = serialSource.batch;
+    const driveRoot = driveSource.rootDirHandle;
     const batchFileOps = useCallback(
-        (fn, opts) => (useSerialSource ? serialSource.batch(fn, opts) : fn()),
-        [useSerialSource, serialSource]
+        (fn, opts) => (useSerialSource ? serialBatch(fn, opts) : fn(driveRoot)),
+        [useSerialSource, serialBatch, driveRoot]
     );
 
     // Ready-made wording so the six places that used to hardcode "CIRCUITPY
@@ -81,12 +81,12 @@ export default function useFileSource(serial, serialReady, appConfig) {
     // is worse than one that refuses.
     //
     // The first correction is silent on purpose. file_source defaults to mass
-    // storage in the schema, so a browser without the drive would otherwise pop
+    // storage in the schema, so Firefox would otherwise pop
     // a dialog on every single page load. Only a later change is the user's own
     // doing and worth interrupting for.
     const hasCorrectedSource = useRef(false);
     useEffect(() => {
-        if (massStorageAvailable || fileSource !== FILE_SOURCE.MASS_STORAGE) {
+        if (!isFirefox || fileSource !== FILE_SOURCE.MASS_STORAGE) {
             return;
         }
         appConfig?.setConfigField?.("general", "file_source", FILE_SOURCE.SERIAL);
@@ -98,11 +98,11 @@ export default function useFileSource(serial, serialReady, appConfig) {
             );
         }
         hasCorrectedSource.current = true;
-    }, [massStorageAvailable, fileSource, appConfig]);
+    }, [fileSource, appConfig]);
 
     const setFileSource = useCallback(
         (value) => {
-            if (value === FILE_SOURCE.MASS_STORAGE && !massStorageAvailable) {
+            if (value === FILE_SOURCE.MASS_STORAGE && isFirefox) {
                 // Refused rather than silently ignored: the setting would appear
                 // to change and then not take effect.
                 alert(
@@ -114,7 +114,7 @@ export default function useFileSource(serial, serialReady, appConfig) {
             }
             appConfig?.setConfigField?.("general", "file_source", value);
         },
-        [appConfig, massStorageAvailable]
+        [appConfig]
     );
 
     // Not memoized: useFileSystem() returns a fresh object every render, so any
@@ -125,10 +125,8 @@ export default function useFileSource(serial, serialReady, appConfig) {
         directoryReady: active.directoryReady,
         statusText: active.statusText,
         rootDirHandle: active.rootDirHandle,
-        // The effective source, which is not always the stored setting: a browser
-        // without the File System Access API is always on serial.
+        // Firefox always uses serial, regardless of the stored setting.
         fileSource: useSerialSource ? FILE_SOURCE.SERIAL : FILE_SOURCE.MASS_STORAGE,
-        massStorageAvailable,
         fileSourceName,
         fileSourceNeeds,
         autoWatchFiles,

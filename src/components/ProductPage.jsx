@@ -14,8 +14,8 @@ import {
     Link,
     CssBaseline,
 } from "@mui/material";
-import { isMobile, isSafari, isFirefox } from "react-device-detect";
-import { canReachBoardFiles, describeUnsupportedBrowser } from "../utilFunctions/browserCapabilities";
+import { isMobile, isSafari, isFirefox, browserVersion } from "react-device-detect";
+import { isBrowserSupported, describeUnsupportedBrowser } from "../utilFunctions/browserSupport";
 
 // --- Content Data (Original Text) ---
 
@@ -125,10 +125,7 @@ const ProductPage = () => {
                             size: isMobile ? "small" : "medium",
                         }}
                         onClick={() => {
-                            // Ask what this browser can actually do rather than
-                            // guessing from its name: Firefox 151+ has Web Serial
-                            // and can run the IDE, older Firefox cannot.
-                            if (!isMobile && canReachBoardFiles()) {
+                            if (isBrowserSupported({ isMobile, isSafari, isFirefox, browserVersion })) {
                                 // Supported browser reached via the `#/product` route:
                                 // drop the hash so the routing shell renders the IDE.
                                 window.location.hash = "";

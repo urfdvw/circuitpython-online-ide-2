@@ -57,7 +57,7 @@ export function useLibInstaller({
     // non-interactive callers (the agent bridge) can report it instead of an empty
     // success. The reason is returned rather than stashed on the hook, so a UI card and
     // the agent bridge running at the same time cannot read each other's.
-    async function analyzeMcu() {
+    async function analyzeMcu(batchRoot) {
         if (bundlesReady === 0) {
             if (interactive) confirm("Please download library bundles and retry");
             return { reason: "Library bundles are not downloaded for this board's CircuitPython version." };
@@ -72,7 +72,7 @@ export function useLibInstaller({
                 );
             return { reason: `CircuitPython ${cpyMajor ?? "?"} is not offered by the library bundle.` };
         }
-        return { libs: await getInstalled() };
+        return { libs: await getInstalled(batchRoot) };
     }
 
     /* ---- uninstall ---- */
@@ -83,7 +83,7 @@ export function useLibInstaller({
     // delete failed. Distinguish the two so the caller can report "removed nothing"
     // instead of reporting a success that never happened.
     // -> { removed: boolean }, throws if a delete itself failed.
-    async function uninstallLib(name) {
+    async function uninstallLib(name, root) {
         name = name.split(".")[0]; // strip extension if present
 
         // NOTE: path2Handles CREATES by default. Every lookup here passes create:false —
@@ -92,7 +92,7 @@ export function useLibInstaller({
         // uninstall would "succeed" for something that was never installed.
         let libDirHandle;
         try {
-            ({ dirHandle: libDirHandle } = await path2Handles(rootDirHandle, `lib`, { create: false }));
+            ({ dirHandle: libDirHandle } = await path2Handles(root, `lib`, { create: false }));
         } catch {
             throw new Error(`The board has no lib folder, so ${name} is not installed.`);
         }
@@ -101,7 +101,7 @@ export function useLibInstaller({
         const removeIfPresent = async (path, pick) => {
             let entry;
             try {
-                entry = pick(await path2Handles(rootDirHandle, path, { create: false }));
+                entry = pick(await path2Handles(root, path, { create: false }));
             } catch {
                 return; // not present in this shape
             }
@@ -128,11 +128,11 @@ export function useLibInstaller({
 
     async function batchUninstallLib(pendingLibNames) {
         return batchFileOps
-            ? await batchFileOps(() => uninstallLibsInSession(pendingLibNames), { label: "uninstalled libraries" })
+            ? await batchFileOps((root) => uninstallLibsInSession(pendingLibNames, root), { label: "uninstalled libraries" })
             : await uninstallLibsInSession(pendingLibNames);
     }
 
-    async function uninstallLibsInSession(pendingLibNames) {
+    async function uninstallLibsInSession(pendingLibNames, root = rootDirHandle) {
         setLibChangeInfo("Uninstalling libs");
         const summary = { ok: true, version: cpyMajor, uninstalled: [], failed: [] };
 
@@ -147,7 +147,7 @@ export function useLibInstaller({
         for (const libName of pendingLibNames) {
             const name = libName.split(".")[0];
             try {
-                await uninstallLib(libName);
+                await uninstallLib(libName, root);
                 summary.uninstalled.push(name);
             } catch (e) {
                 const error = e?.message || String(e);
@@ -159,21 +159,21 @@ export function useLibInstaller({
 
         summary.ok = summary.failed.length === 0;
         await sleep(1000); // let the drive settle before re-reading
-        await refreshCards();
+        await refreshCards(root);
         setLibChangeInfo("");
         return summary;
     }
 
     /* ---- install ---- */
 
-    async function installLib(name, bundle) {
+    async function installLib(name, bundle, root) {
         name = name.split(".")[0]; // strip extension if present
         // Re-check right before the copy: the board could have been swapped since
         // the batch started.
         assertBundleForBoard(bundle);
         const zip = bundle.zip;
         setLibChangeInfo(`Installing ${name}`);
-        const { dirHandle } = await path2Handles(rootDirHandle, "lib");
+        const { dirHandle } = await path2Handles(root, "lib");
         try {
             const folderLib = await zip.getEntryFromCache(`lib/${name}`);
             await copyEntry(folderLib, dirHandle, folderLib.name);
@@ -193,14 +193,14 @@ export function useLibInstaller({
     // separate interruptions of the running program.
     async function batchInstallLib(pendingLibs) {
         return batchFileOps
-            ? await batchFileOps(() => installLibsInSession(pendingLibs), { label: "installed libraries" })
+            ? await batchFileOps((root) => installLibsInSession(pendingLibs, root), { label: "installed libraries" })
             : await installLibsInSession(pendingLibs);
     }
 
-    async function installLibsInSession(pendingLibs) {
+    async function installLibsInSession(pendingLibs, root = rootDirHandle) {
         setLibChangeInfo("Installing Libs");
         const summary = { ok: true, version: cpyMajor, installed: [], upgraded: [], skipped: [], failed: [] };
-        const { libs: installedLibs, reason } = await analyzeMcu();
+        const { libs: installedLibs, reason } = await analyzeMcu(root);
         if (!installedLibs) {
             // no board / unsupported / bundles missing — analyzeMcu already prompted
             // (UI); report the reason so non-interactive callers don't read this as
@@ -239,13 +239,13 @@ export function useLibInstaller({
                             logLine(
                                 `version of ${lib.name} is different in bundle and MCU. bundle: ${version}, MCU: ${from}`
                             );
-                            await installLib(lib.name, bundle);
+                            await installLib(lib.name, bundle, root);
                             summary.upgraded.push({ name: lib.name, version, from });
                             onEvent({ type: "upgrade", name: lib.name, version, from });
                         }
                     } else {
                         logLine(`${lib.name} is not installed yet`);
-                        await installLib(lib.name, bundle);
+                        await installLib(lib.name, bundle, root);
                         summary.installed.push({ name: lib.name, version });
                         onEvent({ type: "install", name: lib.name, version });
                     }
@@ -260,15 +260,16 @@ export function useLibInstaller({
 
         summary.ok = summary.failed.length === 0;
         await sleep(1000); // let the drive settle before re-reading
-        await refreshCards();
+        await refreshCards(root);
         setLibChangeInfo("");
         return summary;
     }
 
     /* ---- cards ---- */
 
-    async function refreshCards() {
-        const { libs: installedLibs } = await analyzeMcu();
+    async function refreshCards(batchRoot) {
+        const root = batchRoot?.kind === "directory" ? batchRoot : undefined;
+        const { libs: installedLibs } = await analyzeMcu(root);
         const cards = [];
         if (boardCpySupported && installedLibs) {
             forEachCatalogEntry(bundles, (bundleLibName, libObj, bundle) => {
@@ -337,7 +338,7 @@ export function useLibInstaller({
         // Reads every .py file on the board to extract imports; one round trip
         // each over serial, so scan inside a single session.
         const scannedLibs = batchFileOps
-            ? await batchFileOps(() => collectPythonTopLevelImports(rootDirHandle), {
+            ? await batchFileOps((root) => collectPythonTopLevelImports(root), {
                   label: "scanned project imports",
               })
             : await collectPythonTopLevelImports(rootDirHandle);

@@ -44,6 +44,11 @@ missing.
 | `deviceOps.test.js` | The injected Python against the fake board: create must not truncate, writes restart the board and reads do not, filenames with edge whitespace survive, a deleted directory reads as unhealthy, a failed write cleans up its temp file. |
 | `pythonRepr.test.js` | Quoting and byte encoding, cross-checked against a real `python3`. Both device-side decoders (`binascii` and the pure-Python fallback) must agree with what JavaScript produced, and every injected snippet must compile. |
 | `serialTransaction.test.js` | Exclusive access to the shared port: console traffic is held rather than dropped during a transfer, reads time out per byte but not forever, transactions serialise, closing the port strands nothing. |
+| `batchSession.test.js` | Independent callers queue during a batch, scoped operations serialize, and reconnecting cannot redirect queued work or cleanup to another board. |
+| `serialFileBatch.test.js` | Multiple writes through the raw REPL and Python fake board share one session and one reboot, preserve file contents, and finish even with an outside cache read waiting. |
+| `serialConnection.test.js` | Existing file handles and writable streams reject access after a disconnect or replacement connection. |
+| `fileSourceLifecycle.test.js` | Repeated renders preserve the callback used by Backup's schedule effects; reconnecting replaces the root handle. Uses an isolated hook dispatcher rather than a browser. |
+| `browserSupport.test.js` | Browser and version support rules, plus unsupported-browser guidance. |
 | `fsCache.test.js` | Refresh cannot cancel a walk already on the wire, so a stale walk must not publish over a newer one and a write landing mid-walk must not be lost. |
 | `storageControl.test.js` | The manual write-access tool, including that `usb_connected` is not used to decide who owns the filesystem. |
 | `saveReporting.test.js` | A failed write is reported rather than silently treated as a save. |

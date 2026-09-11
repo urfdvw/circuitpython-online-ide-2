@@ -25,7 +25,6 @@ export default function Backup() {
         autoWatchFiles,
         batchFileOps,
         fileSource,
-        massStorageAvailable,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
     const [lastRecoverTime, setLastRecoverTime] = useState(null);
@@ -44,7 +43,7 @@ export default function Backup() {
         // compareFolders reads every file in both trees. Over serial that is a
         // round trip each; batching keeps it to one interruption of the board.
         const diff = await batchFileOps(
-            () => compareFolders(rootDirHandle, backupDirHandle),
+            (root) => compareFolders(root, backupDirHandle),
             { label: "compared board with backup folder" }
         );
         setCodeDiff(diff);
@@ -72,13 +71,13 @@ export default function Backup() {
             // the copy runs as a single session rather than interrupting the
             // board once per file.
             if (toPC) {
-                await batchFileOps(() => backupFolder(rootDirHandle, backupDirHandle, clean), {
+                await batchFileOps((root) => backupFolder(root, backupDirHandle, clean), {
                     label: "copied board to the backup folder",
                 });
                 setLastBackupTime(now);
                 console.log("Last backup at: " + now);
             } else {
-                await batchFileOps(() => backupFolder(backupDirHandle, rootDirHandle, clean), {
+                await batchFileOps((root) => backupFolder(backupDirHandle, root, clean), {
                     label: "restored board from the backup folder",
                 });
                 setLastRecoverTime(now);
@@ -220,7 +219,7 @@ export default function Backup() {
                 </Typography>
                 <Typography gutterBottom>
                     Computer Folder:{" "}
-                    <Button onClick={openBackupDirectory} disabled={!massStorageAvailable}>
+                    <Button onClick={openBackupDirectory}>
                         {backupFolderDirectoryReady ? backupDirHandle.name : "Open Folder"}
                     </Button>
                     {backupFolderDirectoryReady ? "✅" : ""}

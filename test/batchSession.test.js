@@ -6,6 +6,7 @@
 // batch works, but that it collapses N handshakes into one.
 
 import { harness } from "./helpers/harness.js";
+import SerialCommunication from "../src/hooks/useSerial/serial";
 import runRawRepl, { withSerialSession } from "../src/serialFs/runRawRepl";
 
 const t = harness("batched serial sessions");
@@ -17,14 +18,16 @@ t.watch();
 function countingSerial() {
     const counts = { transactions: 0, interrupts: 0, enterRaw: 0, leaveRaw: 0, reboots: 0 };
     const announced = [];
-    return {
+    const serial = new SerialCommunication();
+    const startTransaction = serial.startTransaction.bind(serial);
+    return Object.assign(serial, {
         counts,
         announced,
         port: {},
         writer: {},
         startTransaction: async () => {
             counts.transactions += 1;
-            return () => {};
+            return startTransaction();
         },
         writeNow: async (data) => {
             if (data.includes("\x03")) counts.interrupts += 1;
@@ -38,7 +41,7 @@ function countingSerial() {
         write: (data) => {
             if (data === "\x04") counts.reboots += 1;
         },
-    };
+    });
 }
 
 const FILES = 20;
@@ -61,9 +64,9 @@ try {
         const results = [];
         await withSerialSession(
             serial,
-            async () => {
+            async (run) => {
                 for (let i = 0; i < FILES; i++) {
-                    results.push(await runRawRepl(serial, async () => `file ${i}`, { label: `read f${i}.py` }));
+                    results.push(await run(async () => `file ${i}`, { label: `read f${i}.py` }));
                 }
             },
             { label: "scanned installed libraries" }
@@ -86,9 +89,9 @@ try {
         const serial = countingSerial();
         await withSerialSession(
             serial,
-            async () => {
+            async (run) => {
                 for (let i = 0; i < FILES; i++) {
-                    await runRawRepl(serial, async () => null, { restart: true, label: `wrote f${i}.py` });
+                    await run(async () => null, { restart: true, label: `wrote f${i}.py` });
                 }
             },
             { label: "installed a library" }
@@ -99,8 +102,8 @@ try {
     // ---- a batch with no writes must not reboot at all ----
     {
         const serial = countingSerial();
-        await withSerialSession(serial, async () => {
-            await runRawRepl(serial, async () => null, { label: "read a.py" });
+        await withSerialSession(serial, async (run) => {
+            await run(async () => null, { label: "read a.py" });
         }, { label: "scanned" });
         t.check("a read-only batch does not reboot", serial.counts.reboots === 0, String(serial.counts.reboots));
     }
@@ -122,22 +125,94 @@ try {
 
         // The critical part: the session must not be left registered, or every
         // later operation would try to reuse a dead one.
-        const after = countingSerial.call(null);
         await runRawRepl(serial, async () => null, { label: "read a.py" });
         t.check("the session is cleaned up after a failure", serial.counts.enterRaw === 2, String(serial.counts.enterRaw));
-        void after;
     }
 
-    // ---- nesting a batch inside a batch reuses the outer one ----
+    // Only an explicitly passed runner shares the batch, including nested helpers.
     {
         const serial = countingSerial();
-        await withSerialSession(serial, async () => {
-            await withSerialSession(serial, async () => {
-                await runRawRepl(serial, async () => null);
-            }, { label: "inner" });
+        await withSerialSession(serial, async (run) => {
+            const nested = async (runner) => runner(async () => null);
+            await nested(run);
         }, { label: "outer" });
-        t.check("nested batches share one handshake", serial.counts.enterRaw === 1, String(serial.counts.enterRaw));
-        t.check("only the outer batch announces", serial.announced.length === 1 && serial.announced[0].includes("outer"), JSON.stringify(serial.announced));
+        t.check("nested helper shares one handshake", serial.counts.enterRaw === 1);
+    }
+
+    // An unrelated read arriving during handshake must wait for the full batch.
+    {
+        const serial = countingSerial();
+        let entered, proceed;
+        const entering = new Promise(r => { entered = r; });
+        const gate = new Promise(r => { proceed = r; });
+        const readUntil = serial.readUntil;
+        serial.readUntil = async (match) => {
+            if (match.includes("raw REPL") && serial.counts.enterRaw === 1) {
+                entered();
+                await gate;
+            }
+            return readUntil(match);
+        };
+        const events = [];
+        const batch = withSerialSession(serial, async (run) => {
+            await run(async (session) => { await session.exec("print(1)"); events.push("batch"); });
+        });
+        await entering;
+        const other = runRawRepl(serial, async (session) => {
+            await session.exec("print(2)"); events.push("other");
+        });
+        await Promise.resolve();
+        t.check("unrelated read waits through handshake", events.length === 0);
+        proceed();
+        await Promise.all([batch, other]);
+        t.check("unrelated read runs after batch", events.join() === "batch,other", events.join());
+        t.check("independent callers use separate transactions", serial.counts.transactions === 2);
+    }
+
+    // Parallel operations within one explicit batch cannot share device globals.
+    {
+        const serial = countingSerial();
+        let running = 0, maxRunning = 0, lateRun;
+        await withSerialSession(serial, async (run) => {
+            lateRun = run;
+            await Promise.all([1, 2].map(() => run(async () => {
+                running++; maxRunning = Math.max(maxRunning, running);
+                await new Promise(r => setTimeout(r, 5));
+                running--;
+            })));
+        });
+        t.check("operations inside a batch are serialized", maxRunning === 1);
+        let rejected = false;
+        try { await lateRun(async () => {}); } catch { rejected = true; }
+        t.check("batch runner cannot escape its lifetime", rejected);
+    }
+
+    // Connection identity is checked after waiting in the transaction queue.
+    {
+        const serial = countingSerial();
+        const release = await serial.startTransaction();
+        let ran = false;
+        const pending = runRawRepl(serial, async () => { ran = true; }, { restart: true });
+        const observed = pending.catch(error => error);
+        serial.writer = {};
+        release();
+        const error = await observed;
+        t.check("queued operation rejects a replacement connection", error instanceof Error && !ran);
+        t.check("replacement board receives no interrupt or reboot", serial.counts.interrupts === 0 && serial.counts.reboots === 0);
+    }
+    // Cleanup must never send Ctrl-B or a reboot to a newly connected board.
+    {
+        const serial = countingSerial();
+        let rejected = false;
+        try {
+            await runRawRepl(serial, async (session) => {
+                serial.writer = {};
+                await session.exec("print(1)");
+            }, { restart: true });
+        } catch { rejected = true; }
+        t.check("disconnect during an operation fails that operation", rejected);
+        t.check("cleanup never writes to the replacement board", serial.counts.leaveRaw === 0 && serial.counts.reboots === 0);
+        t.check("failed connection still releases the transaction", serial._exclusive === null);
     }
 } catch (error) {
     t.fail("unexpected error", error);

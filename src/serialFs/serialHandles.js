@@ -57,6 +57,7 @@ export function makeSerialFileHandle(ctx, path, size = 0) {
         },
 
         async getFile() {
+            ctx.assertCurrent?.();
             const bytes = await ctx.run((session) => ops.readFile(session, path), { label: `read ${displayPath(path)}` });
             // The device mtime is unreliable on small builds (pinned to 2000-01-01),
             // so we report now rather than something misleading. Nothing in the app
@@ -65,6 +66,7 @@ export function makeSerialFileHandle(ctx, path, size = 0) {
         },
 
         async createWritable() {
+            ctx.assertCurrent?.();
             const parts = [];
             return {
                 async write(data) {
@@ -144,6 +146,7 @@ export function makeSerialDirectoryHandle(ctx, path) {
         },
 
         async getFileHandle(name, opts = {}) {
+            ctx.assertCurrent?.();
             const childPath = joinPath(path, name);
             const meta = await ctx.cache.stat(childPath);
             if (meta) {
@@ -166,6 +169,7 @@ export function makeSerialDirectoryHandle(ctx, path) {
         },
 
         async getDirectoryHandle(name, opts = {}) {
+            ctx.assertCurrent?.();
             const childPath = joinPath(path, name);
             const meta = await ctx.cache.stat(childPath);
             if (meta) {
@@ -186,6 +190,7 @@ export function makeSerialDirectoryHandle(ctx, path) {
         },
 
         async removeEntry(name, opts = {}) {
+            ctx.assertCurrent?.();
             const childPath = joinPath(path, name);
             const meta = await ctx.cache.stat(childPath);
             if (!meta) {
@@ -225,6 +230,7 @@ export function makeSerialDirectoryHandle(ctx, path) {
 
 /** List a directory, throwing if it no longer exists. The root always exists. */
 async function listChecked(ctx, path) {
+    ctx.assertCurrent?.();
     if (path) {
         const meta = await ctx.cache.stat(path);
         if (!meta) {

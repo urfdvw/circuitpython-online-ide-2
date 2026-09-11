@@ -168,9 +168,9 @@ export default function Debugger() {
         // over serial this is a round trip per file in both directions. One
         // session keeps it to a single interruption.
         await batchFileOps(
-            () =>
+            (root) =>
                 instrumentCode(
-                    rootDirHandle,
+                    root,
                     pythonFileNames,
                     debugFileNames,
                     filteredWatchExpressions,

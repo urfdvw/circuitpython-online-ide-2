@@ -91,6 +91,21 @@ try {
         cache.noteRemoved("/lib");
         t.check("removing a directory takes its subtree", (await cache.stat("/lib/a.py")) === null);
     }
+    // An explicit batch never waits on the ordinary cache's pending transaction.
+    {
+        let finishOutside;
+        const cache = createFsCache(() => new Promise(r => { finishOutside = r; }));
+        const outside = cache.ensure();
+        const batch = cache.fork(async () => [{ type: "f", path: "/batch.py", size: 2 }]);
+        t.check("batch uses its own loader while an outside read waits", (await batch.stat("/batch.py"))?.size === 2);
+        finishOutside([{ type: "f", path: "/code.py", size: 1 }]);
+        await outside;
+        batch.noteFile("/saved.py", 3);
+        t.check("batch writes update the ordinary cache", (await cache.stat("/saved.py"))?.size === 3);
+        const snapshot = cache.fork(async () => { throw new Error("snapshot should be cached"); });
+        cache.invalidate();
+        t.check("refresh does not invalidate an active batch's snapshot", (await snapshot.stat("/saved.py"))?.size === 3);
+    }
 } catch (error) {
     t.fail("unexpected error", error);
 }

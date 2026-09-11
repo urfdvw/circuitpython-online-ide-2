@@ -17,7 +17,7 @@
         },
         "file_source": {
             "title": "Board file access",
-            "description": "How the IDE reads and writes files on the board. USB mass storage uses the mounted CIRCUITPY drive. USB serial goes through the REPL instead, for boards whose drive is unavailable; it is slower and interrupts the running program, and it does not refresh on its own.",
+            "description": "How the IDE reads and writes files on the board. USB mass storage uses the mounted CIRCUITPY drive. USB serial goes through the REPL instead, for boards whose drive is unavailable; it is slower and interrupts the running program, and it does not refresh on its own. Firefox cannot open the drive at all, so it always uses USB serial.",
             "type": "string",
             "enum": ["usb_mass_storage", "usb_serial"],
             "default": "usb_mass_storage"

@@ -1,5 +1,6 @@
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { useFileSystem } from "../utilComponents/react-local-file-system";
+import { hasFileSystemAccess } from "../utilFunctions/browserCapabilities";
 import useSerialFileSystem from "./useSerialFileSystem";
 
 export const FILE_SOURCE = {
@@ -33,7 +34,11 @@ export default function useFileSource(serial, serialReady, appConfig) {
     const driveSource = useFileSystem();
     const serialSource = useSerialFileSystem(serial, serialReady);
 
-    const useSerialSource = fileSource === FILE_SOURCE.SERIAL;
+    // Firefox has Web Serial but will never have the File System Access API, so
+    // the drive is simply not reachable there. Force serial rather than leaving
+    // the user on a source that cannot work, whatever the stored setting says.
+    const massStorageAvailable = hasFileSystemAccess();
+    const useSerialSource = fileSource === FILE_SOURCE.SERIAL || !massStorageAvailable;
     const active = useSerialSource ? serialSource : driveSource;
 
     // Whether this source is cheap enough to watch on a timer. Mass storage is,
@@ -70,11 +75,46 @@ export default function useFileSource(serial, serialReady, appConfig) {
         ? "Connect the serial port in the Navigation tab."
         : "Open the CIRCUITPY drive in Folder View.";
 
+    // The settings form writes file_source directly, so it never reaches the
+    // guard in setFileSource below. Catch it here and put the value back, with an
+    // explanation: a setting that appears to save and then quietly does nothing
+    // is worse than one that refuses.
+    //
+    // The first correction is silent on purpose. file_source defaults to mass
+    // storage in the schema, so a browser without the drive would otherwise pop
+    // a dialog on every single page load. Only a later change is the user's own
+    // doing and worth interrupting for.
+    const hasCorrectedSource = useRef(false);
+    useEffect(() => {
+        if (massStorageAvailable || fileSource !== FILE_SOURCE.MASS_STORAGE) {
+            return;
+        }
+        appConfig?.setConfigField?.("general", "file_source", FILE_SOURCE.SERIAL);
+        if (hasCorrectedSource.current) {
+            alert(
+                "This browser cannot open the CIRCUITPY drive.\n\n" +
+                    "Opening a folder needs the File System Access API, which Firefox does not support. " +
+                    "Board file access has been switched back to USB serial, which works here."
+            );
+        }
+        hasCorrectedSource.current = true;
+    }, [massStorageAvailable, fileSource, appConfig]);
+
     const setFileSource = useCallback(
         (value) => {
+            if (value === FILE_SOURCE.MASS_STORAGE && !massStorageAvailable) {
+                // Refused rather than silently ignored: the setting would appear
+                // to change and then not take effect.
+                alert(
+                    "This browser cannot open the CIRCUITPY drive.\n\n" +
+                        "Opening a folder needs the File System Access API, which Firefox does not support. " +
+                        "Board files will keep loading over USB serial."
+                );
+                return;
+            }
             appConfig?.setConfigField?.("general", "file_source", value);
         },
-        [appConfig]
+        [appConfig, massStorageAvailable]
     );
 
     // Not memoized: useFileSystem() returns a fresh object every render, so any
@@ -85,7 +125,10 @@ export default function useFileSource(serial, serialReady, appConfig) {
         directoryReady: active.directoryReady,
         statusText: active.statusText,
         rootDirHandle: active.rootDirHandle,
-        fileSource,
+        // The effective source, which is not always the stored setting: a browser
+        // without the File System Access API is always on serial.
+        fileSource: useSerialSource ? FILE_SOURCE.SERIAL : FILE_SOURCE.MASS_STORAGE,
+        massStorageAvailable,
         fileSourceName,
         fileSourceNeeds,
         autoWatchFiles,

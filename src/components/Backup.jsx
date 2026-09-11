@@ -25,6 +25,7 @@ export default function Backup() {
         autoWatchFiles,
         batchFileOps,
         fileSource,
+        massStorageAvailable,
     } = useContext(AppContext);
     const [lastBackupTime, setLastBackupTime] = useState(null);
     const [lastRecoverTime, setLastRecoverTime] = useState(null);
@@ -219,7 +220,7 @@ export default function Backup() {
                 </Typography>
                 <Typography gutterBottom>
                     Computer Folder:{" "}
-                    <Button onClick={openBackupDirectory}>
+                    <Button onClick={openBackupDirectory} disabled={!massStorageAvailable}>
                         {backupFolderDirectoryReady ? backupDirHandle.name : "Open Folder"}
                     </Button>
                     {backupFolderDirectoryReady ? "✅" : ""}

@@ -15,6 +15,7 @@ import {
     CssBaseline,
 } from "@mui/material";
 import { isMobile, isSafari, isFirefox } from "react-device-detect";
+import { canReachBoardFiles, describeUnsupportedBrowser } from "../utilFunctions/browserCapabilities";
 
 // --- Content Data (Original Text) ---
 
@@ -124,18 +125,18 @@ const ProductPage = () => {
                             size: isMobile ? "small" : "medium",
                         }}
                         onClick={() => {
-                            if (isMobile) {
-                                alert("To use the IDE, visit circuitpy.dev on a desktop browser.");
-                            } else if (isSafari || isFirefox) {
-                                alert(
-                                    "To use the IDE, visit circuitpy.dev on a Chrome or Chromium-based browser, such as Edge and Opera."
-                                );
-                            } else {
+                            // Ask what this browser can actually do rather than
+                            // guessing from its name: Firefox 151+ has Web Serial
+                            // and can run the IDE, older Firefox cannot.
+                            if (!isMobile && canReachBoardFiles()) {
                                 // Supported browser reached via the `#/product` route:
                                 // drop the hash so the routing shell renders the IDE.
                                 window.location.hash = "";
                                 window.location.reload();
+                                return;
                             }
+                            const { reason, fix } = describeUnsupportedBrowser({ isFirefox, isSafari, isMobile });
+                            alert(fix ? `${reason}\n\n${fix}` : reason);
                         }}
                     >
                         Open IDE

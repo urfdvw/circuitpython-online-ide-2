@@ -53,6 +53,7 @@ export default function Navigation() {
         serial,
         fileSource,
         setFileSource,
+        massStorageAvailable,
     } = useContext(AppContext);
     const { queryState, switchToBoard, switchToHost, busy, storageControlDialog } = useStorageControl(
         serial,
@@ -100,13 +101,26 @@ export default function Navigation() {
                 }}
                 sx={{ marginBottom: "8px" }}
             >
-                <ToggleButton value={FILE_SOURCE.MASS_STORAGE} sx={{ textTransform: "none" }}>
+                <ToggleButton
+                    value={FILE_SOURCE.MASS_STORAGE}
+                    disabled={!massStorageAvailable}
+                    sx={{ textTransform: "none" }}
+                >
                     USB mass storage
                 </ToggleButton>
                 <ToggleButton value={FILE_SOURCE.SERIAL} sx={{ textTransform: "none" }}>
                     USB serial
                 </ToggleButton>
             </ToggleButtonGroup>
+            {!massStorageAvailable && (
+                <p style={{ marginTop: 0 }}>
+                    <small>
+                        <b>USB mass storage is unavailable in this browser.</b> Opening a folder needs the File
+                        System Access API, which Firefox does not support. Board files load over USB serial
+                        instead, which works here.
+                    </small>
+                </p>
+            )}
             <p style={{ marginTop: 0 }}>
                 {usingSerial ? (
                     <small>

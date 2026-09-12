@@ -55,9 +55,13 @@ export async function withSerialSession(serial, fn, opts = {}) {
     } finally {
         active = false;
         await tail;
-        await session.exitRawRepl();
+        const prompt = await session.exitRawRepl();
         release();
-        if (outcome) serial.announce(outcome);
+        // Reads leave the board at the friendly prompt. Replay that confirmed
+        // prompt after the summary so Send Code sees the board as ready again.
+        // A save restarts code.py, so its prompt must stay hidden.
+        const suffix = !restartWanted && connection.isCurrent() ? prompt || "" : "";
+        if (outcome || suffix) serial.announce(outcome || "", suffix);
         if (restartWanted && connection.isCurrent()) serial.write(constants.CTRL_D);
     }
 }

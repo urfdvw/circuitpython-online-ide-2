@@ -156,18 +156,21 @@ export default class RawReplSession {
      * So the caller sends Ctrl-D after this returns and after the transaction is
      * released, which also lets the reboot banner and the program's own output
      * reach the console instead of being swallowed by the exclusive tap.
+     * Returns the confirmed friendly prompt, or null if exiting failed.
      */
     async exitRawRepl() {
         if (!this.inRawRepl) {
-            return;
+            return null;
         }
         this.inRawRepl = false;
         try {
             await this.io.write("\r" + CTRL_B);
             await this.io.readUntil(NORMAL_PROMPT, 2000);
+            return NORMAL_PROMPT;
         } catch {
             // Leaving raw mode is best-effort. If the board went away mid-session,
             // failing here would mask the real error from the caller's operation.
+            return null;
         }
     }
 

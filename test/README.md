@@ -53,6 +53,7 @@ missing.
 | `storageControl.test.js` | The manual write-access tool, including that `usb_connected` is not used to decide who owns the filesystem. |
 | `saveReporting.test.js` | A failed write is reported rather than silently treated as a save. |
 | `announce.test.js` | Console summaries for serial file operations: they reach both the console and the agent's buffer, survive the exclusive tap, keep a failure to one line, and — the reason this exists — make `sendCode`'s readiness check fail rather than pass on stale output after a write. |
+| `replReadiness.test.js` | Send Code works after reads and read-only batches restore the confirmed friendly prompt; saves and failed REPL exits do not publish a ready prompt. |
 | `agentBridge.test.js` | Every `fileSystemUtils` function the agent bridge imports, driven on serial handles, plus the `window.__cpyAgent` surface itself: the bridge-on gate, `status().fileSource`, and `refreshFiles()` actually reaching the file source. |
 
 ## Adding a test

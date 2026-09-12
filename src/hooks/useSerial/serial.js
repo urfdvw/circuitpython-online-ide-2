@@ -301,8 +301,8 @@ export default class SerialCommunication {
      * addToOutput) is what keeps the console and the agent's buffer in step,
      * since both are fed from here.
      */
-    announce(text) {
-        const line = `\n${text}\n`;
+    announce(text, suffix = "") {
+        const line = `\n${text}\n${suffix}`;
         for (const id in this.readerCallbacks) {
             this.readerCallbacks[id](line);
         }

@@ -71,7 +71,6 @@ function portableSingleHtml() {
     };
 }
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
     // `docs/` is the GitHub Pages site; every other target builds into `dist/`.
     const portable = mode === "portable";
@@ -98,7 +97,7 @@ export default defineConfig(({ mode }) => {
             include: [
                 '@emotion/react',
                 '@emotion/styled',
-                '@mui/material/Tooltip' // or other MUI components
+                '@mui/material/Tooltip'
             ],
         },
         build: portable

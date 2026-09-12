@@ -1,9 +1,8 @@
-import { useEffect, useRef, useContext } from "react";
+import { useEffect, useRef, useContext, useCallback } from "react";
 import { FitAddon } from "@xterm/addon-fit";
 import { Terminal } from "@xterm/xterm";
 import "@xterm/xterm/css/xterm.css";
 import AppContext from "../AppContext";
-import { sleep } from "../utilFunctions/debuggerUtils";
 
 const invert_css = {
     WebkitFilter: "invert(100%) hue-rotate(180deg)",
@@ -30,103 +29,76 @@ const XtermConsole = ({
     const serialOutput = serialOutputProp ?? ctx.serialOutput;
     const sendData = sendDataProp ?? sendDataToSerialPort;
 
-    const terminalOptions = {
-        convertEol: true,
-        fontFamily: "monospace",
-        cursorBlink: true,
-        fontSize: appConfig.config.serial_console.font + 3,
-    };
-
-    const terminal = useRef(new Terminal(terminalOptions));
+    const terminal = useRef(null);
     const terminalRef = useRef(null);
-    // stable instance, loaded once (a fresh one each render would break later fit() calls)
-    const fitAddon = useRef(new FitAddon()).current;
+    const fitAddon = useRef(null);
+    const latest = useRef(null);
+    latest.current = { sendData, setSerialTitle, enableInput, serialOutput,
+        fontSize: appConfig.config.serial_console.font + 3 };
 
-    // Only fit when visible & sized: FlexLayout gives hidden tabs zero size, and fitting then
-    // collapses the terminal to a tiny width and wraps incoming data.
-    const fitIfVisible = () => {
-        const el = terminalRef.current;
-        if (el && el.offsetWidth > 0 && el.offsetHeight > 0) {
-            try {
-                fitAddon.fit();
-            } catch (e) {
-                /* terminal not attached yet */
-            }
-        }
-    };
-
-    useEffect(() => {
-        /* terminal init */
-        if (!terminalRef.current) {
-            console.error("Error initializing terminal");
-            return;
-        }
-        if (!terminal.current.element) {
-            terminal.current.open(terminalRef.current);
-
-            // typed keystrokes are written to this console's serial channel
-            if (enableInput) {
-                terminal.current.onData((data) => {
-                    sendData(data);
-                    console.log("sent", data);
-                });
-            }
-            terminal.current.onTitleChange((title) => {
-                console.log(title);
-                if (setSerialTitle) setSerialTitle(title);
-            });
-            // auto fit
-            terminal.current.loadAddon(fitAddon);
-            fitIfVisible();
-            const observer = new ResizeObserver(() => {
-                fitIfVisible();
-            });
-            observer.observe(terminal.current.element.parentElement);
-
-            // Backfill the output received before this console mounted (it gates on output > 0).
-            if (serialOutput) {
-                terminal.current.write(serialOutput);
-            }
-        }
-
-        // Register OUTSIDE the open-once guard so it survives a StrictMode remount — the 2nd mount
-        // skips the guarded block, which would otherwise leave the terminal with no subscription.
-        serial.registerReaderCallback(readerId, (data) => {
-            terminal.current.write(data);
-        });
-
-        return () => {
-            serial.unregisterReaderCallback(readerId);
-        };
+    const fitIfVisible = useCallback(() => {
+        const element = terminalRef.current;
+        if (element?.offsetWidth > 0 && element?.offsetHeight > 0) fitAddon.current?.fit();
     }, []);
 
     useEffect(() => {
-        // re-fit on new output: catches a foreground transition and reflows anything wrapped while hidden
+        if (!terminalRef.current) return;
+        const instance = new Terminal({
+            convertEol: true,
+            fontFamily: "monospace",
+            cursorBlink: true,
+            fontSize: latest.current.fontSize,
+        });
+        const addon = new FitAddon();
+        terminal.current = instance;
+        fitAddon.current = addon;
+        instance.open(terminalRef.current);
+        instance.loadAddon(addon);
+        const input = instance.onData((data) => {
+            if (latest.current.enableInput) latest.current.sendData(data);
+        });
+        const title = instance.onTitleChange((value) => latest.current.setSerialTitle?.(value));
+        const observer = new ResizeObserver(fitIfVisible);
+        observer.observe(terminalRef.current);
         fitIfVisible();
-        async function scroll() {
-            terminal.current.scrollToBottom();
-            await sleep(100);
-            terminal.current.scrollToBottom();
-        }
-        scroll();
-    }, [serialOutput]);
+        if (latest.current.serialOutput) instance.write(latest.current.serialOutput);
+        serial.registerReaderCallback(readerId, (data) => instance.write(data));
+
+        return () => {
+            serial.unregisterReaderCallback(readerId);
+            observer.disconnect();
+            input.dispose();
+            title.dispose();
+            instance.dispose();
+            terminal.current = null;
+            fitAddon.current = null;
+        };
+    }, [serial, readerId, fitIfVisible]);
 
     useEffect(() => {
-        if (!terminal.current) {
-            return;
-        }
-        terminal.current.options.fontSize = appConfig.config.serial_console.font + 3;
         fitIfVisible();
-    }, [appConfig.config.serial_console.font]);
+        terminal.current?.scrollToBottom();
+        const timer = setTimeout(() => terminal.current?.scrollToBottom(), 100);
+        return () => clearTimeout(timer);
+    }, [serialOutput, fitIfVisible]);
 
     useEffect(() => {
-        terminal.current.clear();
-        console.log("Clear terminal", clearTrigger);
+        if (terminal.current) terminal.current.options.fontSize = appConfig.config.serial_console.font + 3;
+        fitIfVisible();
+    }, [appConfig.config.serial_console.font, fitIfVisible]);
+
+    useEffect(() => {
+        terminal.current?.clear();
     }, [clearTrigger]);
 
-    let isDarkTheme = JSON.parse(localStorage.getItem("isDarkTheme"));
-    let always_dark = appConfig.config.serial_console.always_dark;
-    let color_css = always_dark ? (isDarkTheme ? { ...invert_css } : {}) : invert_css;
+    let isDarkTheme = false;
+    try {
+        isDarkTheme = localStorage.getItem("isDarkTheme") === "true";
+    } catch {
+        // Storage may be unavailable in a portable or private browser session.
+    }
+    const alwaysDark = appConfig.config.serial_console.always_dark;
+    const color_css = alwaysDark ? (isDarkTheme ? invert_css : {}) : invert_css;
 
     return (
         <div

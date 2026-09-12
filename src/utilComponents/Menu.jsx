@@ -32,7 +32,7 @@ export default function Menu({ label, options, color }) {
         }
     }
 
-    // return focus to the button when we transitioned from !open -> open
+    // Return focus to the trigger when the menu closes.
     const prevOpen = React.useRef(open);
     React.useEffect(() => {
         if (prevOpen.current === true && open === false) {

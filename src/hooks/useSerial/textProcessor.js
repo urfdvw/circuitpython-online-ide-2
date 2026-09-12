@@ -37,7 +37,6 @@ export function matchesInBetween(text, start, end, middle = "*") {
     const re = globStringToRegex(start + middle + end);
     let matches = text.match(re);
     if (matches === null) {
-        // the line above will return null if no matches (so strange)
         matches = [];
     }
     return matches.map((x) => x.slice(start.length, -end.length)); // remove the markers
@@ -67,10 +66,7 @@ export const removeInBetween = (text, start, end) => {
     return splitByInBetween(text, start, end).join("");
 };
 
-// --- functions below should be some where else
-
 export const latestTitle = (text) => {
-    // migrated to useSerialReceiveProcessor
     const matches = matchesInBetween(
         text,
         constants.TITLE_START,
@@ -87,7 +83,14 @@ export const aggregateConnectedVariable = (text) => {
     );
     var ConnectedVariable = {};
     for (const b of cvBlocks) {
-        ConnectedVariable = { ...ConnectedVariable, ...JSON.parse(b) };
+        try {
+            const value = JSON.parse(b);
+            if (value && typeof value === "object" && !Array.isArray(value)) {
+                ConnectedVariable = { ...ConnectedVariable, ...value };
+            }
+        } catch {
+            // A malformed frame must not block later updates in the session.
+        }
     }
     return ConnectedVariable;
 };

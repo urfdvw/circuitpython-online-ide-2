@@ -1,77 +1,39 @@
-import { useEffect, useState } from "react";
-// schema default
+import { useCallback } from "react";
 import jsonSchemaDefaults from "json-schema-defaults";
-// utils
-import { isDefined, isObject } from "./utils";
-// local storage hook
+import { isObject } from "./utils";
 import { useLocalStorage } from "./useLocalStorage";
 
-function getConfigWithDefaults(current_config, schema) {
-    var config = jsonSchemaDefaults(schema);
-    if (isDefined(current_config) && isObject(current_config)) {
-        for (const field_name in config) {
-            if (field_name in current_config) {
-                config[field_name] = current_config[field_name];
-            }
-        }
+export function getConfigWithDefaults(currentConfig, schema) {
+    const config = jsonSchemaDefaults(schema);
+    if (!isObject(currentConfig)) return config;
+    for (const name of Object.keys(config)) {
+        if (!Object.hasOwn(currentConfig, name)) continue;
+        const value = currentConfig[name];
+        const property = schema.properties[name];
+        if (typeof value !== typeof config[name] || value === null) continue;
+        if (property.enum && !property.enum.includes(value)) continue;
+        if (typeof value === "number" && (!Number.isFinite(value) ||
+            value < property.minimum || value > property.maximum)) continue;
+        config[name] = value;
     }
     return config;
 }
 
 export default function useConfig(schemas) {
-    const { localStorageState, setLocalStorageState, initLocalStorageState } = useLocalStorage("config");
-    const [initStep, setInitStep] = useState(0);
+    const { localStorageState, setLocalStorageState } = useLocalStorage("config", (stored) =>
+        Object.fromEntries(schemas.map((schema) => [schema.name, getConfigWithDefaults(stored[schema.name], schema)]))
+    );
 
-    useEffect(() => {
-        if (initStep === 0) {
-            console.log("init step 0: initialize localStorageState");
-            initLocalStorageState();
-            setInitStep(1);
-        }
-        if (initStep === 1) {
-            console.log("init step 1: update localStorageState by schema defaults");
-            for (const schema of schemas) {
-                const schema_name = schema.name;
-                var config_values = getConfigWithDefaults(get_config(schema_name), schema);
-                set_config(schema_name, config_values);
-            }
-            setInitStep(-1); // mark as done
-        }
-    }, [initStep]);
+    const setConfig = useCallback((name, values) => {
+        const schema = schemas.find((entry) => entry.name === name);
+        if (schema) setLocalStorageState(name, getConfigWithDefaults(values, schema));
+    }, [schemas, setLocalStorageState]);
 
-    function get_config(schema_name) {
-        const config = localStorageState[schema_name];
-        return isDefined(config) ? config : null;
-    }
+    const setConfigField = useCallback((name, field, value) => {
+        const schema = schemas.find((entry) => entry.name === name);
+        if (!schema || !Object.hasOwn(schema.properties, field)) return;
+        setLocalStorageState(name, (previous) => getConfigWithDefaults({ ...previous, [field]: value }, schema));
+    }, [schemas, setLocalStorageState]);
 
-    function set_config(schema_name, config_values) {
-        setLocalStorageState(schema_name, config_values);
-    }
-
-    function set_config_field(schema_name, field_name, field_value) {
-        const config = get_config(schema_name);
-        if (field_name in config) {
-            if (typeof field_value !== typeof config[field_name]) {
-                console.error(
-                    "given value " +
-                        field_value +
-                        " has a different type from config schema. Given: " +
-                        typeof field_value +
-                        ", required: " +
-                        typeof config[field_name]
-                );
-            } else {
-                set_config(schema_name, { ...config, [field_name]: field_value });
-            }
-        } else {
-            console.error("no field called " + field_name + " in config schema " + schema_name);
-        }
-    }
-
-    return {
-        config: localStorageState,
-        setConfig: set_config,
-        setConfigField: set_config_field,
-        ready: initStep < 0,
-    };
+    return { config: localStorageState, setConfig, setConfigField, ready: true };
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import * as constants from "../../constants";
 import { removeCommonIndentation } from "./utils";
+import { reprStr } from "../../serialFs/pythonRepr";
 
 export default function useSerialCommands(sendDataToSerialPort, serialOutput, serialReady) {
     const [codeHistory, setCodeHistory] = useState(['print("Hello CircuitPython!")']);
@@ -42,16 +43,7 @@ export default function useSerialCommands(sendDataToSerialPort, serialOutput, se
             return;
         }
         code = removeCommonIndentation(code);
-        // dealing with linebreaks and '\n' in text
-        code = code.split("\\").join("\\\\").split("\n").join("\\n");
-        // remove comments by """
-        code = code.split('"""');
-        for (let i = 0; i < code.length; i++) {
-            code.splice(i + 1, 1);
-        }
-        code = code.join("");
-        // send commands to device
-        await sendSingleLineText('exec("""' + code + '""")');
+        await sendSingleLineText(`exec(${reprStr(code)})`);
     }
 
     // opts.silent: don't pop a confirm() dialog on failure; instead return an
@@ -72,7 +64,7 @@ export default function useSerialCommands(sendDataToSerialPort, serialOutput, se
                         error: "REPL is not ready. Send Ctrl-C (ctrlC()) to reach the '>>>' prompt before sending code.",
                     };
                 }
-                confirm("Before sending Python code to the serial console, make sure to start RELP first.");
+                confirm("Before sending Python code to the serial console, make sure to start REPL first.");
                 return;
             }
         }

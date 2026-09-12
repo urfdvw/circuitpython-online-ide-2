@@ -39,8 +39,7 @@ t.watch();
         const contents = await getFileText(handle);
         t.check("getFileHandle({create}) preserves an existing file", contents.includes("usb_cdc.enable"), JSON.stringify(contents));
 
-        // The reported path: path2Handles defaults to create:true, so merely
-        // reading boot.py goes down the create branch.
+        // The public read helper must preserve the contents too.
         const viaPath = await getFromPath(root, "boot.py");
         t.check("reading through getFromPath does not zero it", viaPath.includes("usb_cdc.enable"));
     } catch (error) {

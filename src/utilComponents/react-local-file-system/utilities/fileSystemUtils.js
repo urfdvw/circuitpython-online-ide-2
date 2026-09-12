@@ -5,12 +5,10 @@ export { sleep };
 
 // path level ====================================
 
-// 规范化路径：反斜杠 -> 斜杠，按 / 拆分并去掉空段
 export function normalizePath(rawPath) {
     return String(rawPath || "")
         .replace(/\\/g, "/")
         .split("/")
-        .map((s) => s.trim())
         .filter(Boolean);
 }
 
@@ -22,33 +20,27 @@ export function normalizePath(rawPath) {
  * the way. Pass { create: false } (or use getFromPathIfExists) for pure reads.
  */
 export async function path2Handles(directoryHandle, rawPath, opt = {}) {
-    const { create = true, treatLastAsFile = false } = opt;
+    const { create = true, treatLastAsFile = false, treatLastAsDirectory = false } = opt;
 
-    // 1) 规范化路径
     const levels = normalizePath(rawPath);
 
-    // 边界：空路径，直接返回起点目录
     if (levels.length === 0) {
         return { dirHandle: directoryHandle, fileHandle: null };
     }
 
-    // 简单的“看起来像文件名”判断：包含 . 且不是以 . 开头的隐藏目录
     const looksLikeFile = (name) => /\.[^./\\]+$/.test(name) && !/^\.[^/\\]+$/.test(name);
 
-    // 2) 逐级进入到“最后一段的父目录”
     let curDir = directoryHandle;
     for (let i = 0; i < levels.length - 1; i++) {
         const seg = levels[i];
         curDir = await curDir.getDirectoryHandle(seg, { create });
     }
 
-    // 3) 处理最后一段：可能是目录，也可能是文件
     const last = levels[levels.length - 1];
-    const lastIsFile = treatLastAsFile || looksLikeFile(last);
+    const lastIsFile = !treatLastAsDirectory && (treatLastAsFile || looksLikeFile(last));
 
     if (lastIsFile) {
         const fileHandle = await curDir.getFileHandle(last, { create });
-        // 对于文件，返回父目录 + 文件句柄
         return { dirHandle: curDir, fileHandle };
     } else {
         const dirHandle = await curDir.getDirectoryHandle(last, { create });
@@ -58,17 +50,15 @@ export async function path2Handles(directoryHandle, rawPath, opt = {}) {
 
 /** Write `text` to the file at `path`, creating intermediate folders. Failures show a confirm() dialog. */
 export async function writeToPath(rootDirHandle, path, text) {
-    const { fileHandle } = await path2Handles(rootDirHandle, path);
-    await writeFileText(fileHandle, text);
+    const { fileHandle } = await path2Handles(rootDirHandle, path, { treatLastAsFile: true });
+    return writeFileText(fileHandle, text);
 }
 
 // Like writeToPath, but always treats the last segment as a file and lets failures
 // throw instead of popping a confirm() dialog. Creates intermediate folders.
 export async function writeToPathStrict(rootDirHandle, path, text) {
     const { fileHandle } = await path2Handles(rootDirHandle, path, { create: true, treatLastAsFile: true });
-    const writable = await fileHandle.createWritable();
-    await writable.write(String(text));
-    await writable.close();
+    await writeFileData(fileHandle, String(text));
 }
 
 // Resolve the PARENT directory handle plus the target entry handle for a path.
@@ -80,7 +70,7 @@ export async function getParentAndHandleFromPath(rootDirHandle, rawPath) {
     }
     const name = levels[levels.length - 1];
     const parentPath = levels.slice(0, -1).join("/");
-    const { dirHandle: parent } = await path2Handles(rootDirHandle, parentPath, { create: false });
+    const { dirHandle: parent } = await path2Handles(rootDirHandle, parentPath, { create: false, treatLastAsDirectory: true });
     let handle;
     try {
         handle = await parent.getFileHandle(name);
@@ -92,30 +82,29 @@ export async function getParentAndHandleFromPath(rootDirHandle, rawPath) {
 
 // Whether a path exists under the root. The empty path is the root itself.
 export async function checkPathExists(rootDirHandle, rawPath) {
+    if (!rootDirHandle) return false;
     const levels = normalizePath(rawPath);
     if (levels.length === 0) return true;
     const name = levels[levels.length - 1];
     const parentPath = levels.slice(0, -1).join("/");
     try {
-        const { dirHandle: parent } = await path2Handles(rootDirHandle, parentPath, { create: false });
+        const { dirHandle: parent } = await path2Handles(rootDirHandle, parentPath, { create: false, treatLastAsDirectory: true });
         return await checkEntryExists(parent, name);
     } catch {
         return false;
     }
 }
 
-/** Read the text of the file at `path`. NOTE: creates the file if missing (create:true default). */
+/** Read a file without creating missing files or folders. */
 export async function getFromPath(rootDirHandle, path) {
-    const { fileHandle } = await path2Handles(rootDirHandle, path);
-    return await getFileText(fileHandle);
+    const { fileHandle } = await path2Handles(rootDirHandle, path, { create: false, treatLastAsFile: true });
+    return getFileText(fileHandle);
 }
 
-// Read a file's text WITHOUT creating it (getFromPath defaults to create:true, so
-// merely probing for a missing file would drop an empty one into the folder).
-// Returns null when the file doesn't exist or can't be read.
+// Optional read: returns null when a file is missing or cannot be read.
 export async function getFromPathIfExists(rootDirHandle, path) {
     try {
-        const { fileHandle } = await path2Handles(rootDirHandle, path, { create: false });
+        const { fileHandle } = await path2Handles(rootDirHandle, path, { create: false, treatLastAsFile: true });
         return await getFileText(fileHandle);
     } catch {
         return null;
@@ -123,28 +112,26 @@ export async function getFromPathIfExists(rootDirHandle, path) {
 }
 // file level ====================================
 
-/**
- * Write `text` into an existing file handle.
- *
- * Failures show a confirm() dialog instead of throwing, but they are also
- * REPORTED: returns true only when the bytes actually reached the file. Callers
- * that track saved state must check this. Treating a failure as a save clears
- * the dirty marker and the close warning while the file on disk is unchanged,
- * which loses the user's work silently. Over serial that is not an edge case:
- * every save fails with errno 30 while CIRCUITPY is mounted on the host.
- *
- * @returns {Promise<boolean>} whether the write succeeded
- */
+/** Commit a write, releasing the stream on failure without hiding the original error. */
+export async function writeFileData(fileHandle, data) {
+    const writable = await fileHandle.createWritable();
+    try {
+        await writable.write(data);
+        await writable.close();
+    } catch (error) {
+        try {
+            await writable.abort?.();
+        } catch {
+            // A failed close may already have released the stream.
+        }
+        throw error;
+    }
+}
+
+/** Report save errors to the user; return true only after the write commits. */
 export async function writeFileText(fileHandle, text) {
     try {
-        // Create a FileSystemWritableFileStream to write to.
-        const writable = await fileHandle.createWritable();
-        // Write the contents of the file to the stream.
-        await writable.write(text);
-        // Close the file and write the contents to disk.
-        await writable.close();
-        console.log("Successfully wrote to", fileHandle.name);
-        await sleep(200); // chill down
+        await writeFileData(fileHandle, text);
         return true;
     } catch (error) {
         confirm("Write to file failed. " + error.message);
@@ -188,14 +175,13 @@ export async function isSameEntrySafe(a, b) {
 
 /** Whether the handle is still readable (detects revoked/detached handles, e.g. after unplugging). */
 export async function isEntryHealthy(entryHandle) {
-    if (entryHandle === null) {
+    if (!entryHandle) {
         return false;
     }
     if (isFolder(entryHandle)) {
         try {
-            // eslint-disable-next-line no-unused-vars
-            for await (const [key, value] of entryHandle.entries()) {
-                break;
+            for await (const entry of entryHandle.entries()) {
+                if (entry) return true;
             }
             return true;
         } catch {
@@ -288,12 +274,7 @@ export async function compareFolders(sourceFolderHandle, targetFolderHandle, ski
                 const subFiles = await walkFolder(entry, fullPath);
                 Object.assign(files, subFiles);
             } else {
-                try {
-                    const content = await getFileText(entry);
-                    files[fullPath] = content;
-                } catch {
-                    // skip unreadable files
-                }
+                files[fullPath] = await getFileText(entry);
             }
         }
         return files;
@@ -327,155 +308,108 @@ export async function compareFolders(sourceFolderHandle, targetFolderHandle, ski
 // Create -------------------------------------
 
 export async function addNewFolder(parentHandle, newFolderName) {
-    try {
-        const newFolder = await parentHandle.getDirectoryHandle(newFolderName, {
-            create: true,
-        });
-        await sleep(200); // chill down
-        return newFolder;
-    } catch (error) {
-        confirm("Folder creation failed. " + error.message);
-    }
+    return parentHandle.getDirectoryHandle(newFolderName, { create: true });
 }
 
 export async function addNewFile(parentHandle, newFileName) {
-    try {
-        const newFile = await parentHandle.getFileHandle(newFileName, {
-            create: true,
-        });
-        await sleep(200); // chill down
-        return newFile;
-    } catch (error) {
-        confirm("File creation failed. " + error.message);
-    }
+    return parentHandle.getFileHandle(newFileName, { create: true });
 }
 
-// Delete -----------------------------------------
-
-/** Delete a file or folder (recursively). Requires a secure context (https). */
+/** Delete an entry, propagating errors to the caller. */
 export async function removeEntry(parentHandle, entryHandle) {
-    // Will not work without https
-    if (isFolder(entryHandle)) {
-        await _removeFolder(parentHandle, entryHandle);
-    } else {
-        await _removeFile(parentHandle, entryHandle);
-    }
+    await parentHandle.removeEntry(entryHandle.name, { recursive: isFolder(entryHandle) });
 }
 
 export async function cleanFolder(parentHandle) {
-    const folder_content = await getFolderContent(parentHandle);
-    folder_content.sort((a, b) => {
-        if (a.name.startsWith(".")) {
-            return -1;
-        }
-        if (b.name.startsWith(".")) {
-            return 1;
-        }
-        return 0;
-    });
-    for (var i = 0; i < folder_content.length; i++) {
-        await removeEntry(parentHandle, folder_content[i]);
+    for (const entry of await getFolderContent(parentHandle)) {
+        await removeEntry(parentHandle, entry);
     }
 }
 
-export async function _removeFolder(parentHandle, folderHandle) {
-    await cleanFolder(folderHandle);
+export const _removeFolder = removeEntry;
+export const _removeFile = removeEntry;
+
+async function containsEntry(directory, entry) {
+    if (await isSameEntrySafe(directory, entry)) return true;
+    if (!directory.resolve) return false;
     try {
-        await parentHandle.removeEntry(folderHandle.name);
-        await sleep(200); // chill down
+        return (await directory.resolve(entry)) !== null;
     } catch (error) {
-        confirm("Failed to remove folder. " + error.message);
+        // Native handles reject handles from another file source.
+        if (error.name === "TypeError") return false;
+        throw error;
     }
 }
 
-export async function _removeFile(parentHandle, fileHandle) {
-    try {
-        await parentHandle.removeEntry(fileHandle.name);
-        await sleep(200); // chill down
-    } catch (error) {
-        confirm("Failed to remove file. " + error.message);
-    }
-}
-
-// Copy --------------------------------------
-
-/** Copy a file or folder (recursively) into `targetFolderHandle` under `newName`. */
-export async function copyEntry(entryHandle, targetFolderHandle, newName) {
+/** Copy all contents, including hidden files. Never copy a folder into itself. */
+export async function copyEntry(entryHandle, targetFolderHandle, newName, { skipHidden = false } = {}) {
     if (isFolder(entryHandle)) {
-        return await _copyFolder(entryHandle, targetFolderHandle, newName);
-    } else {
-        return await _copyFile(entryHandle, targetFolderHandle, newName);
-    }
-}
-
-/** Copy a folder's contents into another folder, optionally emptying it first and skipping dotfiles. */
-export async function backupFolder(folderHandle, newFolderHandle, clean = false, skipHidden = true) {
-    if (clean) {
-        await cleanFolder(newFolderHandle);
-    }
-    for (const entry of await getFolderContent(folderHandle)) {
-        if (skipHidden) {
-            if (entry.name.startsWith(".")) {
-                continue;
-            }
+        if (await containsEntry(entryHandle, targetFolderHandle)) {
+            throw new Error("Cannot copy a folder into itself or one of its subfolders.");
         }
-        await copyEntry(entry, newFolderHandle, entry.name);
+        return _copyFolder(entryHandle, targetFolderHandle, newName, { skipHidden });
+    }
+    const fileData = await entryHandle.getFile();
+    const newFileHandle = await addNewFile(targetFolderHandle, newName);
+    if (await isSameEntrySafe(entryHandle, newFileHandle)) {
+        throw new Error("Cannot copy a file onto itself.");
+    }
+    await writeFileData(newFileHandle, fileData);
+    return newFileHandle;
+}
+
+/** Copy a folder's contents, optionally cleaning the destination and skipping dotfiles. */
+export async function backupFolder(folderHandle, newFolderHandle, clean = false, skipHidden = true) {
+    // Validate before cleaning: overlapping trees can delete the source or recurse forever.
+    if (await containsEntry(folderHandle, newFolderHandle) || await containsEntry(newFolderHandle, folderHandle)) {
+        throw new Error("Source and destination folders must not contain each other.");
+    }
+    const entries = await getFolderContent(folderHandle);
+    if (clean) await cleanFolder(newFolderHandle);
+    for (const entry of entries) {
+        if (skipHidden && entry.name.startsWith(".")) continue;
+        await copyEntry(entry, newFolderHandle, entry.name, { skipHidden });
     }
 }
 
-export async function _copyFolder(folderHandle, targetFolderHandle, newName) {
+export async function _copyFolder(folderHandle, targetFolderHandle, newName, { skipHidden = false } = {}) {
     const newFolderHandle = await addNewFolder(targetFolderHandle, newName);
-    await backupFolder(folderHandle, newFolderHandle);
+    await backupFolder(folderHandle, newFolderHandle, false, skipHidden);
     return newFolderHandle;
 }
 
-async function _copyFile(fileHandle, targetFolderHandle, newName) {
-    try {
-        const fileData = await fileHandle.getFile();
-        const newFileHandle = await addNewFile(targetFolderHandle, newName);
-        const writable = await newFileHandle.createWritable();
-        await writable.write(fileData);
-        await writable.close();
-        await sleep(200); // chill down
-        return newFileHandle;
-    } catch (error) {
-        confirm("Write to file failed. " + error.message);
-    }
-}
-
-// Compound (Copy then Delete) ----------------------------------
-
 export async function renameEntry(parentHandle, entryHandle, newName) {
+    if (entryHandle.name === newName) return entryHandle;
+    if (await checkEntryExists(parentHandle, newName)) {
+        throw new Error(`An entry named "${newName}" already exists.`);
+    }
     const newEntryHandle = await copyEntry(entryHandle, parentHandle, newName);
+    // A failed copy must never reach the deletion of the original.
     await removeEntry(parentHandle, entryHandle);
     return newEntryHandle;
 }
 
 export async function moveEntry(parentHandle, entryHandle, targetFolderHandle) {
+    if (await isSameEntrySafe(parentHandle, targetFolderHandle)) return entryHandle;
+    if (await checkEntryExists(targetFolderHandle, entryHandle.name)) {
+        throw new Error(`An entry named "${entryHandle.name}" already exists.`);
+    }
     const newEntryHandle = await copyEntry(entryHandle, targetFolderHandle, entryHandle.name);
     await removeEntry(parentHandle, entryHandle);
     return newEntryHandle;
 }
 
-// MISC
-/** Trigger a browser download of `data` as `filename`. */
+/** Trigger a browser download and release its temporary object URL. */
 export function downloadAsFile(filename, data) {
-    // Function to download data to a file
-    var file = new Blob([data], { type: "text" });
-    if (window.navigator.msSaveOrOpenBlob)
-        // IE10+
-        window.navigator.msSaveOrOpenBlob(file, filename);
-    else {
-        // Others
-        var a = document.createElement("a"),
-            url = URL.createObjectURL(file);
-        a.href = url;
-        a.download = filename;
-        document.body.appendChild(a);
-        a.click();
-        setTimeout(function () {
-            document.body.removeChild(a);
-            window.URL.revokeObjectURL(url);
-        }, 0);
-    }
+    const file = new Blob([data], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(file);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = filename;
+    document.body.appendChild(anchor);
+    anchor.click();
+    setTimeout(() => {
+        anchor.remove();
+        URL.revokeObjectURL(url);
+    }, 0);
 }

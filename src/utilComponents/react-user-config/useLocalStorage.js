@@ -1,42 +1,33 @@
-import { useState } from "react";
-// utils
-import { isDefined } from "./utils";
+import { useCallback, useRef, useState } from "react";
+import { isObject } from "./utils";
 
-function getLocalStorageObjects() {
-    `Convert localStorage into an object.
-    skip not json values`;
-    const result = Object.keys(localStorage).reduce((obj, k) => {
-        try {
-            obj[k] = JSON.parse(localStorage.getItem(k));
-        } catch {
-            // skip if JSON.parse fails
-        }
-        return obj;
-    }, {});
-
-    return result;
+export function readStoredObject(section) {
+    try {
+        const value = JSON.parse(localStorage.getItem(section));
+        return isObject(value) ? value : {};
+    } catch {
+        // Missing, malformed, or unavailable storage falls back to defaults.
+        return {};
+    }
 }
 
-export function useLocalStorage(section) {
-    const [localStorageState, _setLocalStorageState] = useState({});
-    function initLocalStorageState() {
-        getLocalStorageObjects(); // if anything wrong with localStorage, bleach it
-        if (!isDefined(localStorage.getItem(section))) {
-            localStorage.setItem(section, JSON.stringify({}));
+export function useLocalStorage(section, initialize = (value) => value) {
+    const [localStorageState, setState] = useState(() => initialize(readStoredObject(section)));
+    const current = useRef(localStorageState);
+
+    const setLocalStorageState = useCallback((name, value) => {
+        const previous = current.current;
+        const nextValue = typeof value === "function" ? value(previous[name]) : value;
+        const next = { ...previous, [name]: nextValue };
+        // Keep settings usable for this session when persistence is blocked or full.
+        try {
+            localStorage.setItem(section, JSON.stringify(next));
+        } catch (error) {
+            console.warn("Could not persist IDE settings:", error);
         }
-        _setLocalStorageState(getLocalStorageObjects()[section]);
-    }
+        current.current = next;
+        setState(next);
+    }, [section]);
 
-    function setLocalStorageState(name, value) {
-        localStorage.setItem(
-            section,
-            JSON.stringify({
-                ...JSON.parse(localStorage.getItem(section)),
-                [name]: value,
-            })
-        );
-        _setLocalStorageState(getLocalStorageObjects()[section]);
-    }
-
-    return { localStorageState, setLocalStorageState, initLocalStorageState };
+    return { localStorageState, setLocalStorageState };
 }

@@ -2,31 +2,6 @@ import { Box, Stack, Button } from "@mui/material";
 import Menu from "./Menu";
 
 export default function MenuBar({ menuStructure, additionalElement }) {
-    /*
-        const menuStructure = [
-            {
-                label: "App title",
-                color: DARK_RED,
-                options: [
-                    {
-                        text: "About",
-                        handler: () => {
-                            console.log("App menu bar -> About");
-                        },
-                    },
-                    ...
-                ],
-            },
-            {
-                text: "Help",
-                color: DARK_GREY,
-                handler: () => {
-                    console.log("App menu bar -> Help");
-                },
-            },
-            ...
-        ];
-    */
     return (
         <Box sx={{ display: "flex", flexDirection: "row", width: "100%", height: "100%" }}>
             <Box sx={{ flexGrow: 1 }}>

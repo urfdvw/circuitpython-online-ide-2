@@ -63,7 +63,6 @@ export function useTextStorage(textName, { evictPrefix = "" } = {}) {
     // DOM exception that reads like a download failure.
     const writeText = useCallback(
         (text) => {
-            localStorage.removeItem(storageKey);
             try {
                 localStorage.setItem(storageKey, text);
             } catch (e) {
@@ -134,6 +133,11 @@ export function useTextStorage(textName, { evictPrefix = "" } = {}) {
                 document.body.removeChild(input);
             };
 
+            input.oncancel = () => {
+                cleanup();
+                resolve({ ok: false, reason: "no-file" });
+            };
+
             input.onchange = async () => {
                 const file = input.files && input.files[0];
                 if (!file) {
@@ -179,7 +183,7 @@ export function useTextStorage(textName, { evictPrefix = "" } = {}) {
 
     useEffect(() => {
         const onStorage = (e) => {
-            if (e.key === storageKey) {
+            if (e.key === storageKey || e.key === null) {
                 setTextReady(!!e.newValue);
             }
         };
@@ -192,7 +196,7 @@ export function useTextStorage(textName, { evictPrefix = "" } = {}) {
     }
 
     function setText(text) {
-        writeText(text);
+        setStoredText(text);
     }
 
     return {

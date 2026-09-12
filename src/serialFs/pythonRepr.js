@@ -108,7 +108,8 @@ export function toHex(bytes) {
 /** Decode the hex string a device read returns. Ignores whitespace. */
 export function fromHex(hex) {
     const clean = String(hex).replace(/\s+/g, "");
-    const out = new Uint8Array(clean.length >> 1);
+    if (!/^(?:[0-9a-fA-F]{2})*$/.test(clean)) throw new Error("Invalid hexadecimal data received from the board.");
+    const out = new Uint8Array(clean.length / 2);
     for (let i = 0; i < out.length; i++) {
         out[i] = parseInt(clean.substr(i * 2, 2), 16);
     }

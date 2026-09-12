@@ -63,11 +63,11 @@ export default function Navigation() {
     const setupComplete = serialReady && (usingSerial || rootFolderDirectoryReady);
     const [cpyInfo, setCpyInfo] = useState(null);
     useEffect(() => {
-        const fetchCpyInfo = async () => {
-            const cpy_info = await fetchLatestCircuitPythonInfo();
-            setCpyInfo(cpy_info);
-        };
-        fetchCpyInfo();
+        const controller = new AbortController();
+        fetchLatestCircuitPythonInfo({ signal: controller.signal }).then(setCpyInfo).catch((error) => {
+            if (error.name !== "AbortError") console.warn("Could not check CircuitPython releases:", error);
+        });
+        return () => controller.abort();
     }, []);
 
     return (

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { findTabByName, findTabsetById, openTab } from "../layout/layoutUtils";
+import { findTabsetById, openTab } from "../layout/layoutUtils";
 import * as FlexLayout from "flexlayout-react";
 
 // canonical Connected Variable Widgets config file; opens in the Widgets tab, not the editor
@@ -18,16 +18,15 @@ export default function useEditorTabs(flexModel) {
             return;
         }
 
-        const tabNode = findTabByName(flexModel.getRoot(), fileName);
-
-        if (tabNode instanceof FlexLayout.TabNode) {
-            if (fileLookUp[tabNode.getConfig().fileKey].fullPath === fullPath) {
-                console.log(fileName + " already opened");
-                // Activate the found tab
-                flexModel.doAction(FlexLayout.Actions.selectTab(tabNode.getId()));
-            } else {
-                confirm("A file named '" + fileName + "' is already opened.\nCannot open two files with the same name");
-            }
+        let tabNode = null;
+        flexModel.visitNodes((node) => {
+            if (node.getType() !== "tab" || node.getComponent() !== "editor") return;
+            const handle = fileLookUp[node.getConfig()?.fileKey];
+            if (handle?.fullPath === fullPath) tabNode = node;
+        });
+        // Different folders can contain files with the same display name.
+        if (tabNode) {
+            flexModel.doAction(FlexLayout.Actions.selectTab(tabNode.getId()));
         } else {
             const fileKey = crypto.randomUUID();
             setFileLookUp((cur) => {

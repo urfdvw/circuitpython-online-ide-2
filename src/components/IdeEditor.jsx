@@ -53,14 +53,8 @@ const breakpointStyles = `
     }
 `;
 
-function generateRandomNumber(a) {
-    // Calculate the range between a and a/4
-    const min = a;
-    const max = a / 4;
-    // Generate a random number within the range
-    // Using Math.floor() for an integer result
-    const randomNumber = Math.floor(Math.random() * (max - min + 1)) + min;
-    return randomNumber;
+function hasBreakpointComment(lineText) {
+    return /#\s*●/.test(lineText);
 }
 
 export default function IdeEditor({ node }) {
@@ -83,6 +77,8 @@ export default function IdeEditor({ node }) {
     const fileHandle = fileLookUp[fileKey];
     const aceEditorRef = useRef(null);
     const [text, setText] = useState("");
+    const [loadedFile, setLoadedFile] = useState(null);
+    const saving = useRef(false);
     // last loaded-or-saved content; the editor is "dirty" iff text differs from this baseline
     const [savedText, setSavedText] = useState("");
     const [popped, setPopped] = useState(false);
@@ -93,93 +89,79 @@ export default function IdeEditor({ node }) {
     // instant, event-driven dirtiness: no disk read needed
     const fileEdited = text !== savedText;
 
-    // Periodic disk watch: detect deletion and external changes (not keystroke dirtiness).
-    //
-    // Only for sources that are cheap to read. Against a mounted drive this is
-    // free, but over serial each pass is two full file reads (isEntryHealthy on a
-    // file IS a read) inside a raw REPL session, per open tab, every two seconds.
-    // That saturates the port and Ctrl-Cs the running program continuously.
-    //
-    // Dirtiness never needed this: `fileEdited` compares against the in-memory
-    // savedText baseline. Only conflict/deletion detection did, and over serial
-    // those are traded away rather than paid for.
+    // Poll only drive-backed files; serial reads interrupt the board's program.
     useEffect(() => {
-        if (!autoWatchFiles) {
-            return undefined;
-        }
-        const interval = setInterval(async () => {
-            const healthy = await isEntryHealthy(fileHandle);
-            setFileExists(healthy);
-            if (!healthy) return;
-            let diskText;
+        if (!autoWatchFiles || loadedFile !== fileHandle) return;
+        let cancelled = false;
+        let timer;
+        const check = async () => {
             try {
-                diskText = await getFileText(fileHandle);
-            } catch {
-                return;
+                if (saving.current) return;
+                const healthy = await isEntryHealthy(fileHandle);
+                if (cancelled) return;
+                setFileExists(healthy);
+                if (!healthy) return;
+                const diskText = await getFileText(fileHandle);
+                const editor = aceEditorRef.current?.editor;
+                // Edits, saves, and unmounts invalidate an in-flight disk read.
+                if (cancelled || saving.current || !editor || editor.getValue() !== text) return;
+                if (diskText === savedText) {
+                    setConflict(false);
+                } else if (text === savedText) {
+                    editor.session.setValue(diskText);
+                    setSavedText(diskText);
+                    setConflict(false);
+                } else {
+                    setConflict(true);
+                }
+            } catch (error) {
+                if (!cancelled) console.warn("Could not check file for changes:", error);
+            } finally {
+                if (!cancelled) timer = setTimeout(check, 2000);
             }
-            if (diskText === savedText) {
-                setConflict(false);
-            } else if (text === savedText) {
-                // file changed on disk but we have no local edits -> silently reload (VSCode-like)
-                aceEditorRef.current.editor.session.setValue(diskText);
-                setSavedText(diskText);
-                setConflict(false);
-            } else {
-                // file changed on disk AND we have unsaved edits -> conflict
-                setConflict(true);
-            }
-        }, generateRandomNumber(2000));
-        return () => clearInterval(interval);
-    }, [fileHandle, text, savedText, autoWatchFiles]);
+        };
+        timer = setTimeout(check, 2000);
+        return () => { cancelled = true; clearTimeout(timer); };
+    }, [fileHandle, loadedFile, text, savedText, autoWatchFiles]);
 
     useEffect(() => {
         const name = (fileEdited ? FILE_EDITED : "") + fileHandle.name;
         node.getModel().doAction(FlexLayout.Actions.renameTab(node.getId(), name));
-    }, [fileEdited]);
+    }, [fileEdited, fileHandle.name, node]);
 
     // report dirty status to the shared registry used by the tab-close / page-close guards
     useEffect(() => {
         setFileDirty(fileKey, fileEdited);
-    }, [fileEdited]);
+    }, [fileEdited, fileKey, setFileDirty]);
     useEffect(() => {
         return () => clearFileDirty(fileKey);
-    }, []);
+    }, [clearFileDirty, fileKey]);
 
     useEffect(() => {
+        let cancelled = false;
         async function loadText() {
-            const fileText = await getFileText(fileHandle);
-            aceEditorRef.current.editor.session.setValue(fileText);
-            setSavedText(fileText);
-            setConflict(false);
+            try {
+                const fileText = await getFileText(fileHandle);
+                if (cancelled || !aceEditorRef.current) return;
+                aceEditorRef.current.editor.session.setValue(fileText);
+                setSavedText(fileText);
+                setConflict(false);
+                setFileExists(true);
+                setLoadedFile(fileHandle);
+            } catch (error) {
+                if (!cancelled) alert("Could not load file. " + error.message);
+            }
         }
         loadText();
+        return () => { cancelled = true; };
     }, [fileHandle]);
 
     useEffect(() => {
-        aceEditorRef.current.editor.session.setNewLineMode(config.editor.newline_mode);
+        aceEditorRef.current?.editor.session.setNewLineMode(config.editor.newline_mode);
     }, [config.editor.newline_mode]);
 
-    // Function to check if a line has a breakpoint comment
-    function hasBreakpointComment(lineText) {
-        const breakpointRegex = /#\s*●/;
-        return breakpointRegex.test(lineText);
-    }
-
-    // Function to update breakpoints based on text content
-    function updateBreakpointsFromText() {
-        const lines = text.split("\n");
-        const newBreakpoints = new Set();
-        lines.forEach((line, index) => {
-            if (hasBreakpointComment(line)) {
-                newBreakpoints.add(index);
-            }
-        });
-        setBreakpoints(newBreakpoints);
-    }
-
-    // Update breakpoints when text changes
     useEffect(() => {
-        updateBreakpointsFromText();
+        setBreakpoints(new Set(text.split("\n").flatMap((line, index) => hasBreakpointComment(line) ? [index] : [])));
     }, [text]);
 
     // Update gutter decorations whenever breakpoints change
@@ -222,22 +204,17 @@ export default function IdeEditor({ node }) {
     // (registered by the aceJsonWorker import above)
     useSyntaxCheck(aceEditorRef, text, mode);
 
-    async function saveFile(text) {
-        const saved = await writeFileText(fileHandle, text);
-        // Only move the baseline when the bytes actually landed. Otherwise a
-        // failed save would clear the dirty marker and the close warning while
-        // the file is unchanged, and the edits would be lost with no sign. Over
-        // serial this is the common path: writes fail with errno 30 whenever
-        // CIRCUITPY is mounted on this computer. writeFileText has already told
-        // the user what went wrong, so the tab just stays dirty.
-        if (!saved) {
-            return;
+    async function saveFile(contents) {
+        if (loadedFile !== fileHandle || saving.current) return;
+        saving.current = true;
+        try {
+            if (!(await writeFileText(fileHandle, contents))) return;
+            setSavedText(contents);
+            setConflict(false);
+            setInstrumentationOutdated(true);
+        } finally {
+            saving.current = false;
         }
-        // update the baseline only after the write resolves so the disk watch doesn't
-        // momentarily see disk != baseline and flag a false conflict
-        setSavedText(text);
-        setConflict(false);
-        setInstrumentationOutdated(true);
     }
 
     // conflict resolution: keep the editor's version and overwrite disk
@@ -267,7 +244,7 @@ export default function IdeEditor({ node }) {
         var currline = aceEditorRef.current.editor.getCursorPosition().row;
         var selected = aceEditorRef.current.editor.getSelectedText();
         if (selected) {
-            // if any sellection
+            // Send the selected code.
             sendCode(selected);
             if (del) {
                 aceEditorRef.current.editor.insert("");
@@ -333,31 +310,34 @@ export default function IdeEditor({ node }) {
         sendCode(cell);
     }
 
-    // Register key bindings — re-run when closures over changing values need updating
+    const commandActions = useRef(null);
+    commandActions.current = { text, saveFile, sendCtrlC, sendCtrlD, run_current, run_current_and_del, run_cell };
+
+    // Install bindings once; dispatch through the latest editor and serial callbacks.
     useEffect(() => {
         if (aceEditorRef.current === null) return;
         const commands = aceEditorRef.current.editor.commands;
         commands.addCommand({
             name: "save",
             bindKey: { win: "Ctrl-S", mac: "Command-S" },
-            exec: () => saveFile(text),
+            exec: () => commandActions.current.saveFile(commandActions.current.text),
         });
         commands.addCommand({
             name: "ctrl-c",
             bindKey: { win: "Ctrl-Shift-C", mac: "Ctrl-C" },
-            exec: sendCtrlC,
+            exec: () => commandActions.current.sendCtrlC(),
         });
         commands.addCommand({
             name: "ctrl-d",
             bindKey: { win: "Ctrl-Shift-D", mac: "Ctrl-D" },
-            exec: sendCtrlD,
+            exec: () => commandActions.current.sendCtrlD(),
         });
         commands.addCommand({
             name: "run_current",
             bindKey: { win: "Shift-Enter", mac: "Shift-Enter" },
             exec: function (editor) {
                 console.log("run_current");
-                run_current(editor);
+                commandActions.current.run_current(editor);
             },
         });
         commands.addCommand({
@@ -365,7 +345,7 @@ export default function IdeEditor({ node }) {
             bindKey: { win: "Alt-Enter", mac: "Alt-Enter" },
             exec: function (editor) {
                 console.log("run_current_and_del");
-                run_current_and_del(editor);
+                commandActions.current.run_current_and_del(editor);
             },
         });
         commands.addCommand({
@@ -373,7 +353,7 @@ export default function IdeEditor({ node }) {
             bindKey: { win: "Ctrl-Enter", mac: "Cmd-Enter" },
             exec: function (editor) {
                 console.log("run_cell");
-                run_cell(editor);
+                commandActions.current.run_cell(editor);
             },
         });
         commands.addCommand({
@@ -396,7 +376,7 @@ export default function IdeEditor({ node }) {
             multiSelectAction: "forEach",
             scrollIntoView: "selectionPart",
         });
-    }, [text, sendCtrlC, sendCtrlD]);
+    }, []);
 
     // Register gutter click handler for breakpoints — once only after mount
     useEffect(() => {
@@ -520,6 +500,7 @@ export default function IdeEditor({ node }) {
                     tabSize={4}
                     theme="tomorrow"
                     value={text}
+                    readOnly={loadedFile !== fileHandle}
                     height="100%"
                     width="100%"
                     onChange={(newValue) => {

@@ -18,6 +18,9 @@ import * as ops from "./deviceOps";
 import { joinPath } from "./deviceOps";
 import { displayPath } from "./runRawRepl";
 
+const handleSources = new WeakMap();
+const sourceOf = (ctx) => ctx.identity ?? ctx;
+
 /** Coerce whatever createWritable().write() was handed into bytes. */
 async function toBytes(data) {
     if (data === null || data === undefined) return new Uint8Array(0);
@@ -46,14 +49,14 @@ function baseName(path) {
  * @param {object} ctx.cache
  */
 export function makeSerialFileHandle(ctx, path, size = 0) {
-    return {
+    const handle = {
         kind: "file",
         name: baseName(path),
         // Not part of the browser API, but handy for debugging and for our own code.
         devicePath: path,
 
         async isSameEntry(other) {
-            return !!other && other.kind === "file" && other.devicePath === path;
+            return !!other && handleSources.get(other) === sourceOf(ctx) && other.kind === "file" && other.devicePath === path;
         },
 
         async getFile() {
@@ -110,6 +113,8 @@ export function makeSerialFileHandle(ctx, path, size = 0) {
 
         size,
     };
+    handleSources.set(handle, sourceOf(ctx));
+    return handle;
 }
 
 export function makeSerialDirectoryHandle(ctx, path) {
@@ -119,7 +124,7 @@ export function makeSerialDirectoryHandle(ctx, path) {
         devicePath: path,
 
         async isSameEntry(other) {
-            return !!other && other.kind === "directory" && other.devicePath === path;
+            return !!other && handleSources.get(other) === sourceOf(ctx) && other.kind === "directory" && other.devicePath === path;
         },
 
         // isEntryHealthy() decides a directory is dead by letting entries()
@@ -211,7 +216,8 @@ export function makeSerialDirectoryHandle(ctx, path) {
 
         /** Path segments from this directory down to `descendant`, or null. */
         async resolve(descendant) {
-            const target = descendant?.devicePath;
+            if (!descendant || handleSources.get(descendant) !== sourceOf(ctx)) return null;
+            const target = descendant.devicePath;
             if (typeof target !== "string") return null;
             if (target === path) return [];
             const prefix = path === "" ? "/" : path + "/";
@@ -225,6 +231,7 @@ export function makeSerialDirectoryHandle(ctx, path) {
             return "granted";
         },
     };
+    handleSources.set(handle, sourceOf(ctx));
     return handle;
 }
 

@@ -363,7 +363,7 @@ function buildApi() {
         // ---- files ---------------------------------------------------------
         async listFiles(path = "") {
             const root = getRoot();
-            const { dirHandle } = await path2Handles(root, path, { create: false });
+            const { dirHandle } = await path2Handles(root, path, { create: false, treatLastAsDirectory: true });
             const tree = await getFolderTree(dirHandle);
             const out = [];
             const walk = (nodes) => {
@@ -394,7 +394,7 @@ function buildApi() {
         },
 
         async createFolder(path) {
-            await path2Handles(getRoot(), path, { create: true, treatLastAsFile: false });
+            await path2Handles(getRoot(), path, { create: true, treatLastAsDirectory: true });
             return { ok: true, path };
         },
 
@@ -415,7 +415,7 @@ function buildApi() {
             const { parent, handle } = await getParentAndHandleFromPath(root, path);
             const { dirHandle: targetDir } = await path2Handles(root, targetDirPath, {
                 create: true,
-                treatLastAsFile: false,
+                treatLastAsDirectory: true,
             });
             await fsMoveEntry(parent, handle, targetDir);
             return { ok: true, path, targetDirPath };
@@ -437,8 +437,8 @@ function buildApi() {
         },
 
         async sendSerial(text) {
-            if (!store.sendDataToSerialPort) throw new Error("Serial is not connected.");
-            store.sendDataToSerialPort(String(text));
+            if (!store.serialReady || !store.sendDataToSerialPort) throw new Error("Serial is not connected.");
+            await store.sendDataToSerialPort(String(text));
             return { ok: true };
         },
 
@@ -451,14 +451,14 @@ function buildApi() {
         },
 
         async ctrlC() {
-            if (!store.sendCtrlC) throw new Error("Serial is not connected.");
-            store.sendCtrlC();
+            if (!store.serialReady || !store.sendCtrlC) throw new Error("Serial is not connected.");
+            await store.sendCtrlC();
             return { ok: true };
         },
 
         async ctrlD() {
-            if (!store.sendCtrlD) throw new Error("Serial is not connected.");
-            store.sendCtrlD();
+            if (!store.serialReady || !store.sendCtrlD) throw new Error("Serial is not connected.");
+            await store.sendCtrlD();
             return { ok: true };
         },
 
@@ -478,8 +478,8 @@ function buildApi() {
         },
 
         async sendDataSerial(text) {
-            if (!store.sendToDataSerialPort) throw new Error("Data serial is not connected.");
-            store.sendToDataSerialPort(String(text));
+            if (!store.dataSerialReady || !store.sendToDataSerialPort) throw new Error("Data serial is not connected.");
+            await store.sendToDataSerialPort(String(text));
             return { ok: true };
         },
 

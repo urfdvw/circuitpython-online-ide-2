@@ -8,21 +8,22 @@ const useReplChannel = createSerialChannel({ readerId: "dataFromMcu" });
 
 const useSerial = () => {
     const channel = useReplChannel();
+    const { connect, send } = channel;
 
     // REPL-specific connect: optionally "refresh" the board after connecting by sending
     // Ctrl-C (break any current run) then Ctrl-D (start a fresh run). This is the only
     // REPL-specific behaviour layered on top of the generic channel.
     const connectToSerialPort = useCallback(
         async (refresh) => {
-            const status = await channel.connect();
+            const status = await connect();
             if (status && refresh) {
-                await channel.send(constants.CTRL_C);
+                await send(constants.CTRL_C);
                 await sleep(500);
-                await channel.send(constants.CTRL_D);
+                await send(constants.CTRL_D);
             }
             return status;
         },
-        [channel.connect, channel.send]
+        [connect, send]
     );
 
     // keep the exact same field names so App.jsx and all existing consumers are unchanged

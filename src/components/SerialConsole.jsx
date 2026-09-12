@@ -1,5 +1,5 @@
 // React
-import { useState, useContext, useEffect, useRef } from "react";
+import { useState, useContext, useEffect, useRef, useCallback } from "react";
 // context
 import AppContext from "../AppContext";
 // ---- Display ----
@@ -39,7 +39,7 @@ const RawSerialWrite = ({
     const [tempCode, setTempCode] = useState("");
 
     // code history related
-    function histUp() {
+    const histUp = useCallback(() => {
         let newCodeHistoryIndex = codeHistIndex;
         let newTempCode = tempCode;
         if (aceEditorRef.current.editor.getCursorPosition().row == 0) {
@@ -63,9 +63,9 @@ const RawSerialWrite = ({
         }
         setCodeHistIndex(newCodeHistoryIndex);
         setTempCode(newTempCode);
-    }
+    }, [codeHistIndex, codeHistory, tempCode, setCodeHistIndex]);
 
-    function histDown() {
+    const histDown = useCallback(() => {
         let newCodeHistoryIndex = codeHistIndex;
         if (
             aceEditorRef.current.editor.getCursorPosition().row ==
@@ -89,7 +89,7 @@ const RawSerialWrite = ({
             );
         }
         setCodeHistIndex(newCodeHistoryIndex);
-    }
+    }, [codeHistIndex, codeHistory, tempCode, setCodeHistIndex]);
 
     function addNewline(editor) {
         editor.session.insert(editor.getCursorPosition(), "\n");

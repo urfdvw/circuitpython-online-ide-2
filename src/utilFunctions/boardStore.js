@@ -25,7 +25,12 @@ function db() {
 
 export async function getBoardRecord(uid) {
     if (!uid) return null;
-    return (await (await db()).get(STORE, uid)) ?? null;
+    const connection = await db();
+    try {
+        return (await connection.get(STORE, uid)) ?? null;
+    } finally {
+        connection.close();
+    }
 }
 
 export async function getBackupDirHandle(uid) {
@@ -36,21 +41,41 @@ export async function getBackupDirHandle(uid) {
 export async function setBackupDirHandle(uid, handle) {
     if (!uid) return;
     const d = await db();
-    const record = (await d.get(STORE, uid)) || { uid };
-    record.backupDirHandle = handle;
-    record.backupDirName = handle?.name ?? null;
-    record.updatedAt = Date.now();
-    await d.put(STORE, record);
+    try {
+        const transaction = d.transaction(STORE, "readwrite");
+        await Promise.all([
+            (async () => {
+                const record = (await transaction.store.get(uid)) || { uid };
+                record.backupDirHandle = handle;
+                record.backupDirName = handle?.name ?? null;
+                record.updatedAt = Date.now();
+                await transaction.store.put(record);
+            })(),
+            transaction.done,
+        ]);
+    } finally {
+        d.close();
+    }
 }
 
 export async function clearBackupDirHandle(uid) {
     if (!uid) return;
     const d = await db();
-    const record = await d.get(STORE, uid);
-    if (record) {
-        delete record.backupDirHandle;
-        delete record.backupDirName;
-        record.updatedAt = Date.now();
-        await d.put(STORE, record);
+    try {
+        const transaction = d.transaction(STORE, "readwrite");
+        await Promise.all([
+            (async () => {
+                const record = await transaction.store.get(uid);
+                if (record) {
+                    delete record.backupDirHandle;
+                    delete record.backupDirName;
+                    record.updatedAt = Date.now();
+                    await transaction.store.put(record);
+                }
+            })(),
+            transaction.done,
+        ]);
+    } finally {
+        d.close();
     }
 }

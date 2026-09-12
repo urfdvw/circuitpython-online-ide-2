@@ -29,16 +29,12 @@ export default function createSerialChannel({ readerId = "channel" } = {}) {
             // accumulate the full history of this channel
             serial.registerReaderCallback(readerId, (data) => {
                 setOutput((previousOutput) => previousOutput + data);
+                setReady(Boolean(serial.port && serial.writer && serial.keepRunning));
             });
             return () => {
                 serial.unregisterReaderCallback(readerId);
             };
         }, []);
-
-        // reflect unexpected port close
-        useEffect(() => {
-            setReady(serial.port ? serial.port.connected : false);
-        }, [serial.port, serial.port && serial.port.connected]);
 
         const disconnect = useCallback(async () => {
             await serial.close();
@@ -67,7 +63,7 @@ export default function createSerialChannel({ readerId = "channel" } = {}) {
                 const status = await serial.open(undefined, options && options.baudRate);
                 setReady(status);
                 if (!status) {
-                    serial.close();
+                    await serial.close();
                 }
                 return status;
             } catch (err) {

@@ -14,7 +14,7 @@ import { isFolder, renameEntry, copyEntry, removeEntry } from "../utilities/file
 import { promptUniqueName, getDuplicateName } from "../utilities/uiUtils";
 
 export default function ContentEntry({ entryHandle }) {
-    const { currentFolderHandle, onFileClick, showFolderView, setIsLoading } = useContext(CurFolderContext);
+    const { currentFolderHandle, onFileClick, showFolderView, runOperation } = useContext(CurFolderContext);
     const { setEntryOnDrag, handleDrop } = useContext(DragContext);
 
     const entryName = entryHandle.isParent ? ".." : entryHandle.name;
@@ -43,10 +43,7 @@ export default function ContentEntry({ entryHandle }) {
                 if (!newName) {
                     return;
                 }
-                setIsLoading(true);
-                await renameEntry(currentFolderHandle, entryHandle, newName);
-                await showFolderView(currentFolderHandle);
-                setIsLoading(false);
+                await runOperation(() => renameEntry(currentFolderHandle, entryHandle, newName));
             },
         },
         {
@@ -54,10 +51,7 @@ export default function ContentEntry({ entryHandle }) {
             handler: async (event) => {
                 console.log("ContentEntry duplicate handler called", event);
                 const cloneName = await getDuplicateName(currentFolderHandle, entryHandle);
-                setIsLoading(true);
-                await copyEntry(entryHandle, currentFolderHandle, cloneName);
-                await showFolderView(currentFolderHandle);
-                setIsLoading(false);
+                await runOperation(() => copyEntry(entryHandle, currentFolderHandle, cloneName));
             },
         },
         {
@@ -67,14 +61,7 @@ export default function ContentEntry({ entryHandle }) {
                 if (!confirm('Are you sure to remove "' + entryHandle.name + '"?\nThis is not revertible!')) {
                     return;
                 }
-                setIsLoading(true);
-                try {
-                    await removeEntry(currentFolderHandle, entryHandle);
-                } catch {
-                    console.warn("remove file failed");
-                }
-                await showFolderView(currentFolderHandle);
-                setIsLoading(false);
+                await runOperation(() => removeEntry(currentFolderHandle, entryHandle));
             },
         },
     ];

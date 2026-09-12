@@ -5,10 +5,9 @@ npm test              # everything
 npm test serial       # only files whose name contains "serial"
 ```
 
-These cover the serial file source (`src/serialFs/`) and the serial transport
-changes it depends on. They exist because that code is easy to break in ways that
-are invisible without a board attached: protocol timing, cache races, and Python
-that is generated as text and only fails once it reaches the device.
+These cover serial transfers, file safety, settings persistence, proxy request
+validation, and service-worker behavior. The fake board executes generated Python
+to expose protocol and filesystem failures without attached hardware.
 
 ## No test framework
 
@@ -40,6 +39,12 @@ missing.
 
 | File | Covers |
 | --- | --- |
+| `fileSafety.test.js` | Failed writes and copies, overlapping backup folders, hidden-file preservation, dotted directories, and pure reads. |
+| `serialWriteRecovery.test.js` | Failed replacement and rollback preserve original bytes; staging and recovery files do not overwrite existing entries; invalid child names are rejected. |
+| `serialCode.test.js` | Multiline Python and split UTF-8 packets, disconnect isolation, cross-connection handle identity, and malformed hex transfers. |
+| `config.test.js` | Malformed storage, schema defaults, successive updates, and storage-quota failures. |
+| `proxy.test.js` | Allowed release URLs, redirect restrictions, request methods, and bounded redirect chains. |
+| `serviceWorker.test.js` | Cache ownership, offline shell fallback, and cache failures that must not discard successful network responses. |
 | `fileSystem.test.js` | The duck-typed handles, driven through the **real** `fileSystemUtils` helpers that FolderView, the editor and Backup use. Also asserts that repeated listings cost zero device round trips. |
 | `deviceOps.test.js` | The injected Python against the fake board: create must not truncate, writes restart the board and reads do not, filenames with edge whitespace survive, a deleted directory reads as unhealthy, a failed write cleans up its temp file. |
 | `pythonRepr.test.js` | Quoting and byte encoding, cross-checked against a real `python3`. Both device-side decoders (`binascii` and the pure-Python fallback) must agree with what JavaScript produced, and every injected snippet must compile. |

@@ -1,4 +1,4 @@
-async function fetchWithProxy(targetUrl) {
+export async function fetchWithProxy(targetUrl) {
     // 已部署的 Cloud Run 代理端点
     const PROXY_ENDPOINT = "https://cpy-lib-proxy-663297601284.us-central1.run.app";
 

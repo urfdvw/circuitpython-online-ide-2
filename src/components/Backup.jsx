@@ -1,6 +1,6 @@
 import TabTemplate from "../utilComponents/TabTemplate";
 import AppContext from "../AppContext";
-import { useContext, useEffect, useState, useCallback } from "react";
+import { useContext, useEffect, useState, useCallback, useRef } from "react";
 import { Typography, Box, Button } from "@mui/material";
 import TextDiffViewer from "../utilComponents/TextDiffViewer";
 import { selectTabById } from "../layout/layoutUtils";
@@ -30,13 +30,34 @@ export default function Backup() {
     const [lastRecoverTime, setLastRecoverTime] = useState(null);
     const [lastRefreshTime, setLastRefreshTime] = useState(null);
     const [codeDiff, setCodeDiff] = useState(null);
+    const jobPending = useRef(false);
+    const runJob = useCallback(async (operation) => {
+        if (jobPending.current) return false;
+        jobPending.current = true;
+        try {
+            await operation();
+            return true;
+        } catch (error) {
+            alert("Backup operation failed. " + error.message);
+            return false;
+        } finally {
+            jobPending.current = false;
+        }
+    }, []);
+
+    useEffect(() => {
+        setCodeDiff(null);
+        setLastBackupTime(null);
+        setLastRecoverTime(null);
+        setLastRefreshTime(null);
+    }, [rootDirHandle, backupDirHandle]);
     useEffect(() => {
         if (!backupFolderDirectoryReady) {
             setLastBackupTime(null);
         }
     }, [backupFolderDirectoryReady]);
 
-    const refresh = useCallback(async () => {
+    const refresh = useCallback(() => runJob(async () => {
         if (!(backupDirHandle && rootDirHandle)) {
             return;
         }
@@ -51,10 +72,10 @@ export default function Backup() {
         const now = new Date().toLocaleTimeString();
         setLastRefreshTime(now);
         console.log("Last refresh at: " + now);
-    }, [backupDirHandle, rootDirHandle, batchFileOps]);
+    }), [backupDirHandle, rootDirHandle, batchFileOps, runJob]);
 
     const backup = useCallback(
-        async (toPC) => {
+        (toPC) => runJob(async () => {
             if (await isSameEntrySafe(backupDirHandle, rootDirHandle)) {
                 console.log(backupDirHandle.name);
                 console.log(rootDirHandle.name);
@@ -83,23 +104,18 @@ export default function Backup() {
                 setLastRecoverTime(now);
                 console.log("Last recover at: " + now);
             }
-        },
-        [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean, batchFileOps]
+        }),
+        [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean, batchFileOps, runJob]
     );
 
     // Scheduled backup copies every file on the board. Over serial that is a raw
     // REPL read per file, so the schedules are limited to the mass-storage source.
     // The manual buttons still work in either mode, because the user asked for it.
     useEffect(() => {
-        if (!autoWatchFiles) {
-            return undefined;
-        }
-        const interval = setInterval(async () => {
-            if (!(appConfig.ready && appConfig.config.backup.enable_backup_schedule)) {
-                return;
-            }
-            backup(true);
-        }, 60000 * (appConfig.ready && appConfig.config.backup.backup_period));
+        const period = Number(appConfig.config.backup.backup_period);
+        if (!autoWatchFiles || !appConfig.ready || !appConfig.config.backup.enable_backup_schedule ||
+            !Number.isFinite(period) || period <= 0) return;
+        const interval = setInterval(() => backup(true), 60000 * period);
         return () => clearInterval(interval);
     }, [
         backup,
@@ -112,15 +128,10 @@ export default function Backup() {
     // Same reasoning: refresh() runs compareFolders, which reads every file in
     // both trees to diff them by content.
     useEffect(() => {
-        if (!autoWatchFiles) {
-            return undefined;
-        }
-        const interval = setInterval(async () => {
-            if (!(appConfig.ready && appConfig.config.backup.enable_refresh_schedule)) {
-                return;
-            }
-            refresh();
-        }, 60000 * (appConfig.ready && appConfig.config.backup.refresh_period));
+        const period = Number(appConfig.config.backup.refresh_period);
+        if (!autoWatchFiles || !appConfig.ready || !appConfig.config.backup.enable_refresh_schedule ||
+            !Number.isFinite(period) || period <= 0) return;
+        const interval = setInterval(refresh, 60000 * period);
         return () => clearInterval(interval);
     }, [
         refresh,
@@ -156,9 +167,7 @@ export default function Backup() {
                     handler: async () => {
                         const isConfirmed = window.confirm("Backup to Computer?");
                         if (isConfirmed) {
-                            await backup(true);
-                            console.log("Action was confirmed and executed.");
-                            await refresh();
+                            if (await backup(true)) await refresh();
                         } else {
                             console.log("Action was cancelled by the user.");
                         }
@@ -169,9 +178,7 @@ export default function Backup() {
                     handler: async () => {
                         const isConfirmed = window.confirm("Recover from Computer?");
                         if (isConfirmed) {
-                            await backup(false);
-                            console.log("Action was confirmed and executed.");
-                            await refresh();
+                            if (await backup(false)) await refresh();
                         } else {
                             console.log("Action was cancelled by the user.");
                         }
@@ -263,7 +270,7 @@ export default function Backup() {
                         ) : null}
                         {codeDiff.removedFiles.length > 0 ? (
                             <>
-                                <Typography variant="h6">Files only on compouter</Typography>
+                                <Typography variant="h6">Files only on computer</Typography>
                                 {[
                                     codeDiff.removedFiles.map((file) => (
                                         <Box key={file.path}>

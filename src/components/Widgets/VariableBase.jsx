@@ -96,19 +96,13 @@ const VariableBase = ({ connectedVariables, widgetTitle, getWidgetProperty, setW
                 <Typography component="dir">{description}</Typography>
                 <br />
                 <Autocomplete
-                    isOptionEqualToValue={() => true}
                     freeSolo={true}
                     disableClearable
-                    id="combo-box-demo"
-                    value={variableName}
+                    value={variableName || ""}
                     onChange={(e, newValue) => {
-                        setVariableName(newValue.label);
+                        setVariableName(newValue);
                     }}
-                    options={Object.keys(connectedVariables).map((key) => {
-                        return {
-                            label: key,
-                        };
-                    })}
+                    options={Object.keys(connectedVariables)}
                     renderInput={(params) => <TextField {...params} label="Variable" />}
                 />
                 <br />

@@ -17,12 +17,21 @@ const VariableButton = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
             <Button
                 size="large"
                 variant="contained"
-                onMouseDown={() => {
+                onPointerDown={(event) => {
+                    event.currentTarget.setPointerCapture(event.pointerId);
                     setVariableOnMcu(variableName, true);
                 }}
-                onMouseUp={() => {
+                onPointerUp={() => {
                     setVariableOnMcu(variableName, false);
                 }}
+                onPointerCancel={() => setVariableOnMcu(variableName, false)}
+                onKeyDown={(event) => {
+                    if (!event.repeat && [" ", "Enter"].includes(event.key)) setVariableOnMcu(variableName, true);
+                }}
+                onKeyUp={(event) => {
+                    if ([" ", "Enter"].includes(event.key)) setVariableOnMcu(variableName, false);
+                }}
+                onBlur={() => setVariableOnMcu(variableName, false)}
             >
                 {buttonText}
             </Button>

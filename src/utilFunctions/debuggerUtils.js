@@ -1,5 +1,7 @@
 import { sleep } from "./sleep";
 import { getParser } from "./astUtils";
+import { reprStr } from "../serialFs/pythonRepr";
+import { writeFileData } from "../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 
 // Helper: Constants for file system operations
 const PREFIX = "ide_debug_";
@@ -8,7 +10,7 @@ import * as constants from "../constants";
 
 /**
  * AST Logic: Identifies rows that should be instrumented.
- * Takes the parser instance and raw code string.
+ * Takes Python source text.
  * Returns a Set of 0-indexed row numbers.
  */
 async function identifyCodeRows(codeText) {
@@ -17,6 +19,7 @@ async function identifyCodeRows(codeText) {
 
     const tree = parser.parse(codeText);
     const codeRows = new Set();
+    if (!tree) return codeRows;
 
     const targetTypes = [
         "expression_statement",
@@ -48,7 +51,6 @@ async function identifyCodeRows(codeText) {
         } else if (targetTypes.includes(type)) {
             isCodeRow = true;
 
-            // --- NEW LOGIC START ---
             // If this is a function or class definition, check if it's decorated.
             // If it is, the 'decorated_definition' node will handle the row marking.
             if (
@@ -58,7 +60,6 @@ async function identifyCodeRows(codeText) {
             ) {
                 isCodeRow = false;
             }
-            // --- NEW LOGIC END ---
 
             // Filtering: Docstrings
             if (type === "expression_statement") {
@@ -82,12 +83,15 @@ async function identifyCodeRows(codeText) {
         }
     };
 
-    traverse(tree.rootNode);
-    return codeRows;
+    try {
+        traverse(tree.rootNode);
+        return codeRows;
+    } finally {
+        tree.delete();
+    }
 }
 
 /**
- * 9. Cleanup Function (Standalone)
  * Removes all files/folders starting with 'ide_debug_' in the root directory.
  */
 async function cleanupDebugFiles(rootDir) {
@@ -99,7 +103,6 @@ async function cleanupDebugFiles(rootDir) {
 }
 
 /**
- * Extra 1: Get All Python Files
  * Scans root directory for .py files, excluding hidden, boot.py, and debug files.
  */
 async function getAllPythonFiles(rootDir) {
@@ -128,7 +131,8 @@ async function getAllPythonFiles(rootDir) {
  * Main Function: Instrument Code
  */
 async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExpressions, conditionalBreakpoints) {
-    // 1. & 5. Helper to generate debug blocks
+    if (!(await getParser())) throw new Error("The Python parser is unavailable. Reload the IDE and retry.");
+    // Generate the pause and watch-expression code inserted before each statement.
     const generateDebugBlock = (indent, isBreakpoint, fileName, lineNum) => {
         const globalWatches = watchExpressions[""] || [];
         const localWatches = watchExpressions[fileName] || [];
@@ -146,7 +150,6 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         if (!isBreakpoint) {
             // add conditional breakpoints
             allCBP.forEach((expr) => {
-                // Escape quotes in the expression key string if necessary
                 block += `${indent}try:\n`;
                 block += `${indent}    _ds.us(${expr})\n`;
                 block += `${indent}except:\n`;
@@ -160,16 +163,15 @@ async function instrumentCode(rootDir, pythonFileNames, debugFileNames, watchExp
         }
 
         // Body head
-        block += `${indent}_ds.sh("${fileName}", ${lineNum})\n`;
+        block += `${indent}_ds.sh(${reprStr(fileName)}, ${lineNum})\n`;
 
         // Watch expressions
         allWatches.forEach((expr) => {
-            // Escape quotes in the expression key string if necessary
-            const safeExprKey = expr.replace(/"/g, '\\"');
+            const safeExprKey = reprStr(expr);
             block += `${indent}try:\n`;
-            block += `${indent}    _ds.d["w"]["${safeExprKey}"] = str(${expr})\n`;
+            block += `${indent}    _ds.d["w"][${safeExprKey}] = str(${expr})\n`;
             block += `${indent}except Exception as _debug_e:\n`;
-            block += `${indent}    _ds.d["w"]["${safeExprKey}"] = str(_debug_e)\n`;
+            block += `${indent}    _ds.d["w"][${safeExprKey}] = str(_debug_e)\n`;
         });
 
         // Body tail
@@ -413,17 +415,13 @@ class DebugStates:
 `;
 
     const stateFileHandle = await rootDir.getFileHandle(STATE_FILENAME, { create: true });
-    const stateWriter = await stateFileHandle.createWritable();
-    await stateWriter.write(stateModuleContent);
-    await stateWriter.close();
+    await writeFileData(stateFileHandle, stateModuleContent);
 
     // Write modified python files
     for (const [name, content] of processedFiles) {
         const newName = PREFIX + name;
         const handle = await rootDir.getFileHandle(newName, { create: true });
-        const writer = await handle.createWritable();
-        await writer.write(content);
-        await writer.close();
+        await writeFileData(handle, content);
         await sleep(100);
     }
 }
@@ -447,5 +445,4 @@ function formatBytes(bytes, decimals = 2) {
     return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
 }
 
-// Exporting functions if used as a module
 export { cleanupDebugFiles, getAllPythonFiles, instrumentCode, sleep, formatBytes, identifyCodeRows };

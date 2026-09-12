@@ -12,11 +12,12 @@ This guide walks you through connecting your microcontroller, editing and runnin
     - In the middle of the IDE, you will see a tab called "Navigation". Follow the steps listed there.
 - If you have never installed CircuitPython on this microcontroller, please click on "Step 0. Install CircuitPython" and follow the guide there to install or upgrade CircuitPython.
     - The microcontroller will appear as a USB drive in your computer's file system.
-- Click on "Step 1. Open CircuitPy Drive". In the popup file explorer, navigate to the root directory of your microcontroller, then click on 'open folder'.
+- "Step 1" asks how the IDE should read files on your board. Leave it on **USB mass storage** unless your CIRCUITPY drive does not appear; see the **Folder View** help for what the **USB serial** option changes.
+- Click on "Step 2. Open CircuitPy Drive". In the popup file explorer, navigate to the root directory of your microcontroller, then click on 'open folder'.
     - Click on the "allow" button to grant the IDE file editing permissions.
     - Note, you should open the microcontroller drive as a whole instead of sub-folders or any single file.
     - You should now see the files on the microcontroller in the left panel called "Folder View".
-- Click on "Step 2. Connect to Serial Port", select your microcontroller, then click on "connect".
+- Click on "Step 3. Connect to Serial Port", select your microcontroller, then click on "connect".
     - You will see some system information and running results in the right-side tab called "Serial Console".
 - You have now finished the setup process, and you can safely close the "Navigation" tab.
     - You can reopen the Navigation tab by going to Menu bar -> Tools -> Navigation.

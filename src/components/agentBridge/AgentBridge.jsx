@@ -43,6 +43,9 @@ export default function AgentBridge() {
         clearDataSerialOutput,
         // board
         boardInfo,
+        // which source backs the file methods, and how to re-read it
+        fileSource,
+        refreshFileSource,
     } = useContext(AppContext);
 
     const enabled = useAgentBridgeEnabled();
@@ -62,6 +65,8 @@ export default function AgentBridge() {
     store.flexModel = flexModel;
     store.rootDirHandle = rootDirHandle;
     store.rootFolderReady = Boolean(rootFolderDirectoryReady);
+    store.fileSource = fileSource;
+    store.refreshFileSource = refreshFileSource;
     store.serial = serial;
     store.serialReady = Boolean(serialReady);
     store.sendDataToSerialPort = sendDataToSerialPort;

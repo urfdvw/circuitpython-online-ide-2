@@ -62,6 +62,20 @@ Pressing Shift-Enter (or the "SEND" button) will send the entire snippet to the 
 - `Up` (when the cursor is at the first line in the editor): Recalls earlier command history.
 - `Down` (when the cursor is at the last line in the editor): Recalls later command history.
 
+### Lines starting with `[IDE]`
+
+When board files are loaded over **USB serial** (see Settings -> General -> "Board file access"), the IDE has to borrow this same connection to read and write them. Each of those operations briefly interrupts whatever the board is running.
+
+The raw transfer is hidden, since it would be pages of unreadable data. Instead the IDE prints a one-line summary of what it did:
+
+```
+[IDE] wrote code.py
+[IDE] listed files
+[IDE] wrote code.py failed: The board's filesystem is read-only to CircuitPython...
+```
+
+Anything prefixed with `[IDE]` comes from the editor, not from your program. It is there so a program stopping mid-run is explained rather than mysterious. In USB mass storage mode these lines never appear, because files are read through the mounted drive and the serial connection is left alone.
+
 ## Notes & Troubleshooting
 
 The **Serial Title** indicates the status of CircuitPython:

@@ -8,7 +8,7 @@ import DeveloperBoardOutlinedIcon from "@mui/icons-material/DeveloperBoardOutlin
 import { grey, purple, teal } from "@mui/material/colors";
 
 export default function CornerIcons() {
-    const { appConfig, rootFolderDirectoryReady, rootFolderStatusText, serialReady } = useContext(AppContext);
+    const { appConfig, rootFolderDirectoryReady, rootFolderStatusText, serialReady, fileSourceName } = useContext(AppContext);
     return (
         <Box
             sx={{ height: "100%", alignContent: "center", display: "flex", flexDirection: "row", alignItems: "center" }}
@@ -17,7 +17,7 @@ export default function CornerIcons() {
             <Tooltip
                 title={
                     <>
-                        <b>CircuitPy Drive:</b>
+                        <b>{fileSourceName}:</b>
                         <br />
                         {rootFolderStatusText}
                     </>

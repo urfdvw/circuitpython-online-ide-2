@@ -14,7 +14,8 @@ import {
     Link,
     CssBaseline,
 } from "@mui/material";
-import { isMobile, isSafari, isFirefox } from "react-device-detect";
+import { isMobile, isSafari, isFirefox, browserVersion } from "react-device-detect";
+import { isBrowserSupported, describeUnsupportedBrowser } from "../utilFunctions/browserSupport";
 
 // --- Content Data (Original Text) ---
 
@@ -124,18 +125,15 @@ const ProductPage = () => {
                             size: isMobile ? "small" : "medium",
                         }}
                         onClick={() => {
-                            if (isMobile) {
-                                alert("To use the IDE, visit circuitpy.dev on a desktop browser.");
-                            } else if (isSafari || isFirefox) {
-                                alert(
-                                    "To use the IDE, visit circuitpy.dev on a Chrome or Chromium-based browser, such as Edge and Opera."
-                                );
-                            } else {
+                            if (isBrowserSupported({ isMobile, isSafari, isFirefox, browserVersion })) {
                                 // Supported browser reached via the `#/product` route:
                                 // drop the hash so the routing shell renders the IDE.
                                 window.location.hash = "";
                                 window.location.reload();
+                                return;
                             }
+                            const { reason, fix } = describeUnsupportedBrowser({ isFirefox, isSafari, isMobile });
+                            alert(fix ? `${reason}\n\n${fix}` : reason);
                         }}
                     >
                         Open IDE

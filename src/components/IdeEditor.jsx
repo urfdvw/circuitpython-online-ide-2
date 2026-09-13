@@ -32,6 +32,7 @@ import TabTemplate from "../utilComponents/TabTemplate";
 import { identifyCodeRows } from "../utilFunctions/debuggerUtils";
 // syntax checking
 import useSyntaxCheck from "../hooks/useSyntaxCheck";
+import useEditorCommands from "../hooks/useEditorCommands";
 // side effect only: points ACE at its bundled JSON worker (json syntax annotations)
 import "../utilFunctions/aceJsonWorker";
 
@@ -76,6 +77,7 @@ export default function IdeEditor({ node }) {
     const fileKey = node.getConfig().fileKey;
     const fileHandle = fileLookUp[fileKey];
     const aceEditorRef = useRef(null);
+    const [editorInstance, setEditorInstance] = useState(null);
     const [text, setText] = useState("");
     const [loadedFile, setLoadedFile] = useState(null);
     const saving = useRef(false);
@@ -138,12 +140,13 @@ export default function IdeEditor({ node }) {
     }, [clearFileDirty, fileKey]);
 
     useEffect(() => {
+        if (!editorInstance || loadedFile === fileHandle) return;
         let cancelled = false;
         async function loadText() {
             try {
                 const fileText = await getFileText(fileHandle);
-                if (cancelled || !aceEditorRef.current) return;
-                aceEditorRef.current.editor.session.setValue(fileText);
+                if (cancelled) return;
+                editorInstance.session.setValue(fileText);
                 setSavedText(fileText);
                 setConflict(false);
                 setFileExists(true);
@@ -154,11 +157,11 @@ export default function IdeEditor({ node }) {
         }
         loadText();
         return () => { cancelled = true; };
-    }, [fileHandle]);
+    }, [fileHandle, editorInstance, loadedFile]);
 
     useEffect(() => {
-        aceEditorRef.current?.editor.session.setNewLineMode(config.editor.newline_mode);
-    }, [config.editor.newline_mode]);
+        editorInstance?.session.setNewLineMode(config.editor.newline_mode);
+    }, [config.editor.newline_mode, editorInstance]);
 
     useEffect(() => {
         setBreakpoints(new Set(text.split("\n").flatMap((line, index) => hasBreakpointComment(line) ? [index] : [])));
@@ -166,8 +169,9 @@ export default function IdeEditor({ node }) {
 
     // Update gutter decorations whenever breakpoints change
     useEffect(() => {
-        if (aceEditorRef.current) {
-            const editor = aceEditorRef.current.editor;
+        if (editorInstance) {
+            const editor = editorInstance;
+            const document = editor.container.ownerDocument;
             const session = editor.session;
 
             // Add stylesheet for breakpoint styling if not already added
@@ -186,7 +190,7 @@ export default function IdeEditor({ node }) {
                 session.setBreakpoint(lineNum, "ace_breakpoint");
             });
         }
-    }, [breakpoints]);
+    }, [breakpoints, editorInstance]);
 
     const height = node.getRect().height;
     var mode = "text";
@@ -202,7 +206,7 @@ export default function IdeEditor({ node }) {
 
     // live syntax-error annotations: python via tree-sitter, json via ACE's own worker
     // (registered by the aceJsonWorker import above)
-    useSyntaxCheck(aceEditorRef, text, mode);
+    useSyntaxCheck(editorInstance, text, mode);
 
     async function saveFile(contents) {
         if (loadedFile !== fileHandle || saving.current) return;
@@ -313,75 +317,13 @@ export default function IdeEditor({ node }) {
     const commandActions = useRef(null);
     commandActions.current = { text, saveFile, sendCtrlC, sendCtrlD, run_current, run_current_and_del, run_cell };
 
-    // Install bindings once; dispatch through the latest editor and serial callbacks.
-    useEffect(() => {
-        if (aceEditorRef.current === null) return;
-        const commands = aceEditorRef.current.editor.commands;
-        commands.addCommand({
-            name: "save",
-            bindKey: { win: "Ctrl-S", mac: "Command-S" },
-            exec: () => commandActions.current.saveFile(commandActions.current.text),
-        });
-        commands.addCommand({
-            name: "ctrl-c",
-            bindKey: { win: "Ctrl-Shift-C", mac: "Ctrl-C" },
-            exec: () => commandActions.current.sendCtrlC(),
-        });
-        commands.addCommand({
-            name: "ctrl-d",
-            bindKey: { win: "Ctrl-Shift-D", mac: "Ctrl-D" },
-            exec: () => commandActions.current.sendCtrlD(),
-        });
-        commands.addCommand({
-            name: "run_current",
-            bindKey: { win: "Shift-Enter", mac: "Shift-Enter" },
-            exec: function (editor) {
-                console.log("run_current");
-                commandActions.current.run_current(editor);
-            },
-        });
-        commands.addCommand({
-            name: "run_current_and_del",
-            bindKey: { win: "Alt-Enter", mac: "Alt-Enter" },
-            exec: function (editor) {
-                console.log("run_current_and_del");
-                commandActions.current.run_current_and_del(editor);
-            },
-        });
-        commands.addCommand({
-            name: "run_cell",
-            bindKey: { win: "Ctrl-Enter", mac: "Cmd-Enter" },
-            exec: function (editor) {
-                console.log("run_cell");
-                commandActions.current.run_cell(editor);
-            },
-        });
-        commands.addCommand({
-            name: "MyIntdent",
-            bindKey: { win: "Ctrl-]", mac: "Cmd-]" },
-            exec: function (editor) {
-                console.log("MyIntdent");
-                editor.blockIndent();
-            },
-            multiSelectAction: "forEach",
-            scrollIntoView: "selectionPart",
-        });
-        commands.addCommand({
-            name: "MyOutdent",
-            bindKey: { win: "Ctrl-[", mac: "Cmd-[" },
-            exec: function (editor) {
-                console.log("MyOutdent");
-                editor.blockOutdent();
-            },
-            multiSelectAction: "forEach",
-            scrollIntoView: "selectionPart",
-        });
-    }, []);
+    useEditorCommands(editorInstance, commandActions);
 
-    // Register gutter click handler for breakpoints — once only after mount
+    // Bind to the actual editor, which changes when popping out or docking.
     useEffect(() => {
-        if (aceEditorRef.current === null) return;
-        const gutter = aceEditorRef.current.editor.renderer.$gutterLayer;
+        if (!editorInstance) return;
+        let cancelled = false;
+        const gutter = editorInstance.renderer.$gutterLayer;
         if (!gutter) return;
         const gutterElement = gutter.element;
 
@@ -405,14 +347,16 @@ export default function IdeEditor({ node }) {
             }
 
             if (!isNaN(lineNum) && lineNum >= 0) {
-                const session = aceEditorRef.current.editor.session;
+                const session = editorInstance.session;
                 const line = session.getLine(lineNum);
                 if (hasBreakpointComment(line)) {
                     const newLine = line.replace(/#\s*●/, "").trimEnd();
                     session.replace(new Range(lineNum, 0, lineNum, line.length), newLine);
                     setText(session.getValue());
                 } else {
-                    const codeRows = await identifyCodeRows(session.getValue());
+                    const snapshot = session.getValue();
+                    const codeRows = await identifyCodeRows(snapshot);
+                    if (cancelled || session.getValue() !== snapshot) return;
                     if (codeRows.has(lineNum)) {
                         console.log("Can set breakpoint on a code row.");
                         const newLine = line + (line.trim() ? " " : "") + "# ●";
@@ -424,8 +368,11 @@ export default function IdeEditor({ node }) {
         }
 
         gutterElement.addEventListener("click", handleGutterClick);
-        return () => gutterElement.removeEventListener("click", handleGutterClick);
-    }, []);
+        return () => {
+            cancelled = true;
+            gutterElement.removeEventListener("click", handleGutterClick);
+        };
+    }, [editorInstance]);
 
     const title =
         "Editor: " +
@@ -494,6 +441,7 @@ export default function IdeEditor({ node }) {
                 )}
                 <AceEditor
                     ref={aceEditorRef}
+                    onLoad={setEditorInstance}
                     mode={mode}
                     useSoftTabs={true}
                     wrapEnabled={true}

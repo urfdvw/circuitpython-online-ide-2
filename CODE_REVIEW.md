@@ -1,5 +1,7 @@
 # Code quality review — September 12, 2026
 
+> Follow-up: [review corrections and current validation](CODE_REVIEW_FOLLOWUP.md). This report describes the initial review.
+
 This review covered application code, serial filesystem and transport code, the
 Python widget helper, service worker, proxy, configuration, build setup, and tests.
 Generated bundles and third-party source were assessed through builds and dependency

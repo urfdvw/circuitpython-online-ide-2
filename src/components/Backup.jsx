@@ -1,6 +1,7 @@
+import useBackupJob from "../hooks/useBackupJob";
 import TabTemplate from "../utilComponents/TabTemplate";
 import AppContext from "../AppContext";
-import { useContext, useEffect, useState, useCallback, useRef } from "react";
+import { useContext, useEffect, useState, useCallback } from "react";
 import { Typography, Box, Button } from "@mui/material";
 import TextDiffViewer from "../utilComponents/TextDiffViewer";
 import { selectTabById } from "../layout/layoutUtils";
@@ -30,34 +31,22 @@ export default function Backup() {
     const [lastRecoverTime, setLastRecoverTime] = useState(null);
     const [lastRefreshTime, setLastRefreshTime] = useState(null);
     const [codeDiff, setCodeDiff] = useState(null);
-    const jobPending = useRef(false);
-    const runJob = useCallback(async (operation) => {
-        if (jobPending.current) return false;
-        jobPending.current = true;
-        try {
-            await operation();
-            return true;
-        } catch (error) {
-            alert("Backup operation failed. " + error.message);
-            return false;
-        } finally {
-            jobPending.current = false;
-        }
-    }, []);
+    const { runJob, error: jobError, clearError } = useBackupJob();
 
     useEffect(() => {
+        clearError();
         setCodeDiff(null);
         setLastBackupTime(null);
         setLastRecoverTime(null);
         setLastRefreshTime(null);
-    }, [rootDirHandle, backupDirHandle]);
+    }, [rootDirHandle, backupDirHandle, clearError]);
     useEffect(() => {
         if (!backupFolderDirectoryReady) {
             setLastBackupTime(null);
         }
     }, [backupFolderDirectoryReady]);
 
-    const refresh = useCallback(() => runJob(async () => {
+    const refresh = useCallback((options) => runJob(async () => {
         if (!(backupDirHandle && rootDirHandle)) {
             return;
         }
@@ -72,16 +61,15 @@ export default function Backup() {
         const now = new Date().toLocaleTimeString();
         setLastRefreshTime(now);
         console.log("Last refresh at: " + now);
-    }), [backupDirHandle, rootDirHandle, batchFileOps, runJob]);
+    }, options), [backupDirHandle, rootDirHandle, batchFileOps, runJob]);
 
     const backup = useCallback(
-        (toPC) => runJob(async () => {
+        (toPC, options) => runJob(async () => {
             if (await isSameEntrySafe(backupDirHandle, rootDirHandle)) {
                 console.log(backupDirHandle.name);
                 console.log(rootDirHandle.name);
                 console.error("Cannot backup to the folder itself.");
-                confirm("Cannot backup to the folder itself.");
-                return;
+                throw new Error("Cannot back up a folder to itself.");
             }
             if (!(backupDirHandle && rootDirHandle)) {
                 return;
@@ -104,7 +92,7 @@ export default function Backup() {
                 setLastRecoverTime(now);
                 console.log("Last recover at: " + now);
             }
-        }),
+        }, options),
         [backupDirHandle, rootDirHandle, appConfig.ready, appConfig.config.backup.clean, batchFileOps, runJob]
     );
 
@@ -115,7 +103,7 @@ export default function Backup() {
         const period = Number(appConfig.config.backup.backup_period);
         if (!autoWatchFiles || !appConfig.ready || !appConfig.config.backup.enable_backup_schedule ||
             !Number.isFinite(period) || period <= 0) return;
-        const interval = setInterval(() => backup(true), 60000 * period);
+        const interval = setInterval(() => backup(true, { background: true }), 60000 * period);
         return () => clearInterval(interval);
     }, [
         backup,
@@ -131,7 +119,7 @@ export default function Backup() {
         const period = Number(appConfig.config.backup.refresh_period);
         if (!autoWatchFiles || !appConfig.ready || !appConfig.config.backup.enable_refresh_schedule ||
             !Number.isFinite(period) || period <= 0) return;
-        const interval = setInterval(refresh, 60000 * period);
+        const interval = setInterval(() => refresh({ background: true }), 60000 * period);
         return () => clearInterval(interval);
     }, [
         refresh,
@@ -247,6 +235,7 @@ export default function Backup() {
                     </Typography>
                 ) : null}
 
+                {jobError && <Typography role="status" color="error">{jobError}</Typography>}
                 {lastBackupTime || lastRecoverTime || lastRefreshTime ? <hr /> : null}
                 {lastBackupTime ? <Typography gutterBottom>Last Backup : {lastBackupTime}</Typography> : null}
                 {lastRecoverTime ? <Typography gutterBottom>Last Recover : {lastRecoverTime}</Typography> : null}
@@ -255,6 +244,16 @@ export default function Backup() {
                 {codeDiff ? (
                     <>
                         <hr />
+                        {!codeDiff.complete && (
+                            <Box role="status" sx={{ color: "warning.main" }}>
+                                <Typography>Comparison incomplete. These paths could not be read and are excluded from the differences below:</Typography>
+                                {codeDiff.unreadable.map((entry) => (
+                                    <Typography key={entry.side + entry.path}>
+                                        {entry.side === "source" ? "Microcontroller" : "Computer"}: {entry.path} — {entry.message}
+                                    </Typography>
+                                ))}
+                            </Box>
+                        )}
                         {codeDiff.newFiles.length > 0 ? (
                             <>
                                 <Typography variant="h6">Files only on microcontroller</Typography>

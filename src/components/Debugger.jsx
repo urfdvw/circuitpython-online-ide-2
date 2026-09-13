@@ -1,3 +1,4 @@
+import useDebugTargets from "../hooks/useDebugTargets";
 import {
     cleanupDebugFiles,
     getAllPythonFiles,
@@ -5,7 +6,7 @@ import {
     sleep,
     formatBytes,
 } from "../utilFunctions/debuggerUtils";
-import { useContext, useState, useEffect, useRef } from "react";
+import { useContext, useState, useEffect, useRef, useCallback } from "react";
 import AppContext from "../AppContext";
 import DebugWatchSet from "./DebugWatchSet";
 import * as constants from "../constants";
@@ -53,7 +54,6 @@ export default function Debugger() {
     } = useContext(AppContext);
     const usingSerialFiles = fileSource === "usb_serial";
 
-    const [pythonFileNames, setPythonFileNames] = useState([]);
     const [debugFileNames, setDebugFileNames] = useState([]);
     const [watchExpressions, setWatchExpressions] = useState({});
     const [conditionalBreakpoints, setConditionalBreakpoints] = useState({});
@@ -61,7 +61,7 @@ export default function Debugger() {
     const [debugHistory, setDebugHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
-    const [pageIndex, setPageIndex] = useState(1);
+    const [pageIndex, setPageIndex] = useState(0);
     const [loadingInfo, setLoadingInfo] = useState("");
     const [debuggerRunning, setDebuggerRunning] = useState(false);
     const [debuggerHalted, setDebuggerHalted] = useState(false);
@@ -74,21 +74,16 @@ export default function Debugger() {
         return () => setConfigField("serial_console", "auto_scroll", original);
     }, [setConfigField]);
 
-    useEffect(() => {
-        let cancelled = false;
-        if (!rootFolderDirectoryReady) {
-            setPageIndex(0);
-            return;
-        }
-        getAllPythonFiles(rootDirHandle).then((files) => {
-            if (cancelled) return;
-            setPythonFileNames(files);
-            setPageIndex(1);
-        }).catch((error) => {
-            if (!cancelled) console.warn("Could not list debug targets:", error);
-        });
-        return () => { cancelled = true; };
-    }, [rootFolderDirectoryReady, rootDirHandle]);
+    const onSourceChanged = useCallback(() => {
+        setPageIndex(1);
+        setDebugHistory([]);
+        setHistoryIndex(0);
+        setDebuggerRunning(false);
+        setDebuggerHalted(false);
+        setInstrumentationOutdated(true);
+    }, [setInstrumentationOutdated]);
+    const { files: pythonFileNames, error: targetError, refresh: refreshTargets } =
+        useDebugTargets(rootDirHandle, rootFolderDirectoryReady, getAllPythonFiles, onSourceChanged);
 
     useEffect(() => {
         // for auto re instrumentation
@@ -134,7 +129,7 @@ export default function Debugger() {
     const viewingLatest = historyIndex === debugHistory.length - 1;
     const viewingFirst = historyIndex === 0;
 
-    const canRunCode = debuggerRunning && debuggerHalted && viewingLatest;
+    const canRunCode = serialReady && rootFolderDirectoryReady && debuggerRunning && debuggerHalted && viewingLatest;
     const canRewind = hasHistory && (!debuggerRunning || debuggerHalted) && !viewingFirst;
     const canForward = hasHistory && (!debuggerRunning || debuggerHalted) && !viewingLatest;
 
@@ -151,10 +146,7 @@ export default function Debugger() {
             return;
         }
 
-        const pythonFiles = await getAllPythonFiles(rootDirHandle);
-        setPythonFileNames(pythonFiles);
-        console.log("Python Files:", pythonFiles);
-        setPageIndex(1);
+        if (await refreshTargets()) setPageIndex(1);
     }
 
     async function handleStartDebuggerPage() {
@@ -584,6 +576,8 @@ export default function Debugger() {
                     <Typography component="p">{loadingInfo}</Typography>
                 </Box>
             </Backdrop>
+            {targetError && <Typography role="status" color="error">Could not list debug files: {targetError}</Typography>}
+            {!rootFolderDirectoryReady && <Typography role="status">{fileSourceNeeds}</Typography>}
             {pageIndex === 0 && infoPage()}
             {pageIndex === 1 && configPage()}
             {pageIndex === 2 && debuggerPage()}

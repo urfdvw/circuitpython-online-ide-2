@@ -1,5 +1,4 @@
-import { Readable } from "node:stream";
-import { pipeline } from "node:stream/promises";
+import { createTransferTimeout, pipeRelease } from "./transfer.js";
 import functions from "@google-cloud/functions-framework";
 import { fetchRelease, isAllowedUrl } from "./proxy.js";
 
@@ -33,11 +32,12 @@ functions.http("corsProxy", async (req, res) => {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 60000);
+    const timeout = createTransferTimeout(controller);
     const disconnect = () => controller.abort();
     res.on("close", disconnect);
     try {
         const upstream = await fetchRelease(url, { method: req.method, signal: controller.signal });
+        timeout.progress();
         // Fetch decodes compressed bodies; forwarding encoded lengths/encodings corrupts downloads.
         for (const header of ["content-type", "content-disposition"]) {
             const value = upstream.headers.get(header);
@@ -47,14 +47,14 @@ functions.http("corsProxy", async (req, res) => {
         if (!upstream.body || req.method === "HEAD") {
             res.end();
         } else {
-            await pipeline(Readable.fromWeb(upstream.body), res);
+            await pipeRelease(upstream.body, res, { signal: controller.signal, progress: timeout.progress });
         }
     } catch (error) {
         console.error("Proxy error:", error);
         if (!res.headersSent && !res.destroyed) res.status(502).send("Upstream fetch failed.");
         else res.destroy();
     } finally {
-        clearTimeout(timeout);
+        timeout.dispose();
         res.off("close", disconnect);
     }
 });

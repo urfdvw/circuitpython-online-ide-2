@@ -75,7 +75,8 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement 
             }
             setCurrentFolderHandle(folderHandle);
             setContent((previous) => compareFolderContent(previous, entries) ? previous : entries);
-            setPath(nextPath);
+            setPath((previous) => previous.length === nextPath.length &&
+                previous.every((entry, index) => entry === nextPath[index]) ? previous : nextPath);
         } catch (error) {
             if (request === requestId.current) console.warn("Could not refresh folder:", error);
         }

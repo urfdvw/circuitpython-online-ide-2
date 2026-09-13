@@ -1,3 +1,4 @@
+import useMomentaryButton from "../../hooks/useMomentaryButton";
 import Button from "@mui/material/Button";
 
 import VariableBase from "./VariableBase";
@@ -5,6 +6,7 @@ import VariableBase from "./VariableBase";
 const VariableButton = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, setWidgetProperty, pending }) => {
     const variableName = getWidgetProperty("variableName");
     const buttonText = getWidgetProperty("buttonText");
+    const pressHandlers = useMomentaryButton(variableName, setVariableOnMcu);
 
     return (
         <VariableBase
@@ -17,21 +19,7 @@ const VariableButton = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
             <Button
                 size="large"
                 variant="contained"
-                onPointerDown={(event) => {
-                    event.currentTarget.setPointerCapture(event.pointerId);
-                    setVariableOnMcu(variableName, true);
-                }}
-                onPointerUp={() => {
-                    setVariableOnMcu(variableName, false);
-                }}
-                onPointerCancel={() => setVariableOnMcu(variableName, false)}
-                onKeyDown={(event) => {
-                    if (!event.repeat && [" ", "Enter"].includes(event.key)) setVariableOnMcu(variableName, true);
-                }}
-                onKeyUp={(event) => {
-                    if ([" ", "Enter"].includes(event.key)) setVariableOnMcu(variableName, false);
-                }}
-                onBlur={() => setVariableOnMcu(variableName, false)}
+                {...pressHandlers}
             >
                 {buttonText}
             </Button>

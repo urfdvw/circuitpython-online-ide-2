@@ -93,3 +93,26 @@ DevTools Protocol against `npm run dev`; anything involving React state, the
 FlexLayout model, or the settings form still needs a real browser. In particular
 `useFileSourceTabs` (closing editor tabs when the file source changes) is only
 verified structurally.
+
+## Follow-up regression coverage
+
+`reviewLifecycle.test.js` exercises ACE command replacement, scheduled/manual job
+errors, debugger source changes, and momentary-button release behavior through the
+real hooks and a small effect-lifecycle harness. `reviewData.test.js` covers
+independent settings tabs, failed persistence, and partial folder comparisons.
+`proxyTransfer.test.js` streams real Node/Web streams through progress deadlines.
+These hook tests do not substitute for browser mounting behavior.
+
+A separate real-browser test mounts `IdeEditor` with an in-memory file, opens its
+actual popup, saves through ACE commands, docks back, and adds a breakpoint. It
+never opens a user drive or serial port. To run it with Node 22+:
+
+1. Start Vite: `npm run dev -- --host 127.0.0.1 --port 5176`.
+2. Start a separate Chrome instance with `--remote-debugging-port=9341` and a fresh
+   temporary `--user-data-dir`; leave an `about:blank` tab open. Use an isolated
+   profile because the test navigates a tab and opens/closes a popup.
+3. Run `node test/browser/runEditor.mjs`.
+
+`REVIEW_IDE_ORIGIN` and `REVIEW_CDP_ORIGIN` can override the two local origins. The
+browser runner is separate from `npm test`, which requires neither Chrome nor a
+running development server.

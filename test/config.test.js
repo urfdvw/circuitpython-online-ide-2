@@ -27,6 +27,7 @@ try {
             return slots[index];
         },
         useCallback: (callback) => callback,
+        useEffect: () => {},
     };
     const render = () => {
         cursor = 0;

@@ -112,12 +112,19 @@ export async function getFromPathIfExists(rootDirHandle, path) {
 }
 // file level ====================================
 
+// Retain the historical pacing for mounted drives until real-board testing can
+// establish that it is unnecessary. Serial handles already sequence REPL writes.
+async function settleDriveMutation(handle) {
+    if (typeof handle.devicePath !== "string") await sleep(200);
+}
+
 /** Commit a write, releasing the stream on failure without hiding the original error. */
 export async function writeFileData(fileHandle, data) {
     const writable = await fileHandle.createWritable();
     try {
         await writable.write(data);
         await writable.close();
+        await settleDriveMutation(fileHandle);
     } catch (error) {
         try {
             await writable.abort?.();
@@ -257,67 +264,71 @@ export async function checkEntryExists(parentHandle, entryName) {
     return (await checkFileExists(parentHandle, entryName)) || (await checkFolderExists(parentHandle, entryName));
 }
 
-/** Diff two folders by file text -> { newFiles, removedFiles, editedFiles } (paths + contents). */
+/** Compare readable files and explicitly report paths whose contents are unknown. */
 export async function compareFolders(sourceFolderHandle, targetFolderHandle, skipHidden = true) {
-    const output = {
-        newFiles: [],
-        removedFiles: [],
-        editedFiles: [],
+    const output = { newFiles: [], removedFiles: [], editedFiles: [], unreadable: [], complete: true };
+    const unknown = [];
+    const recordError = (side, path, directory, error) => {
+        unknown.push({ path, directory });
+        output.unreadable.push({ side, path: path || "/", directory, message: error.message });
+        output.complete = false;
     };
-
-    async function walkFolder(folderHandle, basePath = "") {
-        const files = {};
-        for await (const entry of await getFolderContent(folderHandle)) {
+    async function walkFolder(folderHandle, side, basePath = "") {
+        const files = Object.create(null);
+        let entries;
+        try {
+            entries = await getFolderContent(folderHandle);
+        } catch (error) {
+            recordError(side, basePath, true, error);
+            return files;
+        }
+        for (const entry of entries) {
             if (skipHidden && entry.name.startsWith(".")) continue;
-            const fullPath = basePath + "/" + entry.name;
+            const path = basePath + "/" + entry.name;
             if (isFolder(entry)) {
-                const subFiles = await walkFolder(entry, fullPath);
-                Object.assign(files, subFiles);
+                Object.assign(files, await walkFolder(entry, side, path));
             } else {
-                files[fullPath] = await getFileText(entry);
+                try {
+                    files[path] = await getFileText(entry);
+                } catch (error) {
+                    recordError(side, path, false, error);
+                }
             }
         }
         return files;
     }
-
-    const sourceFiles = await walkFolder(sourceFolderHandle);
-    const targetFiles = await walkFolder(targetFolderHandle);
-
-    const allPaths = new Set([...Object.keys(sourceFiles), ...Object.keys(targetFiles)]);
-
-    for (const path of allPaths) {
+    const sourceFiles = await walkFolder(sourceFolderHandle, "source");
+    const targetFiles = await walkFolder(targetFolderHandle, "target");
+    for (const path of new Set([...Object.keys(sourceFiles), ...Object.keys(targetFiles)])) {
+        // An unreadable file/subtree is unknown, never evidence of deletion.
+        if (unknown.some((entry) => path === entry.path || (entry.directory && path.startsWith(entry.path + "/")))) continue;
         const sourceText = sourceFiles[path];
         const targetText = targetFiles[path];
-
-        if (sourceText === undefined) {
-            output.removedFiles.push({ path, text: targetText });
-        } else if (targetText === undefined) {
-            output.newFiles.push({ path, text: sourceText });
-        } else if (sourceText !== targetText) {
-            output.editedFiles.push({
-                path,
-                sourceFileText: sourceText,
-                targetFileText: targetText,
-            });
-        }
+        if (sourceText === undefined) output.removedFiles.push({ path, text: targetText });
+        else if (targetText === undefined) output.newFiles.push({ path, text: sourceText });
+        else if (sourceText !== targetText) output.editedFiles.push({ path, sourceFileText: sourceText, targetFileText: targetText });
     }
-
     return output;
 }
 
 // Create -------------------------------------
 
 export async function addNewFolder(parentHandle, newFolderName) {
-    return parentHandle.getDirectoryHandle(newFolderName, { create: true });
+    const handle = await parentHandle.getDirectoryHandle(newFolderName, { create: true });
+    await settleDriveMutation(handle);
+    return handle;
 }
 
 export async function addNewFile(parentHandle, newFileName) {
-    return parentHandle.getFileHandle(newFileName, { create: true });
+    const handle = await parentHandle.getFileHandle(newFileName, { create: true });
+    await settleDriveMutation(handle);
+    return handle;
 }
 
 /** Delete an entry, propagating errors to the caller. */
 export async function removeEntry(parentHandle, entryHandle) {
     await parentHandle.removeEntry(entryHandle.name, { recursive: isFolder(entryHandle) });
+    await settleDriveMutation(parentHandle);
 }
 
 export async function cleanFolder(parentHandle) {
@@ -325,9 +336,6 @@ export async function cleanFolder(parentHandle) {
         await removeEntry(parentHandle, entry);
     }
 }
-
-export const _removeFolder = removeEntry;
-export const _removeFile = removeEntry;
 
 async function containsEntry(directory, entry) {
     if (await isSameEntrySafe(directory, entry)) return true;

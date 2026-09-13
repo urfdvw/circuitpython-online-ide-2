@@ -14,3 +14,10 @@ check before marking an editor saved.
 
 The tests in `test/fileSystem.test.js` and `test/fileSafety.test.js` exercise these
 helpers using a fake CircuitPython device that executes the generated Python.
+
+`compareFolders` returns `complete` and `unreadable` alongside its three difference
+arrays. An unreadable file or subtree is excluded from differences on both sides;
+it must not be presented as missing. Consumers must show the incomplete status.
+
+Mounted-drive mutations retain a 200 ms compatibility pause pending real-board
+verification. Serial handles use their own REPL sequencing and do not add it.

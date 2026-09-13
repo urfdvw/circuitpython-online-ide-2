@@ -188,8 +188,7 @@ print("REMOUNTED_RW")`,
 /**
  * Hand write access to CircuitPython WITHOUT an eject.
  *
- * Only available on firmware that has unsafe_disable_usb_drive(), which as of
- * now means CircuitPython main rather than any release. Can corrupt the
+ * Only available on firmware that has unsafe_disable_usb_drive(). Can corrupt the
  * filesystem if the host is mid-write, so this is only ever reached through an
  * explicit second confirmation.
  */

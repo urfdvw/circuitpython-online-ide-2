@@ -2,8 +2,9 @@
 // Test runner. No test framework: esbuild already ships with Vite, so each test
 // file is bundled and handed to node with nothing extra installed.
 //
-//   npm test              run everything
+//   npm test              run Node tests
 //   npm test serial       run files whose name matches "serial"
+//   npm test -- --browser include real-browser checks (see test/README.md for setup)
 //
 // A test file prints "PASS <name>" / "FAIL <name>" lines and exits non-zero on
 // failure (see test/helpers/harness.js). Bundling is what lets test files use
@@ -16,7 +17,9 @@ import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const HERE = dirname(fileURLToPath(import.meta.url));
-const filter = process.argv[2];
+const args = process.argv.slice(2);
+const includeBrowser = args.includes("--browser");
+const filter = args.find((arg) => arg !== "--browser");
 
 function hasPython3() {
     try {
@@ -118,4 +121,9 @@ rmSync(outDir, { recursive: true, force: true });
 
 console.log("  " + "-".repeat(52));
 console.log(`  ${passed} passed, ${failed} failed${skipped ? `, ${skipped} file(s) skipped` : ""}`);
+if (includeBrowser) {
+    const browser = spawnSync(process.execPath, [join(HERE, "browser/runEditor.mjs")], { stdio: "inherit" });
+    if (browser.error) console.error(browser.error);
+    if (browser.status !== 0) failed += 1;
+}
 process.exit(failed ? 1 : 0);

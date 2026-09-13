@@ -11,7 +11,7 @@ function getLatestSession(dataFromBoard) {
 // Tally read-ack counts per variable in the given text. Each <CVR> frame is a JSON array of the
 // variable names the board just ingested, e.g. <CVR>["a"]</CVR>.
 function aggregateReadCounts(text) {
-    const counts = {};
+    const counts = Object.create(null);
     for (const block of matchesInBetween(text, CV_READ_START, CV_READ_END)) {
         let names;
         try {
@@ -39,9 +39,9 @@ export default function useConnectedVariables(dataFromBoard, sendToBoard) {
     const [connectedVariables, setConnectedVariables] = useState({});
     const [pending, setPending] = useState({}); // { [name]: bool } — drives the widget indicator
 
-    const queueRef = useRef({}); // { [name]: [values waiting to be sent] }
-    const flightRef = useRef({}); // { [name]: { ackAt } } — present means a write is in flight
-    const readCountsRef = useRef({}); // { [name]: ack count } in the latest session
+    const queueRef = useRef(Object.create(null)); // { [name]: [values waiting to be sent] }
+    const flightRef = useRef(Object.create(null)); // { [name]: { ackAt } } — present means a write is in flight
+    const readCountsRef = useRef(Object.create(null)); // { [name]: ack count } in the latest session
     const sessionRef = useRef(0); // number of session dividers seen (to detect (re)connects)
 
     // always use the latest sender without re-creating the stable callbacks below
@@ -90,8 +90,8 @@ export default function useConnectedVariables(dataFromBoard, sendToBoard) {
         const dividerCount = (dataFromBoard || "").split(CV_SESSION_DIVIDER).length - 1;
         if (dividerCount !== sessionRef.current) {
             sessionRef.current = dividerCount;
-            flightRef.current = {};
-            queueRef.current = {};
+            flightRef.current = Object.create(null);
+            queueRef.current = Object.create(null);
             setPending({});
         }
 

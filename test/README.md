@@ -1,14 +1,15 @@
 # Tests
 
 ```
-npm test              # everything
+npm test              # all Node tests
 npm test serial       # only files whose name contains "serial"
+npm test -- --browser # Node tests plus browser checks (requires setup below)
+npm run test:browser  # browser checks only (requires setup below)
 ```
 
-These cover the serial file source (`src/serialFs/`) and the serial transport
-changes it depends on. They exist because that code is easy to break in ways that
-are invisible without a board attached: protocol timing, cache races, and Python
-that is generated as text and only fails once it reaches the device.
+These cover serial transfers, file safety, settings persistence, proxy request
+validation, and service-worker behavior. The fake board executes generated Python
+to expose protocol and filesystem failures without attached hardware.
 
 ## No test framework
 
@@ -40,6 +41,13 @@ missing.
 
 | File | Covers |
 | --- | --- |
+| `fileSafety.test.js` | Failed writes and copies, overlapping backup folders, hidden-file preservation, dotted directories, and pure reads. |
+| `serialWriteRecovery.test.js` | Failed replacement and rollback preserve original bytes; staging and recovery files do not overwrite existing entries; invalid child names are rejected. |
+| `serialCode.test.js` | Multiline Python and split UTF-8 packets, disconnect isolation, cross-connection handle identity, and malformed hex transfers. |
+| `config.test.js` | Malformed storage, schema defaults, successive updates, and storage-quota failures. |
+| `proxy.test.js` | Allowed release URLs, redirect restrictions, request methods, and bounded redirect chains. |
+| `serviceWorker.test.js` | Complete release installation, cache ownership, offline shell fallback, and failed-update/cache-error recovery. |
+| `hostedOffline.test.js` | Build manifest coverage, content hashes, exclusion of hidden metadata, stable cache revisions despite Finder changes, and Git publication checks for missing/ignored deployment files. |
 | `fileSystem.test.js` | The duck-typed handles, driven through the **real** `fileSystemUtils` helpers that FolderView, the editor and Backup use. Also asserts that repeated listings cost zero device round trips. |
 | `deviceOps.test.js` | The injected Python against the fake board: create must not truncate, writes restart the board and reads do not, filenames with edge whitespace survive, a deleted directory reads as unhealthy, a failed write cleans up its temp file. |
 | `pythonRepr.test.js` | Quoting and byte encoding, cross-checked against a real `python3`. Both device-side decoders (`binascii` and the pure-Python fallback) must agree with what JavaScript produced, and every injected snippet must compile. |
@@ -83,8 +91,33 @@ loops (`SerialCommunication.writeLoop`) that never settle on their own.
 
 ## What is not covered
 
-The UI is not tested here. Browser-level checks were done ad hoc over the Chrome
-DevTools Protocol against `npm run dev`; anything involving React state, the
-FlexLayout model, or the settings form still needs a real browser. In particular
+The Node suite does not mount the UI. The opt-in browser suite below covers the
+editor; other interactions with the FlexLayout model or settings form still need
+manual browser checks. In particular
 `useFileSourceTabs` (closing editor tabs when the file source changes) is only
 verified structurally.
+
+## Follow-up regression coverage
+
+`reviewLifecycle.test.js` exercises ACE command replacement, scheduled/manual job
+errors, debugger source changes, and momentary-button release behavior through the
+real hooks and a small effect-lifecycle harness. `reviewData.test.js` covers
+independent settings tabs, failed persistence, and partial folder comparisons.
+`proxyTransfer.test.js` streams real Node/Web streams through progress deadlines.
+These hook tests do not substitute for browser mounting behavior.
+
+A separate real-browser test mounts `IdeEditor` with an in-memory file, opens its
+actual popup, saves through ACE commands, docks back, and adds a breakpoint. It also
+checks failed reads, repeated retries, and save protection until loading succeeds. It
+never opens a user drive or serial port. To run it with Node 22+:
+
+1. Start Vite: `npm run dev -- --host 127.0.0.1 --port 5176`.
+2. Start a separate Chrome instance with `--remote-debugging-port=9341` and a fresh
+   temporary `--user-data-dir`; leave an `about:blank` tab open. Use an isolated
+   profile because the test navigates a tab and opens/closes a popup.
+3. Run `npm run test:browser`, or `npm test -- --browser` to include the Node suite.
+
+`REVIEW_IDE_ORIGIN` and `REVIEW_CDP_ORIGIN` can override the two local origins. The
+browser checks are opt-in: plain `npm test` requires neither Chrome nor a running
+development server. With `--browser`, a missing browser/server or failed browser
+check makes the command fail; it is not silently skipped.

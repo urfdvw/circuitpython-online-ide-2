@@ -298,7 +298,7 @@ export async function getInstalledLibVersions(rootHandle) {
 
 export function resolveDependenciesFromJsonStrings(dataJsonList, targetNames) {
     // 1) Merge all parsed JSON objects into a single map
-    const merged = {};
+    const merged = Object.create(null);
     for (const s of dataJsonList || []) {
         if (typeof s !== "string") continue;
         try {
@@ -319,7 +319,7 @@ export function resolveDependenciesFromJsonStrings(dataJsonList, targetNames) {
     const roots = Array.isArray(targetNames) ? targetNames.slice() : [String(targetNames || "")];
 
     function dfs(name) {
-        if (visited.has(name)) return;
+        if (typeof name !== "string" || visited.has(name)) return;
         visited.add(name);
 
         const node = merged[name];
@@ -342,7 +342,7 @@ export function resolveDependenciesFromJsonStrings(dataJsonList, targetNames) {
 }
 
 export function filterNamesInJsons(dataJsonList, names) {
-    const merged = {};
+    const merged = Object.create(null);
 
     // Merge all JSON objects (later wins)
     for (const s of dataJsonList || []) {
@@ -386,6 +386,7 @@ export function forEachCatalogEntry(bundles, fn) {
         } catch {
             continue;
         }
+        if (!obj || typeof obj !== "object" || Array.isArray(obj)) continue;
         for (const name of Object.keys(obj)) {
             fn(name, obj[name], bundle);
         }
@@ -399,13 +400,14 @@ export function isBundleJsonFileName(str) {
 
 export async function fetchBundleAssets(repo) {
     const response = await fetch(`https://api.github.com/repos/adafruit/${repo}/releases/latest`);
+    if (!response.ok) throw new Error(`GitHub release lookup failed: HTTP ${response.status}`);
     const data = await response.json();
-
+    if (!Array.isArray(data.assets) || !data.assets.length) throw new Error("GitHub release has no bundle assets.");
     return data.assets;
 }
 
 export function getBundleTimeStamp(assets) {
-    return assets.at(0).updated_at;
+    return assets?.at(0)?.updated_at ?? "";
 }
 
 // The CircuitPython major a bundle zip is built for, read from its file name

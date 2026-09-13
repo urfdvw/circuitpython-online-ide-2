@@ -17,7 +17,7 @@ import {
 import { isMobile, isSafari, isFirefox, browserVersion } from "react-device-detect";
 import { isBrowserSupported, describeUnsupportedBrowser } from "../utilFunctions/browserSupport";
 
-// --- Content Data (Original Text) ---
+// Product features
 
 const FEATURES = [
     {
@@ -182,7 +182,6 @@ const ProductPage = () => {
 
                 {/* --- Feature Section --- */}
                 <Box component="section" sx={{ py: { xs: 6, md: 8 } }}>
-                    {/* Modification: "Features" Title Removed */}
                     <Grid container spacing={4}>
                         {FEATURES.map((feature, index) => (
                             <Grid item xs={12} md={4} key={index}>
@@ -231,7 +230,6 @@ const ProductPage = () => {
                 <Box component="section" sx={{ py: { xs: 6, md: 10 } }}>
                     <Grid container spacing={6} alignItems="center">
                         {/* Video Item */}
-                        {/* Modification: Order 2 on mobile (bottom), Order 1 on desktop (left) */}
                         <Grid item xs={12} md={7} sx={{ order: { xs: 2, md: 1 } }}>
                             <Box
                                 sx={{
@@ -257,7 +255,6 @@ const ProductPage = () => {
                         </Grid>
 
                         {/* Title Item */}
-                        {/* Modification: Order 1 on mobile (top), Order 2 on desktop (right) */}
                         <Grid item xs={12} md={5} sx={{ order: { xs: 1, md: 2 }, mb: { xs: 2, md: 0 } }}>
                             <Typography variant="h4" component="h2" sx={{ color: COLORS.title, fontWeight: 600 }}>
                                 Quick Start Guide
@@ -275,7 +272,6 @@ const ProductPage = () => {
                             <Typography variant="h6" gutterBottom sx={{ color: COLORS.title, fontWeight: 600 }}>
                                 About
                             </Typography>
-                            {/* Modification: Version number removed */}
                             <Typography variant="body2" paragraph sx={{ color: COLORS.textSecondary }}>
                                 <Link
                                     href="https://circuitpython.org/"

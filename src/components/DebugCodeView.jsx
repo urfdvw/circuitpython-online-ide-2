@@ -136,9 +136,6 @@ const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
         }
 
         /* Highlight rows with breakpoint comments in red */
-        // .ace_gutter-cell.breakpoint-comment {
-        //   background-color: rgba(231, 76, 60, 0.3);
-        // }
 
         .ace_gutter-cell.breakpoint-comment::after {
           content: "●";
@@ -148,7 +145,6 @@ const DebugCodeView = ({ rootDirHandle, fileName, lineNumber }) => {
           right: 0;
           bottom: 0;
           color: #ff0000;
-        //   background-color: rgba(231, 76, 60, 0.2);
           pointer-events: none;
         }
       `}</style>

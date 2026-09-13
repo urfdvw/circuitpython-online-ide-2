@@ -64,10 +64,9 @@ const WhatSNew = () => {
             fullWidth
             aria-labelledby="whats-new-dialog-title"
             PaperProps={{
-                sx: { borderRadius: 3 }, // Soften the corners of the modal itself
+                sx: { borderRadius: 3 },
             }}
         >
-            {/* Lively Title Section */}
             <DialogTitle
                 id="whats-new-dialog-title"
                 sx={{
@@ -78,14 +77,11 @@ const WhatSNew = () => {
                     gap: 1.5,
                 }}
             >
-                {/* A celebratory icon */}
                 <Typography
                     variant="h5"
-                    fontWeight="800" // Extra bold
+                    fontWeight="800"
                     sx={{
-                        // Use primary color for vibrance
                         color: theme.palette.primary.main,
-                        // Optional: A subtle text shadow makes it pop slightly
                         textShadow: "0px 1px 2px rgba(0,0,0,0.1)",
                     }}
                 >
@@ -97,8 +93,8 @@ const WhatSNew = () => {
             <DialogContent
                 dividers
                 sx={{
-                    height: "350px", // FIXED HEIGHT defined here
-                    p: 4, // More padding for readability
+                    height: "350px",
+                    p: 4,
                     // The default behavior of DialogContent is overflow-y: auto,
                     // so it will scroll automatically if content exceeds height.
                 }}

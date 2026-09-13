@@ -15,12 +15,14 @@
  * be partial, so the lenient behavior is required and safe for every caller.
  */
 export function parseVersion(v) {
+    const part = (value) => value !== null && value !== "" && value !== undefined &&
+        Number.isInteger(Number(value)) && Number(value) >= 0 ? Number(value) : null;
     if (v && typeof v === "object") {
         const { major = null, minor = null, patch = null } = v;
         return {
-            major: Number.isFinite(+major) ? +major : null,
-            minor: Number.isFinite(+minor) ? +minor : null,
-            patch: Number.isFinite(+patch) ? +patch : null,
+            major: part(major),
+            minor: part(minor),
+            patch: part(patch),
         };
     }
     if (typeof v === "string") {

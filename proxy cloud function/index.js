@@ -1,9 +1,8 @@
-// index.js  ─ Cloud Run / Cloud Functions 入口
-import { Readable } from "node:stream";
+import { createTransferTimeout, pipeRelease } from "./transfer.js";
 import functions from "@google-cloud/functions-framework";
+import { fetchRelease, isAllowedUrl } from "./proxy.js";
 
 functions.http("corsProxy", async (req, res) => {
-    /* ====== 1. CORS Headers ====== */
     res.set({
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "GET, HEAD, OPTIONS",
@@ -13,49 +12,49 @@ functions.http("corsProxy", async (req, res) => {
         res.status(204).end();
         return;
     }
-
-    /* ====== 2. 解析 & 校验目标 URL ====== */
-    const target = req.query.url;
-    if (!target) {
-        res.status(400).send('Missing "url" query parameter.');
+    if (!["GET", "HEAD"].includes(req.method)) {
+        res.setHeader("Allow", "GET, HEAD, OPTIONS");
+        res.status(405).send("Method not allowed.");
         return;
     }
 
-    let parsed;
+    let url;
     try {
-        parsed = new URL(target);
+        if (typeof req.query.url !== "string") throw new Error("Missing URL");
+        url = new URL(req.query.url);
     } catch {
-        res.status(400).send("Invalid target URL.");
+        res.status(400).send('A valid "url" query parameter is required.');
+        return;
+    }
+    if (!isAllowedUrl(url)) {
+        res.status(403).send("Forbidden: expected a release download from an allowed GitHub repository.");
         return;
     }
 
-    // ★★ 2.1 权限机制：仅允许两个特定仓库 ★★
-    const allowedPrefixes = ["/adafruit/CircuitPython_Community_Bundle/", "/adafruit/Adafruit_CircuitPython_Bundle/"];
-    const isAllowed =
-        parsed.hostname === "github.com" && allowedPrefixes.some((prefix) => parsed.pathname.startsWith(prefix));
-
-    if (!isAllowed) {
-        res.status(403).send("Forbidden: target not in allowed GitHub repositories.");
-        return;
-    }
-
-    /* ====== 3. 转发 ====== */
+    const controller = new AbortController();
+    const timeout = createTransferTimeout(controller);
+    const disconnect = () => controller.abort();
+    res.on("close", disconnect);
     try {
-        const up = await fetch(parsed.href, {
-            redirect: "follow",
-            headers: { "User-Agent": "cors-proxy-gcf" },
-        });
-
-        ["content-type", "content-disposition", "content-length", "content-encoding"].forEach((h) => {
-            const v = up.headers.get(h);
-            if (v) res.setHeader(h, v);
-        });
-
-        res.status(up.status);
-        const stream = up.body?.pipe ? up.body : Readable.fromWeb(up.body);
-        stream.pipe(res);
-    } catch (err) {
-        console.error("Proxy error:", err);
-        res.status(502).send("Upstream fetch failed.");
+        const upstream = await fetchRelease(url, { method: req.method, signal: controller.signal });
+        timeout.progress();
+        // Fetch decodes compressed bodies; forwarding encoded lengths/encodings corrupts downloads.
+        for (const header of ["content-type", "content-disposition"]) {
+            const value = upstream.headers.get(header);
+            if (value) res.setHeader(header, value);
+        }
+        res.status(upstream.status);
+        if (!upstream.body || req.method === "HEAD") {
+            res.end();
+        } else {
+            await pipeRelease(upstream.body, res, { signal: controller.signal, progress: timeout.progress });
+        }
+    } catch (error) {
+        console.error("Proxy error:", error);
+        if (!res.headersSent && !res.destroyed) res.status(502).send("Upstream fetch failed.");
+        else res.destroy();
+    } finally {
+        timeout.dispose();
+        res.off("close", disconnect);
     }
 });

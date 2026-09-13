@@ -1,32 +1,31 @@
-import { useState, useEffect } from "react";
-import { isEntryHealthy } from "../utilities/fileSystemUtils";
+import { useState, useEffect, useCallback } from "react";
+import { isEntryHealthy, normalizePath } from "../utilities/fileSystemUtils";
 
 export default function useFileSystem() {
     const [rootDirHandle, setRootDirHandle] = useState(null);
     const [directoryReady, setDirectoryReady] = useState(false);
     const [statusText, setStatusText] = useState("");
 
-    // directoryReady
     useEffect(() => {
-        const interval = setInterval(async () => {
-            setDirectoryReady(await isEntryHealthy(rootDirHandle));
-        }, 1000);
-        return () => clearInterval(interval);
+        let cancelled = false;
+        let timer;
+        setDirectoryReady(false);
+        const check = async () => {
+            const healthy = await isEntryHealthy(rootDirHandle);
+            if (cancelled) return;
+            setDirectoryReady(healthy);
+            timer = setTimeout(check, 1000);
+        };
+        check();
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+        };
     }, [rootDirHandle]);
 
-    // statusText
     useEffect(() => {
-        setStatusText(() => {
-            if (!rootDirHandle) {
-                return "No Directory Connected";
-            }
-            if (!directoryReady) {
-                return "Connecting";
-            } else {
-                const info = "Connected to " + rootDirHandle.name;
-                return info;
-            }
-        });
+        setStatusText(!rootDirHandle ? "No Directory Connected" :
+            directoryReady ? "Connected to " + rootDirHandle.name : "Connecting");
     }, [rootDirHandle, directoryReady]);
 
     // Open dir
@@ -39,9 +38,10 @@ export default function useFileSystem() {
                 console.log("Directory handle opened.");
                 setRootDirHandle(dirHandle);
             } else {
-                throw new Error("Failed to open directory handle. `dirHandle` created but empty"); // not sure wether this is reachiable
+                throw new Error("No directory handle was returned.");
             }
         } catch (error) {
+            if (error.name === "AbortError") return;
             alert(error);
             console.error(error);
         }
@@ -49,20 +49,17 @@ export default function useFileSystem() {
 
     // Set/clear the directory handle programmatically (e.g. restore a remembered
     // backup folder from IndexedDB without going through the picker).
-    function setDirectory(handle) {
+    const setDirectory = useCallback((handle) => {
         setRootDirHandle(handle);
-    }
+    }, []);
 
-    function clearDirectory() {
+    const clearDirectory = useCallback(() => {
         setRootDirHandle(null);
-    }
+    }, []);
 
     // Get Handles under root
     async function path2FolderHandles(path = "", create = false) {
-        // change windows path to the world standard
-        path.replace("\\", "/");
-        // split path to levels
-        const levels = path.split("/").map((level) => level.trim());
+        const levels = normalizePath(path);
         // get dir handle
         let folderHandle = rootDirHandle;
         for (const level of levels) {

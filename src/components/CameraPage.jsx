@@ -8,106 +8,80 @@ export default function CameraPage() {
 
     const [status, setStatus] = useState("init"); // 'init' | 'connecting' | 'connected' | 'stopped' | 'error'
     const [errorMsg, setErrorMsg] = useState("");
-    const peerRef = useRef(null);
-    const streamRef = useRef(null);
-    const wakeLockRef = useRef(null);
+    const stopRef = useRef(() => {});
 
     function handleStop() {
-        streamRef.current?.getTracks().forEach((t) => t.stop());
-        peerRef.current?.destroy();
+        stopRef.current();
         setStatus("stopped");
     }
 
     useEffect(() => {
         let cancelled = false;
+        let stream;
+        let peer;
+        let wakeLock;
+        const stop = () => {
+            cancelled = true;
+            stream?.getTracks().forEach((track) => track.stop());
+            peer?.destroy();
+            wakeLock?.release().catch(() => {});
+        };
+        stopRef.current = stop;
+        const fail = (error) => {
+            if (cancelled) return;
+            setStatus("error");
+            setErrorMsg(error.message);
+            stop();
+        };
 
         async function init() {
-            let stream;
             try {
+                if (!idePeerId) throw new Error("This camera link is missing its connection token.");
                 stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: { ideal: "environment" },
-                        width: { ideal: 1920 },
-                        height: { ideal: 1080 },
-                    },
+                    video: { facingMode: { ideal: "environment" }, width: { ideal: 1920 }, height: { ideal: 1080 } },
                     audio: false,
                 });
-                streamRef.current = stream;
-                const s = stream.getVideoTracks()[0]?.getSettings();
-                if (s && (s.width < 1920 || s.height < 1080)) {
-                    console.log(`[Phone camera quality] Requested 1920x1080, got ${s.width}x${s.height}`);
-                }
-            } catch (err) {
-                if (!cancelled) {
-                    setStatus("error");
-                    setErrorMsg("Camera denied: " + err.message);
-                }
-                return;
-            }
-
-            const { Peer } = await import("peerjs");
-            const peer = new Peer();
-            peerRef.current = peer;
-
-            peer.on("open", () => {
-                if (!cancelled) {
+                // Permission prompts and module loading can finish after the page closes.
+                if (cancelled) { stop(); return; }
+                const { Peer } = await import("peerjs");
+                if (cancelled) { stop(); return; }
+                peer = new Peer();
+                peer.on("open", () => {
+                    if (cancelled) return;
                     setStatus("connecting");
                     const call = peer.call(idePeerId, stream);
+                    if (!call) { fail(new Error("Could not start the camera connection.")); return; }
                     call.on("stream", () => {
-                        if (!cancelled) {
-                            setStatus("connected");
-                            // Increase bitrate for better quality
-                            call.peerConnection?.getSenders().forEach((sender) => {
-                                if (sender.track?.kind === "video") {
-                                    const params = sender.getParameters();
-                                    if (params.encodings?.length > 0) {
-                                        params.encodings[0].maxBitrate = 2500000;
-                                    }
-                                    sender.setParameters(params).catch((err) => {
-                                        console.log(`[Phone camera quality] Could not set bitrate: ${err.message}`);
-                                    });
-                                }
-                            });
-                        }
+                        if (cancelled) return;
+                        setStatus("connected");
+                        call.peerConnection?.getSenders().forEach((sender) => {
+                            if (sender.track?.kind !== "video") return;
+                            const params = sender.getParameters();
+                            if (params.encodings?.length) params.encodings[0].maxBitrate = 2500000;
+                            sender.setParameters(params).catch((error) => console.warn("Could not set camera bitrate:", error));
+                        });
                     });
                     call.on("close", () => {
-                        if (!cancelled) setStatus("stopped");
+                        if (cancelled) return;
+                        setStatus("stopped");
+                        stop();
                     });
-                    call.on("error", (err) => {
-                        if (!cancelled) {
-                            setStatus("error");
-                            setErrorMsg(err.message);
-                        }
-                    });
-                }
-            });
-
-            peer.on("error", (err) => {
-                if (!cancelled) {
-                    setStatus("error");
-                    setErrorMsg(err.message);
-                }
-            });
+                    call.on("error", fail);
+                });
+                peer.on("error", fail);
+            } catch (error) {
+                fail(error);
+            }
         }
-
         init();
-
         if ("wakeLock" in navigator) {
-            navigator.wakeLock
-                .request("screen")
-                .then((lock) => {
-                    wakeLockRef.current = lock;
-                })
-                .catch(() => {});
+            navigator.wakeLock.request("screen").then((lock) => {
+                wakeLock = lock;
+                if (cancelled) lock.release().catch(() => {});
+            }).catch(() => {});
         }
-
-        return () => {
-            cancelled = true;
-            streamRef.current?.getTracks().forEach((t) => t.stop());
-            peerRef.current?.destroy();
-            wakeLockRef.current?.release().catch(() => {});
-        };
-    }, []);
+        return stop;
+    }, [idePeerId]);
 
     return (
         <Box

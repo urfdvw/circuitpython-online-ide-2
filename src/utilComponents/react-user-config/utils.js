@@ -1,7 +1,7 @@
-export function isDefined(obj) {
-    return obj !== null && obj != undefined;
+export function isDefined(value) {
+    return value !== null && value !== undefined;
 }
 
-export function isObject(obj) {
-    return typeof obj === typeof {};
+export function isObject(value) {
+    return value !== null && typeof value === "object" && !Array.isArray(value);
 }

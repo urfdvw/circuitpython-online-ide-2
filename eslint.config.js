@@ -5,11 +5,11 @@ import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
 
 export default [
-  // docs/ is build output; "proxy cloud function" is a standalone deploy example
-  { ignores: ['dist', 'docs', 'proxy cloud function'] },
+  // Generated build output.
+  { ignores: ['dist', 'docs'] },
   // vite.config.js runs in Node, not the browser
   {
-    files: ['vite.config.js', 'eslint.config.js'],
+    files: ['vite.config.js', 'build/*.js', 'eslint.config.js', 'proxy cloud function/*.js'],
     languageOptions: { globals: globals.node },
   },
   // The tests and their runner also run in Node. See test/README.md.
@@ -18,7 +18,7 @@ export default [
     languageOptions: { globals: { ...globals.node, ...globals.browser } },
   },
   {
-    files: ['**/*.{js,jsx}'],
+    files: ['**/*.{js,jsx,mjs}'],
     languageOptions: {
       ecmaVersion: 2020,
       globals: globals.browser,

@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import { readFileSync, readdirSync } from "node:fs";
+import { hostedOffline } from "./build/hostedOffline.js";
 
 const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
@@ -71,7 +72,6 @@ function portableSingleHtml() {
     };
 }
 
-// https://vite.dev/config/
 export default defineConfig(({ mode }) => {
     // `docs/` is the GitHub Pages site; every other target builds into `dist/`.
     const portable = mode === "portable";
@@ -92,13 +92,13 @@ export default defineConfig(({ mode }) => {
                     }
                 },
             },
-            ...(portable ? [portableSingleHtml()] : []),
+            ...(portable ? [portableSingleHtml()] : [hostedOffline()]),
         ],
         optimizeDeps: {
             include: [
                 '@emotion/react',
                 '@emotion/styled',
-                '@mui/material/Tooltip' // or other MUI components
+                '@mui/material/Tooltip'
             ],
         },
         build: portable

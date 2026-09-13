@@ -20,7 +20,6 @@ const SiblingWithBottomRightTab = ({ children, label = "", tooltip = "", onClick
                     <Button
                         onClick={onClick}
                         variant="contained"
-                        // color="primary"
                         size="small"
                         sx={{
                             opacity: 0.5,

@@ -20,8 +20,14 @@ export function useInstalledLibs(rootDirHandle, batchFileOps) {
         // which over serial is a round trip each. Batching turns twenty
         // interruptions of the running program into one.
         const scan = async (root = rootDirHandle) => {
-            const { dirHandle: libFolderHandle } = await path2Handles(root, "lib/");
-            return await getInstalledLibVersions(libFolderHandle);
+            let libFolderHandle;
+            try {
+                ({ dirHandle: libFolderHandle } = await path2Handles(root, "lib/", { create: false }));
+            } catch (error) {
+                if (error.name === "NotFoundError") return [];
+                throw error;
+            }
+            return getInstalledLibVersions(libFolderHandle);
         };
         if (batchRoot) return scan(batchRoot);
         return batchFileOps ? await batchFileOps(scan, { label: "scanned installed libraries" }) : await scan();

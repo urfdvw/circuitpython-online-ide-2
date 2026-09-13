@@ -20,6 +20,8 @@ export default function useBoardInfo(rootFolderDirectoryReady, rootDirHandle) {
     const [boardInfo, setBoardInfo] = useState(null);
 
     useEffect(() => {
+        let cancelled = false;
+        setBoardInfo(null);
         async function getBoardInfo() {
             if (!rootFolderDirectoryReady) {
                 setBoardInfo(null);
@@ -29,9 +31,10 @@ export default function useBoardInfo(rootFolderDirectoryReady, rootDirHandle) {
             // parseCircuitPythonInfo returns null when the contents can't be parsed.
             const board_info = boot_out_txt === null ? null : parseCircuitPythonInfo(boot_out_txt);
             console.log("board_info:", board_info);
-            setBoardInfo(board_info);
+            if (!cancelled) setBoardInfo(board_info);
         }
         getBoardInfo();
+        return () => { cancelled = true; };
     }, [rootFolderDirectoryReady, rootDirHandle]);
 
     return boardInfo;

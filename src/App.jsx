@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 // App
 import "./App.css";
 import AppContext from "./AppContext";
@@ -13,14 +13,13 @@ import AppMenu from "./components/AppMenu";
 import { useConfig } from "./utilComponents/react-user-config";
 import schemas from "./configs";
 // help
-import { useTabValueName } from "./utilComponents/TabedPages";
+import { useTabValueName } from "./utilHooks/useTabValueName";
 import { helpDocs } from "./docs";
 // hot keys
 import useLayoutHotKeys from "./hotKeys/useLayoutHotKeys";
 // theme
 import DarkTheme from "react-lazy-dark-theme";
-// channel
-import useChannel from "./utilHooks/useChannel";
+import useIdePage from "./hooks/useIdePage";
 // device support
 import { isMobile, isSafari, isFirefox, browserVersion } from "react-device-detect";
 import { isBrowserSupported } from "./utilFunctions/browserSupport";
@@ -70,14 +69,10 @@ function App() {
 
 // The IDE itself: wires together hooks, context, and layout (assembly only).
 function Ide() {
-    useEffect(() => {
-        document.body.style.overflow = "hidden";
-    }, []);
-
     // testing state (consumed by the Placeholder tab)
     const [testCount, setTestCount] = useState(0);
     // layout
-    const [flexModel] = useState(FlexLayout.Model.fromJson(layout));
+    const [flexModel] = useState(() => FlexLayout.Model.fromJson(layout));
     // config
     const configTabSelection = useTabValueName(schemas);
     const appConfig = useConfig(schemas);
@@ -85,11 +80,6 @@ function Ide() {
     const helpTabSelection = useTabValueName(helpDocs);
     // hot keys
     useLayoutHotKeys(flexModel);
-    // release channel (?channel=dev|beta), logged once for diagnostics
-    const { showDevFeatures, showBetaFeatures } = useChannel();
-    useEffect(() => {
-        console.log("[showDevFeatures, showBetaFeatures]", [showDevFeatures, showBetaFeatures]);
-    }, [showDevFeatures, showBetaFeatures]);
     const { onFileClick, fileLookUp } = useEditorTabs(flexModel);
     // serial
     const { connectToSerialPort, sendDataToSerialPort, addToSerialOutput, serialOutput, serialReady, serial } =
@@ -127,6 +117,7 @@ function Ide() {
     } = useDataSerial();
     // Board info (derived from the connected drive's boot_out.txt)
     const boardInfo = useBoardInfo(rootFolderDirectoryReady, rootDirHandle);
+    useIdePage(boardInfo, appConfig.config.general?.show_board_id);
     // Backup "computer folder", remembered per board (keyed by the board UID).
     const {
         openBackupDirectory,
@@ -151,13 +142,8 @@ function Ide() {
     // auto-open the Plot tab when the board emits a plot/animation command
     usePlotAutoOpen(serialOutput, flexModel);
 
-    /**** main logic ****/
     if (!appConfig.ready) {
         return;
-    }
-
-    if (appConfig.config.general.show_board_id && boardInfo && boardInfo.board_id) {
-        document.title = "CPy: " + boardInfo.board_id.split("_").join(" ");
     }
 
     // Baud rate for the Data Serial port (configurable in Serial Console settings).

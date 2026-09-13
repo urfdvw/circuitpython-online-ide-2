@@ -2,8 +2,9 @@
  * Fetch the latest CircuitPython release from GitHub.
  * Returns { datetime: "YYYY-MM-DD", version: {major, minor, patch}, name }.
  */
-export async function fetchLatestCircuitPythonInfo() {
-    const response = await fetch(`https://api.github.com/repos/adafruit/CircuitPython/releases/latest`);
+export async function fetchLatestCircuitPythonInfo({ signal } = {}) {
+    const response = await fetch(`https://api.github.com/repos/adafruit/CircuitPython/releases/latest`, { signal });
+    if (!response.ok) throw new Error(`GitHub release lookup failed: HTTP ${response.status}`);
     const data = await response.json();
     return {
         datetime: data.published_at.split("T").at(0),

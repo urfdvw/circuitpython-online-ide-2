@@ -18,7 +18,7 @@ export default function LibCardMUI({
     libObj,
     repoName,
     abbr,
-    libDisplayName, // <-- now passed in directly
+    libDisplayName,
     installedVersion,
     installHandler,
     uninstallHandler,

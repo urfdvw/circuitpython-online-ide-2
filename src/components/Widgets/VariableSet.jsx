@@ -26,13 +26,18 @@ const VariableSet = ({ connectedVariables, setVariableOnMcu, getWidgetProperty, 
         } else if (type === "string") {
             variableValue = String(value);
         } else if (type === "bool") {
-            variableValue = value.trim().toLowerCase() === "true" ? true : false;
+            variableValue = value.trim().toLowerCase() === "true";
         } else if (type === "json") {
             try {
                 variableValue = JSON.parse(value);
             } catch {
-                alert("Input is not a valid json");
+                alert("Input is not valid JSON.");
+                return;
             }
+        }
+        if (variableValue === undefined || (typeof variableValue === "number" && !Number.isFinite(variableValue))) {
+            alert("Enter a valid value for the selected type.");
+            return;
         }
         setVariableOnMcu(variableName, variableValue);
         // don't update variable value on web directly, let the change be reflected by the update echo

@@ -174,16 +174,14 @@ export function useLibInstaller({
         const zip = bundle.zip;
         setLibChangeInfo(`Installing ${name}`);
         const { dirHandle } = await path2Handles(root, "lib");
+        let entry;
         try {
-            const folderLib = await zip.getEntryFromCache(`lib/${name}`);
-            await copyEntry(folderLib, dirHandle, folderLib.name);
-            console.log(`installed folder lib: ${name}`);
-        } catch (e) {
-            console.warn(e);
-            const fileLib = await zip.getEntryFromCache(`lib/${name}.mpy`);
-            await copyEntry(fileLib, dirHandle, fileLib.name);
-            console.log(`installed file lib: ${name}`);
+            entry = await zip.getEntryFromCache(`lib/${name}`);
+        } catch (error) {
+            if (error.name !== "NotFoundError") throw error;
+            entry = await zip.getEntryFromCache(`lib/${name}.mpy`);
         }
+        await copyEntry(entry, dirHandle, entry.name);
         logLine(`installed ${name}`);
         setLibChangeInfo("");
     }

@@ -8,8 +8,9 @@
     "build": "npm run build:docs && npm run build:portable",
     "build:docs": "vite build",
     "build:portable": "vite build --mode portable",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings=0",
     "test": "node test/run.mjs",
+    "test:browser": "node test/browser/runEditor.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

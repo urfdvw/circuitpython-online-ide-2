@@ -1,3 +1,4 @@
+import useDebugTargets from "../hooks/useDebugTargets";
 import {
     cleanupDebugFiles,
     getAllPythonFiles,
@@ -5,7 +6,7 @@ import {
     sleep,
     formatBytes,
 } from "../utilFunctions/debuggerUtils";
-import { useContext, useState, useEffect } from "react";
+import { useContext, useState, useEffect, useRef, useCallback } from "react";
 import AppContext from "../AppContext";
 import DebugWatchSet from "./DebugWatchSet";
 import * as constants from "../constants";
@@ -53,7 +54,6 @@ export default function Debugger() {
     } = useContext(AppContext);
     const usingSerialFiles = fileSource === "usb_serial";
 
-    const [pythonFileNames, setPythonFileNames] = useState([]);
     const [debugFileNames, setDebugFileNames] = useState([]);
     const [watchExpressions, setWatchExpressions] = useState({});
     const [conditionalBreakpoints, setConditionalBreakpoints] = useState({});
@@ -61,29 +61,34 @@ export default function Debugger() {
     const [debugHistory, setDebugHistory] = useState([]);
     const [historyIndex, setHistoryIndex] = useState(0);
 
-    const [pageIndex, setPageIndex] = useState(1);
+    const [pageIndex, setPageIndex] = useState(0);
     const [loadingInfo, setLoadingInfo] = useState("");
     const [debuggerRunning, setDebuggerRunning] = useState(false);
     const [debuggerHalted, setDebuggerHalted] = useState(false);
 
+    const initialAutoScroll = useRef(appConfig.config.serial_console.auto_scroll);
+    const setConfigField = appConfig.setConfigField;
     useEffect(() => {
-        if (!rootFolderDirectoryReady) {
-            setPageIndex(0);
-        } else {
-            handleStartConfigPage();
-        }
+        const original = initialAutoScroll.current;
+        setConfigField("serial_console", "auto_scroll", true);
+        return () => setConfigField("serial_console", "auto_scroll", original);
+    }, [setConfigField]);
 
-        const originalSetting = appConfig.config.serial_console.auto_scroll;
-        appConfig.setConfigField("serial_console", "auto_scroll", true);
-        return () => {
-            appConfig.setConfigField("serial_console", "auto_scroll", originalSetting);
-        };
-    }, []); // initialize config page
+    const onSourceChanged = useCallback(() => {
+        setPageIndex(1);
+        setDebugHistory([]);
+        setHistoryIndex(0);
+        setDebuggerRunning(false);
+        setDebuggerHalted(false);
+        setInstrumentationOutdated(true);
+    }, [setInstrumentationOutdated]);
+    const { files: pythonFileNames, error: targetError, refresh: refreshTargets } =
+        useDebugTargets(rootDirHandle, rootFolderDirectoryReady, getAllPythonFiles, onSourceChanged);
 
     useEffect(() => {
         // for auto re instrumentation
         setInstrumentationOutdated(true);
-    }, [debugFileNames, watchExpressions, conditionalBreakpoints]);
+    }, [debugFileNames, watchExpressions, conditionalBreakpoints, setInstrumentationOutdated]);
 
     useEffect(() => {
         // for debugging
@@ -107,19 +112,24 @@ export default function Debugger() {
             .split(constants.DEBUG_OUT_START)
             .slice(1)
             .map((line) => line.split(constants.DEBUG_OUT_END)[0]);
-        const debugLinesObjects = debugLines.map((line) => {
-            return JSON.parse(line);
+        const debugLinesObjects = debugLines.flatMap((line) => {
+            try {
+                const value = JSON.parse(line);
+                return value && typeof value === "object" && !Array.isArray(value) ? [value] : [];
+            } catch {
+                return []; // Ignore malformed device frames while retaining valid history.
+            }
         });
         setDebugHistory(debugLinesObjects);
-        setHistoryIndex(debugLinesObjects.length - 1);
-        setDebuggerHalted(debugLinesObjects.at(-1).h);
+        setHistoryIndex(Math.max(0, debugLinesObjects.length - 1));
+        setDebuggerHalted(Boolean(debugLinesObjects.at(-1)?.h));
     }, [serialOutput]);
 
     const hasHistory = debugHistory.length > 0;
     const viewingLatest = historyIndex === debugHistory.length - 1;
     const viewingFirst = historyIndex === 0;
 
-    const canRunCode = debuggerRunning && debuggerHalted && viewingLatest;
+    const canRunCode = serialReady && rootFolderDirectoryReady && debuggerRunning && debuggerHalted && viewingLatest;
     const canRewind = hasHistory && (!debuggerRunning || debuggerHalted) && !viewingFirst;
     const canForward = hasHistory && (!debuggerRunning || debuggerHalted) && !viewingLatest;
 
@@ -136,10 +146,7 @@ export default function Debugger() {
             return;
         }
 
-        const pythonFiles = await getAllPythonFiles(rootDirHandle);
-        setPythonFileNames(pythonFiles);
-        console.log("Python Files:", pythonFiles);
-        setPageIndex(1);
+        if (await refreshTargets()) setPageIndex(1);
     }
 
     async function handleStartDebuggerPage() {
@@ -159,15 +166,14 @@ export default function Debugger() {
 
         setLoadingInfo("Instrumenting code for debugging...");
 
-        const filteredWatchExpressions = watchExpressions;
-        for (const key in filteredWatchExpressions) {
-            filteredWatchExpressions[key] = filteredWatchExpressions[key].filter((expr) => expr.trim() !== "");
-        }
+        const filteredWatchExpressions = Object.fromEntries(Object.entries(watchExpressions)
+            .map(([key, expressions]) => [key, expressions.filter((expr) => expr.trim() !== "")]));
         console.log("Watch Expressions:", filteredWatchExpressions);
         // Reads every project .py and writes an instrumented copy of each, so
         // over serial this is a round trip per file in both directions. One
         // session keeps it to a single interruption.
-        await batchFileOps(
+        try {
+            await batchFileOps(
             (root) =>
                 instrumentCode(
                     root,
@@ -179,15 +185,20 @@ export default function Debugger() {
             { label: "instrumented code for debugging" }
         );
 
-        sleep(1000); //chill down
-        setLoadingInfo("");
-        setInstrumentationOutdated(false);
+            setInstrumentationOutdated(false);
+            return true;
+        } catch (error) {
+            alert("Instrumentation failed. " + error.message);
+            return false;
+        } finally {
+            setLoadingInfo("");
+        }
     }
 
     const startDebugging = async () => {
         const hasCodePy = pythonFileNames.includes("code.py");
         if (instrumentationOutdated) {
-            await instrumentCodeProcess();
+            if (!(await instrumentCodeProcess())) return;
         }
         if (!serialReady) {
             alert("Please connect to Serial Console first.");
@@ -260,7 +271,7 @@ export default function Debugger() {
         label: "≡",
         options: [
             pageIndex == 2 && {
-                text: "ReInstrument", // TODO: should be auto re-instrument on code/config change
+                text: "ReInstrument",
                 handler: instrumentCodeProcess,
             },
             pageIndex == 1 && {
@@ -565,6 +576,8 @@ export default function Debugger() {
                     <Typography component="p">{loadingInfo}</Typography>
                 </Box>
             </Backdrop>
+            {targetError && <Typography role="status" color="error">Could not list debug files: {targetError}</Typography>}
+            {!rootFolderDirectoryReady && <Typography role="status">{fileSourceNeeds}</Typography>}
             {pageIndex === 0 && infoPage()}
             {pageIndex === 1 && configPage()}
             {pageIndex === 2 && debuggerPage()}

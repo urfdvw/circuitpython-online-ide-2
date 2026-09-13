@@ -1,21 +1,9 @@
+/** Dedent selected code without removing blank lines inside string literals. */
 export function removeCommonIndentation(text) {
-    // Split the text into lines, considering both Windows and Linux line endings.
-    const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);
-
-    // Find the common indentation (minimum number of leading spaces or tabs).
-    let commonIndent = null;
-    lines.forEach((line) => {
-        const leadingSpaces = line.match(/^[ \t]*/)[0].length;
-        commonIndent = commonIndent === null ? leadingSpaces : Math.min(commonIndent, leadingSpaces);
-    });
-
-    // If there's no indentation, just join the non-empty lines.
-    if (commonIndent === null) {
-        return lines.join("\n");
-    }
-
-    // Remove the common indentation from each non-empty line and join them back into a single string.
-    return lines.map((line) => line.substring(commonIndent)).join("\n");
+    const lines = text.split(/\r?\n/);
+    const indents = lines.filter((line) => line.trim()).map((line) => line.match(/^[ \t]*/)[0].length);
+    const indent = indents.length ? indents.reduce((minimum, value) => Math.min(minimum, value), Infinity) : 0;
+    return lines.map((line) => line.slice(Math.min(indent, line.match(/^[ \t]*/)[0].length))).join("\n");
 }
 
 // Re-exported for existing import sites; the single source of truth is utilFunctions/sleep.js.

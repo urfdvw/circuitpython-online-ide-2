@@ -1,75 +1,105 @@
-// The service-worker is configured to allow the IDE to be installed
-// as a local app for offline use. In the Chrome URL bar you
-// will see an install button when you visit the IDE website.
-//
-// Once the app is installed, it will try to update itself when
-// the Internet is available.
-//
-// The intention is to cache all files needed to run the IDE.
-// If new files are added to the deployment, update the
-// CACHE_NAME variable to a new version and update the
-// values in urlsToCache to include the new files.
+// Production builds inject a content revision and integrity hashes for all published assets.
+const OFFLINE_BUILD = /* OFFLINE_BUILD */ null;
+// Scope isolates hosted installations. Each release keeps its shell and resources together.
+const CACHE_PREFIX = `CircuitPython-Online-IDE:${self.registration.scope}:`;
+const CACHE_NAME = `${CACHE_PREFIX}${OFFLINE_BUILD?.version ?? "development-v4"}`;
+const shellUrl = new URL("index.html", self.registration.scope).href;
+const resources = new Map((OFFLINE_BUILD?.resources ??
+    ["index.html", "tree-sitter-python.wasm", "blinka-192.png", "blinka-512.png", "blinka.svg"].map((path) => ({ path })))
+    .map(({ path, integrity }) => [new URL(path, self.registration.scope).href, integrity]));
 
-// Name of the cache. Update when the list of files to cache changes.
-const CACHE_NAME = "CircuitPython-Online-IDE-cache.20250716.001";
+async function validShell(response) {
+    if (!response.ok || response.redirected || !response.headers.get("content-type")?.includes("text/html")) return false;
+    const html = await response.clone().text();
+    // Reject common login/error pages; this is an application marker, not authentication.
+    return /<title>\s*CircuitPython Online IDE\s*<\/title>/i.test(html) && /id=["']root["']/.test(html);
+}
 
-// List all URLs you want to cache
-const urlsToCache = ["index.html", "service-worker.js", "blinka-192.png", "blinka-512.png", "blinka.svg"];
+async function fetchResource(url, integrity) {
+    const response = await fetch(url, { cache: "reload", redirect: "error", ...(integrity ? { integrity } : {}) });
+    if (!response.ok || response.redirected || (url === shellUrl && !(await validShell(response)))) {
+        throw new Error("Could not install the IDE offline resources.");
+    }
+    return response;
+}
 
-// Install event: Cache the static files
 self.addEventListener("install", (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.addAll(urlsToCache);
-        })
-    );
+    event.waitUntil((async () => {
+        // A missing file or hash mismatch rejects installation. The existing worker stays active.
+        const responses = await Promise.all([...resources].map(async ([url, integrity]) =>
+            [url, await fetchResource(url, integrity)]));
+        const cache = await caches.open(CACHE_NAME);
+        await Promise.all(responses.map(([url, response]) => cache.put(url, response)));
+    })());
 });
 
-// Activate event: Clean up old caches if needed
 self.addEventListener("activate", (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) =>
-            Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        return caches.delete(cacheName);
-                    }
-                })
-            )
-        )
-    );
+    event.waitUntil(caches.keys().then((names) => Promise.all(
+        names.filter((name) => name !== CACHE_NAME &&
+            (name.startsWith(CACHE_PREFIX) || name.startsWith("CircuitPython-Online-IDE-cache.")))
+            .map((name) => caches.delete(name))
+    )));
 });
 
-// Intercept fetch requests, then try to get a fresh copy of the file
-// if the Internet is available, otherwise serve the cached version.
+async function updateCache(request) {
+    try {
+        const response = await fetch(request);
+        if (response.ok) {
+            try {
+                const cache = await caches.open(CACHE_NAME);
+                await cache.put(request, response.clone());
+            } catch (error) {
+                console.warn("Could not cache IDE resource:", error);
+            }
+        }
+        return response;
+    } catch {
+        return undefined;
+    }
+}
+
 self.addEventListener("fetch", (event) => {
-    event.respondWith(
-        caches.open(CACHE_NAME).then((cache) => {
-            return cache.match(event.request).then((cachedResponse) => {
-                const fetchPromise = fetch(event.request)
-                    .then((networkResponse) => {
-                            // Only cache GET requests and successful responses.
-                            // The Cache API only supports caching GET requests; attempting to
-                            // cache other methods (e.g. HEAD) will throw a TypeError.
-                            try {
-                                if (event.request.method === 'GET' && networkResponse && networkResponse.ok) {
-                                    cache.put(event.request, networkResponse.clone());
-                                }
-                            } catch (cacheErr) {
-                                // Log and continue; do not let caching errors break responses.
-                                console.warn('Service worker cache.put failed:', cacheErr);
-                            }
-                            return networkResponse;
-                        })
-                    .catch(() => {
-                        // Network request failed; if there's a cache, serve it
-                        console.log("Serving cached response for " + event.request.url);
-                        return cachedResponse;
-                    });
-
-                // Return cached response immediately if present
-                return cachedResponse || fetchPromise;
-            });
-        })
-    );
+    const request = event.request;
+    if (request.method !== "GET" || !request.url.startsWith(self.registration.scope)) return;
+    const url = new URL(request.url);
+    url.search = "";
+    const resourceUrl = request.mode === "navigate" ? shellUrl : url.href;
+    if (resources.has(resourceUrl)) {
+        event.respondWith((async () => {
+            let cache;
+            try {
+                cache = await caches.open(CACHE_NAME);
+                const cached = await cache.match(resourceUrl);
+                if (cached) return cached;
+            } catch (error) {
+                console.warn("Could not read IDE cache:", error);
+            }
+            // Recover an evicted entry only if it still matches this worker's release.
+            let response;
+            try { response = await fetchResource(resourceUrl, resources.get(resourceUrl)); }
+            catch { return Response.error(); }
+            try { await cache?.put(resourceUrl, response.clone()); }
+            catch (error) { console.warn("Could not cache IDE resource:", error); }
+            return response;
+        })());
+        return;
+    }
+    serveOtherResource(event);
 });
+
+// Resources outside the build manifest can refresh independently of the installed app.
+function serveOtherResource(event) {
+    const request = event.request;
+    const update = updateCache(request);
+    event.waitUntil(update.then(() => {}));
+    event.respondWith((async () => {
+        try {
+            const cache = await caches.open(CACHE_NAME);
+            const cached = await cache.match(request);
+            if (cached) return cached;
+        } catch (error) {
+            console.warn("Could not read IDE cache:", error);
+        }
+        return await update || Response.error();
+    })());
+}

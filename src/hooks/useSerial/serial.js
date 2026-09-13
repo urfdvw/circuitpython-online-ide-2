@@ -17,7 +17,7 @@ export default class SerialCommunication {
 
         // reconnect support
         this._listening = false;
-        this._lastPortInfo = null;
+        this._lastPort = null;
         this._reconnecting = false;
 
         // Exclusive-access support, used by the serial file system.
@@ -42,13 +42,6 @@ export default class SerialCommunication {
                 return false;
             }
             try {
-                // store info for possible reconnects
-                try {
-                    this._lastPortInfo = this.port.getInfo ? this.port.getInfo() : null;
-                } catch (e) {
-                    this._lastPortInfo = null;
-                }
-
                 // Install global listeners once
                 if (!this._listening) {
                     this._listening = true;
@@ -63,6 +56,7 @@ export default class SerialCommunication {
                 }
 
                 await this.port.open({ baudRate: this._baudRate });
+                this._lastPort = this.port;
 
                 this.reader = this.port.readable.getReader();
                 this.writer = this.port.writable.getWriter();
@@ -109,15 +103,6 @@ export default class SerialCommunication {
             }
         }
         this._writing = false;
-
-        // preserve last port info so we can attempt reconnect later
-        if (this.port && this.port.getInfo) {
-            try {
-                this._lastPortInfo = this.port.getInfo();
-            } catch (e) {
-                // ignore
-            }
-        }
 
         if (this.reader) {
             try {
@@ -179,7 +164,7 @@ export default class SerialCommunication {
                 if (done || !this.keepRunning) {
                     break;
                 }
-                const decoded = decoder.decode(value);
+                const decoded = decoder.decode(value, { stream: true });
                 if (this._exclusive) {
                     this._exclusive.buffer += decoded;
                     if (this._exclusive.notify) {
@@ -224,9 +209,7 @@ export default class SerialCommunication {
                         this._writing = false;
                     }
                 }
-                // NOTE: deliberately no `this.writeBuffer = []` here. The loop
-                // above already drained it, so that assignment only ever threw
-                // away entries pushed while it was running.
+
             }
             await new Promise((resolve) => setTimeout(resolve, 1)); // Small delay to prevent high CPU usage
         }
@@ -404,24 +387,18 @@ export default class SerialCommunication {
 
     // Handle the physical disconnect event.
     _onDisconnect(event) {
-        try {
-            if (event && event.port && event.port.getInfo) {
-                this._lastPortInfo = event.port.getInfo();
-            } else if (this.port && this.port.getInfo) {
-                this._lastPortInfo = this.port.getInfo();
-            }
-        } catch (e) {
-            // ignore
-        }
+        // Serial events reach both channels. Only close the port that was unplugged.
+        const disconnectedPort = event?.port ?? event?.target;
+        if (!this.port || disconnectedPort !== this.port) return;
         console.warn("====== serial port disconnected (physical)");
-        // Close current connection but keep _lastPortInfo for reconnect attempts
+        // Close current connection but keep _lastPort for reconnect attempts
         this.close();
     }
 
     // Handle the physical connect event and try to re-open the previously used port.
     async _onConnect() {
         // only attempt reconnect if we have info about the last port and we're not already connected/reconnecting
-        if (!this._lastPortInfo || this.port || this._reconnecting) {
+        if (!this._lastPort || this.port || this._reconnecting) {
             return;
         }
 
@@ -430,13 +407,9 @@ export default class SerialCommunication {
             const ports = await navigator.serial.getPorts();
             for (const p of ports) {
                 try {
-                    const info = p.getInfo ? p.getInfo() : {};
-                    // match using usbVendorId and usbProductId if available
-                    const last = this._lastPortInfo || {};
-                    if (
-                        (last.usbVendorId == null || info.usbVendorId === last.usbVendorId) &&
-                        (last.usbProductId == null || info.usbProductId === last.usbProductId)
-                    ) {
+                    // VID/PID identify a model, not a board or CDC channel. Never
+                    // reconnect to another device merely because those numbers match.
+                    if (p === this._lastPort) {
                         // attempt to re-open the port at the same baud rate as before
                         try {
                             await p.open({ baudRate: this._baudRate });

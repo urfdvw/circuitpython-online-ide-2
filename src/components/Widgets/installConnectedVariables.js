@@ -1,12 +1,5 @@
-// installConnectedVariables.js
-//
-// Shared, UI-free install steps for the Connected Variables library, used by
-// both the Widgets tool (Widgets.jsx) and the agent bridge (cpyAgentBridge.js):
-// write connected_variables.py to the board and make sure boot.py enables the
-// usb_cdc.data channel. Callers inject the file writer so each keeps its own
-// failure behavior — the Widgets UI passes writeToPath (confirm() dialog on
-// failure), the agent bridge passes writeToPathStrict (throws a clean error).
-// The board must be HARD-RESET afterward for a boot.py change to apply.
+// Shared installation steps. The injected writer must throw on failure.
+// boot.py changes take effect only after a hardware reset.
 
 import { getFromPath } from "../../utilComponents/react-local-file-system/utilities/fileSystemUtils";
 import CONNECTED_VARIABLES_PY from "./CIRCUITPY/connected_variables.py";
@@ -24,8 +17,8 @@ export async function ensureDataSerialInBoot(rootDirHandle, writeFile) {
     let boot = "";
     try {
         boot = await getFromPath(rootDirHandle, BOOT_PATH);
-    } catch {
-        boot = ""; // boot.py doesn't exist yet
+    } catch (error) {
+        if (error.name !== "NotFoundError") throw error;
     }
     if (/usb_cdc\.enable\([^)]*\bdata\s*=\s*True/.test(boot)) {
         return { updated: false };

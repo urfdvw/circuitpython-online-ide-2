@@ -6,6 +6,7 @@ import TabTemplate from "../../utilComponents/TabTemplate";
 import { selectTabById } from "../../layout/layoutUtils";
 import {
     writeToPath,
+    writeToPathStrict,
     getFromPathIfExists,
     getFileText,
     checkFileExists,
@@ -52,41 +53,42 @@ export default function Widgets() {
     // null = checking, true/false = whether connected_variables.py is on the board
     const [libInstalled, setLibInstalled] = useState(null);
 
-    // auto-load the saved layout on mount, so opening ide/widgets.json shows the widgets
     useEffect(() => {
+        let cancelled = false;
+        setVariableWidgets([]);
         async function load() {
-            if (!rootFolderDirectoryReady || !rootDirHandle) {
-                return;
-            }
+            if (!rootFolderDirectoryReady || !rootDirHandle) return;
             try {
-                const loadedText = await getFromPathIfExists(rootDirHandle, WIDGETS_PATH);
-                if (loadedText) {
-                    setVariableWidgets(JSON.parse(loadedText));
+                const text = await getFromPathIfExists(rootDirHandle, WIDGETS_PATH);
+                const widgets = text ? JSON.parse(text) : [];
+                if (!cancelled && Array.isArray(widgets)) {
+                    setVariableWidgets(widgets.filter((widget) => widget && typeof widget === "object"));
                 }
-            } catch (e) {
-                // no saved widgets yet, or malformed JSON; start with an empty canvas
+            } catch (error) {
+                if (!cancelled) console.warn("Could not load widget layout:", error);
             }
         }
         load();
-    }, [rootFolderDirectoryReady]);
+        return () => { cancelled = true; };
+    }, [rootFolderDirectoryReady, rootDirHandle, setVariableWidgets]);
 
-    // check whether the connected_variables library is installed on the board: present (checkFileExists
-    // does not create it) AND non-empty
     useEffect(() => {
+        let cancelled = false;
+        setLibInstalled(null);
         async function check() {
-            if (!rootFolderDirectoryReady || !rootDirHandle) {
-                setLibInstalled(false);
-                return;
+            let installed = false;
+            try {
+                if (rootFolderDirectoryReady && rootDirHandle && await checkFileExists(rootDirHandle, LIB_FILENAME)) {
+                    const handle = await rootDirHandle.getFileHandle(LIB_FILENAME);
+                    installed = (await getFileText(handle)).trim().length > 0;
+                }
+            } catch (error) {
+                if (!cancelled) console.warn("Could not check connected variables library:", error);
             }
-            if (!(await checkFileExists(rootDirHandle, LIB_FILENAME))) {
-                setLibInstalled(false);
-                return;
-            }
-            const fileHandle = await rootDirHandle.getFileHandle(LIB_FILENAME);
-            const text = await getFileText(fileHandle);
-            setLibInstalled(text.trim().length > 0);
+            if (!cancelled) setLibInstalled(installed);
         }
         check();
+        return () => { cancelled = true; };
     }, [rootFolderDirectoryReady, rootDirHandle]);
 
     function requireDrive() {
@@ -101,9 +103,15 @@ export default function Widgets() {
     // (shared steps in installConnectedVariables.js, also used by the agent bridge)
     async function installLibrary() {
         if (!requireDrive()) return;
-        await writeConnectedVariablesLib(rootDirHandle, writeToPath);
-        setLibInstalled(true);
-        const { updated } = await ensureDataSerialInBoot(rootDirHandle, writeToPath);
+        let updated;
+        try {
+            await writeConnectedVariablesLib(rootDirHandle, writeToPathStrict);
+            setLibInstalled(true);
+            ({ updated } = await ensureDataSerialInBoot(rootDirHandle, writeToPathStrict));
+        } catch (error) {
+            alert("Could not install connected variables. " + error.message);
+            return;
+        }
         if (updated) {
             alert(
                 "connected_variables installed and the data serial channel was enabled in boot.py.\n\n" +

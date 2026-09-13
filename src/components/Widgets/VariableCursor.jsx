@@ -51,6 +51,7 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
     }
 
     function handleDown(e) {
+        e.currentTarget.setPointerCapture(e.pointerId);
         const p = getPos(e);
         setCursorDown(true);
         setLines((prev) => [...prev, [p.x, p.y]]);
@@ -98,12 +99,10 @@ const VariableCursor = ({ connectedVariables, setVariableOnMcu, getWidgetPropert
                 width={canvasRange.x}
                 height={canvasRange.y}
                 style={{ border: "1px solid grey", touchAction: "none" }}
-                onMouseDown={handleDown}
-                onMouseMove={handleMove}
-                onMouseUp={handleUp}
-                onTouchStart={handleDown}
-                onTouchMove={handleMove}
-                onTouchEnd={handleUp}
+                onPointerDown={handleDown}
+                onPointerMove={handleMove}
+                onPointerUp={handleUp}
+                onPointerCancel={handleUp}
             >
                 {lines.map((flat, i) => (
                     <polyline

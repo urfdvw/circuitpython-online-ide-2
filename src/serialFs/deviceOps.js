@@ -44,11 +44,17 @@ export function devicePath(path) {
         .replace(/\\/g, "/")
         .split("/")
         .filter(Boolean);
+    if (parts.some((part) => part === "." || part === ".." || part.includes("\0"))) {
+        throw new TypeError("Device paths cannot contain relative segments or NUL characters.");
+    }
     return parts.length ? "/" + parts.join("/") : "";
 }
 
 /** Join a parent device path and a child name. */
 export function joinPath(parent, name) {
+    if (typeof name !== "string" || !name || name === "." || name === ".." || /[/\\\0]/.test(name)) {
+        throw new TypeError("Expected a single file or directory name.");
+    }
     return (parent === "/" ? "" : parent) + "/" + name;
 }
 
@@ -119,26 +125,35 @@ export async function readFile(session, path) {
 /**
  * Write bytes to a file.
  *
- * Writes to a temp file and renames into place, so an interrupted transfer
- * cannot leave a half-written code.py behind. Each chunk is sent as whichever of
- * hex or a Python bytes literal is shorter: printable ASCII costs 1 char per
- * byte as a literal versus 2 as hex, while binary costs 4.
+ * Stages the new bytes in a separate file, then keeps the old file under a
+ * recovery name until replacement succeeds. A failed rename attempts rollback.
+ * A power loss during the swap can leave a recovery file; this is not an atomic
+ * filesystem transaction. Temporary and recovery names never overwrite existing files.
  */
 export async function writeFile(session, path, bytes) {
     const p = devicePath(path);
     const data = bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes);
     const parent = p.slice(0, p.lastIndexOf("/"));
     const tmp = (parent || "") + "/.ide-tmp";
+    const backup = (parent || "") + "/.ide-old";
 
     await session.exec(`${UNHEXLIFY_PREAMBLE}import os
-f=open(${reprStr(tmp)},'wb')
+def _ide_free_path(base):
+ n=0
+ while True:
+  candidate=base+('-'+str(n) if n else '')
+  if candidate != ${reprStr(p)}:
+   try: os.stat(candidate)
+   except OSError as e:
+    if e.args[0] == 2: return candidate
+    raise
+  n+=1
+_ide_tmp=_ide_free_path(${reprStr(tmp)})
+f=open(_ide_tmp,'wb')
 w=lambda d: f.write(u(d))
 o=f.write`, 15000, p);
 
-    // From here on the device holds an open handle and a temp file, so any
-    // failure has to clean both up. The target file is atomic either way (it is
-    // only touched by the final rename), but without this the board keeps a
-    // stray .ide-tmp holding disk space after a failed save.
+    // From here on, cleanup owns this temporary file and the open stream.
     try {
         for (let i = 0; i < data.length; i += WRITE_CHUNK_BYTES) {
             const chunk = data.subarray(i, i + WRITE_CHUNK_BYTES);
@@ -147,18 +162,34 @@ o=f.write`, 15000, p);
             await session.exec(asHex.length <= asRepr.length ? asHex : asRepr, 15000, p);
         }
 
-        // Remove first: os.rename refuses to clobber on some ports.
         await session.exec(`f.close()
-try: os.remove(${reprStr(p)})
-except: pass
-os.rename(${reprStr(tmp)},${reprStr(p)})`, 15000, p);
+_ide_exists=False
+try:
+ _ide_stat=os.stat(${reprStr(p)})
+ if _ide_stat[0] & 0x4000: raise OSError(21, 'Target is a directory')
+ _ide_exists=True
+except OSError as e:
+ if e.args[0] != 2: raise
+if _ide_exists:
+ _ide_old=_ide_free_path(${reprStr(backup)})
+ os.rename(${reprStr(p)},_ide_old)
+try:
+ os.rename(_ide_tmp,${reprStr(p)})
+except:
+ if _ide_exists:
+  try: os.rename(_ide_old,${reprStr(p)})
+  except: raise RuntimeError('Write failed; original file preserved at '+_ide_old)
+ raise
+if _ide_exists:
+ try: os.remove(_ide_old)
+ except OSError: pass`, 15000, p);
     } catch (error) {
         try {
             await session.exec(`try: f.close()
 except: pass
 try:
  import os
- os.remove(${reprStr(tmp)})
+ os.remove(_ide_tmp)
 except: pass`, 15000, p);
         } catch {
             // Cleanup is best-effort: if the board is gone or wedged this will
@@ -205,9 +236,7 @@ r(${reprStr(p)})`, 30000, p);
  *
  * Append mode is load-bearing here. `'wb'` would truncate, and the File System
  * Access API requires getFileHandle({create:true}) to be non-destructive for an
- * existing file. Callers rely on that: path2Handles() defaults to create:true,
- * so a plain read of boot.py would otherwise zero it. pyboard.py's fs_touch uses
- * append for the same reason.
+ * existing file, including one created externally since the last cached listing.
  */
 export async function touch(session, path) {
     const p = devicePath(path);

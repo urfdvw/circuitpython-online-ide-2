@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import TabTemplate from "../../TabTemplate";
 
 import {
@@ -22,6 +22,7 @@ import {
     moveEntry,
     checkEntryExists,
     isEntryHealthy,
+    isSameEntrySafe,
 } from "../utilities/fileSystemUtils";
 import { promptUniqueName } from "../utilities/uiUtils";
 
@@ -30,10 +31,10 @@ function compareFolderContent(A, B) {
         return false;
     }
     const A_paths = A.map((entry) => {
-        return entry.fullPath;
+        return `${entry.kind}:${entry.fullPath}`;
     }).sort();
     const B_paths = B.map((entry) => {
-        return entry.fullPath;
+        return `${entry.kind}:${entry.fullPath}`;
     }).sort();
     for (var i = 0; i < A.length; i++) {
         if (A_paths[i] !== B_paths[i]) {
@@ -43,81 +44,95 @@ function compareFolderContent(A, B) {
     return true;
 }
 
-// `autoRefresh` polls the current folder once a second. That is free against a
-// mounted drive, but every other source (serial today, BLE/WiFi later) pays a
-// device round trip per poll that interrupts the running program, so those pass
-// autoRefresh={false} and get a visible refresh button instead.
-export default function FolderView({ rootFolder, onFileClick, additionalElement, autoRefresh = true, onRefresh }) {
+// Serial file access uses explicit refreshes because polling interrupts board code.
+export default function FolderView({ rootFolder, onFileClick, additionalElement = [], autoRefresh = true, onRefresh }) {
     const [currentFolderHandle, setCurrentFolderHandle] = useState(rootFolder);
     const [entryOnDrag, setEntryOnDrag] = useState();
     const [path, setPath] = useState([rootFolder]);
     const [content, setContent] = useState([]);
     const [isLoading, setIsLoading] = useState(false);
-    useEffect(() => {
-        async function showRoot() {
-            setCurrentFolderHandle(rootFolder);
-            setContent(await getFolderContent(rootFolder));
-            setPath([rootFolder]);
+    const requestId = useRef(0);
+    const operationPending = useRef(false);
+
+    const showFolderView = useCallback(async (folderHandle) => {
+        const request = ++requestId.current;
+        try {
+            if (!(await isEntryHealthy(folderHandle))) {
+                folderHandle = rootFolder;
+                if (!(await isEntryHealthy(folderHandle))) {
+                    if (request === requestId.current) {
+                        setContent([]);
+                        setPath([rootFolder]);
+                    }
+                    return;
+                }
+            }
+            const entries = await getFolderContent(folderHandle, true);
+            if (request !== requestId.current) return;
+            const nextPath = [];
+            for (let entry = folderHandle; entry; entry = entry.parent) {
+                nextPath.unshift(entry);
+            }
+            setCurrentFolderHandle(folderHandle);
+            setContent((previous) => compareFolderContent(previous, entries) ? previous : entries);
+            setPath((previous) => previous.length === nextPath.length &&
+                previous.every((entry, index) => entry === nextPath[index]) ? previous : nextPath);
+        } catch (error) {
+            if (request === requestId.current) console.warn("Could not refresh folder:", error);
         }
-        showRoot();
     }, [rootFolder]);
 
     useEffect(() => {
-        if (!autoRefresh) {
-            return undefined;
-        }
-        const interval = setInterval(async () => {
-            await showFolderView(currentFolderHandle);
-        }, 1000);
-        return () => clearInterval(interval);
-    }, [content, currentFolderHandle, autoRefresh]);
+        setCurrentFolderHandle(rootFolder);
+        setContent([]);
+        setPath([rootFolder]);
+        showFolderView(rootFolder);
+        return () => { requestId.current = requestId.current + 1; };
+    }, [rootFolder, showFolderView]);
 
-    async function showFolderView(folderHandle) {
-        const healthy = await isEntryHealthy(folderHandle);
-        if (!healthy) {
-            await showFolderView(rootFolder);
-            return;
+    useEffect(() => {
+        if (!autoRefresh) return;
+        let cancelled = false;
+        let timer;
+        const poll = async () => {
+            if (!operationPending.current) await showFolderView(currentFolderHandle);
+            if (!cancelled) timer = setTimeout(poll, 1000);
+        };
+        timer = setTimeout(poll, 1000);
+        return () => {
+            cancelled = true;
+            clearTimeout(timer);
+            requestId.current = requestId.current + 1;
+        };
+    }, [currentFolderHandle, autoRefresh, showFolderView]);
+
+    async function runOperation(operation) {
+        if (operationPending.current) return;
+        operationPending.current = true;
+        setIsLoading(true);
+        try {
+            const result = await operation();
+            await showFolderView(currentFolderHandle);
+            return result;
+        } catch (error) {
+            alert("File operation failed. " + error.message);
+        } finally {
+            operationPending.current = false;
+            setIsLoading(false);
         }
-        // set context
-        setCurrentFolderHandle(folderHandle);
-        // set content
-        const curContent = await getFolderContent(folderHandle, true);
-        if (compareFolderContent(curContent, content)) {
-            return;
-        }
-        setContent(curContent);
-        // set path
-        // if folderHandle in path, cut what ever behind it
-        for (var i = 0; i < path.length; i++) {
-            if (await folderHandle.isSameEntry(path[i])) {
-                setPath((curPath) => {
-                    return curPath.slice(0, i + 1);
-                });
-                return;
-            }
-        }
-        // else, append folderHandle at the back
-        setPath((curPath) => {
-            return [...curPath, folderHandle];
-        });
-        console.log("Folder view updated");
     }
 
     async function handleDrop(targetFolder) {
-        if (await targetFolder.isSameEntry(entryOnDrag)) {
-            return;
-        }
-        if (await targetFolder.isSameEntry(currentFolderHandle)) {
-            return;
-        }
-        if (await checkEntryExists(targetFolder, entryOnDrag.name)) {
-            alert('"' + entryOnDrag.name + '" conflicts with another name in the target folder.');
-            return;
-        }
-        setIsLoading(true);
-        await moveEntry(currentFolderHandle, entryOnDrag, targetFolder);
-        await showFolderView(currentFolderHandle);
-        setIsLoading(false);
+        if (!entryOnDrag) return;
+        await runOperation(async () => {
+            if (await isSameEntrySafe(targetFolder, entryOnDrag) ||
+                await isSameEntrySafe(targetFolder, currentFolderHandle)) return;
+            if (await checkEntryExists(targetFolder, entryOnDrag.name)) {
+                throw new Error(`"${entryOnDrag.name}" already exists in the target folder.`);
+            }
+            await moveEntry(currentFolderHandle, entryOnDrag, targetFolder);
+            setEntryOnDrag(null);
+        });
     }
 
     const menuStructure = [
@@ -132,12 +147,11 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement,
                         if (!newName) {
                             return;
                         }
-                        setIsLoading(true);
-                        const newFileHandle = await addNewFile(currentFolderHandle, newName);
-                        await showFolderView(currentFolderHandle);
-                        setIsLoading(false);
-                        newFileHandle.fullPath = (currentFolderHandle.fullPath || "") + "/" + newFileHandle.name;
-                        onFileClick(newFileHandle);
+                        await runOperation(async () => {
+                            const file = await addNewFile(currentFolderHandle, newName);
+                            file.fullPath = (currentFolderHandle.fullPath || "") + "/" + file.name;
+                            onFileClick(file);
+                        });
                     },
                 },
                 {
@@ -148,10 +162,7 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement,
                         if (!newName) {
                             return;
                         }
-                        setIsLoading(true);
-                        await addNewFolder(currentFolderHandle, newName);
-                        await showFolderView(currentFolderHandle);
-                        setIsLoading(false);
+                        await runOperation(() => addNewFolder(currentFolderHandle, newName));
                     },
                 },
             ],
@@ -161,14 +172,7 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement,
             : [
                   {
                       text: "\u27F3",
-                      handler: async () => {
-                          setIsLoading(true);
-                          if (onRefresh) {
-                              onRefresh();
-                          }
-                          await showFolderView(currentFolderHandle);
-                          setIsLoading(false);
-                      },
+                      handler: () => runOperation(async () => { await onRefresh?.(); }),
                   },
               ]),
         ...additionalElement,
@@ -192,7 +196,7 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement,
                     }}
                 >
                     <CurFolderContext.Provider
-                        value={{ currentFolderHandle, onFileClick, showFolderView, setIsLoading }}
+                        value={{ currentFolderHandle, onFileClick, showFolderView, runOperation }}
                     >
                         <DragContext.Provider value={{ setEntryOnDrag, handleDrop }}>
                             <Breadcrumbs aria-label="breadcrumb">
@@ -211,11 +215,11 @@ export default function FolderView({ rootFolder, onFileClick, additionalElement,
                     }}
                 >
                     <CurFolderContext.Provider
-                        value={{ currentFolderHandle, onFileClick, showFolderView, setIsLoading }}
+                        value={{ currentFolderHandle, onFileClick, showFolderView, runOperation }}
                     >
                         <DragContext.Provider value={{ setEntryOnDrag, handleDrop }}>
                             <List>
-                                {content
+                                {[...content]
                                     .sort((a, b) => {
                                         if (a.isParent && !b.isParent) {
                                             return -1;

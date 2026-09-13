@@ -10,6 +10,7 @@
     "build:portable": "vite build --mode portable",
     "lint": "eslint . --max-warnings=0",
     "test": "node test/run.mjs",
+    "test:browser": "node test/browser/runEditor.mjs",
     "preview": "vite preview"
   },
   "dependencies": {

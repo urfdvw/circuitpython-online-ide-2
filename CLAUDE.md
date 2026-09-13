@@ -28,6 +28,14 @@ Guidance for working in this repository.
   documented in [src/docs/Use without Internet.md](src/docs/Use without Internet.md). Any
   further target also builds into `dist/`.
 
+The hosted offline manifest excludes dotfiles and hidden directories. After writing
+the default `docs/` build, the offline plugin checks that every required resource
+and the service worker are tracked by Git. If a new output filename causes that
+check to fail, stage the intended deployment files and rebuild. Remove accidental
+public resources or correct ignore rules instead of publishing machine metadata.
+Explicit `--outDir` overrides outside `docs/` remain available for validation and
+do not enforce this Git publication check.
+
 The portable file has to work when it is downloaded on its own and opened over `file://`, so
 the `portableSingleHtml()` plugin embeds everything the app would otherwise fetch from
 `public/` (the tree-sitter wasm, the product page screenshots, the favicon) as data URIs, and

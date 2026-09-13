@@ -2,6 +2,7 @@ import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import { viteSingleFile } from "vite-plugin-singlefile";
 import { readFileSync, readdirSync } from "node:fs";
+import { hostedOffline } from "./build/hostedOffline.js";
 
 const { version } = JSON.parse(readFileSync(new URL("./package.json", import.meta.url), "utf8"));
 
@@ -91,7 +92,7 @@ export default defineConfig(({ mode }) => {
                     }
                 },
             },
-            ...(portable ? [portableSingleHtml()] : []),
+            ...(portable ? [portableSingleHtml()] : [hostedOffline()]),
         ],
         optimizeDeps: {
             include: [

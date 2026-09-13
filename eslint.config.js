@@ -9,7 +9,7 @@ export default [
   { ignores: ['dist', 'docs'] },
   // vite.config.js runs in Node, not the browser
   {
-    files: ['vite.config.js', 'eslint.config.js', 'proxy cloud function/*.js'],
+    files: ['vite.config.js', 'build/*.js', 'eslint.config.js', 'proxy cloud function/*.js'],
     languageOptions: { globals: globals.node },
   },
   // The tests and their runner also run in Node. See test/README.md.

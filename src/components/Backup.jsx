@@ -249,7 +249,7 @@ export default function Backup() {
                                 <Typography>Comparison incomplete. These paths could not be read and are excluded from the differences below:</Typography>
                                 {codeDiff.unreadable.map((entry) => (
                                     <Typography key={entry.side + entry.path}>
-                                        {entry.side === "source" ? "Microcontroller" : "Computer"}: {entry.path} — {entry.message}
+                                        {entry.side === "source" ? "Microcontroller" : "Computer"}: {entry.path}: {entry.message}
                                     </Typography>
                                 ))}
                             </Box>

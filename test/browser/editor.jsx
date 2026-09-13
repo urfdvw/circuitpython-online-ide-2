@@ -3,14 +3,19 @@ import IdeEditor from "../../src/components/IdeEditor";
 import AppContext from "../../src/AppContext";
 
 window.TREE_SITTER_PYTHON_WASM_URL = "/tree-sitter-python.wasm";
-const state = { errors: [], saved: [], popup: null };
+const state = { errors: [], saved: [], popup: null, readAttempts: 0, releaseRead: null };
 window.editorReview = state;
 window.addEventListener("error", (event) => state.errors.push(event.message));
 window.addEventListener("unhandledrejection", (event) => state.errors.push(String(event.reason)));
 window.alert = (message) => state.errors.push(String(message));
 const file = {
     name: "code.py", fullPath: "/code.py",
-    getFile: async () => new File(['print("original")\n'], "code.py"),
+    getFile: async () => {
+        state.readAttempts += 1;
+        if (state.readAttempts <= 2) throw new Error("Device temporarily unavailable");
+        await new Promise((resolve) => { state.releaseRead = resolve; });
+        return new File(['print("original")\n'], "code.py");
+    },
     createWritable: async () => ({ write: async (value) => state.saved.push(value), close: async () => {} }),
 };
 const model = { doAction() {} };

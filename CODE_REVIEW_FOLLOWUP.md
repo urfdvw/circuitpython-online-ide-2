@@ -3,6 +3,10 @@
 This follow-up addresses the review of commit `a1a76aa` (“batch 1”). The earlier
 reports describe the initial changes; this document records their corrections.
 
+The subsequent [recovery and offline-update follow-up](CODE_REVIEW_RECOVERY.md)
+records further corrections, including the replacement of shell background
+refresh with complete, versioned offline releases.
+
 | Finding | Implemented correction | Evidence |
 | --- | --- | --- |
 | Editor shortcuts disappear after pop-out/docking | Track the actual ACE instance through onLoad. Register and clean up commands per instance. Gutter listeners, breakpoint styles, newline settings, and syntax annotations follow that instance too. A replacement does not reload disk contents over unsaved text. | Hook replacement tests plus 14 real Chrome checks of initial save, pop-out save, retained text, docking, commands, gutter breakpoint insertion, and runtime errors. |
@@ -30,8 +34,11 @@ for instrumentation and breakpoint insertion, not on every keystroke.
 - Real Chrome editor lifecycle: **14 checks passed**, no captured runtime errors.
   This uses the actual React/ACE/PopUp components and an in-memory file, not hardware.
 - ESLint: zero errors and warnings. Whitespace check passes.
-- Hosted and portable production builds pass. Hosted output is outside tracked
-  `docs/`; portable output remains in ignored `dist/`.
+- Hosted and portable production builds passed. For this historical validation,
+  the hosted command was `npm run build:docs -- --outDir /tmp/cpy-review-followup-hosted-20260912 --emptyOutDir`.
+  That explicit override left tracked `docs/` unchanged. The default hosted build
+  writes to `docs/`; `npm run build` rebuilds it and the portable file in ignored
+  `dist/`. The subsequent recovery follow-up refreshed the tracked hosted output.
 
 ## Remaining limitations
 
@@ -50,4 +57,4 @@ for instrumentation and breakpoint insertion, not on every keystroke.
 - The previously reported Plotly/MapLibre dependency advisories remain unresolved.
   Existing upstream web-tree-sitter build warnings also remain.
 
-Changes are local and uncommitted. No deployment or site publication occurred.
+This follow-up was committed as `4b9a20a`. Its validation did not deploy or publish the site.

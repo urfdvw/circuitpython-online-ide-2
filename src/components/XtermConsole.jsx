@@ -38,7 +38,13 @@ const XtermConsole = ({
 
     const fitIfVisible = useCallback(() => {
         const element = terminalRef.current;
-        if (element?.offsetWidth > 0 && element?.offsetHeight > 0) fitAddon.current?.fit();
+        if (element?.offsetWidth > 0 && element?.offsetHeight > 0) {
+            try {
+                fitAddon.current?.fit();
+            } catch (error) {
+                console.warn("Could not resize serial console:", error);
+            }
+        }
     }, []);
 
     useEffect(() => {

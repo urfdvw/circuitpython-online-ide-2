@@ -80,6 +80,8 @@ export default function IdeEditor({ node }) {
     const [editorInstance, setEditorInstance] = useState(null);
     const [text, setText] = useState("");
     const [loadedFile, setLoadedFile] = useState(null);
+    const [loadError, setLoadError] = useState(null);
+    const [loadAttempt, setLoadAttempt] = useState(0);
     const saving = useRef(false);
     // last loaded-or-saved content; the editor is "dirty" iff text differs from this baseline
     const [savedText, setSavedText] = useState("");
@@ -142,6 +144,7 @@ export default function IdeEditor({ node }) {
     useEffect(() => {
         if (!editorInstance || loadedFile === fileHandle) return;
         let cancelled = false;
+        setLoadError(null);
         async function loadText() {
             try {
                 const fileText = await getFileText(fileHandle);
@@ -152,12 +155,12 @@ export default function IdeEditor({ node }) {
                 setFileExists(true);
                 setLoadedFile(fileHandle);
             } catch (error) {
-                if (!cancelled) alert("Could not load file. " + error.message);
+                if (!cancelled) setLoadError({ file: fileHandle, message: error.message || String(error) });
             }
         }
         loadText();
         return () => { cancelled = true; };
-    }, [fileHandle, editorInstance, loadedFile]);
+    }, [fileHandle, editorInstance, loadedFile, loadAttempt]);
 
     useEffect(() => {
         editorInstance?.session.setNewLineMode(config.editor.newline_mode);
@@ -420,6 +423,18 @@ export default function IdeEditor({ node }) {
     return (
         <PopUp popped={popped} setPopped={setPopped} title={fileHandle.name} parentStyle={{ height: height + "px" }}>
             <TabTemplate title={title} menuStructure={menuStructure}>
+                {loadedFile !== fileHandle && (
+                    <div role={loadError?.file === fileHandle ? "alert" : "status"}
+                        style={{ padding: "6px 10px", background: "#fff4e5", color: "#222", fontSize: "13px" }}>
+                        {loadError?.file === fileHandle ? <>
+                            Could not load file: {loadError.message}{" "}
+                            <button onClick={() => {
+                                setLoadError(null);
+                                setLoadAttempt((attempt) => attempt + 1);
+                            }}>Retry</button>
+                        </> : "Loading file…"}
+                    </div>
+                )}
                 {conflict && (
                     <div
                         style={{
